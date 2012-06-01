@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <dictionary>
+        <entry key="observationFact"       value="batchInsert"/>
+        <entry key="metaTableName"         value="cardiovascularregistry"/>
+        <entry key="rootNodeName"          value="Cardiovascular Registry"/>
+        <entry key="sourceSystemCode"      value="cardiovascular"/>
+        <entry key="truncateTables"        value="true"/>
+        <entry key="visitDimension" value="Encounter"/>
+        <entry key="visitDimensionDecipheredId" value="visit_id"/>
+        <entry key="providerFullName" value="providerFullName"/>
+        <entry key="providerFirstName" value="providerFirstName"/>
+        <entry key="providerMiddleName" value="providerMiddleName"/>
+        <entry key="providerLastName" value="providerLastName"/>
+        <entry key="patientDimensionMRN" value="demographics_mrn"/>
+        <entry key="patientDimensionGender" value="demographics_gender"/>
+        <entry key="patientDimensionAgeInYears" value="demographics_age"/>
+        <entry key="patientDimensionEthnicity" value="demographics_ethnicity"/>
+        <entry key="patientDimensionRace" value="demographics_race"/>
+        <entry key="patientDimensionMaritalStatus" value="demographics_marital_status" />
+        <entry key="patientDimensionLanguage" value="demographics_lang" />
+        <entry key="patientDimensionReligion" value="demographics_religion" />
+    </dictionary>
+
+    <database>
+        <dbschema key="dataschema" connect="jdbc:oracle:thin:@${aiw.i2b2etl.conf.host}:1521/xe" user="${aiw.i2b2etl.conf.data.user}" passwd="${aiw.i2b2etl.conf.data.password}"/>
+        <dbschema key="metaschema" connect="jdbc:oracle:thin:@${aiw.i2b2etl.conf.host}:1521/xe" user="${aiw.i2b2etl.conf.metadata.user}" passwd="${aiw.i2b2etl.conf.metadata.password}"/>
+    </database>
+
+    <data>
+        <dataType key="diagnoses" reference="diagnosisCodes"/>
+        <dataType key="meds" reference="medicationHistory"/>
+        <dataType key="labs" reference="labs" units="unitOfMeasure" />
+        <dataType key="procedures" reference="procedures"/>
+        <dataType key="vital" reference="vitals"/>
+        <dataType key="dschgDisp" property="dischargeDisposition" start="finish" />
+        <dataType key="providerFullName" reference="provider" property="fullName" />
+        <dataType key="providerFirstName" reference="provider" property="firstName" />
+        <dataType key="providerMiddleName" reference="provider" property="middleName" />
+        <dataType key="providerLastName" reference="provider" property="lastName" />
+        <dataType key="demographics_age" property="age" conceptCodePrefix="DEM|AGE" start="start"/>
+        <dataType key="demographics_gender" reference="patientDetails" property="gender" start="start" conceptCodePrefix='DEM|SEX'/>
+        <dataType key="demographics_ethnicity" reference="patientDetails" property="ethnicity"  start="start"/>
+        <dataType key="demographics_race" reference="patientDetails" property="race" conceptCodePrefix="DEM|RACE" start="start"/>
+        <dataType key="demographics_marital_status" reference="patientDetails" property="maritalStatus" conceptCodePrefix="DEM|MARITAL" start="start"/>
+        <dataType key="demographics_lang" reference="patientDetails" property="language" conceptCodePrefix="DEM|LANGUAGE" start="start" />
+        <dataType key="demographics_religion" reference="patientDetails" property="religion" start="start"/>
+        <dataType key="demographics_mrn" reference="patientDetails" property="patientId"/>
+        <dataType key="visit_id" property="encounterId"/>
+    </data>
+
+    <concepts>
+        <!-- displayName = what shows up in the UI -->
+        <!-- skipGen = ablates a series of redundant parent-child nodes (see source code) -->
+        <!-- metatable = corresponding table name in the meta schema -->
+
+        <!--  each folder must have a relation to a branch (in meta)  -->
+
+        <folder displayName="CPT Codes"             skipGen="1" proposition="CPTCode"/>
+        <folder displayName="ICD9 Diagnostic Codes" skipGen="1" proposition="ICD9:Diagnoses"/>
+        <folder displayName="ICD9 Procedure Codes"  skipGen="1" proposition="ICD9:Procedures"/>
+        <folder displayName="Laboratory Tests"      skipGen="1" proposition="LAB:LabTest"/>
+        <folder displayName="Discharge Disposition" skipGen="1" proposition="Encounter" property="dischargeDisposition"/>
+        <folder displayName="Medication"            skipGen="3" proposition="MED:medications"/>
+        <folder displayName="Vital Signs"           skipGen="1" proposition="VitalSign"/>
+    </concepts>
+</root>
