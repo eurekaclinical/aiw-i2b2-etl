@@ -47,7 +47,7 @@ public class I2b2ETL extends CLI {
 
         try {
             DefaultQueryBuilder q = new DefaultQueryBuilder();
-            q.setPropIds(PROP_IDS);
+            q.setPropositionIds(PROP_IDS);
             Query query = protempa.buildQuery(q);
             QueryResultsHandler tdqrh = new I2B2QueryResultsHandler(confXML);
             protempa.execute(query, tdqrh);

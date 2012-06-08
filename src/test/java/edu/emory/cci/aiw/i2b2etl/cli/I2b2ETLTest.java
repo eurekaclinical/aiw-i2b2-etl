@@ -70,7 +70,7 @@ public class I2b2ETLTest {
         try {
             File confXML = IOUtil.resourceToFile("/conf.xml", "conf", null);
             DefaultQueryBuilder q = new DefaultQueryBuilder();
-            q.setPropIds(PROP_IDS);
+            q.setPropositionIds(PROP_IDS);
             Query query = protempa.buildQuery(q);
             QueryResultsHandler tdqrh = 
                     new I2B2QueryResultsHandler(confXML.getAbsolutePath());
