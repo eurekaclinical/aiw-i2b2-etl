@@ -27,7 +27,7 @@ final class PropositionConceptTreeBuilder {
         try {
             Concept rootConcept = addNode(this.rootPropositionDefinition, null);
             String[] childrenPropIds =
-                    this.rootPropositionDefinition.getDirectChildren();
+                    this.rootPropositionDefinition.getChildren();
             buildHelper(childrenPropIds, rootConcept);
             return rootConcept;
         } catch (UnknownPropositionDefinitionException ex) {
@@ -43,7 +43,7 @@ final class PropositionConceptTreeBuilder {
         for (String propId : propIds) {
             PropositionDefinition propDef = readPropositionDefinition(propId);
             Concept c = addNode(propDef, concept);
-            String[] directChildren = propDef.getDirectChildren();
+            String[] directChildren = propDef.getChildren();
             buildHelper(directChildren, c);
         }
     }
