@@ -44,18 +44,22 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     private Connection dataSchemaConnection;
     private List<FactHandler> factHandlers;
 
-    public I2B2QueryResultsHandler(String confXML) {
+    public I2B2QueryResultsHandler(File confXML) {
+        if (confXML == null) {
+            throw new IllegalArgumentException("confXML cannot be null");
+        }
+        
         String protempaConfig = System.getProperty("i2b2.protempa.config", PROTEMPA_DEFAULT_CONFIG);
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, String.format("Using protempa config: %s", protempaConfig));
-        this.confFile = new File(confXML);
-        logger.log(Level.INFO, String.format("Using conf.xml: %s", this.confFile.getAbsolutePath()));
+        logger.log(Level.FINE, String.format("Using protempa config: %s", protempaConfig));
+        this.confFile = confXML;
+        logger.log(Level.FINE, String.format("Using conf.xml: %s", this.confFile.getAbsolutePath()));
     }
 
     @Override
     public void init(KnowledgeSource knowledgeSource) throws FinderException {
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, "handler init. interpret ontology.");
+        logger.log(Level.FINE, "handler init. interpret ontology.");
         this.knowledgeSource = knowledgeSource;
         try {
             readConfiguration();
@@ -102,7 +106,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         String visitPropId = dictSection.get("visitDimension");
         try {
             Logger logger = I2b2ETLUtil.logger();
-            logger.log(Level.FINE, "STEP: create and persist all Observations");
+            logger.log(Level.FINER, "STEP: create and persist all Observations");
             for (Proposition prop : propositions) {
                 if (prop.getId().equals(visitPropId)) {
                     DataSection obxSection =
@@ -167,20 +171,20 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             
             // persist Patients & Visits.
 
-            logger.log(Level.FINE, "STEP: persist all PatientDimension and VisitDimension");
+            logger.log(Level.FINER, "STEP: persist all PatientDimension and VisitDimension");
             PatientDimension.insertAll(this.ontologyModel.getPatients(), this.dataSchemaConnection);
 
             VisitDimension.insertAll(this.ontologyModel.getVisits(), this.dataSchemaConnection);
 
             // find Provider root. gather its leaf nodes. persist Providers.
 
-            logger.log(Level.FINE, "STEP: persist all ProviderDimension");
+            logger.log(Level.FINER, "STEP: persist all ProviderDimension");
             ProviderDimension.insertAll(this.ontologyModel.getProviders(), this.dataSchemaConnection);
             ProviderDimension.insertFacts(this.dataSchemaConnection);
 
             // flush hot concepts out of the tree. persist Concepts.
 
-            logger.log(Level.FINE, "STEP: persist all ConceptDimension");
+            logger.log(Level.FINER, "STEP: persist all ConceptDimension");
             ConceptDimension.insertAll(this.ontologyModel.getRoot(), this.dataSchemaConnection);
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
@@ -207,7 +211,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
     private void readConfiguration() throws ConfigurationReadException {
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.FINE, "STEP: read conf.xml");
+        logger.log(Level.FINER, "STEP: read conf.xml");
         this.configurationReader = new ConfigurationReader(this.confFile);
         this.configurationReader.read();
     }
@@ -292,7 +296,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     public Connection openDatabaseConnection(String schema) throws SQLException {
         DatabaseSection.DatabaseSpec db = this.configurationReader.getDatabaseSection().get(schema);
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, "STEP: connecting to: {0} as user {1}", new Object[]{db.connect, db.user});
+        logger.log(Level.FINE, "STEP: connecting to: {0} as user {1}", new Object[]{db.connect, db.user});
         return DriverManager.getConnection(db.connect, db.user, db.passwd);
     }
 
@@ -303,7 +307,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
         // persist entire tree.
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.FINE, "STEP: persist all metadata from ontology graph");
+        logger.log(Level.FINER, "STEP: persist all metadata from ontology graph");
         Connection cn = openDatabaseConnection("metaschema");
         try {
             persistOntologyIntoI2B2Batch(this.ontologyModel, cn);
@@ -354,7 +358,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         int batchNumber = 0;
         Logger logger = I2b2ETLUtil.logger();
         try {
-            logger.log(Level.INFO, "batch inserting on table {0}", tableName);
+            logger.log(Level.FINE, "batch inserting on table {0}", tableName);
             PreparedStatement ps;
             ps = cn.prepareStatement("insert into " + tableName + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             try {
@@ -402,7 +406,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                         plus += 8192;
                         logBatch(tableName, batchNumber);
                         ps.clearBatch();
-                        logger.log(Level.INFO, "loaded ontology {0}:{1}", new Object[]{plus, minus});
+                        logger.log(Level.FINE, "loaded ontology {0}:{1}", new Object[]{plus, minus});
                     }
                 }
                 batchNumber++;
@@ -421,7 +425,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             cn.close();
             cn = null;
             logBatch(tableName, batchNumber);
-            logger.log(Level.INFO, "TALLY_META_{0}_PM: {1}:{2}", new Object[]{tableName, plus, minus});
+            logger.log(Level.FINE, "TALLY_META_{0}_PM: {1}:{2}", new Object[]{tableName, plus, minus});
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Batch failed on OntologyTable " + tableName + ". I2B2 will not be correct.", e);
             throw e;
