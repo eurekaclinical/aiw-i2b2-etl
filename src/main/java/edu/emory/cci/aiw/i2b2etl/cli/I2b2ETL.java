@@ -1,6 +1,7 @@
 package edu.emory.cci.aiw.i2b2etl.cli;
 
 import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
+import java.io.File;
 import org.apache.commons.cli.CommandLine;
 import org.protempa.*;
 import org.protempa.cli.CLI;
@@ -43,7 +44,7 @@ public class I2b2ETL extends CLI {
     @Override
     public void execute(Protempa protempa, CommandLine commandLine)
             throws CLIException {
-        String confXML = commandLine.getArgs()[0];
+        File confXML = new File(commandLine.getArgs()[0]);
 
         try {
             DefaultQueryBuilder q = new DefaultQueryBuilder();
