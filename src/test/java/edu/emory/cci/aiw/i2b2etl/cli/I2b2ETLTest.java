@@ -5,19 +5,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.arp.javautil.io.IOUtil;
 import org.junit.*;
 import org.protempa.FinderException;
 import org.protempa.Protempa;
 import org.protempa.ProtempaStartupException;
-import org.protempa.SourceFactory;
 import org.protempa.backend.BackendProviderSpecLoaderException;
-import org.protempa.backend.Configurations;
 import org.protempa.backend.ConfigurationsLoadException;
 import org.protempa.backend.InvalidConfigurationException;
-import org.protempa.bconfigs.commons.INICommonsConfigurations;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
@@ -33,20 +27,6 @@ import org.protempa.query.handler.test.DatabasePopulator;
  * @author Andrew Post
  */
 public class I2b2ETLTest {
-
-    private static final String[] PROP_IDS = {
-        "Patient",
-        "PatientAll",
-        "Encounter",
-        "AttendingPhysician",
-        "LAB:LabTest",
-        "VitalSign",
-        "ICD9:Procedures",
-        "ICD9:Diagnoses",
-        "MED:medications",
-        "LAB:LabTest",
-        "CPTCode"
-    };
 
     /**
      * Executes the i2b2 ETL load.
@@ -64,24 +44,10 @@ public class I2b2ETLTest {
             BackendProviderSpecLoaderException, ConfigurationsLoadException, 
             InvalidConfigurationException {
         new DatabasePopulator().doPopulate();
-        
-        File config = IOUtil.resourceToFile("/protempa-config/i2b2etltest", 
-                "i2b2etltest", null);
-        Configurations configurations = 
-                new INICommonsConfigurations(config.getParentFile());
-        SourceFactory sourceFactory = 
-                new SourceFactory(configurations, config.getName());
-        
-        // force the use of the H2 driver so we don't bother trying to load
-        // others
-        System.setProperty("protempa.dsb.relationaldatabase.sqlgenerator",
-                "org.protempa.bp.commons.dsb.relationaldb.H2SQLGenerator");
-        
-        Protempa protempa = Protempa.newInstance(sourceFactory);
+        Protempa protempa = new ProtempaFactory().newInstance();
         try {
-            File confXML = IOUtil.resourceToFile("/conf.xml", "conf", null);
+            File confXML = new I2b2ETLConfAsFile().getFile();
             DefaultQueryBuilder q = new DefaultQueryBuilder();
-            q.setPropositionIds(PROP_IDS);
             Query query = protempa.buildQuery(q);
             QueryResultsHandler tdqrh = new I2B2QueryResultsHandler(confXML);
             protempa.execute(query, tdqrh);

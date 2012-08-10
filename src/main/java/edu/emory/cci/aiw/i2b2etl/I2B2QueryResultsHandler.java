@@ -3,6 +3,7 @@ package edu.emory.cci.aiw.i2b2etl;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
 import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.configuration.*;
+import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
@@ -18,14 +19,20 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang.ArrayUtils;
 
 
 import org.protempa.FinderException;
 import org.protempa.KnowledgeSource;
+import org.protempa.KnowledgeSourceReadException;
+import org.protempa.PropositionDefinition;
+import org.protempa.ReferenceDefinition;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
 import org.protempa.query.handler.QueryResultsHandler;
+import org.protempa.query.handler.QueryResultsHandlerInitException;
+import org.protempa.query.handler.QueryResultsHandlerProcessingException;
 import org.protempa.query.handler.table.Link;
 import org.protempa.query.handler.table.Reference;
 
@@ -38,6 +45,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     private static final long serialVersionUID = -1503401944818776787L;
     private static final String PROTEMPA_DEFAULT_CONFIG = "erat-diagnoses-direct";
     private final File confFile;
+    private final boolean inferPropositionIdsNeeded;
     private KnowledgeSource knowledgeSource;
     private ConfigurationReader configurationReader;
     private Metadata ontologyModel;
@@ -45,41 +53,65 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     private List<FactHandler> factHandlers;
 
     public I2B2QueryResultsHandler(File confXML) {
+        this(confXML, true);
+    }
+
+    public I2B2QueryResultsHandler(File confXML,
+            boolean inferPropositionIdsNeeded) {
         if (confXML == null) {
             throw new IllegalArgumentException("confXML cannot be null");
         }
-        
+
         String protempaConfig = System.getProperty("i2b2.protempa.config", PROTEMPA_DEFAULT_CONFIG);
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.FINE, String.format("Using protempa config: %s", protempaConfig));
         this.confFile = confXML;
         logger.log(Level.FINE, String.format("Using conf.xml: %s", this.confFile.getAbsolutePath()));
+        this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
     }
 
+    /**
+     * Sets the knowledge source and reads the configuration file.
+     *
+     * @param knowledgeSource the {@link KnowledgeSource}.
+     * @throws QueryResultsHandlerInitException if an error occurs reading the
+     * configuration file.
+     */
     @Override
-    public void init(KnowledgeSource knowledgeSource) throws FinderException {
+    public void init(KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.FINE, "handler init. interpret ontology.");
         this.knowledgeSource = knowledgeSource;
         try {
             readConfiguration();
+        } catch (ConfigurationReadException ex) {
+            throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
+        }
+    }
+
+    /**
+     * Builds most of the concept tree, truncates the data tables, opens a
+     * connection to the i2b2 project database, and does some other prep.
+     *
+     * @throws QueryResultsHandlerProcessingException
+     */
+    @Override
+    public void start() throws QueryResultsHandlerProcessingException {
+        try {
+
             mostlyBuildOntology();
             truncateDataTables();
             this.dataSchemaConnection = openDatabaseConnection("dataschema");
             assembleFactHandlers();
         } catch (InstantiationException ex) {
-            throw new FinderException(ex);
+            throw new QueryResultsHandlerProcessingException(ex);
         } catch (IllegalAccessException ex) {
-            throw new FinderException(ex);
-        } catch (ConfigurationReadException ex) {
-            throw new FinderException(ex);
+            throw new QueryResultsHandlerProcessingException(ex);
         } catch (OntologyBuildException ex) {
-            throw new FinderException(ex);
+            throw new QueryResultsHandlerProcessingException(ex);
         } catch (SQLException ex) {
-            throw new FinderException(ex);
+            throw new QueryResultsHandlerProcessingException(ex);
         }
-        
-        
     }
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException {
@@ -91,7 +123,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             } else {
                 links = null;
             }
-            FactHandler factHandler = new FactHandler(links, obx.propertyName, 
+            FactHandler factHandler = new FactHandler(links, obx.propertyName,
                     obx.start, obx.finish, obx.units, this.ontologyModel);
             this.factHandlers.add(factHandler);
         }
@@ -101,7 +133,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     public void handleQueryResult(String keyId, List<Proposition> propositions,
             Map<Proposition, List<Proposition>> forwardDerivations,
             Map<Proposition, List<Proposition>> backwardDerivations,
-            Map<UniqueId, Proposition> references) throws FinderException {
+            Map<UniqueId, Proposition> references) throws QueryResultsHandlerProcessingException {
         DictionarySection dictSection = this.configurationReader.getDictionarySection();
         String visitPropId = dictSection.get("visitDimension");
         try {
@@ -119,11 +151,11 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                             obxSection.get(dictSection.get("providerMiddleName"));
                     DataSpec providerLastNameSpec =
                             obxSection.get(dictSection.get("providerLastName"));
-                    
-                    ProviderDimension provider = 
-                            this.ontologyModel.addProviderIfNeeded(prop, 
+
+                    ProviderDimension provider =
+                            this.ontologyModel.addProviderIfNeeded(prop,
                             providerFullNameSpec.referenceName,
-                            providerFullNameSpec.propertyName, 
+                            providerFullNameSpec.propertyName,
                             providerFirstNameSpec.referenceName,
                             providerFirstNameSpec.propertyName,
                             providerMiddleNameSpec.referenceName,
@@ -138,7 +170,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                                 this.configurationReader.getDataSection(),
                                 references);
                     }
-                    VisitDimension vd = this.ontologyModel.addVisit(pd.getMRN(), 
+                    VisitDimension vd = this.ontologyModel.addVisit(pd.getMRN(),
                             (TemporalProposition) prop,
                             this.configurationReader.getDictionarySection(),
                             this.configurationReader.getDataSection(),
@@ -152,23 +184,23 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                 }
             }
         } catch (InvalidPatientRecordException ex) {
-            throw new FinderException("Load into i2b2 failed", ex);
+            throw new QueryResultsHandlerProcessingException("Load into i2b2 failed", ex);
         } catch (InvalidFactException ioe) {
-            throw new FinderException("Load into i2b2 failed", ioe);
+            throw new QueryResultsHandlerProcessingException("Load into i2b2 failed", ioe);
         }
     }
 
     @Override
-    public void finish() throws FinderException {
-        
+    public void finish() throws QueryResultsHandlerProcessingException {
+
         try {
             Logger logger = I2b2ETLUtil.logger();
             for (FactHandler factHandler : this.factHandlers) {
                 factHandler.clearOut(this.dataSchemaConnection);
             }
             this.ontologyModel.buildProviderHierarchy();
-            
-            
+
+
             // persist Patients & Visits.
 
             logger.log(Level.FINER, "STEP: persist all PatientDimension and VisitDimension");
@@ -190,11 +222,14 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             this.dataSchemaConnection = null;
             persistMetadata();
         } catch (OntologyBuildException ex) {
-            throw new FinderException("Load into i2b2 failed", ex);
+            throw new QueryResultsHandlerProcessingException(
+                    "Load into i2b2 failed", ex);
         } catch (InvalidConceptCodeException ex) {
-            throw new FinderException("Load into i2b2 failed", ex);
+            throw new QueryResultsHandlerProcessingException(
+                    "Load into i2b2 failed", ex);
         } catch (SQLException ex) {
-            throw new FinderException("Load into i2b2 failed", ex);
+            throw new QueryResultsHandlerProcessingException(
+                    "Load into i2b2 failed", ex);
         } finally {
             if (this.dataSchemaConnection != null) {
                 try {
@@ -206,7 +241,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     }
 
     @Override
-    public void validate(KnowledgeSource knowledgeSource) {
+    public void validate() {
     }
 
     private void readConfiguration() throws ConfigurationReadException {
@@ -217,10 +252,12 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     }
 
     private void mostlyBuildOntology() throws OntologyBuildException {
-        DictionarySection dictionarySection = this.configurationReader.getDictionarySection();
+        DictionarySection dictionarySection =
+                this.configurationReader.getDictionarySection();
         String rootNodeName = dictionarySection.get("rootNodeName");
         String obsFact = dictionarySection.get("observationFact");
-        boolean useBatchInsert = obsFact != null && obsFact.equals("batchInsert");
+        boolean useBatchInsert =
+                obsFact != null && obsFact.equals("batchInsert");
         this.ontologyModel = new Metadata(this.knowledgeSource,
                 rootNodeName,
                 useBatchInsert,
@@ -269,7 +306,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         }
     }
 
-    private void truncateTable(Connection conn, String tableName) throws SQLException {
+    private void truncateTable(Connection conn, String tableName)
+            throws SQLException {
         Logger logger = I2b2ETLUtil.logger();
         try {
             String query = "TRUNCATE TABLE " + tableName;
@@ -444,6 +482,48 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         if (logger.isLoggable(Level.FINEST)) {
             Object[] args = new Object[]{tableName, batchNumber};
             logger.log(Level.FINEST, "DB_{0}_BATCH={1}", args);
+        }
+    }
+
+    public String[] getPropositionIdsNeeded()
+            throws KnowledgeSourceReadException {
+        if (!this.inferPropositionIdsNeeded) {
+            return ArrayUtils.EMPTY_STRING_ARRAY;
+        } else {
+            Set<String> result = new HashSet<String>();
+
+            DictionarySection dictionarySection =
+                    this.configurationReader.getDictionarySection();
+            String visitPropId = dictionarySection.get("visitDimension");
+            result.add(visitPropId);
+            PropositionDefinition visitProp =
+                    this.knowledgeSource.readPropositionDefinition(visitPropId);
+
+            DataSection dataSection =
+                    this.configurationReader.getDataSection();
+            for (DataSpec dataSpec : dataSection.getAll()) {
+                if (dataSpec.referenceName != null) {
+                    ReferenceDefinition refDef =
+                            visitProp.referenceDefinition(dataSpec.referenceName);
+                    if (refDef == null) {
+                        throw new KnowledgeSourceReadException("missing reference "
+                                + dataSpec.referenceName
+                                + " for proposition definition "
+                                + visitPropId);
+                    }
+                    org.arp.javautil.arrays.Arrays.addAll(result,
+                            refDef.getPropositionIds());
+                }
+
+            }
+
+            ConceptsSection conceptsSection =
+                    this.configurationReader.getConceptsSection();
+            for (FolderSpec folderSpec : conceptsSection.getFolderSpecs()) {
+                result.add(folderSpec.proposition);
+            }
+
+            return result.toArray(new String[result.size()]);
         }
     }
 }

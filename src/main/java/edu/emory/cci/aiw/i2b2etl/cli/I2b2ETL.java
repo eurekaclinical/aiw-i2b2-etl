@@ -17,20 +17,6 @@ import org.protempa.query.handler.QueryResultsHandler;
  */
 public class I2b2ETL extends CLI {
 
-    private static final String[] PROP_IDS = {
-        "Patient",
-        "PatientAll",
-        "Encounter",
-        "AttendingPhysician",
-        "LaboratoryTest",
-        "VitalSign",
-        "ICD9:Procedures",
-        "ICD9:Diagnoses",
-        "MED:medications",
-        "LAB:LabTest",
-        "CPTCode"
-    };
-
     public static void main(String[] args) {
         I2b2ETL etl = new I2b2ETL();
         etl.processOptionsAndArgs(args);
@@ -48,7 +34,6 @@ public class I2b2ETL extends CLI {
 
         try {
             DefaultQueryBuilder q = new DefaultQueryBuilder();
-            q.setPropositionIds(PROP_IDS);
             Query query = protempa.buildQuery(q);
             QueryResultsHandler tdqrh = new I2B2QueryResultsHandler(confXML);
             protempa.execute(query, tdqrh);
