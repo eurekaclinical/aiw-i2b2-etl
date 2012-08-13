@@ -269,8 +269,8 @@ public final class FactHandler {
             ps = cn.prepareStatement("insert into OBSERVATION_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             inited = true;
         }
-        ps.setLong(1, obx.getVisit().getVisitId());
-        ps.setLong(2, obx.getPatient().getMRN());
+        ps.setLong(1, obx.getVisit().getEncounterNum());
+        ps.setLong(2, obx.getPatient().getPatientNum());
         ps.setString(3, obx.getConcept().getConceptCode());
         ps.setString(4, TableUtil.setStringAttribute(obx.getProvider().getId()));							//	seems coupled to 'reports'
         ps.setTimestamp(5, TableUtil.setTimestampAttribute(obx.getStartDate()));

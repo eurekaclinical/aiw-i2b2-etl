@@ -55,7 +55,8 @@ public class PatientDimension {
     //  "UPLOAD_ID"            NUMBER(38,0),
     //  CONSTRAINT "PATIENT_MAPPING_PK" PRIMARY KEY ("PATIENT_IDE", "PATIENT_IDE_SOURCE")
     //  )
-    private final Long mrn;
+    private final long patientNum;
+    private final String encryptedPatientId;
     private Integer ageInYears;
     private final String zip;
     private final String race;
@@ -67,22 +68,20 @@ public class PatientDimension {
     private final Date birthDate;
     private final Date deathDate;
     private final String sourceSystem;
+    private static final NumFactory NUM_FACTORY = new IncrNumFactory();
     private static final Logger logger = Logger.getLogger(PatientDimension.class.getName());
 
-    public PatientDimension(long mrn, String zipCode, Integer ageInYears,
+    public PatientDimension(String encryptedPatientId, String zipCode, 
+            Integer ageInYears,
             String gender, String language, String religion,
             java.util.Date birthDate, java.util.Date deathDate,
             String maritalStatus, String race, String sourceSystem) {
         //Required attributes
-        this.mrn = mrn;
+        this.patientNum = NUM_FACTORY.getInstance();
         this.zip = zipCode;
         this.birthDate = TableUtil.setDateAttribute(birthDate);
         this.deathDate = TableUtil.setDateAttribute(deathDate);
-        if (deathDate == null) {
-            this.vital = VitalStatusCode.LIVING;
-        } else {
-            this.vital = VitalStatusCode.DECEASED_ACCURATE_TO_DAY;
-        }
+        this.vital = VitalStatusCode.getInstance(deathDate);
         
         //Optional attributes
         this.ageInYears = ageInYears;
@@ -92,20 +91,30 @@ public class PatientDimension {
         this.language = language;
         this.religion = religion;
         this.sourceSystem = sourceSystem;
+        this.encryptedPatientId = encryptedPatientId;
     }
     
-    public long getMRN() {
-        return this.mrn;
+    public long getPatientNum() {
+        return this.patientNum;
+    }
+    
+    public String getEncryptedPatientId() {
+        return this.encryptedPatientId;
+    }
+    
+    public String getEncryptedPatientIdSourceSystem() {
+        return NUM_FACTORY.getSourceSystem();
     }
 
     public static void insertAll(Collection<PatientDimension> patients, Connection cn) throws SQLException {
         PreparedStatement ps = null;
+        PreparedStatement ps2 = null;
         try {
             ps = cn.prepareStatement("insert into PATIENT_DIMENSION values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps2 = cn.prepareStatement("insert into PATIENT_MAPPING values (?,?,?,?,?,?,?,?,?,?)");
             for (PatientDimension patient : patients) {
-
                 try {
-                    ps.setLong(1, patient.mrn);
+                    ps.setLong(1, patient.patientNum);
                     ps.setString(2, patient.vital.getCode());
                     ps.setDate(3, patient.birthDate);
                     ps.setDate(4, patient.deathDate);
@@ -123,21 +132,42 @@ public class PatientDimension {
                     ps.setTimestamp(16, new java.sql.Timestamp(System.currentTimeMillis()));
                     ps.setString(17, patient.sourceSystem);
                     ps.setObject(18, null);
-
                     ps.execute();
+                    
+                    ps2.setString(1, patient.encryptedPatientId);
+                    ps2.setString(2, NUM_FACTORY.getSourceSystem());
+                    ps2.setLong(3, patient.patientNum);
+                    ps2.setString(4, null);
+                    ps2.setDate(5, null);
+                    ps2.setDate(6, null);
+                    ps2.setDate(7, null);
+                    ps2.setTimestamp(8, new java.sql.Timestamp(System.currentTimeMillis()));
+                    ps2.setString(9, patient.sourceSystem);
+                    ps2.setNull(10, Types.NUMERIC);
+                    ps2.execute();
+                    
                     logger.log(Level.FINEST, "DB_PD_INSERT {0}", patient);
                 } catch (SQLException e) {
                     logger.log(Level.SEVERE, "DB_PD_INSERT_FAIL {0}", patient);
                     throw e;
                 }
                 ps.clearParameters();
+                ps2.clearParameters();
             }
             ps.close();
             ps = null;
+            ps2.close();
+            ps2 = null;
         } finally {
             if (ps != null) {
                 try {
                     ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (ps2 != null) {
+                try {
+                    ps2.close();
                 } catch (SQLException e) {
                 }
             }

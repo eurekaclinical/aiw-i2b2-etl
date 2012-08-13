@@ -320,7 +320,6 @@ public final class Metadata {
             Value val = prop.getProperty(dataSpec.propertyName);
             if (val != null) {
                 String patientId = val.getFormatted();
-                long mrn = Long.parseLong(patientId);
                 PatientDimension patientDimension = this.patientCache.get(keyId);
                 if (patientDimension == null) {
                     Value zipCode = getField(dictSection, obxSection,
@@ -359,7 +358,7 @@ public final class Metadata {
                         birthdate = null;
                     }
 
-                    patientDimension = new PatientDimension(mrn,
+                    patientDimension = new PatientDimension(keyId,
                             zipCode != null ? zipCode.getFormatted() : null,
                             ageInYearsStr != null ? Integer.valueOf(ageInYearsStr.getFormatted()) : null,
                             gender != null ? gender.getFormatted() : null,
@@ -383,22 +382,25 @@ public final class Metadata {
         return null;
     }
 
-    public VisitDimension addVisit(long mrn, TemporalProposition encounterProp,
-            DictionarySection dictSection,
+    public VisitDimension addVisit(long patientNum, String encryptedPatientId,
+            String encryptedPatientIdSourceSystem,
+            TemporalProposition encounterProp, DictionarySection dictSection,
             DataSection obxSection,
             Map<UniqueId, Proposition> references) {
         java.util.Date visitStartDate = AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinStart());
         java.util.Date visitEndDate = AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinFinish());
-        Value decipheredId = getField(dictSection, obxSection, "visitDimensionDecipheredId", encounterProp, references);
-        String decipheredIdStr;
-        if (decipheredId != null) {
-            decipheredIdStr = decipheredId.getFormatted();
+        Value encryptedId = getField(dictSection, obxSection, "visitDimensionDecipheredId", encounterProp, references);
+        String encryptedIdStr;
+        if (encryptedId != null) {
+            encryptedIdStr = encryptedId.getFormatted();
         } else {
-            decipheredIdStr = null;
+            encryptedIdStr = null;
         }
-        VisitDimension vd = new VisitDimension(mrn, visitStartDate, visitEndDate,
-                decipheredIdStr);
-        visitCache.put(vd.getVisitId(), vd);
+        VisitDimension vd = new VisitDimension(patientNum, encryptedPatientId,
+                visitStartDate, visitEndDate, encryptedIdStr, 
+                encounterProp.getDataSourceType().getStringRepresentation(),
+                encryptedPatientIdSourceSystem);
+        visitCache.put(vd.getEncounterNum(), vd);
         return vd;
     }
 

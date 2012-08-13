@@ -30,6 +30,19 @@ public final class TableUtil {
         return TableUtil.LazyLoggerHolder.instance;
     }
     
+    public static String setStringAttribute(String attribute, int maxLength) {
+        if (maxLength < 1) {
+            throw new IllegalArgumentException("maxLength cannot be < 1");
+        }
+        if (attribute == null || attribute.length() == 0) {
+            return "@";
+        } else if (attribute.length() > maxLength) {
+            return attribute.substring(0, maxLength);
+        } else {
+            return attribute;
+        }
+    }
+    
     public static String setStringAttribute(String attribute) {
         if (attribute == null || attribute.length() == 0) {
             return "@";
@@ -51,6 +64,20 @@ public final class TableUtil {
             return null;
         } else {
             return new java.sql.Timestamp(date.getTime());
+        }
+    }
+    
+    public static String setNullableStringAttribute(String attribute,
+            int maxLength) {
+        if (maxLength < 1) {
+            throw new IllegalArgumentException("maxLength cannot be < 1");
+        }
+        if (attribute == null) {
+            return null;
+        } else if (attribute.length() > maxLength) {
+            return attribute.substring(0, maxLength);
+        } else {
+            return attribute;
         }
     }
 }

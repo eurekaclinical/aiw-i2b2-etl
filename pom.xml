@@ -258,6 +258,13 @@
                             <include>conf.xml</include>
                         </includes>
                     </testResource>
+                    <testResource>
+                        <directory>src/test/resources</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>get-proposition-ids-needed-test-file</include>
+                        </includes>
+                    </testResource>
                 </testResources>
                 <plugins>
                     <plugin>

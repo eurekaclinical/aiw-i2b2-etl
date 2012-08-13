@@ -170,7 +170,9 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                                 this.configurationReader.getDataSection(),
                                 references);
                     }
-                    VisitDimension vd = this.ontologyModel.addVisit(pd.getMRN(),
+                    VisitDimension vd = this.ontologyModel.addVisit(
+                            pd.getPatientNum(), pd.getEncryptedPatientId(),
+                            pd.getEncryptedPatientIdSourceSystem(),
                             (TemporalProposition) prop,
                             this.configurationReader.getDictionarySection(),
                             this.configurationReader.getDataSection(),
@@ -272,7 +274,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         String truncateTables = this.configurationReader.getDictionarySection().get("truncateTables");
         if (truncateTables == null || truncateTables.equalsIgnoreCase("true")) {
             // To do: table names should be parameterized in conf.xml and related to other data
-            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PROVIDER_DIMENSION", "VISIT_DIMENSION"};
+            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING"};
 
             Connection conn = openDatabaseConnection("dataschema");
             try {

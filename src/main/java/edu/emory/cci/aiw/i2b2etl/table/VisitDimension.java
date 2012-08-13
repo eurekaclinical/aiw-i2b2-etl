@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,66 +33,104 @@ public class VisitDimension {
     // 		"UPLOAD_ID"			NUMBER(38,0), 
     // 		 CONSTRAINT "VISIT_DIMENSION_PK" PRIMARY KEY ("ENCOUNTER_NUM", "PATIENT_NUM") ENABLE
     // 	    )
-    private final Long visitId;
-    private final String decipheredVisitId;
-    private final long mrn;
+    private final Long encounterNum;
+    private final String encryptedVisitId;
+    private final long patientNum;
     private final Date startDate;
     private final Date endDate;
+    private final String visitSourceSystem;
+    private final String encryptedPatientIdSourceSystem;
+    private final ActiveStatusCode activeStatus;
+    private final String encryptedPatientId;
     private static final Logger logger = Logger.getLogger(VisitDimension.class.getName());
-    private static long VISIT_ID = 0;
+    private static final NumFactory NUM_FACTORY = new IncrNumFactory();
 
-    public VisitDimension(long mrn,
+    public VisitDimension(long patientNum, String encryptedPatientId,
             java.util.Date startDate, java.util.Date endDate,
-            String decipheredVisitId) {
-        this.visitId = VISIT_ID++;
-        this.decipheredVisitId = TableUtil.setStringAttribute(decipheredVisitId);
-        this.mrn = mrn;
+            String encryptedVisitId, String visitSourceSystem,
+            String encryptedPatientIdSourceSystem) {
+        this.encounterNum = NUM_FACTORY.getInstance();
+        this.encryptedVisitId = TableUtil.setStringAttribute(encryptedVisitId);
+        this.patientNum = patientNum;
+        this.encryptedPatientId = TableUtil.setStringAttribute(encryptedPatientId);
         this.startDate = TableUtil.setDateAttribute(startDate);
         this.endDate = TableUtil.setDateAttribute(endDate);
+        this.visitSourceSystem = visitSourceSystem;
+        this.encryptedPatientIdSourceSystem = encryptedPatientIdSourceSystem;
+        this.activeStatus = ActiveStatusCode.getInstance(true, startDate, endDate);
+    }
+
+    public long getEncounterNum() {
+        return this.encounterNum;
     }
     
-    public long getVisitId() {
-        return this.visitId;
+    public String getEncryptedVisitIdSourceSystem() {
+        return NUM_FACTORY.getSourceSystem();
     }
 
     public static void insertAll(Collection<VisitDimension> visits, Connection cn) throws SQLException {
 
         PreparedStatement ps = null;
+        PreparedStatement ps2 = null;
         try {
 
             ps = cn.prepareStatement("insert into VISIT_DIMENSION values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps2 = cn.prepareStatement("insert into ENCOUNTER_MAPPING values (?,?,?,?,?,?,?,?,?,?,?,?)");
+            
             for (VisitDimension visit : visits) {
-
                 try {
-
-                    ps.setLong(1, visit.visitId);
-                    ps.setLong(2, visit.mrn);
-                    ps.setString(3, null);
+                    ps.setLong(1, visit.encounterNum);
+                    ps.setLong(2, visit.patientNum);
+                    ps.setString(3, visit.activeStatus.getCode());
                     ps.setDate(4, visit.startDate);
                     ps.setDate(5, visit.endDate);
                     ps.setString(6, null);
                     ps.setString(7, null);
                     ps.setString(8, null);
-                    ps.setObject(9, "deciphered encounterID=" + visit.decipheredVisitId);
+                    ps.setObject(9, null);
                     ps.setDate(10, null);
                     ps.setDate(11, null);
-                    ps.setDate(12, new java.sql.Date(System.currentTimeMillis()));
-                    ps.setString(13, null);
+                    ps.setTimestamp(12, new java.sql.Timestamp(System.currentTimeMillis()));
+                    ps.setString(13, visit.visitSourceSystem);
                     ps.setObject(14, null);
-
                     ps.execute();
+                    
+                    ps2.setString(1, visit.encryptedVisitId);
+                    ps2.setString(2, NUM_FACTORY.getSourceSystem());
+                    ps2.setLong(3, visit.encounterNum);
+                    ps2.setString(4, visit.encryptedPatientId);
+                    ps2.setString(5, visit.encryptedPatientIdSourceSystem);
+                    ps2.setString(6, null);
+                    ps2.setDate(7, null);
+                    ps2.setDate(8, null);
+                    ps2.setDate(9, null);
+                    ps2.setTimestamp(10, new java.sql.Timestamp(System.currentTimeMillis()));
+                    ps2.setString(11, visit.visitSourceSystem);
+                    ps2.setNull(12, Types.NUMERIC);
+                    ps2.execute();
+                    
                     logger.log(Level.FINEST, "DB_VD_INSERT {0}", visit);
                 } catch (SQLException e) {
                     logger.log(Level.SEVERE, "DB_VD_INSERT_FAIL {0}", visit);
+                    throw e;
                 }
                 ps.clearParameters();
+                ps2.clearParameters();
             }
             ps.close();
             ps = null;
+            ps2.close();
+            ps2 = null;
         } finally {
             if (ps != null) {
                 try {
                     ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (ps2 != null) {
+                try {
+                    ps2.close();
                 } catch (SQLException e) {
                 }
             }
