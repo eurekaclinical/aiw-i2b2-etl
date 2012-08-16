@@ -1,4 +1,4 @@
-package edu.emory.cci.aiw.i2b2etl.cli;
+package edu.emory.cci.aiw.i2b2etl;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +16,8 @@ import org.protempa.bconfigs.commons.INICommonsConfigurations;
  *
  * @author Andrew Post
  */
-class ProtempaFactory {
-    Protempa newInstance() throws IOException, 
+public class ProtempaFactory {
+    public Protempa newInstance() throws IOException, 
             BackendProviderSpecLoaderException, ConfigurationsLoadException, 
             InvalidConfigurationException, ProtempaStartupException {
         File config = IOUtil.resourceToFile(

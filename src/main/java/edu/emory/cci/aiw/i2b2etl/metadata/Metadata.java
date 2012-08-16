@@ -69,7 +69,6 @@ import org.protempa.proposition.value.Value;
 public final class Metadata {
 
     private final Concept rootConcept;
-    private final boolean useBatchObxInsert;
     private final Map<ConceptId, Concept> CACHE =
             new HashMap<ConceptId, Concept>();
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap();
@@ -84,7 +83,7 @@ public final class Metadata {
     private final DictionarySection dictSection;
 
     public Metadata(KnowledgeSource knowledgeSource,
-            String rootNodeDisplayName, boolean useBatchObxInsert,
+            String rootNodeDisplayName,
             FolderSpec[] folderSpecs,
             DictionarySection dictSection,
             DataSection dataSection) throws OntologyBuildException {
@@ -102,7 +101,10 @@ public final class Metadata {
             throw new OntologyBuildException("Could not build ontology", ex);
         }
         this.rootConcept.setDisplayName(rootNodeDisplayName);
-        this.useBatchObxInsert = useBatchObxInsert;
+        this.rootConcept.setDataType(DataType.TEXT);
+        this.rootConcept.setSourceSystemCode(
+                MetadataUtil.toSourceSystemCode(
+                I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
         this.providers = new HashMap<String, ProviderDimension>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
@@ -187,10 +189,6 @@ public final class Metadata {
 
     public Collection<VisitDimension> getVisits() {
         return visitCache.values();
-    }
-
-    public boolean isUseBatchObxInsert() {
-        return useBatchObxInsert;
     }
 
     public ProviderDimension addProviderIfNeeded(Proposition encounterProp,
@@ -360,7 +358,7 @@ public final class Metadata {
 
                     patientDimension = new PatientDimension(keyId,
                             zipCode != null ? zipCode.getFormatted() : null,
-                            ageInYearsStr != null ? Integer.valueOf(ageInYearsStr.getFormatted()) : null,
+                            ageInYearsStr != null ? Integer.valueOf(ageInYearsStr.getFormatted()) : Integer.valueOf(-1),
                             gender != null ? gender.getFormatted() : null,
                             language != null ? language.getFormatted() : null,
                             religion != null ? religion.getFormatted() : null,
@@ -444,7 +442,8 @@ public final class Metadata {
         if (propId == null) {
             throw new IllegalArgumentException("propId cannot be null");
         }
-        return this.CACHE.get(ConceptId.getInstance(propId, propertyName, value, this));
+        return this.CACHE.get(
+                ConceptId.getInstance(propId, propertyName, value, this));
     }
 
     public void addToIdCache(Concept concept) {
@@ -471,16 +470,31 @@ public final class Metadata {
         return this.conceptCodeCache.contains(conceptCode);
     }
 
-    private void constructTreePre(FolderSpec[] folderSpecs) throws IOException, SQLException, KnowledgeSourceReadException, UnknownPropositionDefinitionException, InvalidConceptCodeException, OntologyBuildException, InvalidPromoteArgumentException {
+    private void constructTreePre(FolderSpec[] folderSpecs) 
+            throws IOException, SQLException, KnowledgeSourceReadException, 
+            UnknownPropositionDefinitionException, InvalidConceptCodeException, 
+            OntologyBuildException, InvalidPromoteArgumentException {
         for (FolderSpec folderSpec : folderSpecs) {
-            Concept concept = new Concept(ConceptId.getInstance(folderSpec.displayName, this), folderSpec.conceptCodePrefix, this);
-            concept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+            ConceptId conceptId = 
+                    ConceptId.getInstance(folderSpec.displayName, this);
+            Concept concept = 
+                    new Concept(conceptId, folderSpec.conceptCodePrefix, this);
+            concept.setSourceSystemCode(
+                    MetadataUtil.toSourceSystemCode(
+                    I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
             concept.setDisplayName(folderSpec.displayName);
+            concept.setDataType(DataType.TEXT);
             if (folderSpec.property == null) {
-                PropositionConceptTreeBuilder propProxy = new PropositionConceptTreeBuilder(this.knowledgeSource, folderSpec.proposition, folderSpec.conceptCodePrefix, this);
+                PropositionConceptTreeBuilder propProxy = 
+                        new PropositionConceptTreeBuilder(this.knowledgeSource, 
+                        folderSpec.proposition, folderSpec.conceptCodePrefix, 
+                        folderSpec.valueType, this);
                 concept.add(propProxy.build());
             } else {
-                ValueSetConceptTreeBuilder vsProxy = new ValueSetConceptTreeBuilder(this.knowledgeSource, folderSpec.proposition, folderSpec.property, folderSpec.conceptCodePrefix, this);
+                ValueSetConceptTreeBuilder vsProxy = 
+                        new ValueSetConceptTreeBuilder(this.knowledgeSource, 
+                        folderSpec.proposition, folderSpec.property, 
+                        folderSpec.conceptCodePrefix, this);
                 concept.add(vsProxy.build());
             }
             promote(concept, folderSpec.skipGen);

@@ -1,12 +1,12 @@
 package edu.emory.cci.aiw.i2b2etl.cli;
 
+import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
 import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.commons.lang.ArrayUtils;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.io.WithBufferedReaderByLine;
 import org.junit.AfterClass;
@@ -16,10 +16,6 @@ import org.junit.Test;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.Protempa;
-import org.protempa.ProtempaStartupException;
-import org.protempa.backend.BackendProviderSpecLoaderException;
-import org.protempa.backend.ConfigurationsLoadException;
-import org.protempa.backend.InvalidConfigurationException;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 
 /**
@@ -33,9 +29,7 @@ public class GetPropositionIdsNeededTest {
     private static Set<String> expectedPropIds;
 
     @BeforeClass
-    public static void setUp() throws IOException,
-            BackendProviderSpecLoaderException, ConfigurationsLoadException,
-            InvalidConfigurationException, ProtempaStartupException {
+    public static void setUp() throws Exception {
         protempa = new ProtempaFactory().newInstance();
         confXML = new I2b2ETLConfAsFile().getFile();
         expectedPropIds = expectedPropIds();

@@ -24,6 +24,8 @@ public class UserObject {
     private boolean inDataSource;
     private String conceptCode;		//	concept_dimension.concept_cd   &&   ontology.c_basecode
     private String conceptPath;		//	concept_dimension.concept_path
+    private DataType dataType;
+    private ValueTypeCode valueTypeCode;
     //	ontology.c_fullname
     //		AND
     //	ontology.c_dimcode
@@ -34,6 +36,7 @@ public class UserObject {
     //	ICD9:123.4
     //	
     private String sourceSystemId;
+    private boolean derived;
     private boolean inUse;
 
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
@@ -41,7 +44,7 @@ public class UserObject {
         this.id = id;
         this.concept = concept;
         if (conceptCodePrefix != null) {
-            OverriddenConceptCodeBuilder ccBuilder = 
+            OverriddenConceptCodeBuilder ccBuilder =
                     new OverriddenConceptCodeBuilder(metadata);
             ccBuilder.setId(conceptCodePrefix);
             ccBuilder.setValue(id.getValue());
@@ -49,6 +52,7 @@ public class UserObject {
         } else {
             this.conceptCode = id.toConceptCode();
         }
+        this.valueTypeCode = ValueTypeCode.UNSPECIFIED;
     }
 
     public ConceptId getId() {
@@ -95,17 +99,52 @@ public class UserObject {
         sourceSystemId = CodeUtil.truncateCodeStringIfNeeded(sourceSystemId);
         this.sourceSystemId = sourceSystemId;
     }
-
+    
     public boolean isInUse() {
         return this.inUse;
     }
-
+    
     public void setInUse(boolean inUse) {
         this.inUse = inUse;
     }
 
+    public boolean isDerived() {
+        return this.derived;
+    }
+
+    public void setDerived(boolean derived) {
+        this.derived = derived;
+    }
+
     public Concept getParent() {
         return (Concept) this.concept.getParent();
+    }
+
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
+    }
+
+    public DataType getDataType() {
+        return this.dataType;
+    }
+
+    public void setValueTypeCode(ValueTypeCode valueTypeCode) {
+        if (valueTypeCode == null) {
+            valueTypeCode = ValueTypeCode.UNSPECIFIED;
+        }
+        this.valueTypeCode = valueTypeCode;
+    }
+
+    public ValueTypeCode getValueTypeCode() {
+        return this.valueTypeCode;
+    }
+
+    public ConceptOperator getOperator() {
+        if (isInDataSource() || isDerived()) {
+            return ConceptOperator.EQUAL;
+        } else {
+            return ConceptOperator.LIKE;
+        }
     }
 
     @Override

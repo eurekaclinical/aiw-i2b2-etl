@@ -1,5 +1,6 @@
 package edu.emory.cci.aiw.i2b2etl.cli;
 
+import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
 import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
 import java.io.File;
 import java.io.IOException;

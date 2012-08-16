@@ -7,16 +7,20 @@ import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.proposition.*;
 import org.protempa.proposition.value.*;
+import org.protempa.query.handler.table.Derivation;
 import org.protempa.query.handler.table.Link;
 import org.protempa.query.handler.table.LinkTraverser;
 
@@ -31,27 +35,36 @@ public final class FactHandler {
     private int batchNumber = 0;
     private long ctr = 0L;
     private int idx = 0;
-    private boolean useBatch = true;
-    private Metadata ontologyModel;
+    private Metadata metadata;
     private PreparedStatement ps;
     private final String startConfig;
     private final String finishConfig;
     private final String unitsPropertyName;
+    private final Link[] derivationLinks;
+    private Timestamp importTimestamp;
 
-    public FactHandler(Link[] links, String propertyName, String start, 
+    public FactHandler(Link[] links, String propertyName, String start,
             String finish, String unitsPropertyName,
-            Metadata ontologyModel) {
-        if (ontologyModel == null) {
-            throw new IllegalArgumentException("ontologyModel cannot be null");
+            String[] potentialDerivedPropIds, Metadata metadata) {
+        if (metadata == null) {
+            throw new IllegalArgumentException("metadata cannot be null");
         }
-        this.ontologyModel = ontologyModel;
-        useBatch = ontologyModel.isUseBatchObxInsert();
+        this.metadata = metadata;
         this.linkTraverser = new LinkTraverser();
         this.links = links;
         this.propertyName = propertyName;
         this.startConfig = start;
         this.finishConfig = finish;
         this.unitsPropertyName = unitsPropertyName;
+        if (potentialDerivedPropIds == null) {
+            potentialDerivedPropIds = new String[0];
+        } else {
+            potentialDerivedPropIds = potentialDerivedPropIds.clone();
+        }
+        this.derivationLinks = new Link[]{
+            new Derivation(potentialDerivedPropIds,
+            Derivation.Behavior.MULT_FORWARD)
+        };
     }
 
     public void handleRecord(PatientDimension patient, VisitDimension visit,
@@ -60,7 +73,9 @@ public final class FactHandler {
             Map<Proposition, List<Proposition>> forwardDerivations,
             Map<Proposition, List<Proposition>> backwardDerivations,
             Map<UniqueId, Proposition> references,
-            KnowledgeSource knowledgeSource, Connection cn) throws InvalidFactException {
+            KnowledgeSource knowledgeSource,
+            Set<Proposition> derivedPropositions, Connection cn)
+            throws InvalidFactException {
         assert patient != null : "patient cannot be null";
         assert visit != null : "visit cannot be null";
         assert provider != null : "provider cannot be null";
@@ -73,32 +88,49 @@ public final class FactHandler {
             throw new InvalidFactException(ex);
         }
 
-        Logger logger = TableUtil.logger();
         for (Proposition prop : props) {
-            Value propertyVal = this.propertyName != null ? prop.getProperty(this.propertyName) : null;
+            Value propertyVal = this.propertyName != null
+                    ? prop.getProperty(this.propertyName) : null;
             Concept concept =
-                    this.ontologyModel.getFromIdCache(prop.getId(),
+                    this.metadata.getFromIdCache(prop.getId(),
                     this.propertyName, propertyVal);
             if (concept != null) {
-                Date start = handleStartDate(prop, encounterProp, propertyVal);
-
-                Date finish = handleFinishDate(prop, encounterProp, propertyVal);
-
-                Value value = handleValue(prop);
-
-                String observationBlob = null;
-                
-                ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE;
-                
-                String units = handleUnits(prop);
-
-                ObservationFact obx = new ObservationFact(start, finish, patient,
-                        visit, provider, concept, value, valueFlagCode, observationBlob,
-                        concept.getDisplayName(), units,
-                        prop.getDataSourceType().getStringRepresentation());
-                concept.setInUse(true);
+                ObservationFact obx = createObservationFact(prop,
+                        encounterProp, patient, visit, provider, concept);
                 try {
                     insert(obx, cn);
+
+                    List<Proposition> derivedProps;
+                    try {
+                        derivedProps = this.linkTraverser.traverseLinks(
+                                this.derivationLinks, prop, forwardDerivations,
+                                backwardDerivations, references,
+                                knowledgeSource);
+                    } catch (KnowledgeSourceReadException ex) {
+                        throw new InvalidFactException(ex);
+                    }
+                    for (Proposition derivedProp :
+                            new HashSet<Proposition>(derivedProps)) {
+                        if (derivedPropositions.add(derivedProp)) {
+                            Concept derivedConcept =
+                                    this.metadata.getFromIdCache(derivedProp.getId(),
+                                    null, null);
+                            if (derivedConcept != null) {
+                                ObservationFact derivedObx = createObservationFact(
+                                        derivedProp, encounterProp, patient, visit,
+                                        provider, derivedConcept);
+                                try {
+                                    insert(derivedObx, cn);
+                                } catch (SQLException sqle) {
+                                    String msg = "Observation fact not created for " + prop.getId();
+                                    throw new InvalidFactException(msg, sqle);
+                                } catch (InvalidConceptCodeException ex) {
+                                    String msg = "Observation fact not created for " + prop.getId();
+                                    throw new InvalidFactException(msg, ex);
+                                }
+                            }
+                        }
+                    }
                 } catch (SQLException ex) {
                     String msg = "Observation fact not created for " + prop.getId() + "." + this.propertyName + "=" + propertyVal;
                     throw new InvalidFactException(msg, ex);
@@ -106,12 +138,10 @@ public final class FactHandler {
                     String msg = "Observation fact not created for " + prop.getId() + "." + this.propertyName + "=" + propertyVal;
                     throw new InvalidFactException(msg, ex);
                 }
-            } else {
-                logger.log(Level.FINE, "Discarded fact " + prop.getId() + "." + this.propertyName + "=" + propertyVal);
             }
         }
     }
-    
+
     private String handleUnits(Proposition prop) {
         String value;
         if (this.unitsPropertyName != null) {
@@ -184,9 +214,6 @@ public final class FactHandler {
     public void clearOut(Connection cn) throws SQLException {
         Logger logger = TableUtil.logger();
         try {
-            if (!useBatch) {
-                return;
-            }
             if (ps != null) {
                 batchNumber++;
                 ps.executeBatch();
@@ -207,14 +234,6 @@ public final class FactHandler {
     }
 
     private void insert(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
-        if (useBatch) {
-            insertBatch(obx, cn);
-        } else {
-            insertNoBatch(obx, cn);
-        }
-    }
-
-    private void insertBatch(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
         Logger logger = TableUtil.logger();
         try {
             setParameters(cn, obx);
@@ -222,6 +241,8 @@ public final class FactHandler {
             ps.addBatch();
 
             if ((++idx % 8192) == 0) {
+                this.importTimestamp =
+                        new Timestamp(System.currentTimeMillis());
                 batchNumber++;
                 ps.executeBatch();
                 logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
@@ -235,27 +256,6 @@ public final class FactHandler {
             logger.log(Level.FINEST, "DB_OBX_BATCH_FAIL={0}", batchNumber);
             logger.log(Level.SEVERE, "Batch failed on ObservationFact. I2B2 will not be correct.", e);
             logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
-            try {
-                ps.close();
-            } catch (SQLException sqle) {
-            }
-            throw e;
-        }
-    }
-
-    private void insertNoBatch(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
-        Logger logger = TableUtil.logger();
-        try {
-            setParameters(cn, obx);
-
-            ps.execute();
-            plus++;
-            logger.log(Level.FINEST, "DB_OBX_INSERT");
-            ps.clearParameters();
-            logger.log(Level.FINEST, "loaded obx {0}:{1}", new Object[]{plus, minus});
-        } catch (SQLException e) {
-            logger.log(Level.FINEST, "DB_OBX_INSERT_FAIL");
-            logger.log(Level.SEVERE, "Insert failed on ObservationFact. I2B2 will not be correct.", e);
             try {
                 ps.close();
             } catch (SQLException sqle) {
@@ -307,7 +307,10 @@ public final class FactHandler {
         ps.setObject(17, obx.getObservationBlob());
         ps.setTimestamp(18, null);
         ps.setTimestamp(19, null);
-        ps.setTimestamp(20, new java.sql.Timestamp(System.currentTimeMillis()));
+        if (this.importTimestamp == null) {
+            this.importTimestamp = new Timestamp(System.currentTimeMillis());
+        }
+        ps.setTimestamp(20, this.importTimestamp);
         ps.setString(21, obx.getSourceSystem());
         ps.setObject(22, null);
     }
@@ -315,5 +318,25 @@ public final class FactHandler {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+
+    private ObservationFact createObservationFact(Proposition prop,
+            Proposition encounterProp, PatientDimension patient,
+            VisitDimension visit, ProviderDimension provider, Concept concept)
+            throws InvalidFactException {
+        Date start = handleStartDate(prop, encounterProp, null);
+        Date finish = handleFinishDate(prop, encounterProp, null);
+        Value value = handleValue(prop);
+        ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
+        String units = handleUnits(prop);
+        ObservationFact derivedObx = new ObservationFact(
+                start, finish, patient,
+                visit, provider, concept,
+                value, valueFlagCode,
+                null, concept.getDisplayName(),
+                units,
+                prop.getDataSourceType().getStringRepresentation());
+        concept.setInUse(true);
+        return derivedObx;
     }
 }

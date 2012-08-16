@@ -1,10 +1,12 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
+import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -63,20 +65,22 @@ public class VisitDimension {
     public long getEncounterNum() {
         return this.encounterNum;
     }
-    
+
     public String getEncryptedVisitIdSourceSystem() {
         return NUM_FACTORY.getSourceSystem();
     }
 
     public static void insertAll(Collection<VisitDimension> visits, Connection cn) throws SQLException {
-
+        int batchSize = 1000;
+        int counter = 0;
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
         try {
-
+            Timestamp importTimestamp =
+                    new Timestamp(System.currentTimeMillis());
             ps = cn.prepareStatement("insert into VISIT_DIMENSION values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             ps2 = cn.prepareStatement("insert into ENCOUNTER_MAPPING values (?,?,?,?,?,?,?,?,?,?,?,?)");
-            
+
             for (VisitDimension visit : visits) {
                 try {
                     ps.setLong(1, visit.encounterNum);
@@ -90,32 +94,49 @@ public class VisitDimension {
                     ps.setObject(9, null);
                     ps.setDate(10, null);
                     ps.setDate(11, null);
-                    ps.setTimestamp(12, new java.sql.Timestamp(System.currentTimeMillis()));
-                    ps.setString(13, visit.visitSourceSystem);
+                    ps.setTimestamp(12, importTimestamp);
+                    ps.setString(13, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
                     ps.setObject(14, null);
-                    ps.execute();
-                    
+                    ps.addBatch();
+                    ps.clearParameters();
+
                     ps2.setString(1, visit.encryptedVisitId);
-                    ps2.setString(2, NUM_FACTORY.getSourceSystem());
+                    ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
                     ps2.setLong(3, visit.encounterNum);
                     ps2.setString(4, visit.encryptedPatientId);
-                    ps2.setString(5, visit.encryptedPatientIdSourceSystem);
+                    ps2.setString(5, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
                     ps2.setString(6, null);
                     ps2.setDate(7, null);
                     ps2.setDate(8, null);
                     ps2.setDate(9, null);
-                    ps2.setTimestamp(10, new java.sql.Timestamp(System.currentTimeMillis()));
-                    ps2.setString(11, visit.visitSourceSystem);
+                    ps2.setTimestamp(10, importTimestamp);
+                    ps2.setString(11, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
                     ps2.setNull(12, Types.NUMERIC);
-                    ps2.execute();
+                    ps2.addBatch();
+                    ps2.clearParameters();
+                    counter++;
                     
+                    if (counter >= batchSize) {
+                        importTimestamp = 
+                                new Timestamp(System.currentTimeMillis());
+                        ps.executeBatch();
+                        ps.clearBatch();
+                        ps2.executeBatch();
+                        ps2.clearBatch();
+                        counter = 0;
+                    }
+
                     logger.log(Level.FINEST, "DB_VD_INSERT {0}", visit);
                 } catch (SQLException e) {
                     logger.log(Level.SEVERE, "DB_VD_INSERT_FAIL {0}", visit);
                     throw e;
                 }
-                ps.clearParameters();
-                ps2.clearParameters();
+            }
+            if (counter > 0) {
+                ps.executeBatch();
+                ps.clearBatch();
+                ps2.executeBatch();
+                ps2.clearBatch();
             }
             ps.close();
             ps = null;

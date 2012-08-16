@@ -7,7 +7,7 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * @author Andrew Post
  */
 enum ValueFlagCode {
-    NO_VALUE("@"),
+    NO_VALUE_FLAG("@"),
     ABNORMAL("A"),
     HIGH("H"),
     LOW("L"),

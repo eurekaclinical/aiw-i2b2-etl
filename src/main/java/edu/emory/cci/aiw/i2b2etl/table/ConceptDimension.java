@@ -6,6 +6,7 @@ import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,6 +47,8 @@ public class ConceptDimension {
             ps = cn.prepareStatement("insert into CONCEPT_DIMENSION values (?,?,?,?,?,?,?,?,?)");
             @SuppressWarnings("unchecked")
             Enumeration<Concept> emu = root.breadthFirstEnumeration();
+            Timestamp importTimestamp = 
+                    new Timestamp(System.currentTimeMillis());
             while (emu.hasMoreElements()) {
 
                 Concept concept = emu.nextElement();
@@ -56,10 +59,9 @@ public class ConceptDimension {
                     ps.setObject(4, null);
                     ps.setTimestamp(5, null);
                     ps.setTimestamp(6, null);
-                    ps.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
+                    ps.setTimestamp(7, importTimestamp);
                     ps.setString(8, concept.getSourceSystemCode());
                     ps.setObject(9, null);
-
                     logger.log(Level.FINEST, "DB_CD_INSERT {0}", concept);
                     counter++;
                     ps.addBatch();

@@ -1,9 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package edu.emory.cci.aiw.i2b2etl.configuration;
 
+import edu.emory.cci.aiw.i2b2etl.metadata.ValueTypeCode;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -16,11 +13,13 @@ import org.w3c.dom.NamedNodeMap;
 public final class ConceptsSection extends ConfigurationSection {
 
     public class FolderSpec {
+
         public int skipGen;
         public String displayName;
         public String proposition;
         public String property;
         public String conceptCodePrefix;
+        public ValueTypeCode valueType;
     }
     private List<FolderSpec> folders = new ArrayList<FolderSpec>();
 
@@ -41,7 +40,14 @@ public final class ConceptsSection extends ConfigurationSection {
         folderSpec.displayName = readAttribute(nnm, "displayName", true);
         folderSpec.proposition = readAttribute(nnm, "proposition", true);
         folderSpec.property = readAttribute(nnm, "property", false);
-        folderSpec.conceptCodePrefix = readAttribute(nnm, "conceptCodePrefix", false);
+        folderSpec.conceptCodePrefix = readAttribute(nnm, "conceptCodePrefix",
+                false);
+        String valueTypeStr = readAttribute(nnm, "valueType", false);
+        if (valueTypeStr != null) {
+            folderSpec.valueType = ValueTypeCode.valueOf(valueTypeStr);
+        } else {
+            folderSpec.valueType = ValueTypeCode.UNSPECIFIED;
+        }
         this.folders.add(folderSpec);
     }
 

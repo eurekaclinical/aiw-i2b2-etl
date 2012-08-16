@@ -1,5 +1,6 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
+import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import java.sql.*;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -86,9 +87,12 @@ public class ProviderDimension {
     }
     
     public static void insertFacts(Connection dataSchemaConnection) throws SQLException {
-        Statement stmt = dataSchemaConnection.createStatement();
+        PreparedStatement stmt = 
+                dataSchemaConnection.prepareStatement(
+                "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM)");
         try {
-            stmt.execute("INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, a1.IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM)");
+            stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            stmt.execute();
             stmt.close();
             stmt = null;
         } finally {
@@ -119,7 +123,7 @@ public class ProviderDimension {
                     ps.setTimestamp(5, null);
                     ps.setTimestamp(6, null);
                     ps.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
-                    ps.setString(8, provider.sourceSystem);
+                    ps.setString(8, MetadataUtil.toSourceSystemCode(provider.sourceSystem));
                     ps.setObject(9, null);
 
                     ps.execute();

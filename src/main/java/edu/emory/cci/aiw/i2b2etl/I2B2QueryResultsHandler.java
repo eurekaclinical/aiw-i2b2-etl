@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.ArrayUtils;
 
 
-import org.protempa.FinderException;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
@@ -30,6 +29,8 @@ import org.protempa.ReferenceDefinition;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
+import org.protempa.proposition.comparator.AllPropositionIntervalComparator;
+import org.protempa.proposition.comparator.TemporalPropositionIntervalComparator;
 import org.protempa.query.handler.QueryResultsHandler;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 import org.protempa.query.handler.QueryResultsHandlerProcessingException;
@@ -43,7 +44,10 @@ import org.protempa.query.handler.table.Reference;
 public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
     private static final long serialVersionUID = -1503401944818776787L;
-    private static final String PROTEMPA_DEFAULT_CONFIG = "erat-diagnoses-direct";
+    private static final String PROTEMPA_DEFAULT_CONFIG = 
+            "erat-diagnoses-direct";
+    private static final Comparator PROP_COMPARATOR =
+            new AllPropositionIntervalComparator();
     private final File confFile;
     private final boolean inferPropositionIdsNeeded;
     private KnowledgeSource knowledgeSource;
@@ -103,6 +107,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             truncateDataTables();
             this.dataSchemaConnection = openDatabaseConnection("dataschema");
             assembleFactHandlers();
+        } catch (KnowledgeSourceReadException ex) {
+            throw new QueryResultsHandlerProcessingException(ex);
         } catch (InstantiationException ex) {
             throw new QueryResultsHandlerProcessingException(ex);
         } catch (IllegalAccessException ex) {
@@ -114,17 +120,44 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         }
     }
 
-    private void assembleFactHandlers() throws IllegalAccessException, InstantiationException {
+    private void assembleFactHandlers() throws IllegalAccessException,
+            InstantiationException, KnowledgeSourceReadException {
         this.factHandlers = new ArrayList<FactHandler>();
-        for (DataSection.DataSpec obx : this.configurationReader.getDataSection().getAll()) {
+        DictionarySection dictSection =
+                this.configurationReader.getDictionarySection();
+        String visitPropId = dictSection.get("visitDimension");
+        PropositionDefinition visitPropDef =
+                this.knowledgeSource.readPropositionDefinition(visitPropId);
+        DataSection dataSection = this.configurationReader.getDataSection();
+        for (DataSection.DataSpec obx : dataSection.getAll()) {
+            PropositionDefinition[] propDefs;
             Link[] links;
             if (obx.referenceName != null) {
                 links = new Link[]{new Reference(obx.referenceName)};
+                ReferenceDefinition refDef =
+                        visitPropDef.referenceDefinition(obx.referenceName);
+                String[] propIds = refDef.getPropositionIds();
+                propDefs = new PropositionDefinition[propIds.length + 1];
+                propDefs[0] = visitPropDef;
+                for (int i = 1; i < propDefs.length; i++) {
+                    propDefs[i] =
+                            this.knowledgeSource.readPropositionDefinition(
+                            propIds[i - 1]);
+                    assert propDefs[i] != null : "Invalid proposition id "
+                            + propIds[i - 1];
+                }
             } else {
                 links = null;
+                propDefs = new PropositionDefinition[]{visitPropDef};
             }
+
+            String[] potentialDerivedPropIdsArr =
+                    new I2b2DerivedPropositionIdExtractor(
+                    this.knowledgeSource).extractDerived(propDefs);
+
             FactHandler factHandler = new FactHandler(links, obx.propertyName,
-                    obx.start, obx.finish, obx.units, this.ontologyModel);
+                    obx.start, obx.finish, obx.units,
+                    potentialDerivedPropIdsArr, this.ontologyModel);
             this.factHandlers.add(factHandler);
         }
     }
@@ -133,56 +166,66 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     public void handleQueryResult(String keyId, List<Proposition> propositions,
             Map<Proposition, List<Proposition>> forwardDerivations,
             Map<Proposition, List<Proposition>> backwardDerivations,
-            Map<UniqueId, Proposition> references) throws QueryResultsHandlerProcessingException {
-        DictionarySection dictSection = this.configurationReader.getDictionarySection();
+            Map<UniqueId, Proposition> references)
+            throws QueryResultsHandlerProcessingException {
+        DictionarySection dictSection =
+                this.configurationReader.getDictionarySection();
         String visitPropId = dictSection.get("visitDimension");
         try {
             Logger logger = I2b2ETLUtil.logger();
-            logger.log(Level.FINER, "STEP: create and persist all Observations");
+            logger.log(Level.FINER,
+                    "STEP: create and persist all Observations");
+            Set<Proposition> derivedPropositions = new HashSet<Proposition>();
+            List<Proposition> props = new ArrayList<Proposition>();
             for (Proposition prop : propositions) {
                 if (prop.getId().equals(visitPropId)) {
-                    DataSection obxSection =
-                            this.configurationReader.getDataSection();
-                    DataSpec providerFullNameSpec =
-                            obxSection.get(dictSection.get("providerFullName"));
-                    DataSpec providerFirstNameSpec =
-                            obxSection.get(dictSection.get("providerFirstName"));
-                    DataSpec providerMiddleNameSpec =
-                            obxSection.get(dictSection.get("providerMiddleName"));
-                    DataSpec providerLastNameSpec =
-                            obxSection.get(dictSection.get("providerLastName"));
+                    props.add(prop);
+                }
+            }
+            Collections.sort(props, PROP_COMPARATOR);
+            for (Proposition prop : props) {
+                DataSection obxSection =
+                        this.configurationReader.getDataSection();
+                DataSpec providerFullNameSpec =
+                        obxSection.get(dictSection.get("providerFullName"));
+                DataSpec providerFirstNameSpec =
+                        obxSection.get(dictSection.get("providerFirstName"));
+                DataSpec providerMiddleNameSpec =
+                        obxSection.get(dictSection.get("providerMiddleName"));
+                DataSpec providerLastNameSpec =
+                        obxSection.get(dictSection.get("providerLastName"));
 
-                    ProviderDimension provider =
-                            this.ontologyModel.addProviderIfNeeded(prop,
-                            providerFullNameSpec.referenceName,
-                            providerFullNameSpec.propertyName,
-                            providerFirstNameSpec.referenceName,
-                            providerFirstNameSpec.propertyName,
-                            providerMiddleNameSpec.referenceName,
-                            providerMiddleNameSpec.propertyName,
-                            providerLastNameSpec.referenceName,
-                            providerLastNameSpec.propertyName,
-                            references);
-                    PatientDimension pd;
-                    if ((pd = this.ontologyModel.getPatient(keyId)) == null) {
-                        pd = this.ontologyModel.addPatient(keyId, prop,
-                                this.configurationReader.getDictionarySection(),
-                                this.configurationReader.getDataSection(),
-                                references);
-                    }
-                    VisitDimension vd = this.ontologyModel.addVisit(
-                            pd.getPatientNum(), pd.getEncryptedPatientId(),
-                            pd.getEncryptedPatientIdSourceSystem(),
-                            (TemporalProposition) prop,
+                ProviderDimension provider =
+                        this.ontologyModel.addProviderIfNeeded(prop,
+                        providerFullNameSpec.referenceName,
+                        providerFullNameSpec.propertyName,
+                        providerFirstNameSpec.referenceName,
+                        providerFirstNameSpec.propertyName,
+                        providerMiddleNameSpec.referenceName,
+                        providerMiddleNameSpec.propertyName,
+                        providerLastNameSpec.referenceName,
+                        providerLastNameSpec.propertyName,
+                        references);
+                PatientDimension pd;
+                if ((pd = this.ontologyModel.getPatient(keyId)) == null) {
+                    pd = this.ontologyModel.addPatient(keyId, prop,
                             this.configurationReader.getDictionarySection(),
                             this.configurationReader.getDataSection(),
                             references);
-                    for (FactHandler factHandler : this.factHandlers) {
-                        factHandler.handleRecord(pd, vd, provider, prop,
-                                forwardDerivations, backwardDerivations,
-                                references, this.knowledgeSource,
-                                this.dataSchemaConnection);
-                    }
+                }
+                VisitDimension vd = this.ontologyModel.addVisit(
+                        pd.getPatientNum(), pd.getEncryptedPatientId(),
+                        pd.getEncryptedPatientIdSourceSystem(),
+                        (TemporalProposition) prop,
+                        this.configurationReader.getDictionarySection(),
+                        this.configurationReader.getDataSection(),
+                        references);
+                for (FactHandler factHandler : this.factHandlers) {
+                    factHandler.handleRecord(pd, vd, provider, prop,
+                            forwardDerivations, backwardDerivations,
+                            references, this.knowledgeSource,
+                            derivedPropositions,
+                            this.dataSchemaConnection);
                 }
             }
         } catch (InvalidPatientRecordException ex) {
@@ -258,11 +301,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                 this.configurationReader.getDictionarySection();
         String rootNodeName = dictionarySection.get("rootNodeName");
         String obsFact = dictionarySection.get("observationFact");
-        boolean useBatchInsert =
-                obsFact != null && obsFact.equals("batchInsert");
         this.ontologyModel = new Metadata(this.knowledgeSource,
                 rootNodeName,
-                useBatchInsert,
                 this.configurationReader.getConceptsSection().getFolderSpecs(),
                 this.configurationReader.getDictionarySection(),
                 this.configurationReader.getDataSection());
@@ -404,6 +444,9 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             try {
                 @SuppressWarnings("unchecked")
                 Enumeration<Concept> emu = model.getRoot().depthFirstEnumeration();
+                Timestamp importTimestamp =
+                        new Timestamp(System.currentTimeMillis());
+                Set<String> conceptCodes = new HashSet<String>();
                 while (emu.hasMoreElements()) {
 
                     Concept concept = emu.nextElement();
@@ -412,11 +455,16 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     ps.setString(2, concept.getI2B2Path());
                     assert concept.getDisplayName() != null && concept.getDisplayName().length() > 0 : "concept " + concept.getConceptCode() + " (" + concept.getI2B2Path() + ") " + " has an invalid display name '" + concept.getDisplayName() + "'";
                     ps.setString(3, concept.getDisplayName());
-                    ps.setString(4, "N");
+                    String conceptCode = concept.getConceptCode();
+                    if (conceptCodes.add(conceptCode)) {
+                        ps.setString(4, SynonymCode.NOT_SYNONYM.getCode());
+                    } else {
+                        ps.setString(4, SynonymCode.SYNONYM.getCode());
+                    }
                     ps.setString(5, concept.getCVisualAttributes());
                     ps.setObject(6, null);
 
-                    ps.setString(7, concept.getConceptCode());
+                    ps.setString(7, conceptCode);
 
                     // put labParmXml here
                     //
@@ -425,20 +473,24 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     ps.setString(9, "concept_cd");
                     ps.setString(10, "concept_dimension");
                     ps.setString(11, "concept_path");
-                    ps.setString(12, "T");
-                    ps.setString(13, "LIKE");
+                    ps.setString(12, concept.getDataType().getCode());
+                    ps.setString(13, concept.getOperator().getSQLOperator());
                     ps.setString(14, concept.getI2B2Path());
                     ps.setObject(15, null);
                     ps.setString(16, null);
-                    ps.setDate(17, new java.sql.Date(System.currentTimeMillis()));
+                    ps.setTimestamp(17, importTimestamp);
                     ps.setDate(18, null);
-                    ps.setDate(19, null);
-                    ps.setString(20, concept.getSourceSystemCode());
-                    ps.setString(21, null);
+                    ps.setTimestamp(19, importTimestamp);
+                    ps.setString(20,
+                            MetadataUtil.toSourceSystemCode(
+                            concept.getSourceSystemCode()));
+                    ps.setString(21, concept.getValueTypeCode().getCode());
 
                     ps.addBatch();
 
                     if ((++idx % 8192) == 0) {
+                        importTimestamp =
+                                new Timestamp(System.currentTimeMillis());
                         batchNumber++;
                         ps.executeBatch();
                         cn.commit();
@@ -446,7 +498,10 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                         plus += 8192;
                         logBatch(tableName, batchNumber);
                         ps.clearBatch();
-                        logger.log(Level.FINE, "loaded ontology {0}:{1}", new Object[]{plus, minus});
+                        if (logger.isLoggable(Level.FINE)) {
+                            logger.log(Level.FINE, "loaded ontology {0}:{1}",
+                                    new Object[]{plus, minus});
+                        }
                     }
                 }
                 batchNumber++;

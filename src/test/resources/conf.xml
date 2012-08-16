@@ -59,9 +59,11 @@
         <folder displayName="CPT Codes"             skipGen="1" proposition="CPTCode"/>
         <folder displayName="ICD9 Diagnostic Codes" skipGen="1" proposition="ICD9:Diagnoses"/>
         <folder displayName="ICD9 Procedure Codes"  skipGen="1" proposition="ICD9:Procedures"/>
-        <folder displayName="Laboratory Tests"      skipGen="1" proposition="LAB:LabTest"/>
+        <folder displayName="Laboratory Tests"      skipGen="1" proposition="LAB:LabTest" valueType="LABORATORY_TESTS" />
         <folder displayName="Discharge Disposition" skipGen="1" proposition="Encounter" property="dischargeDisposition"/>
         <folder displayName="Medication"            skipGen="3" proposition="MED:medications"/>
         <folder displayName="Vital Signs"           skipGen="1" proposition="VitalSign"/>
+        <folder displayName="Co-morbidities"        skipGen="1" proposition="Condition"/>
+        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:EncounterWithSubsequent30DayReadmission"/>
     </concepts>
 </root>

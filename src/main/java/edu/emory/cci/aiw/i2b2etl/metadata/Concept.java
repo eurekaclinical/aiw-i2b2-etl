@@ -52,20 +52,28 @@ public final class Concept extends DefaultMutableTreeNode {
         return usrObj.getId();
     }
 
-    public boolean isInUse() {
-        return usrObj.isInUse();
+    public boolean isDerived() {
+        return usrObj.isDerived();
     }
 
-    public void setInUse(boolean inUse) {
-        usrObj.setInUse(inUse);
+    public void setDerived(boolean derived) {
+        usrObj.setDerived(derived);
     }
 
-    public boolean isInDatasource() {
+    public boolean isInDataSource() {
         return usrObj.isInDataSource();
     }
 
-    public void setInDatasource(boolean b) {
+    public void setInDataSource(boolean b) {
         usrObj.setInDataSource(b);
+    }
+    
+    public boolean isInUse() {
+        return usrObj.isInUse();
+    }
+    
+    public void setInUse(boolean inUse) {
+        usrObj.setInUse(inUse);
     }
 
     public String getSourceSystemCode() {
@@ -101,6 +109,26 @@ public final class Concept extends DefaultMutableTreeNode {
 
     public void setDisplayName(String displayName) {
         usrObj.setDisplayName(displayName);
+    }
+    
+    public ConceptOperator getOperator() {
+        return usrObj.getOperator();
+    }
+    
+    public void setDataType(DataType dataType) {
+        usrObj.setDataType(dataType);
+    }
+    
+    public DataType getDataType() {
+        return usrObj.getDataType();
+    }
+    
+    public void setValueTypeCode(ValueTypeCode valueTypeCode) {
+        usrObj.setValueTypeCode(valueTypeCode);
+    }
+    
+    public ValueTypeCode getValueTypeCode() {
+        return usrObj.getValueTypeCode();
     }
 
     @Override

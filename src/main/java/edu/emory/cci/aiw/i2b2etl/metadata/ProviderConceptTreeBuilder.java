@@ -30,12 +30,15 @@ class ProviderConceptTreeBuilder {
             Concept root = new Concept(ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider", this.metadata), null, this.metadata);
             root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
             root.setDisplayName("Providers");
+            root.setDataType(DataType.TEXT);
             String ca = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             TreeMap<Character, Concept> alpha =
                     new TreeMap<Character, Concept>();
             for (char c : ca.toCharArray()) {
                 Concept ontologyNode = new Concept(ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|" + String.valueOf(c), this.metadata), null, this.metadata);
                 ontologyNode.setDisplayName(String.valueOf(c));
+                ontologyNode.setDataType(DataType.TEXT);
+                ontologyNode.setSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation());
                 alpha.put(c, ontologyNode);
                 root.add(ontologyNode);
             }
@@ -47,12 +50,15 @@ class ProviderConceptTreeBuilder {
                     if (parent == null && root.getChildCount() == ca.length()) {
                         parent = new Concept(ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata), null, this.metadata);
                         parent.setDisplayName("Other");
+                        parent.setDataType(DataType.TEXT);
+                        parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
                         root.add(parent);
                     }
                     Concept child = new Concept(ConceptId.getInstance(id, this.metadata), id, this.metadata);
                     parent.add(child);
                     child.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
                     child.setDisplayName(pd.getFullName());
+                    child.setDataType(DataType.TEXT);
                     child.setInUse(true);
                     this.metadata.addToIdCache(child);
                     pd.setI2b2Path(child.getI2B2Path());
@@ -60,6 +66,7 @@ class ProviderConceptTreeBuilder {
                     Concept notRecordedConcept = new Concept(ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "Provider|NotRecorded", this.metadata), null, this.metadata);
                     notRecordedConcept.setDisplayName(notRecordedConcept.getDisplayName());
                     notRecordedConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                    notRecordedConcept.setDataType(DataType.TEXT);
                     root.add(notRecordedConcept);
                     pd.setI2b2Path(notRecordedConcept.getI2B2Path());
                 }

@@ -72,6 +72,7 @@ class DemographicsConceptTreeBuilder {
                     Concept ageConcept = 
                             new Concept(ConceptId.getInstance(this.visitDimensionPropId, ageDataSpec.propertyName, NumberValue.getInstance(ages[j]), this.metadata), ageDataSpec.conceptCodePrefix, this.metadata);
                     ageConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                    ageConcept.setDataType(DataType.TEXT);
                     this.metadata.addToIdCache(ageConcept);
                     ageCategory.add(ageConcept);
                 } catch (InvalidConceptCodeException ex) {
@@ -165,6 +166,7 @@ class DemographicsConceptTreeBuilder {
                         Concept childConcept = new Concept(conceptId, dataSpec.conceptCodePrefix, DemographicsConceptTreeBuilder.this.metadata);
                         childConcept.setDisplayName(valueSetElement.getDisplayName());
                         childConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                        childConcept.setDataType(DataType.TEXT);
                         DemographicsConceptTreeBuilder.this.metadata.addToIdCache(childConcept);
                         concept.add(childConcept);
                     }
@@ -183,6 +185,7 @@ class DemographicsConceptTreeBuilder {
         }
         folder.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
         folder.setDisplayName(displayName);
+        folder.setDataType(DataType.TEXT);
         return folder;
     }
 

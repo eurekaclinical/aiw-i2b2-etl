@@ -24,7 +24,7 @@ public class MetadataUtil {
         return LazyLoggerHolder.instance;
     }
 
-    static String toSourceSystemCode(String sourceIdString) {
+    public static String toSourceSystemCode(String sourceIdString) {
         if (sourceIdString.length() > CodeUtil.CODE_LENGTH) {
             return sourceIdString.substring(0, CodeUtil.CODE_LENGTH);
         } else {
