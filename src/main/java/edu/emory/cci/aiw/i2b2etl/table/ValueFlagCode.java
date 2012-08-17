@@ -6,7 +6,7 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * 
  * @author Andrew Post
  */
-enum ValueFlagCode {
+public enum ValueFlagCode {
     NO_VALUE_FLAG("@"),
     ABNORMAL("A"),
     HIGH("H"),
@@ -24,7 +24,7 @@ enum ValueFlagCode {
      * 
      * @return a code {@link String}.
      */
-    String getCode() {
+    public String getCode() {
         return this.code;
     }
 }

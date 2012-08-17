@@ -1,5 +1,6 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
+import edu.emory.cci.aiw.i2b2etl.metadata.I2B2QueryResultsHandlerSourceId;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import java.sql.*;
 import java.util.Collection;
@@ -58,7 +59,7 @@ public class PatientDimension {
     //  )
     private final long patientNum;
     private final String encryptedPatientId;
-    private Integer ageInYears;
+    private long ageInYears;
     private final String zip;
     private final String race;
     private final String gender;
@@ -73,7 +74,7 @@ public class PatientDimension {
     private static final Logger logger = Logger.getLogger(PatientDimension.class.getName());
 
     public PatientDimension(String encryptedPatientId, String zipCode,
-            Integer ageInYears,
+            long ageInYears,
             String gender, String language, String religion,
             java.util.Date birthDate, java.util.Date deathDate,
             String maritalStatus, String race, String sourceSystem) {
@@ -106,6 +107,31 @@ public class PatientDimension {
     public String getEncryptedPatientIdSourceSystem() {
         return NUM_FACTORY.getSourceSystem();
     }
+    
+    public long getAgeInYears() {
+        return this.ageInYears;
+    }
+    
+    public static void insertAges(Collection<PatientDimension> patients, Connection cn, String ageConceptCodePrefix) throws SQLException {
+        String sql1 = "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a2.ENCOUNTER_NUM, a1.PATIENT_NUM, CONCAT(?, a1.AGE_IN_YEARS_NUM) as CONCEPT_CD, '@' AS PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM PATIENT_DIMENSION a1 JOIN VISIT_DIMENSION a2 on (a1.PATIENT_NUM=a2.PATIENT_NUM)";
+        PreparedStatement ps = null;
+        try {
+            ps = cn.prepareStatement(sql1);
+            ps.setString(1, ageConceptCodePrefix + ":");
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            
+            ps.execute();
+            ps.close();
+            ps = null;
+        } finally {
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
 
     public static void insertAll(Collection<PatientDimension> patients, Connection cn) throws SQLException {
         int batchSize = 1000;
@@ -124,7 +150,7 @@ public class PatientDimension {
                     ps.setDate(3, patient.birthDate);
                     ps.setDate(4, patient.deathDate);
                     ps.setString(5, patient.gender);
-                    ps.setObject(6, patient.ageInYears);
+                    ps.setLong(6, patient.ageInYears);
                     ps.setString(7, patient.language);
                     ps.setString(8, patient.race);
                     ps.setString(9, patient.maritalStatus);

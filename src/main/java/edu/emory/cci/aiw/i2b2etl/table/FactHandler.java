@@ -1,6 +1,5 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
-import edu.emory.cci.aiw.i2b2etl.I2b2ETLUtil;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;

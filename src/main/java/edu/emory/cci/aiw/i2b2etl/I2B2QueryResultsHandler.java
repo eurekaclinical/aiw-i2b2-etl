@@ -30,7 +30,6 @@ import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
 import org.protempa.proposition.comparator.AllPropositionIntervalComparator;
-import org.protempa.proposition.comparator.TemporalPropositionIntervalComparator;
 import org.protempa.query.handler.QueryResultsHandler;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 import org.protempa.query.handler.QueryResultsHandlerProcessingException;
@@ -182,7 +181,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     props.add(prop);
                 }
             }
-            Collections.sort(props, PROP_COMPARATOR);
+            
             for (Proposition prop : props) {
                 DataSection obxSection =
                         this.configurationReader.getDataSection();
@@ -250,8 +249,12 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
             logger.log(Level.FINER, "STEP: persist all PatientDimension and VisitDimension");
             PatientDimension.insertAll(this.ontologyModel.getPatients(), this.dataSchemaConnection);
+            
 
             VisitDimension.insertAll(this.ontologyModel.getVisits(), this.dataSchemaConnection);
+            
+            PatientDimension.insertAges(this.ontologyModel.getPatients(), this.dataSchemaConnection,
+                    this.configurationReader.getDictionarySection().get("ageConceptCodePrefix"));
 
             // find Provider root. gather its leaf nodes. persist Providers.
 

@@ -23,8 +23,11 @@ import org.protempa.KnowledgeSourceReadException;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
+import org.protempa.proposition.value.AbsoluteTimeGranularity;
 import org.protempa.proposition.value.AbsoluteTimeGranularityUtil;
+import org.protempa.proposition.value.AbsoluteTimeUnit;
 import org.protempa.proposition.value.DateValue;
+import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.Value;
 
 /**
@@ -317,14 +320,10 @@ public final class Metadata {
             Proposition prop = references.get(uids.get(0));
             Value val = prop.getProperty(dataSpec.propertyName);
             if (val != null) {
-                String patientId = val.getFormatted();
                 PatientDimension patientDimension = this.patientCache.get(keyId);
                 if (patientDimension == null) {
                     Value zipCode = getField(dictSection, obxSection,
                             "patientDimensionZipCode", encounterProp,
-                            references);
-                    Value ageInYearsStr = getField(dictSection, obxSection,
-                            "patientDimensionAge", encounterProp,
                             references);
                     Value maritalStatus = getField(dictSection, obxSection,
                             "patientDimensionMaritalStatus", encounterProp,
@@ -356,9 +355,20 @@ public final class Metadata {
                         birthdate = null;
                     }
 
+                    Date now = new Date();
+                    long ageInYears = AbsoluteTimeGranularity.YEAR.distance(
+                            AbsoluteTimeGranularityUtil.asPosition(birthdate),
+                            AbsoluteTimeGranularityUtil.asPosition(now),
+                            AbsoluteTimeGranularity.YEAR,
+                            AbsoluteTimeUnit.YEAR);
+                    
+                    Concept ageConcept = getFromIdCache(null, null, 
+                            NumberValue.getInstance(ageInYears));
+                    ageConcept.setInUse(true);
+
                     patientDimension = new PatientDimension(keyId,
                             zipCode != null ? zipCode.getFormatted() : null,
-                            ageInYearsStr != null ? Integer.valueOf(ageInYearsStr.getFormatted()) : Integer.valueOf(-1),
+                            ageInYears,
                             gender != null ? gender.getFormatted() : null,
                             language != null ? language.getFormatted() : null,
                             religion != null ? religion.getFormatted() : null,
@@ -395,7 +405,7 @@ public final class Metadata {
             encryptedIdStr = null;
         }
         VisitDimension vd = new VisitDimension(patientNum, encryptedPatientId,
-                visitStartDate, visitEndDate, encryptedIdStr, 
+                visitStartDate, visitEndDate, encryptedIdStr,
                 encounterProp.getDataSourceType().getStringRepresentation(),
                 encryptedPatientIdSourceSystem);
         visitCache.put(vd.getEncounterNum(), vd);
@@ -439,9 +449,9 @@ public final class Metadata {
     }
 
     public Concept getFromIdCache(String propId, String propertyName, Value value) {
-        if (propId == null) {
-            throw new IllegalArgumentException("propId cannot be null");
-        }
+//        if (propId == null) {
+//            throw new IllegalArgumentException("propId cannot be null");
+//        }
         return this.CACHE.get(
                 ConceptId.getInstance(propId, propertyName, value, this));
     }
@@ -470,14 +480,14 @@ public final class Metadata {
         return this.conceptCodeCache.contains(conceptCode);
     }
 
-    private void constructTreePre(FolderSpec[] folderSpecs) 
-            throws IOException, SQLException, KnowledgeSourceReadException, 
-            UnknownPropositionDefinitionException, InvalidConceptCodeException, 
+    private void constructTreePre(FolderSpec[] folderSpecs)
+            throws IOException, SQLException, KnowledgeSourceReadException,
+            UnknownPropositionDefinitionException, InvalidConceptCodeException,
             OntologyBuildException, InvalidPromoteArgumentException {
         for (FolderSpec folderSpec : folderSpecs) {
-            ConceptId conceptId = 
+            ConceptId conceptId =
                     ConceptId.getInstance(folderSpec.displayName, this);
-            Concept concept = 
+            Concept concept =
                     new Concept(conceptId, folderSpec.conceptCodePrefix, this);
             concept.setSourceSystemCode(
                     MetadataUtil.toSourceSystemCode(
@@ -485,15 +495,15 @@ public final class Metadata {
             concept.setDisplayName(folderSpec.displayName);
             concept.setDataType(DataType.TEXT);
             if (folderSpec.property == null) {
-                PropositionConceptTreeBuilder propProxy = 
-                        new PropositionConceptTreeBuilder(this.knowledgeSource, 
-                        folderSpec.proposition, folderSpec.conceptCodePrefix, 
+                PropositionConceptTreeBuilder propProxy =
+                        new PropositionConceptTreeBuilder(this.knowledgeSource,
+                        folderSpec.proposition, folderSpec.conceptCodePrefix,
                         folderSpec.valueType, this);
                 concept.add(propProxy.build());
             } else {
-                ValueSetConceptTreeBuilder vsProxy = 
-                        new ValueSetConceptTreeBuilder(this.knowledgeSource, 
-                        folderSpec.proposition, folderSpec.property, 
+                ValueSetConceptTreeBuilder vsProxy =
+                        new ValueSetConceptTreeBuilder(this.knowledgeSource,
+                        folderSpec.proposition, folderSpec.property,
                         folderSpec.conceptCodePrefix, this);
                 concept.add(vsProxy.build());
             }

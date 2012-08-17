@@ -126,9 +126,9 @@ public class ConceptId {
      */
     public static ConceptId getInstance(String propId,
             String propertyName, Value value, Metadata metadata) {
-        if (propId == null) {
-            throw new IllegalArgumentException("propId cannot be null");
-        }
+//        if (propId == null) {
+//            throw new IllegalArgumentException("propId cannot be null");
+//        }
         List<Object> key = new ArrayList<Object>(3);
         key.add(propId);
         key.add(propertyName);
@@ -142,9 +142,9 @@ public class ConceptId {
     }
 
     private ConceptId(String propId, String propertyName, Value value, Metadata metadata) {
-        if (propId == null) {
-            throw new IllegalArgumentException("propId cannot be null");
-        }
+//        if (propId == null) {
+//            throw new IllegalArgumentException("propId cannot be null");
+//        }
         if (metadata == null) {
             throw new IllegalArgumentException("metadata cannot be null");
         }

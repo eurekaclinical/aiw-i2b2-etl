@@ -61,17 +61,30 @@ class DemographicsConceptTreeBuilder {
 
     private Concept buildAge(String displayName) throws OntologyBuildException {
         Concept age = newConcept(displayName);
-        DataSpec ageDataSpec = this.dataSection.get(this.dictionarySection.get("patientDimensionAgeInYears"));
+        String ageConceptCodePrefix = 
+                this.dictionarySection.get("ageConceptCodePrefix");
         for (int i = 0; i < ageCategories.length; i++) {
             int[] ages = ageCategories[i];
-            String ageRangeDisplayName = String.valueOf(ages[0]) + '-' + String.valueOf(ages[ages.length - 1]) + " years old";
+            String ageRangeDisplayName = String.valueOf(ages[0]) + '-' + 
+                    String.valueOf(ages[ages.length - 1]) + " years old";
             Concept ageCategory = newConcept(ageRangeDisplayName);
             age.add(ageCategory);
             for (int j = 0; j < ages.length; j++) {
                 try {
                     Concept ageConcept = 
-                            new Concept(ConceptId.getInstance(this.visitDimensionPropId, ageDataSpec.propertyName, NumberValue.getInstance(ages[j]), this.metadata), ageDataSpec.conceptCodePrefix, this.metadata);
-                    ageConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                            new Concept(ConceptId.getInstance(
+                                null, null, 
+                                NumberValue.getInstance(ages[j]), 
+                                this.metadata), 
+                            ageConceptCodePrefix, this.metadata);
+                    if (ages[j] == 1) {
+                        ageConcept.setDisplayName(ages[j] + " year old");
+                    } else {
+                        ageConcept.setDisplayName(ages[j] + " years old");
+                    }
+                    ageConcept.setSourceSystemCode(
+                            MetadataUtil.toSourceSystemCode(
+                            I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
                     ageConcept.setDataType(DataType.TEXT);
                     this.metadata.addToIdCache(ageConcept);
                     ageCategory.add(ageConcept);
@@ -80,18 +93,7 @@ class DemographicsConceptTreeBuilder {
                 }
             }
         }
-        /*
-         * The commented-out code below will make the ETL process load not-recorded ages.
-         */
-//        Concept notRecordedAge;
-//        try {
-//            notRecordedAge = new Concept(ConceptId.getInstance(this.visitDimensionPropId, ageDataSpec.propertyName, null, this.metadata), ageDataSpec.conceptCodePrefix + ":NotRecorded", this.metadata);
-//            notRecordedAge.setDisplayName("Age Not Recorded");
-//            notRecordedAge.setDoCache(true);
-//        } catch (InvalidConceptCodeException ex) {
-//            throw new OntologyBuildException("Could not build null age concept", ex);
-//        }
-//        age.add(notRecordedAge);
+        
         return age;
     }
 

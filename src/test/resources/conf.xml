@@ -14,12 +14,13 @@
         <entry key="providerLastName" value="providerLastName"/>
         <entry key="patientDimensionMRN" value="demographics_mrn"/>
         <entry key="patientDimensionGender" value="demographics_gender"/>
-        <entry key="patientDimensionAgeInYears" value="demographics_age"/>
+        <entry key="ageConceptCodePrefix" value="DEM|AGE"/>
         <entry key="patientDimensionEthnicity" value="demographics_ethnicity"/>
         <entry key="patientDimensionRace" value="demographics_race"/>
         <entry key="patientDimensionMaritalStatus" value="demographics_marital_status" />
         <entry key="patientDimensionLanguage" value="demographics_lang" />
         <entry key="patientDimensionReligion" value="demographics_religion" />
+        <entry key="patientDimensionBirthdate" value="demographics_dob" />
     </dictionary>
 
     <database>
@@ -38,7 +39,6 @@
         <dataType key="providerFirstName" reference="provider" property="firstName" />
         <dataType key="providerMiddleName" reference="provider" property="middleName" />
         <dataType key="providerLastName" reference="provider" property="lastName" />
-        <dataType key="demographics_age" property="age" conceptCodePrefix="DEM|AGE" start="start"/>
         <dataType key="demographics_gender" reference="patientDetails" property="gender" start="start" conceptCodePrefix='DEM|SEX'/>
         <dataType key="demographics_ethnicity" reference="patientDetails" property="ethnicity"  start="start"/>
         <dataType key="demographics_race" reference="patientDetails" property="race" conceptCodePrefix="DEM|RACE" start="start"/>
@@ -46,6 +46,7 @@
         <dataType key="demographics_lang" reference="patientDetails" property="language" conceptCodePrefix="DEM|LANGUAGE" start="start" />
         <dataType key="demographics_religion" reference="patientDetails" property="religion" start="start"/>
         <dataType key="demographics_mrn" reference="patientDetails" property="patientId"/>
+        <dataType key="demographics_dob" reference="patientDetails" property="dateOfBirth"/>
         <dataType key="visit_id" property="encounterId"/>
     </data>
 
