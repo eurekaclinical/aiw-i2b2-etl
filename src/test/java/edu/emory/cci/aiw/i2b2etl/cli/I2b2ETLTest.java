@@ -7,12 +7,19 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import org.junit.*;
+import org.protempa.EventDefinition;
 import org.protempa.FinderException;
+import org.protempa.HighLevelAbstractionDefinition;
+import org.protempa.Offsets;
+import org.protempa.PrimitiveParameterDefinition;
+import org.protempa.PropositionDefinition;
 import org.protempa.Protempa;
 import org.protempa.ProtempaStartupException;
+import org.protempa.TemporalExtendedPropositionDefinition;
 import org.protempa.backend.BackendProviderSpecLoaderException;
 import org.protempa.backend.ConfigurationsLoadException;
 import org.protempa.backend.InvalidConfigurationException;
+import org.protempa.proposition.interval.Relation;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
@@ -49,6 +56,32 @@ public class I2b2ETLTest {
         try {
             File confXML = new I2b2ETLConfAsFile().getFile();
             DefaultQueryBuilder q = new DefaultQueryBuilder();
+            
+            EventDefinition ed = new EventDefinition("MyDiagnosis");
+            ed.setDisplayName("My Diagnosis");
+            ed.setInverseIsA("ICD9:907.1");
+            
+            PrimitiveParameterDefinition pd = 
+                    new PrimitiveParameterDefinition("MyLabTest");
+            pd.setDisplayName("My Lab Test");
+            pd.setInverseIsA("LAB:8007694");
+            
+            HighLevelAbstractionDefinition hd =
+                    new HighLevelAbstractionDefinition("MyTemporalPattern");
+            hd.setDisplayName("My Temporal Pattern");
+            TemporalExtendedPropositionDefinition td1 =
+                    new TemporalExtendedPropositionDefinition(ed.getId());
+            TemporalExtendedPropositionDefinition td2 =
+                    new TemporalExtendedPropositionDefinition(pd.getId());
+            hd.add(td1);
+            hd.add(td2);
+            Relation rel = new Relation();
+            hd.setRelation(td1, td2, rel);
+            hd.setTemporalOffset(new Offsets());
+            
+            q.setPropositionDefinitions(
+                    new PropositionDefinition[]{ed, pd, hd});
+            
             Query query = protempa.buildQuery(q);
             QueryResultsHandler tdqrh = new I2B2QueryResultsHandler(confXML);
             protempa.execute(query, tdqrh);

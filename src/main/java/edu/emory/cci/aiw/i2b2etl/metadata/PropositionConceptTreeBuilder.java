@@ -34,9 +34,10 @@ final class PropositionConceptTreeBuilder {
     Concept build() throws OntologyBuildException {
         try {
             Concept rootConcept =
-                    addNode(this.rootPropositionDefinition, null);
+                    addNode(this.rootPropositionDefinition);
             if (!rootConcept.isDerived()) {
-                String[] children = this.rootPropositionDefinition.getChildren();
+                String[] children = 
+                        this.rootPropositionDefinition.getChildren();
                 buildHelper(children, rootConcept);
             }
             return rootConcept;
@@ -52,48 +53,60 @@ final class PropositionConceptTreeBuilder {
         }
     }
 
-    private void buildHelper(String[] propIds, Concept concept)
+    private void buildHelper(String[] childPropIds, Concept parent)
             throws UnknownPropositionDefinitionException,
             KnowledgeSourceReadException, InvalidConceptCodeException {
-        for (String propId : propIds) {
-            PropositionDefinition propDef = readPropositionDefinition(propId);
-            Concept childConcept = addNode(propDef, concept);
-            if (!childConcept.isDerived()) {
-                String[] children = propDef.getChildren();
-                buildHelper(children, childConcept);
-            }      
+        for (String childPropId : childPropIds) {
+            PropositionDefinition childPropDef =
+                    readPropositionDefinition(childPropId);
+            Concept child = addNode(childPropDef);
+            if (parent != null) {
+                parent.add(child);
+            }
+            if (child.isCopy()) {
+                parent.setDerived(true);
+                parent.removeAllChildren();
+                break;
+            }
+            if (!child.isDerived()) {
+                String[] grandChildrenPropIds = childPropDef.getChildren();
+                buildHelper(grandChildrenPropIds, child);
+            }
         }
     }
 
-    private Concept addNode(PropositionDefinition propDef, Concept parent)
+    private Concept addNode(PropositionDefinition propDef) 
             throws InvalidConceptCodeException {
         ConceptId conceptId =
                 ConceptId.getInstance(propDef.getId(), this.metadata);
-        Concept concept =
-                new Concept(conceptId, this.conceptCode, this.metadata);
-        concept.setInDataSource(propDef.getInDataSource());
-        concept.setDisplayName(propDef.getDisplayName());
-        concept.setSourceSystemCode(
-                MetadataUtil.toSourceSystemCode(
-                propDef.getSourceId().getStringRepresentation()));
-        concept.setValueTypeCode(this.valueTypeCode);
-        if (propDef instanceof AbstractionDefinition) {
-            concept.setDerived(true);
-        }
-        if (propDef instanceof ParameterDefinition) {
-            ValueType valueType =
-                    ((ParameterDefinition) propDef).getValueType();
-            concept.setDataType(DataType.dataTypeFor(valueType));
+        Concept child = this.metadata.getFromIdCache(conceptId);
+        if (child == null) {
+            child =
+                    new Concept(conceptId, this.conceptCode, this.metadata);
+            child.setInDataSource(propDef.getInDataSource());
+            child.setDisplayName(propDef.getDisplayName());
+            child.setSourceSystemCode(
+                    MetadataUtil.toSourceSystemCode(
+                    propDef.getSourceId().getStringRepresentation()));
+            child.setValueTypeCode(this.valueTypeCode);
+            if (propDef instanceof AbstractionDefinition) {
+                child.setDerived(true);
+            }
+            if (propDef instanceof ParameterDefinition) {
+                ValueType valueType =
+                        ((ParameterDefinition) propDef).getValueType();
+                child.setDataType(DataType.dataTypeFor(valueType));
+            } else {
+                child.setDataType(DataType.TEXT);
+            }
+            this.metadata.addToIdCache(child);
         } else {
-            concept.setDataType(DataType.TEXT);
+            Concept childCopy = new Concept(child, this.metadata);
+            childCopy.setDimCode(child.getDimCode());
+            child = childCopy;
         }
-        if (concept.isLeaf() || concept.isInDataSource() || concept.isDerived()) {
-            this.metadata.addToIdCache(concept);
-        }
-        if (parent != null) {
-            parent.add(concept);
-        }
-        return concept;
+
+        return child;
     }
 
     private PropositionDefinition readPropositionDefinition(String propId)

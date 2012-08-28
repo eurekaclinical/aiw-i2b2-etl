@@ -1,6 +1,5 @@
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import java.util.logging.Level;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 
@@ -41,6 +40,14 @@ public final class Concept extends DefaultMutableTreeNode {
     // 	)
     public Concept(ConceptId id, String conceptCodePrefix, Metadata metadata) throws InvalidConceptCodeException {
         this.usrObj = new UserObject(id, conceptCodePrefix, this, metadata);
+    }
+    
+    public Concept(Concept concept, Metadata metadata) throws InvalidConceptCodeException {
+        this.usrObj = new UserObject(concept.usrObj, this);
+    }
+    
+    public String getConceptCodePrefix() {
+        return usrObj.getConceptCodePrefix();
     }
 
     public ConceptId getId() {
@@ -94,6 +101,18 @@ public final class Concept extends DefaultMutableTreeNode {
         path.append('\\');
         return path.toString();
     }
+    
+    public void setDimCode(String dimCode) {
+        usrObj.setDimCode(dimCode);
+    }
+    
+    public String getDimCode() {
+        String result = usrObj.getDimCode();
+        if (result == null) {
+            result = getI2B2Path();
+        }
+        return result;
+    }
 
     public String getCVisualAttributes() {
         return isLeaf() ? "LAE" : "FAE";
@@ -129,6 +148,10 @@ public final class Concept extends DefaultMutableTreeNode {
     
     public ValueTypeCode getValueTypeCode() {
         return usrObj.getValueTypeCode();
+    }
+    
+    public boolean isCopy() {
+        return usrObj.isCopy();
     }
 
     @Override

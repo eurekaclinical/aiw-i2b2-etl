@@ -151,8 +151,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             }
 
             String[] potentialDerivedPropIdsArr =
-                    new I2b2DerivedPropositionIdExtractor(
-                    this.knowledgeSource).extractDerived(propDefs);
+                    this.ontologyModel.extractDerived(propDefs);
 
             FactHandler factHandler = new FactHandler(links, obx.propertyName,
                     obx.start, obx.finish, obx.units,
@@ -447,6 +446,10 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             try {
                 @SuppressWarnings("unchecked")
                 Enumeration<Concept> emu = model.getRoot().depthFirstEnumeration();
+                /*
+                 * A depth-first enumeration should traverse the hierarchies
+                 * in the order in which they were created.
+                 */
                 Timestamp importTimestamp =
                         new Timestamp(System.currentTimeMillis());
                 Set<String> conceptCodes = new HashSet<String>();
@@ -478,7 +481,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     ps.setString(11, "concept_path");
                     ps.setString(12, concept.getDataType().getCode());
                     ps.setString(13, concept.getOperator().getSQLOperator());
-                    ps.setString(14, concept.getI2B2Path());
+                    ps.setString(14, concept.getDimCode());
                     ps.setObject(15, null);
                     ps.setString(16, null);
                     ps.setTimestamp(17, importTimestamp);

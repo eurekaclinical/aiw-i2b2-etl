@@ -64,7 +64,32 @@
         <folder displayName="Discharge Disposition" skipGen="1" proposition="Encounter" property="dischargeDisposition"/>
         <folder displayName="Medication"            skipGen="3" proposition="MED:medications"/>
         <folder displayName="Vital Signs"           skipGen="1" proposition="VitalSign"/>
-        <folder displayName="Co-morbidities"        skipGen="1" proposition="Condition"/>
+        <!--<folder displayName="Co-morbidities"        skipGen="1" proposition="Condition"/>-->
         <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:EncounterWithSubsequent30DayReadmission"/>
+        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:SecondReadmit"/>
+        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:FrequentFlierEncounter"/>
+        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:Chemotherapy180DaysBeforeSurgery"/>
+        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:Chemotherapy365DaysBeforeSurgery"/>
+        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:Encounter90DaysEarlier"/>
+        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:Encounter180DaysEarlier"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:MyocardialInfarction"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="READMISSIONS:SecondMI"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:UncontrolledDiabetes"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:EndStageRenalDisease"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:Obesity"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATCancer"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATCKD"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATCOPD"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATDiabetes"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATHF"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATHxTransplant"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATPulmHyp"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="ERATStroke"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:MethicillinResistantStaphAureusEvent"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:SickleCellAnemiaEvent"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:SickleCellCrisisEvent"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:ThrombocytopeniaEvent"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:MetastasisEvent"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:HypertensionEvent"/>
     </concepts>
 </root>

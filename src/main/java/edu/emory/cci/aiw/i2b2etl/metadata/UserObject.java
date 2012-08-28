@@ -23,7 +23,6 @@ public class UserObject {
     private String displayName;
     private boolean inDataSource;
     private String conceptCode;		//	concept_dimension.concept_cd   &&   ontology.c_basecode
-    private String conceptPath;		//	concept_dimension.concept_path
     private DataType dataType;
     private ValueTypeCode valueTypeCode;
     //	ontology.c_fullname
@@ -38,6 +37,9 @@ public class UserObject {
     private String sourceSystemId;
     private boolean derived;
     private boolean inUse;
+    private String conceptCodePrefix;
+    private String dimCode;
+    private boolean copy;
 
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
@@ -53,6 +55,26 @@ public class UserObject {
             this.conceptCode = id.toConceptCode();
         }
         this.valueTypeCode = ValueTypeCode.UNSPECIFIED;
+        this.conceptCodePrefix = conceptCodePrefix;
+    }
+    
+    UserObject(UserObject usrObj, Concept concept) {
+        this.id = usrObj.id;
+        this.concept = concept;
+        this.displayName = usrObj.displayName;
+        this.inDataSource = usrObj.inDataSource;
+        this.conceptCode = usrObj.conceptCode;
+        this.dataType = usrObj.dataType;
+        this.valueTypeCode = usrObj.valueTypeCode;
+        this.sourceSystemId = usrObj.sourceSystemId;
+        this.derived = usrObj.derived;
+        this.inUse = usrObj.inUse;
+        this.conceptCodePrefix = usrObj.conceptCodePrefix;
+        this.copy = true;
+    }
+    
+    public String getConceptCodePrefix() {
+        return this.conceptCodePrefix;
     }
 
     public ConceptId getId() {
@@ -81,14 +103,6 @@ public class UserObject {
 
     public String getConceptCode() {
         return this.conceptCode;
-    }
-
-    public String getConceptPath() {
-        return conceptPath;
-    }
-
-    public void setConceptPath(String conceptPath) {
-        this.conceptPath = conceptPath;
     }
 
     public String getSourceSystemId() {
@@ -150,5 +164,17 @@ public class UserObject {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+
+    void setDimCode(String dimCode) {
+        this.dimCode = dimCode;
+    }
+    
+    String getDimCode() {
+        return this.dimCode;
+    }
+    
+    boolean isCopy() {
+        return this.copy;
     }
 }

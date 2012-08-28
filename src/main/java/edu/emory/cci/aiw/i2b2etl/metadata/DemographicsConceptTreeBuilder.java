@@ -3,6 +3,8 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.protempa.*;
 import org.protempa.ValueSet.ValueSetElement;
 import org.protempa.proposition.value.NumberValue;
@@ -61,39 +63,45 @@ class DemographicsConceptTreeBuilder {
 
     private Concept buildAge(String displayName) throws OntologyBuildException {
         Concept age = newConcept(displayName);
-        String ageConceptCodePrefix = 
+        String ageConceptCodePrefix =
                 this.dictionarySection.get("ageConceptCodePrefix");
         for (int i = 0; i < ageCategories.length; i++) {
             int[] ages = ageCategories[i];
-            String ageRangeDisplayName = String.valueOf(ages[0]) + '-' + 
-                    String.valueOf(ages[ages.length - 1]) + " years old";
+            String ageRangeDisplayName = String.valueOf(ages[0]) + '-'
+                    + String.valueOf(ages[ages.length - 1]) + " years old";
             Concept ageCategory = newConcept(ageRangeDisplayName);
             age.add(ageCategory);
             for (int j = 0; j < ages.length; j++) {
                 try {
-                    Concept ageConcept = 
-                            new Concept(ConceptId.getInstance(
-                                null, null, 
-                                NumberValue.getInstance(ages[j]), 
-                                this.metadata), 
-                            ageConceptCodePrefix, this.metadata);
-                    if (ages[j] == 1) {
-                        ageConcept.setDisplayName(ages[j] + " year old");
+                    ConceptId conceptId = ConceptId.getInstance(
+                            null, null,
+                            NumberValue.getInstance(ages[j]),
+                            this.metadata);
+                    Concept ageConcept = this.metadata.getFromIdCache(conceptId);
+                    if (ageConcept == null) {
+                        ageConcept =
+                                new Concept(conceptId,
+                                ageConceptCodePrefix, this.metadata);
+                        if (ages[j] == 1) {
+                            ageConcept.setDisplayName(ages[j] + " year old");
+                        } else {
+                            ageConcept.setDisplayName(ages[j] + " years old");
+                        }
+                        ageConcept.setSourceSystemCode(
+                                MetadataUtil.toSourceSystemCode(
+                                I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                        ageConcept.setDataType(DataType.TEXT);
+                        this.metadata.addToIdCache(ageConcept);
                     } else {
-                        ageConcept.setDisplayName(ages[j] + " years old");
+                        throw new OntologyBuildException("Duplicate age concept: " + ageConcept.getConceptCode());
                     }
-                    ageConcept.setSourceSystemCode(
-                            MetadataUtil.toSourceSystemCode(
-                            I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                    ageConcept.setDataType(DataType.TEXT);
-                    this.metadata.addToIdCache(ageConcept);
                     ageCategory.add(ageConcept);
                 } catch (InvalidConceptCodeException ex) {
                     throw new OntologyBuildException("Could not build age concept", ex);
                 }
             }
         }
-        
+
         return age;
     }
 
@@ -165,11 +173,16 @@ class DemographicsConceptTreeBuilder {
                     ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
                     for (ValueSetElement valueSetElement : valueSetElements) {
                         ConceptId conceptId = ConceptId.getInstance(propId, dataSpec.propertyName, valueSetElement.getValue(), DemographicsConceptTreeBuilder.this.metadata);
-                        Concept childConcept = new Concept(conceptId, dataSpec.conceptCodePrefix, DemographicsConceptTreeBuilder.this.metadata);
-                        childConcept.setDisplayName(valueSetElement.getDisplayName());
-                        childConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                        childConcept.setDataType(DataType.TEXT);
-                        DemographicsConceptTreeBuilder.this.metadata.addToIdCache(childConcept);
+                        Concept childConcept = DemographicsConceptTreeBuilder.this.metadata.getFromIdCache(conceptId);
+                        if (childConcept == null) {
+                            childConcept = new Concept(conceptId, dataSpec.conceptCodePrefix, DemographicsConceptTreeBuilder.this.metadata);
+                            childConcept.setDisplayName(valueSetElement.getDisplayName());
+                            childConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                            childConcept.setDataType(DataType.TEXT);
+                            DemographicsConceptTreeBuilder.this.metadata.addToIdCache(childConcept);
+                        } else {
+                            throw new OntologyBuildException("Duplicate demographics concept: " + childConcept.getConceptCode());
+                        }
                         concept.add(childConcept);
                     }
                 }
@@ -179,15 +192,22 @@ class DemographicsConceptTreeBuilder {
 
     private Concept newConcept(String displayName) throws OntologyBuildException {
         String conceptIdPrefix = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics|";
-        Concept folder;
-        try {
-            folder = new Concept(ConceptId.getInstance(displayName, this.metadata), conceptIdPrefix + displayName, this.metadata);
-        } catch (InvalidConceptCodeException ex) {
-            throw new OntologyBuildException("Error building ontology", ex);
+        ConceptId conceptId = ConceptId.getInstance(displayName, metadata);
+        Concept folder = this.metadata.getFromIdCache(conceptId);
+        if (folder == null) {
+            try {
+                folder = new Concept(conceptId, conceptIdPrefix + displayName, this.metadata);
+            } catch (InvalidConceptCodeException ex) {
+                throw new OntologyBuildException("Error building ontology", ex);
+            }
+            folder.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+            folder.setDisplayName(displayName);
+            folder.setDataType(DataType.TEXT);
+            this.metadata.addToIdCache(folder);
+        } else {
+            throw new OntologyBuildException(
+                    "Duplicate demographics concept: " + folder.getConceptCode());
         }
-        folder.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-        folder.setDisplayName(displayName);
-        folder.setDataType(DataType.TEXT);
         return folder;
     }
 

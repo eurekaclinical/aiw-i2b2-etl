@@ -4,7 +4,6 @@ import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -20,6 +19,7 @@ import java.sql.SQLException;
 import java.util.*;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.protempa.KnowledgeSourceReadException;
+import org.protempa.PropositionDefinition;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
@@ -447,12 +447,16 @@ public final class Metadata {
         }
         return val;
     }
+    
+    public Concept getFromIdCache(ConceptId conceptId) {
+        return this.CACHE.get(conceptId);
+    }
 
     public Concept getFromIdCache(String propId, String propertyName, Value value) {
 //        if (propId == null) {
 //            throw new IllegalArgumentException("propId cannot be null");
 //        }
-        return this.CACHE.get(
+        return getFromIdCache(
                 ConceptId.getInstance(propId, propertyName, value, this));
     }
 
@@ -479,6 +483,24 @@ public final class Metadata {
     boolean isInConceptCodeCache(String conceptCode) {
         return this.conceptCodeCache.contains(conceptCode);
     }
+    
+    public String[] extractDerived(PropositionDefinition[] propDefs)
+            throws KnowledgeSourceReadException {
+        Set<String> potentialDerivedConceptCodes = new HashSet<String>();
+
+        @SuppressWarnings("unchecked")
+        Enumeration<Concept> emu = getRoot().depthFirstEnumeration();
+
+        while (emu.hasMoreElements()) {
+            Concept concept = emu.nextElement();
+            if (concept.isDerived()) {
+                potentialDerivedConceptCodes.add(concept.getId().getPropositionId());
+            }
+        }
+
+        return potentialDerivedConceptCodes.toArray(
+                new String[potentialDerivedConceptCodes.size()]);
+    }
 
     private void constructTreePre(FolderSpec[] folderSpecs)
             throws IOException, SQLException, KnowledgeSourceReadException,
@@ -487,13 +509,18 @@ public final class Metadata {
         for (FolderSpec folderSpec : folderSpecs) {
             ConceptId conceptId =
                     ConceptId.getInstance(folderSpec.displayName, this);
-            Concept concept =
-                    new Concept(conceptId, folderSpec.conceptCodePrefix, this);
-            concept.setSourceSystemCode(
-                    MetadataUtil.toSourceSystemCode(
-                    I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-            concept.setDisplayName(folderSpec.displayName);
-            concept.setDataType(DataType.TEXT);
+            Concept concept = getFromIdCache(conceptId);
+            if (concept == null) {
+                concept =
+                        new Concept(conceptId, folderSpec.conceptCodePrefix, this);
+                concept.setSourceSystemCode(
+                        MetadataUtil.toSourceSystemCode(
+                        I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                concept.setDisplayName(folderSpec.displayName);
+                concept.setDataType(DataType.TEXT);
+                addToIdCache(concept);
+                this.rootConcept.add(concept);
+            }
             if (folderSpec.property == null) {
                 PropositionConceptTreeBuilder propProxy =
                         new PropositionConceptTreeBuilder(this.knowledgeSource,
@@ -507,8 +534,7 @@ public final class Metadata {
                         folderSpec.conceptCodePrefix, this);
                 concept.add(vsProxy.build());
             }
-            promote(concept, folderSpec.skipGen);
-            this.rootConcept.add(concept);
+            promote(concept, folderSpec.skipGen);   
         }
     }
 
