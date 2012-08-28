@@ -302,7 +302,6 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         DictionarySection dictionarySection =
                 this.configurationReader.getDictionarySection();
         String rootNodeName = dictionarySection.get("rootNodeName");
-        String obsFact = dictionarySection.get("observationFact");
         this.ontologyModel = new Metadata(this.knowledgeSource,
                 rootNodeName,
                 this.configurationReader.getConceptsSection().getFolderSpecs(),
