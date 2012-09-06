@@ -5,42 +5,55 @@ import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
 import org.protempa.PropositionDefinition;
+import org.protempa.ProtempaUtil;
 import org.protempa.proposition.value.ValueType;
 
 final class PropositionConceptTreeBuilder {
 
     private final KnowledgeSource knowledgeSource;
-    private final PropositionDefinition rootPropositionDefinition;
+    private final PropositionDefinition[] rootPropositionDefinitions;
     private final String conceptCode;
     private final Metadata metadata;
     private final ValueTypeCode valueTypeCode;
 
     PropositionConceptTreeBuilder(KnowledgeSource knowledgeSource,
-            String propId, String conceptCode, ValueTypeCode valueTypeCode,
+            String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
             Metadata metadata)
             throws KnowledgeSourceReadException,
             UnknownPropositionDefinitionException {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
-        assert propId != null : "propId cannot be null";
+        ProtempaUtil.checkArray(propIds, "propIds");
         assert metadata != null : "metadata cannot be null";
 
         this.knowledgeSource = knowledgeSource;
-        this.rootPropositionDefinition = readPropositionDefinition(propId);
+        this.rootPropositionDefinitions =
+                new PropositionDefinition[propIds.length];
+        for (int i = 0; i < propIds.length; i++) {
+            this.rootPropositionDefinitions[i] =
+                    readPropositionDefinition(propIds[i]);
+        }
         this.conceptCode = conceptCode;
         this.metadata = metadata;
         this.valueTypeCode = valueTypeCode;
     }
 
-    Concept build() throws OntologyBuildException {
+    Concept[] build() throws OntologyBuildException {
         try {
-            Concept rootConcept =
-                    addNode(this.rootPropositionDefinition);
-            if (!rootConcept.isDerived()) {
-                String[] children = 
-                        this.rootPropositionDefinition.getChildren();
-                buildHelper(children, rootConcept);
+            Concept[] result =
+                    new Concept[this.rootPropositionDefinitions.length];
+            for (int i = 0; i < this.rootPropositionDefinitions.length; i++) {
+                PropositionDefinition rootPropositionDefinition =
+                        this.rootPropositionDefinitions[i];
+                Concept rootConcept =
+                        addNode(rootPropositionDefinition);
+                if (!rootConcept.isDerived()) {
+                    String[] children =
+                            rootPropositionDefinition.getChildren();
+                    buildHelper(children, rootConcept);
+                }
+                result[i] = rootConcept;
             }
-            return rootConcept;
+            return result;
         } catch (UnknownPropositionDefinitionException ex) {
             throw new OntologyBuildException(
                     "Could not build proposition concept tree", ex);
@@ -75,7 +88,7 @@ final class PropositionConceptTreeBuilder {
         }
     }
 
-    private Concept addNode(PropositionDefinition propDef) 
+    private Concept addNode(PropositionDefinition propDef)
             throws InvalidConceptCodeException {
         ConceptId conceptId =
                 ConceptId.getInstance(propDef.getId(), this.metadata);

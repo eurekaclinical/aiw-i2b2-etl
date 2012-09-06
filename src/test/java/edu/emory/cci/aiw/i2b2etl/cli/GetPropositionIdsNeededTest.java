@@ -16,6 +16,10 @@ import org.junit.Test;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.Protempa;
+import org.protempa.query.DefaultQueryBuilder;
+import org.protempa.query.Query;
+import org.protempa.query.QueryBuildException;
+import org.protempa.query.QueryBuilder;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 
 /**
@@ -37,10 +41,13 @@ public class GetPropositionIdsNeededTest {
 
     @Test
     public void testPropositionIds() throws
-            QueryResultsHandlerInitException, KnowledgeSourceReadException {
+            QueryResultsHandlerInitException, KnowledgeSourceReadException, 
+            QueryBuildException {
         KnowledgeSource knowledgeSource = protempa.getKnowledgeSource();
         I2B2QueryResultsHandler qrh = new I2B2QueryResultsHandler(confXML);
-        qrh.init(knowledgeSource);
+        QueryBuilder queryBuilder = new DefaultQueryBuilder();
+        Query query = protempa.buildQuery(queryBuilder);
+        qrh.init(knowledgeSource, query);
         String[] actualPropIds = qrh.getPropositionIdsNeeded();
         Assert.assertEquals(expectedPropIds, Arrays.asSet(actualPropIds));
     }

@@ -222,7 +222,6 @@ public final class FactHandler {
             }
 
         } finally {
-            logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
             if (ps != null) {
                 try {
                     ps.close();

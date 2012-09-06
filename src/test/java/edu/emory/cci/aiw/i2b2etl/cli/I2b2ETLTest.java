@@ -81,6 +81,7 @@ public class I2b2ETLTest {
             
             q.setPropositionDefinitions(
                     new PropositionDefinition[]{ed, pd, hd});
+            q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
             QueryResultsHandler tdqrh = new I2B2QueryResultsHandler(confXML);

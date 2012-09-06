@@ -12,11 +12,11 @@ import org.w3c.dom.NamedNodeMap;
  */
 public final class ConceptsSection extends ConfigurationSection {
 
-    public class FolderSpec {
+    public static class FolderSpec {
 
         public int skipGen;
         public String displayName;
-        public String proposition;
+        public String[] propositions;
         public String property;
         public String conceptCodePrefix;
         public ValueTypeCode valueType;
@@ -38,7 +38,8 @@ public final class ConceptsSection extends ConfigurationSection {
             folderSpec.skipGen = Integer.parseInt(skipGenStr);
         }
         folderSpec.displayName = readAttribute(nnm, "displayName", true);
-        folderSpec.proposition = readAttribute(nnm, "proposition", true);
+        folderSpec.propositions = 
+                new String[]{readAttribute(nnm, "proposition", true)};
         folderSpec.property = readAttribute(nnm, "property", false);
         folderSpec.conceptCodePrefix = readAttribute(nnm, "conceptCodePrefix",
                 false);

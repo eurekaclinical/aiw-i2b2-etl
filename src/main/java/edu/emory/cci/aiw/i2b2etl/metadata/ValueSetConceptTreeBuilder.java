@@ -15,48 +15,56 @@ class ValueSetConceptTreeBuilder {
     private KnowledgeSource knowledgeSource;
     private String propertyName;
     private String conceptCodePrefix;
-    private final String propId;
-    private final PropositionDefinition propDefinition;
+    private final PropositionDefinition[] rootPropositionDefinitions;
     private final Metadata metadata;
 
-    ValueSetConceptTreeBuilder(KnowledgeSource knowledgeSource, String propId, String property,
+    ValueSetConceptTreeBuilder(KnowledgeSource knowledgeSource, String[] propIds, String property,
             String conceptCodePrefix, Metadata metadata) throws KnowledgeSourceReadException, UnknownPropositionDefinitionException {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
-        assert propId != null : "propId cannot be null";
+        ProtempaUtil.checkArray(propIds, "propIds");
         assert metadata != null : "metadata cannot be null";
         this.knowledgeSource = knowledgeSource;
         this.propertyName = property;
         this.conceptCodePrefix = conceptCodePrefix;
-        this.propId = propId;
-        this.propDefinition =
-                knowledgeSource.readPropositionDefinition(this.propId);
-        if (this.propDefinition == null) {
-            throw new UnknownPropositionDefinitionException(this.propId);
+        this.rootPropositionDefinitions =
+                new PropositionDefinition[propIds.length];
+        for (int i = 0; i < propIds.length; i++) {
+            this.rootPropositionDefinitions[i] =
+                    knowledgeSource.readPropositionDefinition(propIds[i]);
+            if (this.rootPropositionDefinitions[i] == null) {
+                throw new UnknownPropositionDefinitionException(propIds[i]);
+            }
         }
         this.metadata = metadata;
     }
-    
-    Concept build() throws OntologyBuildException {
+
+    Concept[] build() throws OntologyBuildException {
         try {
-            Concept root = new Concept(ConceptId.getInstance(this.propId, this.propertyName, this.metadata), this.conceptCodePrefix, this.metadata);
-            root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-            root.setDataType(DataType.TEXT);
-            PropertyDefinition propertyDef =
-                    propDefinition.propertyDefinition(propertyName);
-            ValueSet valueSet =
-                    knowledgeSource.readValueSet(propertyDef.getValueSetId());
-            ValueSetElement[] vse = valueSet.getValueSetElements();
-            for (ValueSetElement e : vse) {
-                Concept concept = new Concept(ConceptId.getInstance(
-                        this.propId, this.propertyName, e.getValue(), this.metadata), this.conceptCodePrefix, this.metadata);
-                concept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(valueSet.getSourceId().getStringRepresentation()));
-                concept.setInDataSource(true);
-                concept.setDisplayName(e.getDisplayName());
-                concept.setDataType(DataType.TEXT);
-                this.metadata.addToIdCache(concept);
-                root.add(concept);
+            Concept[] result =
+                    new Concept[this.rootPropositionDefinitions.length];
+            for (int i = 0; i < this.rootPropositionDefinitions.length; i++) {
+                PropositionDefinition propDefinition = this.rootPropositionDefinitions[i];
+                Concept root = new Concept(ConceptId.getInstance(propDefinition.getId(), this.propertyName, this.metadata), this.conceptCodePrefix, this.metadata);
+                root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                root.setDataType(DataType.TEXT);
+                PropertyDefinition propertyDef =
+                        propDefinition.propertyDefinition(propertyName);
+                ValueSet valueSet =
+                        knowledgeSource.readValueSet(propertyDef.getValueSetId());
+                ValueSetElement[] vse = valueSet.getValueSetElements();
+                for (ValueSetElement e : vse) {
+                    Concept concept = new Concept(ConceptId.getInstance(
+                            propDefinition.getId(), this.propertyName, e.getValue(), this.metadata), this.conceptCodePrefix, this.metadata);
+                    concept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(valueSet.getSourceId().getStringRepresentation()));
+                    concept.setInDataSource(true);
+                    concept.setDisplayName(e.getDisplayName());
+                    concept.setDataType(DataType.TEXT);
+                    this.metadata.addToIdCache(concept);
+                    root.add(concept);
+                }
+                result[i] = root;
             }
-            return root;
+            return result;
         } catch (KnowledgeSourceReadException ex) {
             throw new OntologyBuildException("Could not build value set concept tree", ex);
         } catch (InvalidConceptCodeException ex) {

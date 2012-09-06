@@ -18,6 +18,7 @@ import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
 import org.apache.commons.collections.map.ReferenceMap;
+import org.protempa.ConstantDefinition;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
 import org.protempa.proposition.Proposition;
@@ -84,8 +85,10 @@ public final class Metadata {
     private final Map<String, ProviderDimension> providers;
     private final DataSection dataSection;
     private final DictionarySection dictSection;
+    private final PropositionDefinition[] userDefinedPropositionDefinitions;
 
     public Metadata(KnowledgeSource knowledgeSource,
+            PropositionDefinition[] userDefinedPropositionDefinitions,
             String rootNodeDisplayName,
             FolderSpec[] folderSpecs,
             DictionarySection dictSection,
@@ -111,6 +114,8 @@ public final class Metadata {
         this.providers = new HashMap<String, ProviderDimension>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
+        this.userDefinedPropositionDefinitions =
+                userDefinedPropositionDefinitions;
         Logger logger = MetadataUtil.logger();
 
         try {
@@ -361,8 +366,8 @@ public final class Metadata {
                             AbsoluteTimeGranularityUtil.asPosition(now),
                             AbsoluteTimeGranularity.YEAR,
                             AbsoluteTimeUnit.YEAR);
-                    
-                    Concept ageConcept = getFromIdCache(null, null, 
+
+                    Concept ageConcept = getFromIdCache(null, null,
                             NumberValue.getInstance(ageInYears));
                     ageConcept.setInUse(true);
 
@@ -447,7 +452,7 @@ public final class Metadata {
         }
         return val;
     }
-    
+
     public Concept getFromIdCache(ConceptId conceptId) {
         return this.CACHE.get(conceptId);
     }
@@ -483,7 +488,7 @@ public final class Metadata {
     boolean isInConceptCodeCache(String conceptCode) {
         return this.conceptCodeCache.contains(conceptCode);
     }
-    
+
     public String[] extractDerived(PropositionDefinition[] propDefs)
             throws KnowledgeSourceReadException {
         Set<String> potentialDerivedConceptCodes = new HashSet<String>();
@@ -507,34 +512,22 @@ public final class Metadata {
             UnknownPropositionDefinitionException, InvalidConceptCodeException,
             OntologyBuildException, InvalidPromoteArgumentException {
         for (FolderSpec folderSpec : folderSpecs) {
-            ConceptId conceptId =
-                    ConceptId.getInstance(folderSpec.displayName, this);
-            Concept concept = getFromIdCache(conceptId);
-            if (concept == null) {
-                concept =
-                        new Concept(conceptId, folderSpec.conceptCodePrefix, this);
-                concept.setSourceSystemCode(
-                        MetadataUtil.toSourceSystemCode(
-                        I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                concept.setDisplayName(folderSpec.displayName);
-                concept.setDataType(DataType.TEXT);
-                addToIdCache(concept);
-                this.rootConcept.add(concept);
+            processFolderSpec(folderSpec);
+        }
+        if (this.userDefinedPropositionDefinitions.length > 0) {
+            FolderSpec folderSpec = new FolderSpec();
+            folderSpec.displayName = "User-defined Derived Variables";
+            String[] propIds =
+                    new String[this.userDefinedPropositionDefinitions.length];
+            for (int i = 0;
+                    i < this.userDefinedPropositionDefinitions.length;
+                    i++) {
+                propIds[i] = this.userDefinedPropositionDefinitions[i].getId();
             }
-            if (folderSpec.property == null) {
-                PropositionConceptTreeBuilder propProxy =
-                        new PropositionConceptTreeBuilder(this.knowledgeSource,
-                        folderSpec.proposition, folderSpec.conceptCodePrefix,
-                        folderSpec.valueType, this);
-                concept.add(propProxy.build());
-            } else {
-                ValueSetConceptTreeBuilder vsProxy =
-                        new ValueSetConceptTreeBuilder(this.knowledgeSource,
-                        folderSpec.proposition, folderSpec.property,
-                        folderSpec.conceptCodePrefix, this);
-                concept.add(vsProxy.build());
-            }
-            promote(concept, folderSpec.skipGen);   
+            folderSpec.propositions = propIds;
+            folderSpec.valueType = null;
+            folderSpec.skipGen = 0;
+            processFolderSpec(folderSpec);
         }
     }
 
@@ -561,5 +554,44 @@ public final class Metadata {
             c.removeAllChildren();
             promote(concept, ctr - 1);
         }
+    }
+
+    private void processFolderSpec(FolderSpec folderSpec)
+            throws InvalidConceptCodeException, KnowledgeSourceReadException,
+            InvalidPromoteArgumentException,
+            UnknownPropositionDefinitionException, OntologyBuildException {
+        ConceptId conceptId =
+                ConceptId.getInstance(folderSpec.displayName, this);
+        Concept concept = getFromIdCache(conceptId);
+        if (concept == null) {
+            concept =
+                    new Concept(conceptId, folderSpec.conceptCodePrefix, this);
+            concept.setSourceSystemCode(
+                    MetadataUtil.toSourceSystemCode(
+                    I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+            concept.setDisplayName(folderSpec.displayName);
+            concept.setDataType(DataType.TEXT);
+            addToIdCache(concept);
+            this.rootConcept.add(concept);
+        }
+        Concept[] concepts;
+        if (folderSpec.property == null) {
+            PropositionConceptTreeBuilder propProxy =
+                    new PropositionConceptTreeBuilder(this.knowledgeSource,
+                    folderSpec.propositions, folderSpec.conceptCodePrefix,
+                    folderSpec.valueType, this);
+            concepts = propProxy.build();
+
+        } else {
+            ValueSetConceptTreeBuilder vsProxy =
+                    new ValueSetConceptTreeBuilder(this.knowledgeSource,
+                    folderSpec.propositions, folderSpec.property,
+                    folderSpec.conceptCodePrefix, this);
+            concepts = vsProxy.build();
+        }
+        for (Concept c : concepts) {
+            concept.add(c);
+        }
+        promote(concept, folderSpec.skipGen);
     }
 }
