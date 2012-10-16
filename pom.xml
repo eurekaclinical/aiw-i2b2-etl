@@ -11,6 +11,19 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     
+    <distributionManagement>
+        <repository>
+            <id>aiw.internal.repo</id>
+            <name>AIW Internal Repo</name>
+            <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/aiw/</url>
+        </repository>
+        <snapshotRepository>
+            <id>aiw.snapshots.internal.repo</id>
+            <name>AIW Internal Snapshots Repo</name>
+            <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/aiw-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+    
     <repositories>
         <repository>
             <id>central</id>
@@ -132,6 +145,33 @@
                     </delimiters>
                     <useDefaultDelimiters>false</useDefaultDelimiters>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -277,6 +317,19 @@
                             <skipTests>false</skipTests>
                             <argLine>-enableassertions -Xmx4G -Djava.security.egd=file:///dev/urandom</argLine>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
