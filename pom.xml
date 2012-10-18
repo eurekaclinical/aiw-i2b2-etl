@@ -1,10 +1,9 @@
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.emory.cci</groupId>
     <artifactId>aiw-i2b2-etl</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>A Protempa query results handler for loading data and abstractions into i2b2.</description>
@@ -14,9 +13,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:https://scm.cci.emory.edu/svn/aiw/trunk/aiw-i2b2-etl
+        <connection>scm:svn:https://scm.cci.emory.edu/svn/aiw/tags/aiw-i2b2-etl-1.0.1
         </connection>
-        <url>https://scm.cci.emory.edu/svn/aiw/trunk/aiw-i2b2-etl</url>
+        <url>https://scm.cci.emory.edu/svn/aiw/tags/aiw-i2b2-etl-1.0.1</url>
     </scm>
 
     <issueManagement>
