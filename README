@@ -1,0 +1,53 @@
+AIW i2b2 ETL 1.0.2 -- A Query Results Handler for Protempa for Loading Data and
+Abstractions into i2b2
+Center for Comprehensive Informatics, Emory University
+
+OVERVIEW
+
+Welcome to the AIW i2b2 ETL query results handler. It implements support for
+loading data and abstractions retrieved and computed by Protempa into i2b2.
+
+WHAT'S NEW
+
+Version 1.0.2 is the first externally available version.
+
+REQUIREMENTS
+
+The current version is known to work with Oracle Java 6. It is expected to work
+with OpenJDK 6 as well. It is incompatible with Java 7.
+
+This package uses the Maven build system, available from 
+http://maven.apache.org. You must install maven, if you do not already have it,
+to work with the source code. We use Maven 3.
+
+AIW i2b2 ETL is a "plugin" to the Protempa temporal query system, which is
+available from the same site where you got this software.
+
+INSTALLATION
+
+The easiest way to get AIW i2b2 ETL is using Maven. It is available from the
+http://maven.cci.emory.edu:8081 repository. Use the following dependency
+declaration:
+
+<dependency>
+  <groupId>edu.emory.cci</groupId>
+  <artifactId>aiw-i2b2-etl</artifactId>
+  <version>1.0.2</version>
+</dependency>
+
+It is also available in tarball and zip file formats from 
+http://eureka-dev.cci.emory.edu/dev/. Put aiw-i2b2-etl-1.0.2.jar on your
+classpath to use.
+
+LICENSING
+
+AIW i2b2 ETL is freely available as open source under the Apache License, 
+Version 2.0. A copy of the license is in the LICENSE file provided in this 
+distribution.
+
+AIW i2b2 ETL is Copyright (C) 2012 Emory University.
+
+FOR MORE INFORMATION
+
+Please see http://eureka-dev.cci.emory.edu/dev for technical documentation and
+more information.
