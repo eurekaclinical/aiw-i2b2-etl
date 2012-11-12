@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>A Protempa query results handler for loading data and abstractions into i2b2.</description>
-    <url>http://eureka.cci.emory.edu/dev/</url>
+    <url>http://aiw.sourceforge.net</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -25,8 +25,8 @@
     
     <distributionManagement>
         <site>
-            <id>eureka-dev.cci.emory.edu</id>
-            <url>scp://eureka-dev.cci.emory.edu/var/www/html/dev/aiw-i2b2-etl</url>
+            <id>aiw.sourceforge.net</id>
+            <url>scp://shell.sourceforge.net/home/project-web/aiw/htdocs/dev/${project.build.finalName}</url>
         </site>
         <repository>
             <id>aiw.internal.repo</id>
