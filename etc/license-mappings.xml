@@ -25,12 +25,6 @@
         <license>Mozilla Public License</license>
     </artifact>
     <artifact>
-        <groupId>org.drools</groupId>
-        <artifactId>drools-core</artifactId>
-        <version>4.0.7</version>
-        <license>Apache License, Version 2.0</license>
-    </artifact>
-    <artifact>
         <groupId>umlsquery</groupId>
         <artifactId>umls-query</artifactId>
         <version>1.0</version>
