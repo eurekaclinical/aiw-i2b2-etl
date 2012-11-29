@@ -57,10 +57,6 @@
             <id>aiw.internal.repo</id>
             <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/aiw/</url>
         </repository>
-        <repository>
-            <id>aiw.snapshots.internal.repo</id>
-            <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/aiw-snapshots/</url>
-        </repository>
     </repositories>
     
     <reporting>
