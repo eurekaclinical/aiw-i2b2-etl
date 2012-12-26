@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>A Protempa query results handler for loading data and abstractions into i2b2.</description>
-    <url>http://aiw.sourceforge.net</url>
+    <url>http://aiw.sourceforge.net/dev/${project.build.finalName}</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -29,14 +29,14 @@
             <url>scp://shell.sourceforge.net/home/project-web/aiw/htdocs/dev/${project.build.finalName}</url>
         </site>
         <repository>
-            <id>aiw.internal.repo</id>
-            <name>AIW Internal Repo</name>
-            <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/aiw/</url>
+            <id>aiw.repo</id>
+            <name>AIW Repo</name>
+            <url>http://maven.cci.emory.edu/nexus/content/repositories/aiw/</url>
         </repository>
         <snapshotRepository>
-            <id>aiw.snapshots.internal.repo</id>
-            <name>AIW Internal Snapshots Repo</name>
-            <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/aiw-snapshots/</url>
+            <id>aiw.snapshots.repo</id>
+            <name>AIW Snapshots Repo</name>
+            <url>http://maven.cci.emory.edu/nexus/content/repositories/aiw-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
     
@@ -51,11 +51,13 @@
     <repositories>
         <repository>
             <id>maven.cci</id>
-            <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/public</url>
+						<name>CCI Maven Repository</name>
+            <url>http://maven.cci.emory.edu/nexus/content/repositories/public</url>
         </repository>
         <repository>
-            <id>aiw.internal.repo</id>
-            <url>http://maven.cci.emory.edu:8081/nexus/content/repositories/aiw/</url>
+            <id>aiw.repo</id>
+						<name>AIW Release Repository</name>
+            <url>http://maven.cci.emory.edu/nexus/content/repositories/aiw/</url>
         </repository>
     </repositories>
     
