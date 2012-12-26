@@ -6,8 +6,14 @@
     <version>1.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
-    <description>A Protempa query results handler for loading data and abstractions into i2b2.</description>
+    <description>AIW i2b2 ETL is a Protempa query results handler for loading data and abstractions into i2b2.</description>
+    <organization>
+        <name>Emory University</name>
+        <url>http://www.emory.edu</url>
+    </organization>
+    
     <url>http://aiw.sourceforge.net/dev/${project.build.finalName}</url>
+    
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -51,12 +57,12 @@
     <repositories>
         <repository>
             <id>maven.cci</id>
-						<name>CCI Maven Repository</name>
+            <name>CCI Maven Repository</name>
             <url>http://maven.cci.emory.edu/nexus/content/repositories/public</url>
         </repository>
         <repository>
             <id>aiw.repo</id>
-						<name>AIW Release Repository</name>
+            <name>AIW Release Repository</name>
             <url>http://maven.cci.emory.edu/nexus/content/repositories/aiw/</url>
         </repository>
     </repositories>
