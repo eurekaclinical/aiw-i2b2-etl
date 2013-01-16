@@ -629,6 +629,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         }
     }
     
+    @Override
     public String[] getPropositionIdsNeeded()
             throws KnowledgeSourceReadException {
         if (!this.inferPropositionIdsNeeded) {
