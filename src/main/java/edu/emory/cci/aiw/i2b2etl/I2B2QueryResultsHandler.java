@@ -383,12 +383,29 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         DictionarySection dictionarySection =
                 this.configurationReader.getDictionarySection();
         String rootNodeName = dictionarySection.get("rootNodeName");
+        
         this.ontologyModel = new Metadata(this.knowledgeSource,
-                this.query.getPropositionDefinitions(),
+                collectUserPropositionDefinitions(),
                 rootNodeName,
                 this.configurationReader.getConceptsSection().getFolderSpecs(),
                 this.configurationReader.getDictionarySection(),
                 this.configurationReader.getDataSection());
+    }
+    
+    private PropositionDefinition[] collectUserPropositionDefinitions() {
+        PropositionDefinition[] allUserPropDefs = 
+                this.query.getPropositionDefinitions();
+        List<PropositionDefinition> result = 
+                new ArrayList<PropositionDefinition>();
+        Set<String> propIds = 
+                org.arp.javautil.arrays.Arrays.asSet(
+                this.query.getPropositionIds());
+        for (PropositionDefinition propDef : allUserPropDefs) {
+            if (propIds.contains(propDef.getId())) {
+                result.add(propDef);
+            }
+        }
+        return result.toArray(new PropositionDefinition[result.size()]);
     }
     
     private void truncateDataTables() throws SQLException {

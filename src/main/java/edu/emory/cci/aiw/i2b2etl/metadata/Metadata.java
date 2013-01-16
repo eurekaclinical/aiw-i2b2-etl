@@ -90,6 +90,10 @@ import org.protempa.proposition.value.Value;
  * batch-loaded into the database.
  */
 public final class Metadata {
+    
+    private static final PropositionDefinition[] 
+            EMPTY_PROPOSITION_DEFINITION_ARRAY =
+            new PropositionDefinition[0];
 
     private final Concept rootConcept;
     private final Map<ConceptId, Concept> CACHE =
@@ -118,6 +122,16 @@ public final class Metadata {
         if (dataSection == null) {
             throw new IllegalArgumentException("dataSource cannot be null");
         }
+        if (folderSpecs == null) {
+            throw new IllegalArgumentException("folderSpecs cannot be null");
+        }
+        if (userDefinedPropositionDefinitions == null) {
+            this.userDefinedPropositionDefinitions = 
+                    EMPTY_PROPOSITION_DEFINITION_ARRAY;
+        } else {
+            this.userDefinedPropositionDefinitions = 
+                    userDefinedPropositionDefinitions.clone();
+        }
         this.knowledgeSource = knowledgeSource;
         try {
             this.rootConcept = new Concept(
@@ -133,8 +147,7 @@ public final class Metadata {
         this.providers = new HashMap<String, ProviderDimension>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
-        this.userDefinedPropositionDefinitions =
-                userDefinedPropositionDefinitions;
+        
         Logger logger = MetadataUtil.logger();
 
         try {
@@ -142,7 +155,7 @@ public final class Metadata {
              * Produce the ontology tree.
              */
             logger.log(Level.FINE, "STEP: construct tree");
-            constructTreePre(folderSpecs);
+            constructTreePre(folderSpecs.clone());
 
             buildDemographicsHierarchy();
 
