@@ -159,19 +159,19 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     this.query.getId());
         } catch (KnowledgeSourceReadException ex) {
             throw new QueryResultsHandlerProcessingException(
-                    "Error during query " + this.query.getId(), ex);
+                    "Error during i2b2 load", ex);
         } catch (InstantiationException ex) {
             throw new QueryResultsHandlerProcessingException(
-                    "Error during query " + this.query.getId(), ex);
+                    "Error during i2b2 load", ex);
         } catch (IllegalAccessException ex) {
             throw new QueryResultsHandlerProcessingException(
-                    "Error during query " + this.query.getId(), ex);
+                    "Error during i2b2 load", ex);
         } catch (OntologyBuildException ex) {
             throw new QueryResultsHandlerProcessingException(
-                    "Error during query " + this.query.getId(), ex);
+                    "Error during i2b2 load", ex);
         } catch (SQLException ex) {
             throw new QueryResultsHandlerProcessingException(
-                    "Error during query " + this.query.getId(), ex);
+                    "Error during i2b2 load", ex);
         }
     }
     
