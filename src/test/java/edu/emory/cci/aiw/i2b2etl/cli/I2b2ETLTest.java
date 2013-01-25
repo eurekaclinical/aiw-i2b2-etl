@@ -26,19 +26,30 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import org.junit.*;
+import org.protempa.CompoundLowLevelAbstractionDefinition;
+import org.protempa.CompoundLowLevelAbstractionDefinition.ValueClassification;
 import org.protempa.EventDefinition;
 import org.protempa.FinderException;
 import org.protempa.HighLevelAbstractionDefinition;
+import org.protempa.LowLevelAbstractionDefinition;
+import org.protempa.LowLevelAbstractionValueDefinition;
 import org.protempa.Offsets;
 import org.protempa.PrimitiveParameterDefinition;
 import org.protempa.PropositionDefinition;
 import org.protempa.Protempa;
 import org.protempa.ProtempaStartupException;
+import org.protempa.SimpleGapFunction;
+import org.protempa.SlidingWindowWidthMode;
+import org.protempa.TemporalExtendedParameterDefinition;
 import org.protempa.TemporalExtendedPropositionDefinition;
 import org.protempa.backend.BackendProviderSpecLoaderException;
 import org.protempa.backend.ConfigurationsLoadException;
 import org.protempa.backend.InvalidConfigurationException;
 import org.protempa.proposition.interval.Relation;
+import org.protempa.proposition.value.NominalValue;
+import org.protempa.proposition.value.NumberValue;
+import org.protempa.proposition.value.ValueComparator;
+import org.protempa.proposition.value.ValueType;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
@@ -78,12 +89,86 @@ public class I2b2ETLTest {
             
             EventDefinition ed = new EventDefinition("MyDiagnosis");
             ed.setDisplayName("My Diagnosis");
-            ed.setInverseIsA("ICD9:907.1");
+            ed.setInverseIsA("ICD9:719.52");
             
             PrimitiveParameterDefinition pd = 
                     new PrimitiveParameterDefinition("MyLabTest");
             pd.setDisplayName("My Lab Test");
             pd.setInverseIsA("LAB:8007694");
+            pd.setValueType(ValueType.NUMBERVALUE);
+            
+            PrimitiveParameterDefinition pd2 =
+                    new PrimitiveParameterDefinition("MyOtherLabTest");
+            pd2.setDisplayName("My Other Lab Test");
+            pd2.setInverseIsA("LAB:8400010");
+            pd2.setValueType(ValueType.NUMBERVALUE);
+            
+            LowLevelAbstractionDefinition ld =
+                    new LowLevelAbstractionDefinition("MyLabThreshold");
+            ld.setDisplayName("My Lab Threshold");
+            ld.addPrimitiveParameterId(pd.getId());
+            LowLevelAbstractionValueDefinition vd =
+                    new LowLevelAbstractionValueDefinition(ld, "MyLabThresholdHigh");
+            vd.setValue(NominalValue.getInstance("High"));
+            vd.setParameterComp("minThreshold", ValueComparator.GREATER_THAN);
+            vd.setParameterValue("minThreshold", NumberValue.getInstance(600));
+            ld.addValueDefinition(vd);
+            LowLevelAbstractionValueDefinition vd3 =
+                    new LowLevelAbstractionValueDefinition(ld, "MyLabThresholdOther");
+            vd3.setValue(NominalValue.getInstance("Other"));
+            vd3.setParameterComp("maxThreshold", ValueComparator.LESS_THAN_OR_EQUAL_TO);
+            vd3.setParameterValue("maxThreshold", NumberValue.getInstance(600));
+            ld.addValueDefinition(vd3);
+            ld.setAlgorithmId("stateDetector");
+            ld.setMaximumNumberOfValues(1);
+            ld.setMinimumNumberOfValues(1);
+            ld.setGapFunction(new SimpleGapFunction(0, null));
+            ld.setSlidingWindowWidthMode(SlidingWindowWidthMode.RANGE);
+            
+            LowLevelAbstractionDefinition ld2 =
+                    new LowLevelAbstractionDefinition("MyOtherLabThreshold");
+            ld2.setDisplayName("My Other Lab Threshold");
+            ld2.addPrimitiveParameterId("LAB:8400010");
+            LowLevelAbstractionValueDefinition vd2 =
+                    new LowLevelAbstractionValueDefinition(ld2, "MyOtherLabThresholdHigh");
+            vd2.setValue(NominalValue.getInstance("High"));
+            vd2.setParameterComp("minThreshold", ValueComparator.GREATER_THAN);
+            vd2.setParameterValue("minThreshold", NumberValue.getInstance(400));
+            LowLevelAbstractionValueDefinition vd4 =
+                    new LowLevelAbstractionValueDefinition(ld2, "MyOtherLabThresholdOther");
+            vd4.setValue(NominalValue.getInstance("Other"));
+            vd4.setParameterComp("maxThreshold", ValueComparator.LESS_THAN_OR_EQUAL_TO);
+            vd4.setParameterValue("maxThreshold", NumberValue.getInstance(400));
+            ld2.setAlgorithmId("stateDetector");
+            ld2.setGapFunction(new SimpleGapFunction(0, null));
+            ld2.setSlidingWindowWidthMode(SlidingWindowWidthMode.DEFAULT);
+            
+            HighLevelAbstractionDefinition ldWrapper =
+                    new HighLevelAbstractionDefinition("MyLabThresholdWrapper");
+            ldWrapper.setDisplayName("My Lab Threshold");
+            TemporalExtendedParameterDefinition td3 =
+                    new TemporalExtendedParameterDefinition(ld.getId());
+            td3.setValue(NominalValue.getInstance("High"));
+            ldWrapper.add(td3);
+            Relation rel2 = new Relation();
+            ldWrapper.setRelation(td3, td3, rel2);
+            
+            CompoundLowLevelAbstractionDefinition clad =
+                    new CompoundLowLevelAbstractionDefinition("Compound");
+            clad.setDisplayName("Combined Thresholds");
+            clad.setValueDefinitionMatchOperator(CompoundLowLevelAbstractionDefinition.ValueDefinitionMatchOperator.ANY);
+            clad.addValueClassification(new ValueClassification("High", ld.getId(), "High"));
+            clad.addValueClassification(new ValueClassification("High", ld2.getId(), "High"));
+            clad.addValueClassification(new ValueClassification("Other", ld.getId(), "Other"));
+            clad.addValueClassification(new ValueClassification("Other", ld2.getId(), "Other"));
+            clad.setMinimumNumberOfValues(1);
+            
+            CompoundLowLevelAbstractionDefinition clad2 =
+                    new CompoundLowLevelAbstractionDefinition("AtLeast2Compound");
+            clad2.setDisplayName("At Least 2");
+            clad2.addValueClassification(new ValueClassification("High", clad.getId(), "High"));
+            clad2.addValueClassification(new ValueClassification("Other", clad.getId(), "Other"));
+            clad2.setMinimumNumberOfValues(2);
             
             HighLevelAbstractionDefinition hd =
                     new HighLevelAbstractionDefinition("MyTemporalPattern");
@@ -99,7 +184,8 @@ public class I2b2ETLTest {
             hd.setTemporalOffset(new Offsets());
             
             q.setPropositionDefinitions(
-                    new PropositionDefinition[]{ed, pd, hd});
+                    new PropositionDefinition[]{ed, pd, pd2, hd, ld, ldWrapper, ld2, clad, clad2, pd2, ld2});
+            q.setPropositionIds(new String[]{ed.getId(), pd.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), pd2.getId(), ld2.getId()});
             q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
