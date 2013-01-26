@@ -39,6 +39,7 @@ import org.protempa.PropositionDefinition;
 import org.protempa.Protempa;
 import org.protempa.ProtempaStartupException;
 import org.protempa.SimpleGapFunction;
+import org.protempa.SliceDefinition;
 import org.protempa.SlidingWindowWidthMode;
 import org.protempa.TemporalExtendedParameterDefinition;
 import org.protempa.TemporalExtendedPropositionDefinition;
@@ -91,22 +92,10 @@ public class I2b2ETLTest {
             ed.setDisplayName("My Diagnosis");
             ed.setInverseIsA("ICD9:719.52");
             
-            PrimitiveParameterDefinition pd = 
-                    new PrimitiveParameterDefinition("MyLabTest");
-            pd.setDisplayName("My Lab Test");
-            pd.setInverseIsA("LAB:8007694");
-            pd.setValueType(ValueType.NUMBERVALUE);
-            
-            PrimitiveParameterDefinition pd2 =
-                    new PrimitiveParameterDefinition("MyOtherLabTest");
-            pd2.setDisplayName("My Other Lab Test");
-            pd2.setInverseIsA("LAB:8400010");
-            pd2.setValueType(ValueType.NUMBERVALUE);
-            
             LowLevelAbstractionDefinition ld =
                     new LowLevelAbstractionDefinition("MyLabThreshold");
             ld.setDisplayName("My Lab Threshold");
-            ld.addPrimitiveParameterId(pd.getId());
+            ld.addPrimitiveParameterId("LAB:8007694");
             LowLevelAbstractionValueDefinition vd =
                     new LowLevelAbstractionValueDefinition(ld, "MyLabThresholdHigh");
             vd.setValue(NominalValue.getInstance("High"));
@@ -133,12 +122,12 @@ public class I2b2ETLTest {
                     new LowLevelAbstractionValueDefinition(ld2, "MyOtherLabThresholdHigh");
             vd2.setValue(NominalValue.getInstance("High"));
             vd2.setParameterComp("minThreshold", ValueComparator.GREATER_THAN);
-            vd2.setParameterValue("minThreshold", NumberValue.getInstance(400));
+            vd2.setParameterValue("minThreshold", NumberValue.getInstance(300));
             LowLevelAbstractionValueDefinition vd4 =
                     new LowLevelAbstractionValueDefinition(ld2, "MyOtherLabThresholdOther");
             vd4.setValue(NominalValue.getInstance("Other"));
             vd4.setParameterComp("maxThreshold", ValueComparator.LESS_THAN_OR_EQUAL_TO);
-            vd4.setParameterValue("maxThreshold", NumberValue.getInstance(400));
+            vd4.setParameterValue("maxThreshold", NumberValue.getInstance(300));
             ld2.setAlgorithmId("stateDetector");
             ld2.setGapFunction(new SimpleGapFunction(0, null));
             ld2.setSlidingWindowWidthMode(SlidingWindowWidthMode.DEFAULT);
@@ -161,14 +150,27 @@ public class I2b2ETLTest {
             clad.addValueClassification(new ValueClassification("High", ld2.getId(), "High"));
             clad.addValueClassification(new ValueClassification("Other", ld.getId(), "Other"));
             clad.addValueClassification(new ValueClassification("Other", ld2.getId(), "Other"));
+            clad.setGapFunction(new SimpleGapFunction(Integer.valueOf(0), null));
+            clad.setConcatenable(false);
             clad.setMinimumNumberOfValues(1);
             
             CompoundLowLevelAbstractionDefinition clad2 =
                     new CompoundLowLevelAbstractionDefinition("AtLeast2Compound");
-            clad2.setDisplayName("At Least 2");
+            clad2.setDisplayName("At Least 2 consecutive");
             clad2.addValueClassification(new ValueClassification("High", clad.getId(), "High"));
             clad2.addValueClassification(new ValueClassification("Other", clad.getId(), "Other"));
+            clad2.setGapFunction(new SimpleGapFunction(Integer.valueOf(0), null));
+            clad2.setConcatenable(false);
             clad2.setMinimumNumberOfValues(2);
+            
+            SliceDefinition sd = new SliceDefinition("FirstAndOrSecondSlice");
+            sd.setDisplayName("First and/or second");
+            TemporalExtendedParameterDefinition tepd =
+                    new TemporalExtendedParameterDefinition(clad.getId(), 
+                    NominalValue.getInstance("High"));
+            sd.add(tepd);
+            sd.setMinIndex(0);
+            sd.setMaxIndex(2);
             
             HighLevelAbstractionDefinition hd =
                     new HighLevelAbstractionDefinition("MyTemporalPattern");
@@ -176,7 +178,7 @@ public class I2b2ETLTest {
             TemporalExtendedPropositionDefinition td1 =
                     new TemporalExtendedPropositionDefinition(ed.getId());
             TemporalExtendedPropositionDefinition td2 =
-                    new TemporalExtendedPropositionDefinition(pd.getId());
+                    new TemporalExtendedPropositionDefinition("LAB:8007694");
             hd.add(td1);
             hd.add(td2);
             Relation rel = new Relation();
@@ -184,8 +186,8 @@ public class I2b2ETLTest {
             hd.setTemporalOffset(new Offsets());
             
             q.setPropositionDefinitions(
-                    new PropositionDefinition[]{ed, pd, pd2, hd, ld, ldWrapper, ld2, clad, clad2, pd2, ld2});
-            q.setPropositionIds(new String[]{ed.getId(), pd.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), pd2.getId(), ld2.getId()});
+                    new PropositionDefinition[]{ed, hd, ld, ldWrapper, ld2, clad, clad2, ld2, sd});
+            q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId()});
             q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
