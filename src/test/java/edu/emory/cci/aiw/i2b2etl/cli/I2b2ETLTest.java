@@ -160,7 +160,7 @@ public class I2b2ETLTest {
             clad2.addValueClassification(new ValueClassification("High", clad.getId(), "High"));
             clad2.addValueClassification(new ValueClassification("Other", clad.getId(), "Other"));
             clad2.setGapFunction(new SimpleGapFunction(Integer.valueOf(0), null));
-            clad2.setConcatenable(false);
+            //clad2.setConcatenable(false);
             clad2.setMinimumNumberOfValues(2);
             
             SliceDefinition sd = new SliceDefinition("FirstAndOrSecondSlice");
