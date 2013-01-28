@@ -10,7 +10,7 @@ Protempa into i2b2.
 
 WHAT'S NEW
 
-Version 1.0.3 moved the website to aiw.sourceforge.net.
+Version 1.0.3 contains minor bug fixes.
 
 REQUIREMENTS
 
@@ -27,9 +27,9 @@ which is available from the same site where you got this software.
 
 INSTALLATION
 
-The easiest way to get AIW i2b2 ETL is using Maven. It is available
-from the http://maven.cci.emory.edu:8081 repository. Use the following
-dependency declaration:
+The easiest way to get AIW i2b2 ETL is using Maven. It is available from
+the http://maven.cci.emory.edu/nexus/content/repositories/aiw/ repository. 
+Use the following dependency declaration:
 
 <dependency>
     <groupId>edu.emory.cci</groupId>
@@ -47,7 +47,7 @@ AIW i2b2 ETL is freely available as open source under the Apache
 License, Version 2.0. A copy of the license is in the LICENSE file
 provided in this distribution.
 
-AIW i2b2 ETL is Copyright (C) 2012 Emory University.
+AIW i2b2 ETL is Copyright (C) 2012-2013 Emory University.
 
 FOR MORE INFORMATION
 
