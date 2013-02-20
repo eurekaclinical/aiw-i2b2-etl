@@ -7,6 +7,7 @@
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>AIW i2b2 ETL is a Protempa query results handler for loading data and abstractions into i2b2.</description>
+		<inceptionYear>2012</inceptionYear>
     <organization>
         <name>Emory University</name>
         <url>http://www.emory.edu</url>
@@ -367,13 +368,9 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.0</version>
+                <version>1.4</version>
                 <configuration>
                     <licenseName>apache_v2</licenseName>
-                    <verbose>false</verbose>
-                    <organizationName>Emory University</organizationName>
-                    <inceptionYear>2012</inceptionYear>
-                    <canUpdateDescription>false</canUpdateDescription>
                     <roots>
                         <root>src/main</root>
                         <root>src/test/java/</root>
