@@ -21,7 +21,6 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.protempa.proposition.value.Value;
 
 public class UserObject {
 
@@ -59,6 +58,10 @@ public class UserObject {
     private String conceptCodePrefix;
     private String dimCode;
     private boolean copy;
+
+	// contains, eg, <ValueMetadata><loinc>...</loinc><ValueMetadata> to tell
+	// i2b2 that this concept has numerical values
+	private String metadataXml;
 
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
@@ -192,8 +195,16 @@ public class UserObject {
     String getDimCode() {
         return this.dimCode;
     }
-    
-    boolean isCopy() {
+
+	public String getMetadataXml() {
+		return metadataXml;
+	}
+
+	public void setMetadataXml(String metadataXml) {
+		this.metadataXml = metadataXml;
+	}
+
+	boolean isCopy() {
         return this.copy;
     }
 }

@@ -34,6 +34,7 @@ import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
 import java.io.File;
+import java.io.StringReader;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -596,7 +597,14 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
                     // put labParmXml here
                     //
-                    ps.setObject(8, null);
+					if (null == concept.getMetadataXml() || concept
+							.getMetadataXml().isEmpty() || concept
+							.getMetadataXml().equals("")) {
+						ps.setObject(8, null);
+					} else {
+						ps.setClob(8, new StringReader(concept.getMetadataXml
+								()));
+					}
                     
                     ps.setString(9, "concept_cd");
                     ps.setString(10, "concept_dimension");

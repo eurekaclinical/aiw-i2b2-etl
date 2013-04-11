@@ -23,6 +23,7 @@ import org.protempa.AbstractionDefinition;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
+import org.protempa.PrimitiveParameterDefinition;
 import org.protempa.PropositionDefinition;
 import org.protempa.ProtempaUtil;
 import org.protempa.proposition.value.ValueType;
@@ -124,6 +125,12 @@ final class PropositionConceptTreeBuilder {
             if (propDef instanceof AbstractionDefinition) {
                 child.setDerived(true);
             }
+			if (propDef instanceof PrimitiveParameterDefinition && (null ==
+					propDef.getChildren() || propDef.getChildren().length <
+					1)) {
+				child.setMetadataXml("<ValueMetadata><Loinc>" + child
+						.getConceptCode() + "</Loinc></ValueMetadata>");
+			}
             if (propDef instanceof ParameterDefinition) {
                 ValueType valueType =
                         ((ParameterDefinition) propDef).getValueType();

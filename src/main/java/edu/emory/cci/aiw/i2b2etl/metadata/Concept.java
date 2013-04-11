@@ -168,6 +168,14 @@ public final class Concept extends DefaultMutableTreeNode {
     public ValueTypeCode getValueTypeCode() {
         return usrObj.getValueTypeCode();
     }
+
+	public void setMetadataXml(String metadataXml) {
+		usrObj.setMetadataXml(metadataXml);
+	}
+
+	public String getMetadataXml() {
+		return usrObj.getMetadataXml();
+	}
     
     public boolean isCopy() {
         return usrObj.isCopy();
