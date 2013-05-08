@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Configures the i2b2 query results handler. -->
-<root>
+<queryResultsHandler>
+    <type>I2B2</type>
+    <displayName>I2B2 Test</displayName>
     <!-- A dictionary of properties for configuring the i2b2 query results
          handler.
     -->
@@ -212,4 +214,4 @@
         <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:MetastasisEvent"/>
         <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:HypertensionEvent"/>
     </concepts>
-</root>
+</queryResultsHandler>
