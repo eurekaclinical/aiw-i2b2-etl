@@ -64,6 +64,7 @@ public class ObservationFact {
     private final String sourceSystem;
     private final String units;
     private final ValueFlagCode valueFlagCode;
+    private final boolean rejected;
 
     public ObservationFact(java.util.Date startDate, 
             java.util.Date finishDate,
@@ -72,7 +73,8 @@ public class ObservationFact {
             Concept concept, Value value, ValueFlagCode valueFlagCode,
             String observationBlob, String displayName,
             String units,
-            String sourceSystem) {
+            String sourceSystem,
+            boolean rejected) {
         if (patient == null) {
             throw new IllegalArgumentException("patient cannot be null");
         }
@@ -82,9 +84,9 @@ public class ObservationFact {
         if (provider == null) {
             throw new IllegalArgumentException("provider cannot be null");
         }
-        if (startDate == null) {
-            throw new IllegalArgumentException("startDate cannot be null");
-        }
+        //if (startDate == null) {
+        //    throw new IllegalArgumentException("startDate cannot be null");
+        //}
         if (valueFlagCode == null) {
             throw new IllegalArgumentException("valueFlagCode cannot be null");
         }
@@ -100,8 +102,13 @@ public class ObservationFact {
         this.sourceSystem = sourceSystem;
         this.units = units;
         this.valueFlagCode = valueFlagCode;
+        this.rejected = rejected;
     }
 
+    public boolean isRejected() {
+        return rejected;
+    }
+    
     public Concept getConcept() {
         return concept;
     }

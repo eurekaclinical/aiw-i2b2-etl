@@ -90,11 +90,9 @@ import org.protempa.proposition.value.Value;
  * batch-loaded into the database.
  */
 public final class Metadata {
-    
-    private static final PropositionDefinition[] 
-            EMPTY_PROPOSITION_DEFINITION_ARRAY =
-            new PropositionDefinition[0];
 
+    private static final PropositionDefinition[] EMPTY_PROPOSITION_DEFINITION_ARRAY =
+            new PropositionDefinition[0];
     private final Concept rootConcept;
     private final Map<ConceptId, Concept> CACHE =
             new HashMap<ConceptId, Concept>();
@@ -126,10 +124,10 @@ public final class Metadata {
             throw new IllegalArgumentException("folderSpecs cannot be null");
         }
         if (userDefinedPropositionDefinitions == null) {
-            this.userDefinedPropositionDefinitions = 
+            this.userDefinedPropositionDefinitions =
                     EMPTY_PROPOSITION_DEFINITION_ARRAY;
         } else {
-            this.userDefinedPropositionDefinitions = 
+            this.userDefinedPropositionDefinitions =
                     userDefinedPropositionDefinitions.clone();
         }
         this.knowledgeSource = knowledgeSource;
@@ -147,7 +145,7 @@ public final class Metadata {
         this.providers = new HashMap<String, ProviderDimension>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
-        
+
         Logger logger = MetadataUtil.logger();
 
         try {
@@ -252,15 +250,20 @@ public final class Metadata {
 
         ProviderDimension result = this.providers.get(fullName);
         if (result == null) {
-            result = new ProviderDimension(
-                    MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:" + fullName,
-                    fullName,
-                    providerProp.getDataSourceType().getStringRepresentation());
+            if (providerProp != null) {
+                result = new ProviderDimension(
+                        MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:" + fullName,
+                        fullName,
+                        providerProp.getDataSourceType().getStringRepresentation());
+            } else {
+                result = new ProviderDimension(
+                        MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL 
+                        + "|Provider:NotRecorded", "Not Recorded", 
+                        MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+            }
             this.providers.put(fullName, result);
         }
         return result;
-
-
     }
 
     private Proposition resolveReference(Proposition encounterProp, String namePartReference, Map<UniqueId, Proposition> references) {
@@ -393,15 +396,19 @@ public final class Metadata {
                     }
 
                     Date now = new Date();
-                    long ageInYears = AbsoluteTimeGranularity.YEAR.distance(
-                            AbsoluteTimeGranularityUtil.asPosition(birthdate),
-                            AbsoluteTimeGranularityUtil.asPosition(now),
-                            AbsoluteTimeGranularity.YEAR,
-                            AbsoluteTimeUnit.YEAR);
-
-                    Concept ageConcept = getFromIdCache(null, null,
-                            NumberValue.getInstance(ageInYears));
-                    ageConcept.setInUse(true);
+                    Long ageInYears;
+                    if (birthdate != null) {
+                        ageInYears = AbsoluteTimeGranularity.YEAR.distance(
+                                AbsoluteTimeGranularityUtil.asPosition(birthdate),
+                                AbsoluteTimeGranularityUtil.asPosition(now),
+                                AbsoluteTimeGranularity.YEAR,
+                                AbsoluteTimeUnit.YEAR);
+                        Concept ageConcept = getFromIdCache(null, null,
+                                NumberValue.getInstance(ageInYears));
+                        ageConcept.setInUse(true);
+                    } else {
+                        ageInYears = null;
+                    }
 
                     patientDimension = new PatientDimension(keyId,
                             zipCode != null ? zipCode.getFormatted() : null,

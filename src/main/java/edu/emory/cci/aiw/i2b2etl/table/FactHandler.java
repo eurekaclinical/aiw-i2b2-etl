@@ -205,9 +205,6 @@ public final class FactHandler {
         } else {
             start = null;
         }
-        if (start == null) {
-            throw new InvalidFactException("Fact " + prop.getId() + ";" + this.propertyName + ";" + propertyVal + " does not have a time");
-        }
         return start;
     }
 
@@ -252,32 +249,36 @@ public final class FactHandler {
 
     private void insert(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
         Logger logger = TableUtil.logger();
-        try {
-            setParameters(cn, obx);
-
-            ps.addBatch();
-
-            if ((++idx % 8192) == 0) {
-                this.importTimestamp =
-                        new Timestamp(System.currentTimeMillis());
-                batchNumber++;
-                ps.executeBatch();
-                logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
-                ps.clearBatch();
-                plus += 8192;
-                idx = 0;
-                logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
-            }
-            ps.clearParameters();
-        } catch (SQLException e) {
-            logger.log(Level.FINEST, "DB_OBX_BATCH_FAIL={0}", batchNumber);
-            logger.log(Level.SEVERE, "Batch failed on ObservationFact. I2B2 will not be correct.", e);
-            logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
+        if (obx.isRejected()) {
+            logger.log(Level.WARNING, "Rejected fact {0}", obx);
+        } else {
             try {
-                ps.close();
-            } catch (SQLException sqle) {
+                setParameters(cn, obx);
+
+                ps.addBatch();
+
+                if ((++idx % 8192) == 0) {
+                    this.importTimestamp =
+                            new Timestamp(System.currentTimeMillis());
+                    batchNumber++;
+                    ps.executeBatch();
+                    logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
+                    ps.clearBatch();
+                    plus += 8192;
+                    idx = 0;
+                    logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
+                }
+                ps.clearParameters();
+            } catch (SQLException e) {
+                logger.log(Level.FINEST, "DB_OBX_BATCH_FAIL={0}", batchNumber);
+                logger.log(Level.SEVERE, "Batch failed on ObservationFact. I2B2 will not be correct.", e);
+                logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
+                try {
+                    ps.close();
+                } catch (SQLException sqle) {
+                }
+                throw e;
             }
-            throw e;
         }
     }
 
@@ -289,9 +290,9 @@ public final class FactHandler {
         ps.setLong(1, obx.getVisit().getEncounterNum());
         ps.setLong(2, obx.getPatient().getPatientNum());
         ps.setString(3, obx.getConcept().getConceptCode());
-        ps.setString(4, 
+        ps.setString(4,
                 TableUtil.setStringAttribute(obx.getProvider().getId()));							//	seems coupled to 'reports'
-        ps.setTimestamp(5, 
+        ps.setTimestamp(5,
                 TableUtil.setTimestampAttribute(obx.getStartDate()));
         ps.setString(6, Long.toString(ctr++));								//	used for admitting, primary, secondary on ICD9Diag
 
@@ -354,7 +355,8 @@ public final class FactHandler {
                 value, valueFlagCode,
                 null, concept.getDisplayName(),
                 units,
-                prop.getDataSourceType().getStringRepresentation());
+                prop.getDataSourceType().getStringRepresentation(),
+                start == null);
         concept.setInUse(true);
         return derivedObx;
     }

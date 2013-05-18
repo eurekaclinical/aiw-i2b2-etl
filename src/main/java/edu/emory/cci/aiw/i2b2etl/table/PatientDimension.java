@@ -19,7 +19,6 @@
  */
 package edu.emory.cci.aiw.i2b2etl.table;
 
-import edu.emory.cci.aiw.i2b2etl.metadata.I2B2QueryResultsHandlerSourceId;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import java.sql.*;
 import java.util.Collection;
@@ -78,7 +77,7 @@ public class PatientDimension {
     //  )
     private final long patientNum;
     private final String encryptedPatientId;
-    private long ageInYears;
+    private Long ageInYears;
     private final String zip;
     private final String race;
     private final String gender;
@@ -93,7 +92,7 @@ public class PatientDimension {
     private static final Logger logger = Logger.getLogger(PatientDimension.class.getName());
 
     public PatientDimension(String encryptedPatientId, String zipCode,
-            long ageInYears,
+            Long ageInYears,
             String gender, String language, String religion,
             java.util.Date birthDate, java.util.Date deathDate,
             String maritalStatus, String race, String sourceSystem) {
@@ -127,7 +126,7 @@ public class PatientDimension {
         return NUM_FACTORY.getSourceSystem();
     }
     
-    public long getAgeInYears() {
+    public Long getAgeInYears() {
         return this.ageInYears;
     }
     
@@ -169,7 +168,7 @@ public class PatientDimension {
                     ps.setDate(3, patient.birthDate);
                     ps.setDate(4, patient.deathDate);
                     ps.setString(5, patient.gender);
-                    ps.setLong(6, patient.ageInYears);
+                    ps.setObject(6, patient.ageInYears);
                     ps.setString(7, patient.language);
                     ps.setString(8, patient.race);
                     ps.setString(9, patient.maritalStatus);
