@@ -234,7 +234,7 @@ public final class Metadata {
             String firstNameReference, String firstNameProperty,
             String middleNameReference, String middleNameProperty,
             String lastNameReference, String lastNameProperty,
-            Map<UniqueId, Proposition> references) {
+            Map<UniqueId, Proposition> references) throws InvalidConceptCodeException {
         String firstName = getNamePart(resolveReference(encounterProp, firstNameReference, references), firstNameProperty);
         String middleName = getNamePart(resolveReference(encounterProp, middleNameReference, references), middleNameProperty);
         Proposition providerProp = resolveReference(encounterProp, lastNameReference, references);
@@ -247,18 +247,18 @@ public final class Metadata {
             providerProp = resolveReference(encounterProp, fullNameReference, references);
             fullName = getNamePart(providerProp, fullNameProperty);
         }
-
+        
         ProviderDimension result = this.providers.get(fullName);
         if (result == null) {
             if (providerProp != null) {
+                DefaultConceptCodeBuilder ccb = new DefaultConceptCodeBuilder(this);
+                ccb.setPropositionId(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:" + fullName);
                 result = new ProviderDimension(
-                        MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:" + fullName,
+                        ccb.build(),
                         fullName,
                         providerProp.getDataSourceType().getStringRepresentation());
             } else {
-                result = new ProviderDimension(
-                        MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL 
-                        + "|Provider:NotRecorded", "Not Recorded", 
+                result = new ProviderDimension(null, null, 
                         MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
             }
             this.providers.put(fullName, result);
