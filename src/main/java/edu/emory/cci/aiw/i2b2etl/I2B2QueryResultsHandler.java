@@ -280,6 +280,10 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                             this.dataSchemaConnection);
                 }
             }
+        } catch (InvalidConceptCodeException ex) {
+            throw new QueryResultsHandlerProcessingException(
+                    "Load into i2b2 failed for query " + this.query.getId(),
+                    ex);
         } catch (InvalidPatientRecordException ex) {
             throw new QueryResultsHandlerProcessingException(
                     "Load into i2b2 failed for query " + this.query.getId(),
