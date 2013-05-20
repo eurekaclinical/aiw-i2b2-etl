@@ -19,6 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.table;
 
+import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import java.sql.*;
 import java.util.Collection;
@@ -50,10 +51,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * @author Andrew Post
  */
 public class ProviderDimension {
+    private static final Logger LOGGER = TableUtil.logger();
     
-    private final String id;
-    private String i2b2Path;
-    private final String fullName;
+    private final Concept concept;
     private final String sourceSystem;
     
     /**
@@ -69,9 +69,11 @@ public class ProviderDimension {
      * @param lastName the provider's last name, if known.
      * @param fullName the provider's full name, if known.
      */
-    public ProviderDimension(String id, String fullName, String sourceSystem) {
-        this.id = id;
-        this.fullName = fullName;
+    public ProviderDimension(Concept concept, String fullName, String sourceSystem) {
+        if (concept == null) {
+            throw new IllegalArgumentException("concept cannot be null");
+        }
+        this.concept = concept;
         this.sourceSystem = sourceSystem;
     }
     
@@ -81,18 +83,8 @@ public class ProviderDimension {
      * 
      * @return a {@link String}.
      */
-    public String getId() {
-        return this.id;
-    }
-    
-    /**
-     * Returns the provider's full name, or <code>null</code> if the provider 
-     * is not recorded or unknown.
-     * 
-     * @return a {@link String}.
-     */
-    public String getFullName() {
-        return this.fullName;
+    public Concept getConcept() {
+        return this.concept;
     }
     
     /**
@@ -108,10 +100,43 @@ public class ProviderDimension {
     public static void insertFacts(Connection dataSchemaConnection) throws SQLException {
         PreparedStatement stmt = 
                 dataSchemaConnection.prepareStatement(
-                "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM) WHERE a1.PROVIDER_ID <> '@'");
+                "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM) WHERE a1.PROVIDER_ID <> '@' AND a2.START_DATE IS NOT NULL");
         try {
             stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             stmt.execute();
+            stmt.close();
+            stmt = null;
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ignored) {
+                    
+                }
+            }
+        }
+        
+        stmt = 
+                dataSchemaConnection.prepareStatement(
+                "SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM) WHERE a1.PROVIDER_ID <> '@' AND a2.START_DATE IS NULL");
+        try {
+            stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            ResultSet resultSet = stmt.executeQuery();
+            try {
+                while (resultSet.next()) {
+                    LOGGER.log(Level.WARNING, "Rejected fact {0}; {1}; {2}; {3}; {4}; {5}; {6}; {7}", new Object[]{resultSet.getInt(1), resultSet.getInt(2), resultSet.getString(3), resultSet.getString(4), resultSet.getTimestamp(5), resultSet.getTimestamp(6), resultSet.getInt(7), resultSet.getTimestamp(8)});
+                }
+                resultSet.close();
+                resultSet = null;
+            } finally {
+                if (resultSet != null) {
+                    try {
+                        resultSet.close();
+                    } catch (SQLException ignored) {
+                        
+                    }
+                }
+            }
             stmt.close();
             stmt = null;
         } finally {
@@ -131,13 +156,13 @@ public class ProviderDimension {
         PreparedStatement ps = cn.prepareStatement("insert into PROVIDER_DIMENSION values (?,?,?,?,?,?,?,?,?)");
         try {
             for (ProviderDimension provider : providers) {
-                if (provider.i2b2Path == null) {
+                if (provider.concept.getI2B2Path() == null) {
                     throw new AssertionError("i2b2path cannot be null: " + provider);
                 }
                 try {
-                    ps.setString(1, TableUtil.setStringAttribute(provider.id));
-                    ps.setString(2, provider.i2b2Path);
-                    ps.setString(3, provider.fullName);
+                    ps.setString(1, TableUtil.setStringAttribute(provider.concept.getConceptCode()));
+                    ps.setString(2, provider.concept.getI2B2Path());
+                    ps.setString(3, provider.concept.getDisplayName());
                     ps.setObject(4, null);
                     ps.setTimestamp(5, null);
                     ps.setTimestamp(6, null);
@@ -164,25 +189,6 @@ public class ProviderDimension {
                 }
             }
         }
-    }
-
-    /**
-     * Sets the provider i2b2 path.
-     * 
-     * @param i2b2Path a {@link String} path separated by <code>/</code>.
-     */
-    public void setI2b2Path(String i2b2Path) {
-        this.i2b2Path = i2b2Path;
-    }
-    
-    /**
-     * Returns the provider i2b2 path, or <code>null</code> if the provider 
-     * is not recorded or unknown.
-     * 
-     * @return a {@link String}.
-     */
-    public String getI2b2Path() {
-        return this.i2b2Path;
     }
 
     @Override

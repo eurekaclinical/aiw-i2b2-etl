@@ -247,20 +247,27 @@ public final class Metadata {
             providerProp = resolveReference(encounterProp, fullNameReference, references);
             fullName = getNamePart(providerProp, fullNameProperty);
         }
-        
+
         ProviderDimension result = this.providers.get(fullName);
         if (result == null) {
+            String id;
+            String source;
             if (providerProp != null) {
-                DefaultConceptCodeBuilder ccb = new DefaultConceptCodeBuilder(this);
-                ccb.setPropositionId(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:" + fullName);
-                result = new ProviderDimension(
-                        ccb.build(),
-                        fullName,
-                        providerProp.getDataSourceType().getStringRepresentation());
+                id = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:" + fullName;
+                source = providerProp.getDataSourceType().getStringRepresentation();
             } else {
-                result = new ProviderDimension(null, null, 
-                        MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                id = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:NotRecorded";
+                source = MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation());
+                fullName = "Not Recorded";
             }
+            ConceptId cid = ConceptId.getInstance(id, this);
+            assert getFromIdCache(cid) == null : "duplicate provider concept " + cid;
+            Concept concept = new Concept(cid, null, this);
+            concept.setSourceSystemCode(source);
+            concept.setDisplayName(fullName);
+            concept.setDataType(DataType.TEXT);
+            concept.setInUse(true);
+            result = new ProviderDimension(concept, fullName, source);
             this.providers.put(fullName, result);
         }
         return result;

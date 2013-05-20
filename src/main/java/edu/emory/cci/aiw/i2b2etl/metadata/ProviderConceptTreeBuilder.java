@@ -76,47 +76,44 @@ class ProviderConceptTreeBuilder {
                 root.add(ontologyNode);
             }
             for (ProviderDimension pd : this.providers) {
-                String id = pd.getId();
-                if (id != null) {
-                    String fullName = pd.getFullName();
-                    Concept parent = alpha.get(fullName.charAt(0));
-                    if (parent == null && root.getChildCount() == ca.length()) {
-                        ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata);
-                        parent = this.metadata.getFromIdCache(cid);
-                        if (parent == null) {
-                            parent = new Concept(cid, null, this.metadata);
-                            parent.setDisplayName("Other");
-                            parent.setDataType(DataType.TEXT);
-                            parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                            this.metadata.addToIdCache(parent);
-                        } else {
-                            throw new OntologyBuildException("Duplicate provider concept: " + parent.getConceptCode());
-                        }
-                        root.add(parent);
-                    }
-                    ConceptId cid = ConceptId.getInstance(id, this.metadata);
-                    Concept child = this.metadata.getFromIdCache(cid);
-                    if (child == null) {
-                        child = new Concept(cid, id, this.metadata);
-                        parent.add(child);
-                        child.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                        child.setDisplayName(pd.getFullName());
-                        child.setDataType(DataType.TEXT);
-                        child.setInUse(true);
-                        this.metadata.addToIdCache(child);
+                //String id = pd.getId();
+                //if (id != null) {
+                String fullName = pd.getConcept().getDisplayName();
+                Concept parent = alpha.get(fullName.charAt(0));
+                if (parent == null && root.getChildCount() == ca.length()) {
+                    ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata);
+                    parent = this.metadata.getFromIdCache(cid);
+                    if (parent == null) {
+                        parent = new Concept(cid, null, this.metadata);
+                        parent.setDisplayName("Other");
+                        parent.setDataType(DataType.TEXT);
+                        parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                        this.metadata.addToIdCache(parent);
                     } else {
-                        throw new OntologyBuildException("Duplicate provider concept: " + child.getConceptCode());
+                        throw new OntologyBuildException("Duplicate provider concept: " + parent.getConceptCode());
                     }
-                    pd.setI2b2Path(child.getI2B2Path());
-                } else {
-                    Concept notRecordedConcept = new Concept(ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "Provider|NotRecorded", this.metadata), null, this.metadata);
-                    notRecordedConcept.setDisplayName(notRecordedConcept.getDisplayName());
-                    notRecordedConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                    notRecordedConcept.setDataType(DataType.TEXT);
-                    this.metadata.addToIdCache(notRecordedConcept);
-                    root.add(notRecordedConcept);
-                    pd.setI2b2Path(notRecordedConcept.getI2B2Path());
+                    root.add(parent);
                 }
+                //ConceptId cid = ConceptId.getInstance(id, this.metadata);
+                //Concept child = this.metadata.getFromIdCache(cid);
+                //if (child == null) {
+                Concept child = pd.getConcept();
+                //child = new Concept(cid, id, this.metadata);
+                parent.add(child);
+                
+                this.metadata.addToIdCache(child);
+                //} else {
+                //   throw new OntologyBuildException("Duplicate provider concept: " + child.getConceptCode());
+                //}
+//                } else {
+//                    Concept notRecordedConcept = new Concept(ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "Provider|NotRecorded", this.metadata), null, this.metadata);
+//                    notRecordedConcept.setDisplayName(notRecordedConcept.getDisplayName());
+//                    notRecordedConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+//                    notRecordedConcept.setDataType(DataType.TEXT);
+//                    this.metadata.addToIdCache(notRecordedConcept);
+//                    root.add(notRecordedConcept);
+//                    pd.setI2b2Path(notRecordedConcept.getI2B2Path());
+//                }
             }
             return root;
         } catch (InvalidConceptCodeException ex) {

@@ -131,13 +131,15 @@ public class PatientDimension {
     }
     
     public static void insertAges(Collection<PatientDimension> patients, Connection cn, String ageConceptCodePrefix) throws SQLException {
-        String sql1 = "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a2.ENCOUNTER_NUM, a1.PATIENT_NUM, CONCAT(?, a1.AGE_IN_YEARS_NUM) as CONCEPT_CD, '@' AS PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM PATIENT_DIMENSION a1 JOIN VISIT_DIMENSION a2 on (a1.PATIENT_NUM=a2.PATIENT_NUM)";
+        String sql1 = "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a2.ENCOUNTER_NUM, a1.PATIENT_NUM, CONCAT(?, a1.AGE_IN_YEARS_NUM) AS CONCEPT_CD, '@' AS PROVIDER_ID, ? AS START_DATE, ? AS END_DATE, 0 AS MODIFIER_CD, ? AS IMPORT_DATE FROM PATIENT_DIMENSION a1 JOIN VISIT_DIMENSION a2 ON (a1.PATIENT_NUM=a2.PATIENT_NUM) WHERE a1.AGE_IN_YEARS_NUM IS NOT NULL AND a2.ENCOUNTER_NUM IN (SELECT * FROM (SELECT ENCOUNTER_NUM FROM VISIT_DIMENSION ORDER BY START_DATE DESC) WHERE ROWNUM <= 1)";
         PreparedStatement ps = null;
         try {
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
             ps = cn.prepareStatement(sql1);
             ps.setString(1, ageConceptCodePrefix + ":");
-            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-            
+            ps.setTimestamp(2, timestamp);
+            ps.setTimestamp(3, timestamp);
+            ps.setTimestamp(4, timestamp);
             ps.execute();
             ps.close();
             ps = null;

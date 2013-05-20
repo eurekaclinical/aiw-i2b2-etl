@@ -291,7 +291,7 @@ public final class FactHandler {
         ps.setLong(2, obx.getPatient().getPatientNum());
         ps.setString(3, obx.getConcept().getConceptCode());
         ps.setString(4,
-                TableUtil.setStringAttribute(obx.getProvider().getId()));							//	seems coupled to 'reports'
+                TableUtil.setStringAttribute(obx.getProvider().getConcept().getConceptCode()));							//	seems coupled to 'reports'
         ps.setTimestamp(5,
                 TableUtil.setTimestampAttribute(obx.getStartDate()));
         ps.setString(6, Long.toString(ctr++));								//	used for admitting, primary, secondary on ICD9Diag
