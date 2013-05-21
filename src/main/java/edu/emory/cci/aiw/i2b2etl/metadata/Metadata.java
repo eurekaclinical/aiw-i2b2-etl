@@ -446,9 +446,9 @@ public final class Metadata {
             TemporalProposition encounterProp, DictionarySection dictSection,
             DataSection obxSection,
             Map<UniqueId, Proposition> references) {
-        java.util.Date visitStartDate = AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinStart());
-        java.util.Date visitEndDate = AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinFinish());
-        Value encryptedId = getField(dictSection, obxSection, "visitDimensionDecipheredId", encounterProp, references);
+        java.util.Date visitStartDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinStart()) : null;
+        java.util.Date visitEndDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinFinish()) : null;
+        Value encryptedId = encounterProp != null ? getField(dictSection, obxSection, "visitDimensionDecipheredId", encounterProp, references) : null;
         String encryptedIdStr;
         if (encryptedId != null) {
             encryptedIdStr = encryptedId.getFormatted();
@@ -457,7 +457,7 @@ public final class Metadata {
         }
         VisitDimension vd = new VisitDimension(patientNum, encryptedPatientId,
                 visitStartDate, visitEndDate, encryptedIdStr,
-                encounterProp.getDataSourceType().getStringRepresentation(),
+                encounterProp != null ? encounterProp.getDataSourceType().getStringRepresentation() : I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
                 encryptedPatientIdSourceSystem);
         visitCache.put(vd.getEncounterNum(), vd);
         return vd;

@@ -22,6 +22,7 @@ package edu.emory.cci.aiw.i2b2etl.table;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import java.sql.*;
 import java.util.Collection;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -125,22 +126,49 @@ public class PatientDimension {
     public String getEncryptedPatientIdSourceSystem() {
         return NUM_FACTORY.getSourceSystem();
     }
-    
+
     public Long getAgeInYears() {
         return this.ageInYears;
     }
-    
-    public static void insertAges(Collection<PatientDimension> patients, Connection cn, String ageConceptCodePrefix) throws SQLException {
-        String sql1 = "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a2.ENCOUNTER_NUM, a1.PATIENT_NUM, CONCAT(?, a1.AGE_IN_YEARS_NUM) AS CONCEPT_CD, '@' AS PROVIDER_ID, ? AS START_DATE, ? AS END_DATE, 0 AS MODIFIER_CD, ? AS IMPORT_DATE FROM PATIENT_DIMENSION a1 JOIN VISIT_DIMENSION a2 ON (a1.PATIENT_NUM=a2.PATIENT_NUM) WHERE a1.AGE_IN_YEARS_NUM IS NOT NULL AND a2.ENCOUNTER_NUM IN (SELECT * FROM (SELECT ENCOUNTER_NUM FROM VISIT_DIMENSION ORDER BY START_DATE DESC) WHERE ROWNUM <= 1)";
+
+    public static void insertAges(Collection<PatientDimension> patients, Connection cn, String ageConceptCodePrefix, Map<Long, VisitDimension> patientLevelFakeVisits) throws SQLException {
+        int batchSize = 1000;
+        int counter = 0;
         PreparedStatement ps = null;
         try {
-            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement(sql1);
-            ps.setString(1, ageConceptCodePrefix + ":");
-            ps.setTimestamp(2, timestamp);
-            ps.setTimestamp(3, timestamp);
-            ps.setTimestamp(4, timestamp);
-            ps.execute();
+            Timestamp importTimestamp =
+                    new Timestamp(System.currentTimeMillis());
+            ps = cn.prepareStatement("INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) VALUES (?, ?, CONCAT('" + ageConceptCodePrefix + ":', ?), '@', ?, ?, 0, ?)");
+            for (PatientDimension patient : patients) {
+                Long ageInYrs = patient.getAgeInYears();
+                if (ageInYrs != null) {
+                    try {
+                        ps.setLong(1, patientLevelFakeVisits.get(patient.getPatientNum()).getEncounterNum());
+                        ps.setLong(2, patient.getPatientNum());
+                        ps.setString(3, ageInYrs.toString());
+                        ps.setTimestamp(4, importTimestamp);
+                        ps.setTimestamp(5, importTimestamp);
+                        ps.setTimestamp(6, importTimestamp);
+                        ps.addBatch();
+                        ps.clearParameters();
+                        counter++;
+                        if (counter >= batchSize) {
+                            importTimestamp =
+                                    new Timestamp(System.currentTimeMillis());
+                            ps.executeBatch();
+                            ps.clearBatch();
+                            counter = 0;
+                        }
+                    } catch (SQLException e) {
+                        logger.log(Level.SEVERE, "DB_PD_INSERT_FAIL {0}", patient);
+                        throw e;
+                    }
+                }
+            }
+            if (counter > 0) {
+                ps.executeBatch();
+                ps.clearBatch();
+            }
             ps.close();
             ps = null;
         } finally {
@@ -159,7 +187,7 @@ public class PatientDimension {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
         try {
-            Timestamp importTimestamp = 
+            Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
             ps = cn.prepareStatement("insert into PATIENT_DIMENSION values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             ps2 = cn.prepareStatement("insert into PATIENT_MAPPING values (?,?,?,?,?,?,?,?,?,?)");
@@ -201,7 +229,7 @@ public class PatientDimension {
                     counter++;
 
                     if (counter >= batchSize) {
-                        importTimestamp = 
+                        importTimestamp =
                                 new Timestamp(System.currentTimeMillis());
                         ps.executeBatch();
                         ps.clearBatch();

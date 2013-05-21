@@ -92,6 +92,7 @@ public class VisitDimension {
     public static void insertAll(Collection<VisitDimension> visits, Connection cn) throws SQLException {
         int batchSize = 1000;
         int counter = 0;
+        boolean ps2BatchAdded = false;
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
         try {
@@ -119,29 +120,35 @@ public class VisitDimension {
                     ps.addBatch();
                     ps.clearParameters();
 
-                    ps2.setString(1, visit.encryptedVisitId);
-                    ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
-                    ps2.setLong(3, visit.encounterNum);
-                    ps2.setString(4, visit.encryptedPatientId);
-                    ps2.setString(5, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
-                    ps2.setString(6, null);
-                    ps2.setDate(7, null);
-                    ps2.setDate(8, null);
-                    ps2.setDate(9, null);
-                    ps2.setTimestamp(10, importTimestamp);
-                    ps2.setString(11, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
-                    ps2.setNull(12, Types.NUMERIC);
-                    ps2.addBatch();
-                    ps2.clearParameters();
+                    if (!visit.encryptedVisitId.equals("@")) {
+                        ps2.setString(1, visit.encryptedVisitId);
+                        ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                        ps2.setLong(3, visit.encounterNum);
+                        ps2.setString(4, visit.encryptedPatientId);
+                        ps2.setString(5, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
+                        ps2.setString(6, null);
+                        ps2.setDate(7, null);
+                        ps2.setDate(8, null);
+                        ps2.setDate(9, null);
+                        ps2.setTimestamp(10, importTimestamp);
+                        ps2.setString(11, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
+                        ps2.setNull(12, Types.NUMERIC);
+                        ps2.addBatch();
+                        ps2BatchAdded = true;
+                        ps2.clearParameters();
+                    }
                     counter++;
-                    
+
                     if (counter >= batchSize) {
-                        importTimestamp = 
+                        importTimestamp =
                                 new Timestamp(System.currentTimeMillis());
                         ps.executeBatch();
                         ps.clearBatch();
-                        ps2.executeBatch();
-                        ps2.clearBatch();
+                        if (ps2BatchAdded) {
+                            ps2.executeBatch();
+                            ps2.clearBatch();
+                            ps2BatchAdded = false;
+                        }
                         counter = 0;
                     }
 
@@ -154,8 +161,10 @@ public class VisitDimension {
             if (counter > 0) {
                 ps.executeBatch();
                 ps.clearBatch();
-                ps2.executeBatch();
-                ps2.clearBatch();
+                if (ps2BatchAdded) {
+                    ps2.executeBatch();
+                    ps2.clearBatch();
+                }
             }
             ps.close();
             ps = null;

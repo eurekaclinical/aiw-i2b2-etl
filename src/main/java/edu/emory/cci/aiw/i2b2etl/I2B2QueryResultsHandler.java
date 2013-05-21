@@ -71,6 +71,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     private Connection dataSchemaConnection;
     private List<FactHandler> factHandlers;
     private Query query;
+    private final Map<Long, VisitDimension> patientLevelFakeVisits;
     
     /**
      * Creates a new query results handler that will use the provided 
@@ -111,6 +112,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         logger.log(Level.FINE, String.format("Using configuration file: %s",
                 this.confFile.getAbsolutePath()));
         this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
+        this.patientLevelFakeVisits =
+                    new HashMap<Long, VisitDimension>();
     }
 
     /**
@@ -264,6 +267,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                             this.configurationReader.getDictionarySection(),
                             this.configurationReader.getDataSection(),
                             references);
+                    patientLevelFakeVisits.put(pd.getPatientNum(), this.ontologyModel.addVisit(pd.getPatientNum(), pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), null, this.configurationReader.getDictionarySection(), this.configurationReader.getDataSection(), null));
                 }
                 VisitDimension vd = this.ontologyModel.addVisit(
                         pd.getPatientNum(), pd.getEncryptedPatientId(),
@@ -328,7 +332,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     queryId);
             PatientDimension.insertAges(this.ontologyModel.getPatients(),
                     this.dataSchemaConnection,
-                    this.configurationReader.getDictionarySection().get("ageConceptCodePrefix"));
+                    this.configurationReader.getDictionarySection().get("ageConceptCodePrefix"),
+                    patientLevelFakeVisits);
 
             // find Provider root. gather its leaf nodes. persist Providers.
 

@@ -321,7 +321,7 @@ public final class FactHandler {
         ps.setObject(11, null);
         ps.setObject(12, null);
         ps.setString(13, obx.getUnits());
-        ps.setDate(14, TableUtil.setDateAttribute(obx.getEndDate()));
+        ps.setTimestamp(14, TableUtil.setTimestampAttribute(obx.getEndDate()));
         ps.setString(15, null);
         ps.setObject(16, null);
         ps.setObject(17, obx.getObservationBlob());
