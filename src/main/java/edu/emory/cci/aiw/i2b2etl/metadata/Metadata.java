@@ -375,8 +375,8 @@ public final class Metadata {
                     Value maritalStatus = getField(dictSection, obxSection,
                             "patientDimensionMaritalStatus", encounterProp,
                             references);
-                    Value ethnicity = getField(dictSection, obxSection,
-                            "patientDimensionEthnicity", encounterProp,
+                    Value race = getField(dictSection, obxSection,
+                            "patientDimensionRace", encounterProp,
                             references);
                     Value birthdateVal = getField(dictSection, obxSection,
                             "patientDimensionBirthdate", encounterProp,
@@ -425,7 +425,7 @@ public final class Metadata {
                             religion != null ? religion.getFormatted() : null,
                             birthdate, null,
                             maritalStatus != null ? maritalStatus.getFormatted() : null,
-                            ethnicity != null ? ethnicity.getFormatted() : null,
+                            race != null ? race.getFormatted() : null,
                             prop.getDataSourceType().getStringRepresentation());
                     this.patientCache.put(keyId, patientDimension);
                     return patientDimension;
