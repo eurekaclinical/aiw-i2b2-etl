@@ -43,7 +43,7 @@ import org.protempa.query.handler.table.Link;
 import org.protempa.query.handler.table.LinkTraverser;
 
 public final class FactHandler {
-
+    
     private final LinkTraverser linkTraverser;
     private final Link[] links;
     private final String propertyName;
@@ -60,7 +60,7 @@ public final class FactHandler {
     private final String unitsPropertyName;
     private final Link[] derivationLinks;
     private Timestamp importTimestamp;
-
+    
     public FactHandler(Link[] links, String propertyName, String start,
             String finish, String unitsPropertyName,
             String[] potentialDerivedPropIds, Metadata metadata) {
@@ -84,7 +84,7 @@ public final class FactHandler {
             Derivation.Behavior.MULT_FORWARD)
         };
     }
-
+    
     public void handleRecord(PatientDimension patient, VisitDimension visit,
             ProviderDimension provider,
             Proposition encounterProp,
@@ -105,7 +105,7 @@ public final class FactHandler {
         } catch (KnowledgeSourceReadException ex) {
             throw new InvalidFactException(ex);
         }
-
+        
         for (Proposition prop : props) {
             Value propertyVal = this.propertyName != null
                     ? prop.getProperty(this.propertyName) : null;
@@ -117,7 +117,7 @@ public final class FactHandler {
                         encounterProp, patient, visit, provider, concept);
                 try {
                     insert(obx, cn);
-
+                    
                     List<Proposition> derivedProps;
                     try {
                         derivedProps = this.linkTraverser.traverseLinks(
@@ -159,7 +159,7 @@ public final class FactHandler {
             }
         }
     }
-
+    
     private String handleUnits(Proposition prop) {
         String value;
         if (this.unitsPropertyName != null) {
@@ -174,7 +174,7 @@ public final class FactHandler {
         }
         return value;
     }
-
+    
     private Value handleValue(Proposition prop) {
         Value value = null;
         if (this.propertyName != null) {
@@ -189,7 +189,7 @@ public final class FactHandler {
         }
         return value;
     }
-
+    
     private Date handleStartDate(Proposition prop, Proposition encounterProp, Value propertyVal) throws InvalidFactException {
         Date start;
         if (prop instanceof TemporalProposition) {
@@ -207,7 +207,7 @@ public final class FactHandler {
         }
         return start;
     }
-
+    
     private Date handleFinishDate(Proposition prop, Proposition encounterProp, Value propertyVal) throws InvalidFactException {
         Date start;
         if (prop instanceof TemporalProposition) {
@@ -225,7 +225,7 @@ public final class FactHandler {
         }
         return start;
     }
-
+    
     public void clearOut(Connection cn) throws SQLException {
         Logger logger = TableUtil.logger();
         try {
@@ -236,7 +236,7 @@ public final class FactHandler {
                 ps.close();
                 ps = null;
             }
-
+            
         } finally {
             if (ps != null) {
                 try {
@@ -246,7 +246,7 @@ public final class FactHandler {
             }
         }
     }
-
+    
     private void insert(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
         Logger logger = TableUtil.logger();
         if (obx.isRejected()) {
@@ -254,9 +254,9 @@ public final class FactHandler {
         } else {
             try {
                 setParameters(cn, obx);
-
+                
                 ps.addBatch();
-
+                
                 if ((++idx % 8192) == 0) {
                     this.importTimestamp =
                             new Timestamp(System.currentTimeMillis());
@@ -266,7 +266,9 @@ public final class FactHandler {
                     ps.clearBatch();
                     plus += 8192;
                     idx = 0;
-                    logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
+                    if (logger.isLoggable(Level.INFO)) {
+                        logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
+                    }
                 }
                 ps.clearParameters();
             } catch (SQLException e) {
@@ -281,7 +283,7 @@ public final class FactHandler {
             }
         }
     }
-
+    
     private void setParameters(Connection cn, ObservationFact obx) throws SQLException, InvalidConceptCodeException {
         if (!inited) {
             ps = cn.prepareStatement("insert into OBSERVATION_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -334,12 +336,12 @@ public final class FactHandler {
         ps.setString(21, obx.getSourceSystem());
         ps.setObject(22, null);
     }
-
+    
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
-
+    
     private ObservationFact createObservationFact(Proposition prop,
             Proposition encounterProp, PatientDimension patient,
             VisitDimension visit, ProviderDimension provider, Concept concept)

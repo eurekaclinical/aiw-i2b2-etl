@@ -22,7 +22,6 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import java.util.Collection;
 import java.util.TreeMap;
-import org.protempa.KnowledgeSource;
 
 /**
  *

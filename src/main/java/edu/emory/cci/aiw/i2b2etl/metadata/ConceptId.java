@@ -37,7 +37,7 @@ public class ConceptId {
     private final String propId;
     private final String propertyName;
     private final Value value;
-    private DefaultConceptCodeBuilder ccBuilder;
+    private String conceptCode;
     private final Metadata metadata;
 
 //    public static ConceptId newInstance(String id, String propertyName, Value value, KnowledgeSource knowledgeSource) throws OntologyBuildException {
@@ -145,9 +145,6 @@ public class ConceptId {
      */
     public static ConceptId getInstance(String propId,
             String propertyName, Value value, Metadata metadata) {
-//        if (propId == null) {
-//            throw new IllegalArgumentException("propId cannot be null");
-//        }
         List<Object> key = new ArrayList<Object>(3);
         key.add(propId);
         key.add(propertyName);
@@ -161,9 +158,6 @@ public class ConceptId {
     }
 
     private ConceptId(String propId, String propertyName, Value value, Metadata metadata) {
-//        if (propId == null) {
-//            throw new IllegalArgumentException("propId cannot be null");
-//        }
         if (metadata == null) {
             throw new IllegalArgumentException("metadata cannot be null");
         }
@@ -216,13 +210,14 @@ public class ConceptId {
     }
 
     String toConceptCode() throws InvalidConceptCodeException {
-        if (this.ccBuilder == null) {
-            this.ccBuilder = new DefaultConceptCodeBuilder(this.metadata);
-            this.ccBuilder.setPropositionId(propId);
-            this.ccBuilder.setPropertyName(propertyName);
-            this.ccBuilder.setValue(value);
+        if (this.conceptCode == null) {
+            DefaultConceptCodeBuilder ccBuilder = new DefaultConceptCodeBuilder(this.metadata);
+            ccBuilder.setPropositionId(propId);
+            ccBuilder.setPropertyName(propertyName);
+            ccBuilder.setValue(value);
+            this.conceptCode = ccBuilder.build();
         }
-        return this.ccBuilder.build();
+        return this.conceptCode;
     }
 
     @Override

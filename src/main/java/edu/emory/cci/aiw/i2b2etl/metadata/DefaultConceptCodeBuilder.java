@@ -27,6 +27,7 @@ import org.protempa.proposition.value.Value;
  * @author Andrew Post
  */
 final class DefaultConceptCodeBuilder extends ConceptCodeBuilder {
+    private static int NUM_LENGTH = Math.min(5, CodeUtil.CODE_LENGTH);
     private String propositionId;
     private String propertyName;
     private Value value;
@@ -76,17 +77,17 @@ final class DefaultConceptCodeBuilder extends ConceptCodeBuilder {
         boolean chopped = false;
         int number = 0;
         String codeWithoutNumber = null;
-        int numLength = Math.min(5, CodeUtil.CODE_LENGTH);
+        
         while (getMetadata().isInConceptCodeCache(conceptCode) 
                 || conceptCode.length() > CodeUtil.CODE_LENGTH) {
-            if (String.valueOf(number).length() > numLength) {
+            if (String.valueOf(number).length() > NUM_LENGTH) {
                 throw new InvalidConceptCodeException(
                 "Could not create a concept code that is not already in use");
             }
             if (!chopped) {
                 codeWithoutNumber = 
                         conceptCode.substring(0, Math.min(conceptCode.length(), 
-                        CodeUtil.CODE_LENGTH - numLength));
+                        CodeUtil.CODE_LENGTH - NUM_LENGTH));
             }
             
             conceptCode = codeWithoutNumber + number++;

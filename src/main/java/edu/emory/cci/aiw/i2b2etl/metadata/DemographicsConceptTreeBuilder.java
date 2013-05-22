@@ -22,8 +22,6 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.protempa.*;
 import org.protempa.ValueSet.ValueSetElement;
 import org.protempa.proposition.value.NumberValue;

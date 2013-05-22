@@ -35,6 +35,7 @@ import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
 import java.io.*;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.util.*;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.protempa.ConstantDefinition;
@@ -93,6 +94,8 @@ public final class Metadata {
 
     private static final PropositionDefinition[] EMPTY_PROPOSITION_DEFINITION_ARRAY =
             new PropositionDefinition[0];
+    private static final String PROVIDER_ID_PREFIX = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:";
+    private static final String NOT_RECORDED_PROVIDER_ID = PROVIDER_ID_PREFIX + "NotRecorded";
     private final Concept rootConcept;
     private final Map<ConceptId, Concept> CACHE =
             new HashMap<ConceptId, Concept>();
@@ -253,10 +256,10 @@ public final class Metadata {
             String id;
             String source;
             if (providerProp != null) {
-                id = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:" + fullName;
+                id = PROVIDER_ID_PREFIX + fullName;
                 source = providerProp.getDataSourceType().getStringRepresentation();
             } else {
-                id = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:NotRecorded";
+                id = NOT_RECORDED_PROVIDER_ID;
                 source = MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation());
                 fullName = "Not Recorded";
             }
@@ -412,7 +415,11 @@ public final class Metadata {
                                 AbsoluteTimeUnit.YEAR);
                         Concept ageConcept = getFromIdCache(null, null,
                                 NumberValue.getInstance(ageInYears));
-                        ageConcept.setInUse(true);
+                        if (ageConcept != null) {
+                            ageConcept.setInUse(true);
+                        } else {
+                            logger.log(Level.WARNING, "Likely wrong birthdate '{0,date,yyyy-MM-dd}' and age in years '{1}'", new Object[]{birthdate, ageInYears});
+                        }
                     } else {
                         ageInYears = null;
                     }
@@ -504,9 +511,6 @@ public final class Metadata {
     }
 
     public Concept getFromIdCache(String propId, String propertyName, Value value) {
-//        if (propId == null) {
-//            throw new IllegalArgumentException("propId cannot be null");
-//        }
         return getFromIdCache(
                 ConceptId.getInstance(propId, propertyName, value, this));
     }
