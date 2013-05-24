@@ -87,6 +87,7 @@ public class ConceptDimension {
                     if (counter >= batchSize) {
                         ps.executeBatch();
                         ps.clearBatch();
+                        cn.commit();
                         counter = 0;
                     }
                 }
@@ -94,6 +95,7 @@ public class ConceptDimension {
             if (counter > 0) {
                 ps.executeBatch();
                 ps.clearBatch();
+                cn.commit();
             }
             ps.close();
             ps = null;

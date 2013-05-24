@@ -20,7 +20,6 @@
 package edu.emory.cci.aiw.i2b2etl.configuration;
 
 import java.util.*;
-import org.w3c.dom.Attr;
 import org.w3c.dom.NamedNodeMap;
 
 /**

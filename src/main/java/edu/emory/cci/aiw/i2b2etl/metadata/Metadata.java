@@ -156,7 +156,7 @@ public final class Metadata {
              * Produce the ontology tree.
              */
             logger.log(Level.FINE, "STEP: construct tree");
-            constructTreePre(folderSpecs.clone());
+            constructTreePre(folderSpecs);
 
             buildDemographicsHierarchy();
 
@@ -405,12 +405,11 @@ public final class Metadata {
                         birthdate = null;
                     }
 
-                    Date now = new Date();
                     Long ageInYears;
                     if (birthdate != null) {
                         ageInYears = AbsoluteTimeGranularity.YEAR.distance(
                                 AbsoluteTimeGranularityUtil.asPosition(birthdate),
-                                AbsoluteTimeGranularityUtil.asPosition(now),
+                                AbsoluteTimeGranularityUtil.asPosition(new Date()),
                                 AbsoluteTimeGranularity.YEAR,
                                 AbsoluteTimeUnit.YEAR);
                         Concept ageConcept = getFromIdCache(null, null,

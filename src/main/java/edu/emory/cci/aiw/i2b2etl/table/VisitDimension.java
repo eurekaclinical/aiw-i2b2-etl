@@ -149,6 +149,7 @@ public class VisitDimension {
                             ps2.clearBatch();
                             ps2BatchAdded = false;
                         }
+                        cn.commit();
                         counter = 0;
                     }
 
@@ -165,6 +166,7 @@ public class VisitDimension {
                     ps2.executeBatch();
                     ps2.clearBatch();
                 }
+                cn.commit();
             }
             ps.close();
             ps = null;

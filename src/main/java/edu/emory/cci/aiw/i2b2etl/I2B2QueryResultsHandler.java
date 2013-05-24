@@ -507,7 +507,9 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     "Connecting to {0} as user {1} for query {2}",
                     new Object[]{db.connect, db.user, this.query.getId()});
         }
-        return DriverManager.getConnection(db.connect, db.user, db.passwd);
+        Connection con = DriverManager.getConnection(db.connect, db.user, db.passwd);
+        con.setAutoCommit(false);
+        return con;
     }
 
     private void persistMetadata() throws SQLException {
@@ -632,6 +634,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                                 new Timestamp(System.currentTimeMillis());
                         batchNumber++;
                         ps.executeBatch();
+                        ps.clearBatch();
                         cn.commit();
                         idx = 0;
                         plus += 8192;
@@ -645,6 +648,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                 }
                 batchNumber++;
                 ps.executeBatch();
+                ps.clearBatch();
+                cn.commit();
                 ps.close();
                 ps = null;
             } finally {

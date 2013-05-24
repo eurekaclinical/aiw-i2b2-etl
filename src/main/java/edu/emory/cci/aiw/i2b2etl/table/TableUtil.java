@@ -24,14 +24,23 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
+import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Map;
 import java.util.logging.Logger;
+import org.apache.commons.collections.map.ReferenceMap;
 
 /**
  *
  * @author Andrew Post
  */
 public final class TableUtil {
+    @SuppressWarnings("unchecked")
+    private static final Map<Date, java.sql.Date> dateCache = new ReferenceMap();
+    
+    @SuppressWarnings("unchecked")
+    private static final Map<Date, Timestamp> timestampCache = new ReferenceMap();
+    
     private TableUtil() {}
     
     private static class LazyLoggerHolder {
@@ -74,7 +83,12 @@ public final class TableUtil {
         if (date == null) {
             return null;
         } else {
-            return new java.sql.Date(date.getTime());
+            java.sql.Date d = dateCache.get(date);
+            if (d == null) {
+                d = new java.sql.Date(date.getTime());
+                dateCache.put(date, d);
+            }
+            return d;
         }
     }
     
@@ -82,7 +96,12 @@ public final class TableUtil {
         if (date == null) {
             return null;
         } else {
-            return new java.sql.Timestamp(date.getTime());
+            java.sql.Timestamp ts = timestampCache.get(date);
+            if (ts == null) {
+                ts = new java.sql.Timestamp(date.getTime());
+                timestampCache.put(date, ts);
+            }
+            return ts;
         }
     }
     

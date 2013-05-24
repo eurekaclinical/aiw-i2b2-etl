@@ -157,6 +157,7 @@ public class PatientDimension {
                                     new Timestamp(System.currentTimeMillis());
                             ps.executeBatch();
                             ps.clearBatch();
+                            cn.commit();
                             counter = 0;
                         }
                     } catch (SQLException e) {
@@ -168,6 +169,7 @@ public class PatientDimension {
             if (counter > 0) {
                 ps.executeBatch();
                 ps.clearBatch();
+                cn.commit();
             }
             ps.close();
             ps = null;
@@ -235,6 +237,7 @@ public class PatientDimension {
                         ps.clearBatch();
                         ps2.executeBatch();
                         ps2.clearBatch();
+                        cn.commit();
                         counter = 0;
                     }
 
@@ -249,6 +252,7 @@ public class PatientDimension {
                 ps.clearBatch();
                 ps2.executeBatch();
                 ps2.clearBatch();
+                cn.commit();
             }
             ps.close();
             ps = null;

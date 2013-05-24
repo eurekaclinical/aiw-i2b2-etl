@@ -54,7 +54,6 @@ public class ObservationFact {
 //	private static long ctr = 0L;
     private final String displayName;
     private final Value value;
-    private final String observationBlob;
     private final java.util.Date startDate;
     private final java.util.Date endDate;
     private final PatientDimension patient;
@@ -71,7 +70,7 @@ public class ObservationFact {
             PatientDimension patient,
             VisitDimension visit, ProviderDimension provider,
             Concept concept, Value value, ValueFlagCode valueFlagCode,
-            String observationBlob, String displayName,
+            String displayName,
             String units,
             String sourceSystem,
             boolean rejected) {
@@ -98,7 +97,6 @@ public class ObservationFact {
         this.concept = concept;
         this.displayName = displayName;
         this.value = value;
-        this.observationBlob = observationBlob;
         this.sourceSystem = sourceSystem;
         this.units = units;
         this.valueFlagCode = valueFlagCode;
@@ -123,10 +121,6 @@ public class ObservationFact {
 
     public Value getValue() {
         return value;
-    }
-
-    public String getObservationBlob() {
-        return observationBlob;
     }
 
     public String getDisplayName() {

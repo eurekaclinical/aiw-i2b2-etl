@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.drools.util.StringUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.proposition.*;
@@ -75,9 +76,7 @@ public final class FactHandler {
         this.finishConfig = finish;
         this.unitsPropertyName = unitsPropertyName;
         if (potentialDerivedPropIds == null) {
-            potentialDerivedPropIds = new String[0];
-        } else {
-            potentialDerivedPropIds = potentialDerivedPropIds.clone();
+            potentialDerivedPropIds = StringUtils.EMPTY_STRING_ARRAY;
         }
         this.derivationLinks = new Link[]{
             new Derivation(potentialDerivedPropIds,
@@ -316,7 +315,13 @@ public final class FactHandler {
             ps.setObject(9, ((NumericalValue) value).getNumber());
         } else {
             ps.setString(7, ValTypeCode.TEXT.getCode());
-            ps.setString(8, value.getFormatted());
+            String tval = value.getFormatted();
+            if (tval.length() > 255) {
+                ps.setString(8, tval.substring(0, 255));
+                TableUtil.logger().log(Level.WARNING, "Truncated text result to 255 characters: " + tval);
+            } else {
+                ps.setString(8, tval);
+            }
             ps.setString(9, null);
         }
         ps.setString(10, obx.getValueFlagCode().getCode());
@@ -326,7 +331,7 @@ public final class FactHandler {
         ps.setTimestamp(14, TableUtil.setTimestampAttribute(obx.getEndDate()));
         ps.setString(15, null);
         ps.setObject(16, null);
-        ps.setObject(17, obx.getObservationBlob());
+        ps.setString(17, null);
         ps.setTimestamp(18, null);
         ps.setTimestamp(19, null);
         if (this.importTimestamp == null) {
@@ -355,7 +360,7 @@ public final class FactHandler {
                 start, finish, patient,
                 visit, provider, concept,
                 value, valueFlagCode,
-                null, concept.getDisplayName(),
+                concept.getDisplayName(),
                 units,
                 prop.getDataSourceType().getStringRepresentation(),
                 start == null);

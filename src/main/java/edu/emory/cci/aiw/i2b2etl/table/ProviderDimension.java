@@ -29,41 +29,41 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Represents records in the i2b2 provider dimension.
- * 
+ *
  * The provider dimension has the following DDL:
  * <pre>
- *   CREATE TABLE  "PROVIDER_DIMENSION" 
+ *   CREATE TABLE  "PROVIDER_DIMENSION"
  *    	(
- *   	"PROVIDER_ID"		VARCHAR2(50) NOT NULL ENABLE, 
- *    	"PROVIDER_PATH"		VARCHAR2(700) NOT NULL ENABLE, 
- *    	"NAME_CHAR"			VARCHAR2(850), 
- *    	"PROVIDER_BLOB"		CLOB, 
- *    	"UPDATE_DATE"		DATE, 
- *    	"DOWNLOAD_DATE"		DATE, 
- *    	"IMPORT_DATE"		DATE, 
- *    	"SOURCESYSTEM_CD"	VARCHAR2(50), 
- *    	"UPLOAD_ID"			NUMBER(38,0), 
+ *   	"PROVIDER_ID"		VARCHAR2(50) NOT NULL ENABLE,
+ *    	"PROVIDER_PATH"		VARCHAR2(700) NOT NULL ENABLE,
+ *    	"NAME_CHAR"			VARCHAR2(850),
+ *    	"PROVIDER_BLOB"		CLOB,
+ *    	"UPDATE_DATE"		DATE,
+ *    	"DOWNLOAD_DATE"		DATE,
+ *    	"IMPORT_DATE"		DATE,
+ *    	"SOURCESYSTEM_CD"	VARCHAR2(50),
+ *    	"UPLOAD_ID"			NUMBER(38,0),
  *    	CONSTRAINT "PROVIDER_DIMENSION_PK" PRIMARY KEY ("PROVIDER_PATH", "PROVIDER_ID") ENABLE
  *    	)
  * </pre>
- * 
- * 
+ *
+ *
  * @author Andrew Post
  */
 public class ProviderDimension {
+
     private static final Logger LOGGER = TableUtil.logger();
-    
     private final Concept concept;
     private final String sourceSystem;
-    
+
     /**
-     * Constructs a provider dimension record. The provider path, which also
-     * is in this dimension, is added later on with the 
+     * Constructs a provider dimension record. The provider path, which also is
+     * in this dimension, is added later on with the 
      * {@link #setI2b2Path(java.lang.String) } after the ontology hierarchy is
      * created.
-     * 
-     * @param id the provider unique id, or <code>null</code> if the provider 
-     * is not recorded or unknown.
+     *
+     * @param id the provider unique id, or <code>null</code> if the provider is
+     * not recorded or unknown.
      * @param firstName the provider's first name, if known.
      * @param middleName the provider's middle name, if known.
      * @param lastName the provider's last name, if known.
@@ -76,34 +76,35 @@ public class ProviderDimension {
         this.concept = concept;
         this.sourceSystem = sourceSystem;
     }
-    
+
     /**
-     * Returns the provider's unique id, or <code>null</code> if the provider 
-     * is not recorded or unknown.
-     * 
+     * Returns the provider's unique id, or
+     * <code>null</code> if the provider is not recorded or unknown.
+     *
      * @return a {@link String}.
      */
     public Concept getConcept() {
         return this.concept;
     }
-    
+
     /**
-     * Returns the source system of this provider, or <code>null</code> if it
-     * is not recorded.
-     * 
-     * @return a {@link String}. 
+     * Returns the source system of this provider, or
+     * <code>null</code> if it is not recorded.
+     *
+     * @return a {@link String}.
      */
     public String getSourceSystem() {
         return this.sourceSystem;
     }
-    
+
     public static void insertFacts(Connection dataSchemaConnection) throws SQLException {
-        PreparedStatement stmt = 
+        PreparedStatement stmt =
                 dataSchemaConnection.prepareStatement(
                 "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM) WHERE a1.PROVIDER_ID <> '@' AND a2.START_DATE IS NOT NULL");
         try {
             stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             stmt.execute();
+            dataSchemaConnection.commit();
             stmt.close();
             stmt = null;
         } finally {
@@ -111,12 +112,11 @@ public class ProviderDimension {
                 try {
                     stmt.close();
                 } catch (SQLException ignored) {
-                    
                 }
             }
         }
-        
-        stmt = 
+
+        stmt =
                 dataSchemaConnection.prepareStatement(
                 "SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM) WHERE a1.PROVIDER_ID <> '@' AND a2.START_DATE IS NULL");
         try {
@@ -133,7 +133,6 @@ public class ProviderDimension {
                     try {
                         resultSet.close();
                     } catch (SQLException ignored) {
-                        
                     }
                 }
             }
@@ -144,15 +143,16 @@ public class ProviderDimension {
                 try {
                     stmt.close();
                 } catch (SQLException ignored) {
-                    
                 }
             }
         }
     }
 
-    public static void insertAll(Collection<ProviderDimension> providers, 
+    public static void insertAll(Collection<ProviderDimension> providers,
             Connection cn) throws SQLException {
         Logger logger = TableUtil.logger();
+        int batchSize = 1000;
+        int counter = 0;
         PreparedStatement ps = cn.prepareStatement("insert into PROVIDER_DIMENSION values (?,?,?,?,?,?,?,?,?)");
         try {
             for (ProviderDimension provider : providers) {
@@ -169,14 +169,26 @@ public class ProviderDimension {
                     ps.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
                     ps.setString(8, MetadataUtil.toSourceSystemCode(provider.sourceSystem));
                     ps.setObject(9, null);
+                    ps.addBatch();
+                    counter++;
+                    if (counter >= batchSize) {
+                        ps.executeBatch();
+                        ps.clearBatch();
+                        cn.commit();
+                        counter = 0;
+                    }
 
-                    ps.execute();
                     logger.log(Level.FINEST, "DB_RD_INSERT {0}", provider);
                 } catch (SQLException e) {
                     logger.log(Level.SEVERE, "DB_RD_INSERT_FAIL {0}", provider);
                     throw e;
                 }
                 ps.clearParameters();
+            }
+            if (counter > 0) {
+                ps.executeBatch();
+                ps.clearBatch();
+                cn.commit();
             }
             ps.close();
             ps = null;
@@ -185,7 +197,6 @@ public class ProviderDimension {
                 try {
                     ps.close();
                 } catch (SQLException sqle) {
-                    
                 }
             }
         }
@@ -195,6 +206,4 @@ public class ProviderDimension {
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
-    
-    
 }
