@@ -368,6 +368,11 @@ public final class Metadata {
                         encounterProp);
             }
             Proposition prop = references.get(uids.get(0));
+            if (prop == null) {
+                throw new InvalidPatientRecordException("Encounter's " 
+                        + dataSpec.referenceName 
+                        + " reference points to a non-existant proposition");
+            }
             Value val = prop.getProperty(dataSpec.propertyName);
             if (val != null) {
                 PatientDimension patientDimension = this.patientCache.get(keyId);
