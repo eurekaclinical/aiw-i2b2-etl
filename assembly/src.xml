@@ -14,9 +14,9 @@
                 <exclude>**/.settings/**</exclude>
                 <exclude>**/.classpath</exclude>
                 <exclude>**/.project</exclude>
-                <exclude>${project.basedir}/.idea</exclude>
+				<exclude>${project.basedir}/.idea/**</exclude>
                 <exclude>${project.basedir}/*.iml</exclude>
-                <exclude>**/.idea</exclude>
+				<exclude>**/.idea/**</exclude>
                 <exclude>**/*.iml</exclude>
                 <exclude>**/nbactions.xml</exclude>
                 <exclude>**/nb-configuration.xml</exclude>
