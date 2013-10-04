@@ -28,6 +28,7 @@ import org.protempa.SourceFactory;
 import org.protempa.backend.BackendProviderSpecLoaderException;
 import org.protempa.backend.Configurations;
 import org.protempa.backend.ConfigurationsLoadException;
+import org.protempa.backend.ConfigurationsNotFoundException;
 import org.protempa.backend.InvalidConfigurationException;
 import org.protempa.bconfigs.commons.INICommonsConfigurations;
 
@@ -36,9 +37,8 @@ import org.protempa.bconfigs.commons.INICommonsConfigurations;
  * @author Andrew Post
  */
 public class ProtempaFactory {
-    public Protempa newInstance() throws IOException, 
-            BackendProviderSpecLoaderException, ConfigurationsLoadException, 
-            InvalidConfigurationException, ProtempaStartupException {
+    public Protempa newInstance()
+			throws IOException, BackendProviderSpecLoaderException, ConfigurationsLoadException, InvalidConfigurationException, ProtempaStartupException, ConfigurationsNotFoundException {
         File config = IOUtil.resourceToFile(
                 "/protempa-config/protege-h2-test-config", 
                 "protege-h2-test-config", null);

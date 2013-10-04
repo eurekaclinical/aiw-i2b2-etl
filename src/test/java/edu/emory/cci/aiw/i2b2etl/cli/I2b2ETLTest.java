@@ -19,44 +19,32 @@
  */
 package edu.emory.cci.aiw.i2b2etl.cli;
 
-import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import org.junit.*;
-import org.protempa.CompoundLowLevelAbstractionDefinition;
-import org.protempa.CompoundLowLevelAbstractionDefinition.ValueClassification;
-import org.protempa.EventDefinition;
-import org.protempa.FinderException;
-import org.protempa.HighLevelAbstractionDefinition;
-import org.protempa.LowLevelAbstractionDefinition;
-import org.protempa.LowLevelAbstractionValueDefinition;
-import org.protempa.Offsets;
-import org.protempa.PrimitiveParameterDefinition;
-import org.protempa.PropositionDefinition;
-import org.protempa.Protempa;
-import org.protempa.ProtempaStartupException;
-import org.protempa.SimpleGapFunction;
-import org.protempa.SliceDefinition;
-import org.protempa.SlidingWindowWidthMode;
-import org.protempa.TemporalExtendedParameterDefinition;
-import org.protempa.TemporalExtendedPropositionDefinition;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.protempa.*;
 import org.protempa.backend.BackendProviderSpecLoaderException;
 import org.protempa.backend.ConfigurationsLoadException;
+import org.protempa.backend.ConfigurationsNotFoundException;
 import org.protempa.backend.InvalidConfigurationException;
 import org.protempa.proposition.interval.Relation;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.ValueComparator;
-import org.protempa.proposition.value.ValueType;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
 import org.protempa.query.handler.QueryResultsHandler;
 import org.protempa.query.handler.test.DataProviderException;
 import org.protempa.query.handler.test.DatabasePopulator;
+
+import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
+import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
 
 /**
  * Integration tests for the i2b2 ETL. This assumes that there is an i2b2
@@ -77,11 +65,8 @@ public class I2b2ETLTest {
      * @throws FinderException if executing the Protempa query failed.
      */
     @BeforeClass
-    public static void setUp() throws ProtempaStartupException, IOException, 
-            QueryBuildException, FinderException, DataProviderException, 
-            SQLException, URISyntaxException, 
-            BackendProviderSpecLoaderException, ConfigurationsLoadException, 
-            InvalidConfigurationException {
+    public static void setUp()
+			throws ProtempaStartupException, IOException, QueryBuildException, FinderException, DataProviderException, SQLException, URISyntaxException, BackendProviderSpecLoaderException, ConfigurationsLoadException, InvalidConfigurationException, CloseException, ConfigurationsNotFoundException {
         new DatabasePopulator().doPopulate();
         Protempa protempa = new ProtempaFactory().newInstance();
         try {
@@ -183,7 +168,7 @@ public class I2b2ETLTest {
             hd.add(td2);
             Relation rel = new Relation();
             hd.setRelation(td1, td2, rel);
-            hd.setTemporalOffset(new Offsets());
+            hd.setTemporalOffset(new TemporalPatternOffset());
             
             q.setPropositionDefinitions(
                     new PropositionDefinition[]{ed, hd, ld, ldWrapper, ld2, clad, clad2, ld2, sd});

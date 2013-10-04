@@ -19,19 +19,19 @@
  */
 package edu.emory.cci.aiw.i2b2etl.cli;
 
-import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.io.WithBufferedReaderByLine;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.protempa.CloseException;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.Protempa;
@@ -40,6 +40,9 @@ import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
 import org.protempa.query.QueryBuilder;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
+
+import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
+import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
 
 /**
  *
@@ -72,7 +75,7 @@ public class GetPropositionIdsNeededTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void tearDown() throws CloseException {
         if (protempa != null) {
             protempa.close();
         }
