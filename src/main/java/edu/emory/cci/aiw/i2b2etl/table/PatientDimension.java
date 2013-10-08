@@ -219,7 +219,7 @@ public class PatientDimension {
                     ps2.setString(1, patient.encryptedPatientId);
                     ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
                     ps2.setLong(3, patient.patientNum);
-                    ps2.setString(4, null);
+                    ps2.setString(4, PatientIdeStatusCode.ACTIVE.getCode());
                     ps2.setDate(5, null);
                     ps2.setDate(6, null);
                     ps2.setDate(7, null);
@@ -228,6 +228,20 @@ public class PatientDimension {
                     ps2.setNull(10, Types.NUMERIC);
                     ps2.addBatch();
                     ps2.clearParameters();
+                    
+                    ps2.setLong(1, patient.patientNum);
+                    ps2.setString(2, "HIVE");
+                    ps2.setLong(3, patient.patientNum);
+                    ps2.setString(4, PatientIdeStatusCode.ACTIVE.getCode());
+                    ps2.setDate(5, null);
+                    ps2.setDate(6, null);
+                    ps2.setDate(7, null);
+                    ps2.setTimestamp(8, importTimestamp);
+                    ps2.setString(9, null);
+                    ps2.setNull(10, Types.NUMERIC);
+                    ps2.addBatch();
+                    ps2.clearParameters();
+                    
                     counter++;
 
                     if (counter >= batchSize) {

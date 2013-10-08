@@ -126,7 +126,7 @@ public class VisitDimension {
                         ps2.setLong(3, visit.encounterNum);
                         ps2.setString(4, visit.encryptedPatientId);
                         ps2.setString(5, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
-                        ps2.setString(6, null);
+                        ps2.setString(6, EncounterIdeStatusCode.ACTIVE.getCode());
                         ps2.setDate(7, null);
                         ps2.setDate(8, null);
                         ps2.setDate(9, null);
@@ -134,8 +134,23 @@ public class VisitDimension {
                         ps2.setString(11, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
                         ps2.setNull(12, Types.NUMERIC);
                         ps2.addBatch();
-                        ps2BatchAdded = true;
                         ps2.clearParameters();
+                        
+                        ps2.setLong(1, visit.encounterNum);
+                        ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                        ps2.setLong(3, visit.encounterNum);
+                        ps2.setLong(4, visit.patientNum);
+                        ps2.setString(5, "HIVE");
+                        ps2.setString(6, EncounterIdeStatusCode.ACTIVE.getCode());
+                        ps2.setDate(7, null);
+                        ps2.setDate(8, null);
+                        ps2.setDate(9, null);
+                        ps2.setTimestamp(10, importTimestamp);
+                        ps2.setString(11, null);
+                        ps2.setNull(12, Types.NUMERIC);
+                        ps2.addBatch();
+                        ps2.clearParameters();
+                        ps2BatchAdded = true;
                     }
                     counter++;
 
