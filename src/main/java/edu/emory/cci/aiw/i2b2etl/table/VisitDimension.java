@@ -137,7 +137,7 @@ public class VisitDimension {
                         ps2.clearParameters();
                         
                         ps2.setLong(1, visit.encounterNum);
-                        ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                        ps2.setString(2, "HIVE");
                         ps2.setLong(3, visit.encounterNum);
                         ps2.setLong(4, visit.patientNum);
                         ps2.setString(5, "HIVE");
