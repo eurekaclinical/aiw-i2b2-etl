@@ -51,6 +51,7 @@ import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
 import org.protempa.query.Query;
 import org.protempa.query.handler.QueryResultsHandler;
+import org.protempa.query.handler.QueryResultsHandlerCloseException;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 import org.protempa.query.handler.QueryResultsHandlerProcessingException;
 import org.protempa.query.handler.table.Link;
@@ -339,8 +340,6 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             logger.log(Level.FINE, "Populating concept dimension for query {0}",
                     this.query.getId());
             ConceptDimension.insertAll(this.ontologyModel.getRoot(), this.dataSchemaConnection);
-            this.dataSchemaConnection.close();
-            this.dataSchemaConnection = null;
             logger.log(Level.INFO, "Done populating dimensions for query {0}",
                     queryId);
             logger.log(Level.INFO,
@@ -356,12 +355,17 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         } catch (SQLException ex) {
             throw new QueryResultsHandlerProcessingException(
                     "Load into i2b2 failed for query " + queryId, ex);
-        } finally {
-            if (this.dataSchemaConnection != null) {
-                try {
-                    this.dataSchemaConnection.close();
-                } catch (SQLException ex) {
-                }
+        }
+    }
+
+    @Override
+    public void close() throws QueryResultsHandlerCloseException {
+        if (this.dataSchemaConnection != null) {
+            try {
+                this.dataSchemaConnection.close();
+                this.dataSchemaConnection = null;
+            } catch (SQLException ex) {
+                throw new QueryResultsHandlerCloseException(ex);
             }
         }
     }
@@ -369,6 +373,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     @Override
     public void validate() {
     }
+
 
     private void readConfiguration() throws ConfigurationReadException {
         Logger logger = I2b2ETLUtil.logger();
