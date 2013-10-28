@@ -22,10 +22,8 @@ package edu.emory.cci.aiw.i2b2etl.table;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+
+import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Date;
@@ -261,6 +259,7 @@ public final class FactHandler {
                             new Timestamp(System.currentTimeMillis());
                     batchNumber++;
                     ps.executeBatch();
+                    cn.commit();
                     logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
                     ps.clearBatch();
                     plus += 8192;
