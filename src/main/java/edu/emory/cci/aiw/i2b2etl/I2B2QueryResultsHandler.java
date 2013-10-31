@@ -64,6 +64,9 @@ import org.protempa.query.handler.table.Reference;
 public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
     private static final long serialVersionUID = -1503401944818776787L;
+    private static final String[] OBX_FACT_IDXS = new String[]{"FACT_NOLOB",
+            "FACT_PATCON_DATE_PRVD_IDX", "FACT_CNPT_PAT_ENCT_IDX"};
+
     private final File confFile;
     private final boolean inferPropositionIdsNeeded;
     private KnowledgeSource knowledgeSource;
@@ -152,6 +155,34 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         }
     }
 
+    private void disableObservationFactIndexes() throws SQLException {
+        Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.INFO, "Disabling indices on observation_fact");
+        Statement stmt = this.dataSchemaConnection.createStatement();
+        for (String idx : OBX_FACT_IDXS) {
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "Disabling index: {0}", idx);
+            }
+            stmt.executeUpdate("ALTER INDEX " + idx + " UNUSABLE");
+        }
+        stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = true");
+        logger.log(Level.INFO, "Disabled indices on observation_fact");
+    }
+
+    private void enableObservationFactIndexes() throws SQLException {
+        Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.INFO, "Enabling indices on observation_fact");
+        Statement stmt = this.dataSchemaConnection.createStatement();
+        for (String idx : OBX_FACT_IDXS) {
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "Enabling index: {0}", idx);
+            }
+            stmt.executeUpdate("ALTER INDEX " + idx + " REBUILD ONLINE");
+        }
+        stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = false");
+        logger.log(Level.INFO, "Enabled indices on observation_fact");
+    }
+
     /**
      * Builds most of the concept tree, truncates the data tables, opens a
      * connection to the i2b2 project database, and does some other prep. This
@@ -167,6 +198,9 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             truncateDataTables();
             this.dataSchemaConnection = openDatabaseConnection("dataschema");
             assembleFactHandlers();
+
+            // disable indexes on observation_fact to speed up inserts
+            disableObservationFactIndexes();
             logger.log(Level.INFO,
                     "Populating observation facts table for query {0}",
                     this.query.getId());
@@ -300,6 +334,18 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             for (FactHandler factHandler : this.factHandlers) {
                 factHandler.clearOut(this.dataSchemaConnection);
             }
+
+            // re-enable the indexes now that we're done populating the table
+            enableObservationFactIndexes();
+
+            // gather statistics on observation_fact
+            logger.log(Level.INFO, "Gathering statistics on observation_fact");
+            CallableStatement stmt = this.dataSchemaConnection.prepareCall("{call dbms_stats.gather_table_stats(?, ?)}");
+            stmt.setString(1, this.configurationReader.getDatabaseSection().get("dataschema").user);
+            stmt.setString(2, "observation_fact");
+            stmt.execute();
+            logger.log(Level.INFO, "Finished gathering statistics on observation_fact");
+
             this.ontologyModel.buildProviderHierarchy();
 
             // persist Patients & Visits.
@@ -360,9 +406,17 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
     @Override
     public void close() throws QueryResultsHandlerCloseException {
+        Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.INFO, "Attempting to close data schema connection");
         if (this.dataSchemaConnection != null) {
             try {
-                this.dataSchemaConnection.close();
+                logger.log(Level.INFO, "data schema connection not null; continuing close operation");
+                if (!dataSchemaConnection.isClosed()) {
+                    logger.log(Level.INFO, "data schema connection not closed; rolling back and closing");
+                    this.dataSchemaConnection.rollback();
+                    this.dataSchemaConnection.close();
+                    logger.log(Level.INFO, "Closed data schema connection");
+                }
                 this.dataSchemaConnection = null;
             } catch (SQLException ex) {
                 throw new QueryResultsHandlerCloseException(ex);
