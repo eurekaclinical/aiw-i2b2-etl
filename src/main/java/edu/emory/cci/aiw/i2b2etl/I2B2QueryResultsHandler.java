@@ -177,7 +177,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, "Enabling index: {0}", idx);
             }
-            stmt.executeUpdate("ALTER INDEX " + idx + " REBUILD ONLINE");
+            stmt.executeUpdate("ALTER INDEX " + idx + " REBUILD");
         }
         stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = false");
         logger.log(Level.INFO, "Enabled indices on observation_fact");
