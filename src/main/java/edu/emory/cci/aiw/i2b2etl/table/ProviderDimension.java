@@ -97,62 +97,13 @@ public class ProviderDimension {
         return this.sourceSystem;
     }
 
-    public static void insertFacts(Connection dataSchemaConnection) throws SQLException {
-        PreparedStatement stmt =
-                dataSchemaConnection.prepareStatement(
-                "INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM) WHERE a1.PROVIDER_ID <> '@' AND a2.START_DATE IS NOT NULL");
-        try {
-            stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-            stmt.execute();
-            dataSchemaConnection.commit();
-            stmt.close();
-            stmt = null;
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException ignored) {
-                }
-            }
-        }
-
-        stmt =
-                dataSchemaConnection.prepareStatement(
-                "SELECT DISTINCT a1.ENCOUNTER_NUM, a1.PATIENT_NUM, a1.PROVIDER_ID as CONCEPT_CD, a1.PROVIDER_ID, a2.START_DATE, a2.END_DATE, 0 as MODIFIER_CD, ? as IMPORT_DATE FROM OBSERVATION_FACT a1 JOIN VISIT_DIMENSION a2 on (a1.ENCOUNTER_NUM=a2.ENCOUNTER_NUM) WHERE a1.PROVIDER_ID <> '@' AND a2.START_DATE IS NULL");
-        try {
-            stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-            ResultSet resultSet = stmt.executeQuery();
-            try {
-                while (resultSet.next()) {
-                    LOGGER.log(Level.WARNING, "Rejected fact {0}; {1}; {2}; {3}; {4}; {5}; {6}; {7}", new Object[]{resultSet.getInt(1), resultSet.getInt(2), resultSet.getString(3), resultSet.getString(4), resultSet.getTimestamp(5), resultSet.getTimestamp(6), resultSet.getInt(7), resultSet.getTimestamp(8)});
-                }
-                resultSet.close();
-                resultSet = null;
-            } finally {
-                if (resultSet != null) {
-                    try {
-                        resultSet.close();
-                    } catch (SQLException ignored) {
-                    }
-                }
-            }
-            stmt.close();
-            stmt = null;
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException ignored) {
-                }
-            }
-        }
-    }
-
     public static void insertAll(Collection<ProviderDimension> providers,
             Connection cn) throws SQLException {
         Logger logger = TableUtil.logger();
         int batchSize = 1000;
         int counter = 0;
+        int commitSize = 10000;
+        int commitCounter = 0;
         PreparedStatement ps = cn.prepareStatement("insert into PROVIDER_DIMENSION values (?,?,?,?,?,?,?,?,?)");
         try {
             for (ProviderDimension provider : providers) {
@@ -170,12 +121,17 @@ public class ProviderDimension {
                     ps.setString(8, MetadataUtil.toSourceSystemCode(provider.sourceSystem));
                     ps.setObject(9, null);
                     ps.addBatch();
+                    ps.clearParameters();
                     counter++;
+                    commitCounter++;
                     if (counter >= batchSize) {
                         ps.executeBatch();
                         ps.clearBatch();
-                        cn.commit();
                         counter = 0;
+                    }
+                    if (commitCounter >= commitSize) {
+                        cn.commit();
+                        commitCounter = 0;
                     }
 
                     logger.log(Level.FINEST, "DB_RD_INSERT {0}", provider);
@@ -183,11 +139,12 @@ public class ProviderDimension {
                     logger.log(Level.SEVERE, "DB_RD_INSERT_FAIL {0}", provider);
                     throw e;
                 }
-                ps.clearParameters();
             }
             if (counter > 0) {
                 ps.executeBatch();
                 ps.clearBatch();
+            }
+            if (commitCounter > 0) {
                 cn.commit();
             }
             ps.close();

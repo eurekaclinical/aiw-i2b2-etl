@@ -1,4 +1,10 @@
 /*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package edu.emory.cci.aiw.i2b2etl.table;
+
+/*
  * #%L
  * AIW i2b2 ETL
  * %%
@@ -17,147 +23,137 @@
  * limitations under the License.
  * #L%
  */
-package edu.emory.cci.aiw.i2b2etl.table;
-
-import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
-import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
-
-import java.sql.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.drools.util.StringUtils;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.protempa.KnowledgeSource;
-import org.protempa.KnowledgeSourceReadException;
-import org.protempa.proposition.*;
-import org.protempa.proposition.value.*;
-import org.protempa.query.handler.table.Derivation;
-import org.protempa.query.handler.table.Link;
-import org.protempa.query.handler.table.LinkTraverser;
+import org.protempa.proposition.Parameter;
+import org.protempa.proposition.Proposition;
+import org.protempa.proposition.TemporalProposition;
+import org.protempa.proposition.UniqueId;
+import org.protempa.proposition.value.AbsoluteTimeGranularityUtil;
+import org.protempa.proposition.value.InequalityNumberValue;
+import org.protempa.proposition.value.NominalValue;
+import org.protempa.proposition.value.NumberValue;
+import org.protempa.proposition.value.NumericalValue;
+import org.protempa.proposition.value.Value;
 
-public final class FactHandler {
-    
-    private final LinkTraverser linkTraverser;
-    private final Link[] links;
-    private final String propertyName;
-    private int plus = 0;
-    private int minus = 0;
+/**
+ *
+ * @author arpost
+ */
+public abstract class FactHandler {
+
     private boolean inited = false;
     private int batchNumber = 0;
     private long ctr = 0L;
-    private int idx = 0;
-    private Metadata metadata;
+    private int counter = 0;
+    private int batchSize = 1000;
+    private int commitCounter = 0;
+    private int commitSize = 10000;
     private PreparedStatement ps;
+    private Timestamp importTimestamp;
     private final String startConfig;
     private final String finishConfig;
     private final String unitsPropertyName;
-    private final Link[] derivationLinks;
-    private Timestamp importTimestamp;
-    
-    public FactHandler(Link[] links, String propertyName, String start,
-            String finish, String unitsPropertyName,
-            String[] potentialDerivedPropIds, Metadata metadata) {
-        if (metadata == null) {
-            throw new IllegalArgumentException("metadata cannot be null");
-        }
-        this.metadata = metadata;
-        this.linkTraverser = new LinkTraverser();
-        this.links = links;
+    private final String propertyName;
+
+    public FactHandler(String propertyName, String startConfig, String finishConfig, String unitsPropertyName) {
         this.propertyName = propertyName;
-        this.startConfig = start;
-        this.finishConfig = finish;
+        this.startConfig = startConfig;
+        this.finishConfig = finishConfig;
         this.unitsPropertyName = unitsPropertyName;
-        if (potentialDerivedPropIds == null) {
-            potentialDerivedPropIds = StringUtils.EMPTY_STRING_ARRAY;
-        }
-        this.derivationLinks = new Link[]{
-            new Derivation(potentialDerivedPropIds,
-            Derivation.Behavior.MULT_FORWARD)
-        };
     }
-    
-    public void handleRecord(PatientDimension patient, VisitDimension visit,
-            ProviderDimension provider,
-            Proposition encounterProp,
-            Map<Proposition, List<Proposition>> forwardDerivations,
-            Map<Proposition, List<Proposition>> backwardDerivations,
-            Map<UniqueId, Proposition> references,
-            KnowledgeSource knowledgeSource,
-            Set<Proposition> derivedPropositions, Connection cn)
-            throws InvalidFactException {
-        assert patient != null : "patient cannot be null";
-        assert visit != null : "visit cannot be null";
-        assert provider != null : "provider cannot be null";
-        List<Proposition> props;
-        try {
-            props = this.linkTraverser.traverseLinks(this.links, encounterProp,
-                    forwardDerivations,
-                    backwardDerivations, references, knowledgeSource);
-        } catch (KnowledgeSourceReadException ex) {
-            throw new InvalidFactException(ex);
-        }
-        
-        for (Proposition prop : props) {
-            Value propertyVal = this.propertyName != null
-                    ? prop.getProperty(this.propertyName) : null;
-            Concept concept =
-                    this.metadata.getFromIdCache(prop.getId(),
-                    this.propertyName, propertyVal);
-            if (concept != null) {
-                ObservationFact obx = createObservationFact(prop,
-                        encounterProp, patient, visit, provider, concept);
-                try {
-                    insert(obx, cn);
-                    
-                    List<Proposition> derivedProps;
+
+    public String getStartConfig() {
+        return startConfig;
+    }
+
+    public String getFinishConfig() {
+        return finishConfig;
+    }
+
+    public String getUnitsPropertyName() {
+        return unitsPropertyName;
+    }
+
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public abstract void handleRecord(PatientDimension patient, VisitDimension visit, ProviderDimension provider, Proposition encounterProp, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references, KnowledgeSource knowledgeSource, Set<Proposition> derivedPropositions, Connection cn) throws InvalidFactException;
+
+    public final void clearOut(Connection cn) throws SQLException {
+        Logger logger = TableUtil.logger();
+        if (this.ps != null) {
+            try {
+                if (counter > 0) {
+                    batchNumber++;
+                    ps.executeBatch();
+                    logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
+                }
+                if (commitCounter > 0) {
+                    cn.commit();
+                }
+                ps.close();
+                ps = null;
+            } finally {
+                if (ps != null) {
                     try {
-                        derivedProps = this.linkTraverser.traverseLinks(
-                                this.derivationLinks, prop, forwardDerivations,
-                                backwardDerivations, references,
-                                knowledgeSource);
-                    } catch (KnowledgeSourceReadException ex) {
-                        throw new InvalidFactException(ex);
+                        ps.close();
+                    } catch (SQLException ignore) {
                     }
-                    for (Proposition derivedProp :
-                            new HashSet<Proposition>(derivedProps)) {
-                        if (derivedPropositions.add(derivedProp)) {
-                            Concept derivedConcept =
-                                    this.metadata.getFromIdCache(derivedProp.getId(),
-                                    null, null);
-                            if (derivedConcept != null) {
-                                ObservationFact derivedObx = createObservationFact(
-                                        derivedProp, encounterProp, patient, visit,
-                                        provider, derivedConcept);
-                                try {
-                                    insert(derivedObx, cn);
-                                } catch (SQLException sqle) {
-                                    String msg = "Observation fact not created for " + prop.getId();
-                                    throw new InvalidFactException(msg, sqle);
-                                } catch (InvalidConceptCodeException ex) {
-                                    String msg = "Observation fact not created for " + prop.getId();
-                                    throw new InvalidFactException(msg, ex);
-                                }
-                            }
-                        }
-                    }
-                } catch (SQLException ex) {
-                    String msg = "Observation fact not created for " + prop.getId() + "." + this.propertyName + "=" + propertyVal;
-                    throw new InvalidFactException(msg, ex);
-                } catch (InvalidConceptCodeException ex) {
-                    String msg = "Observation fact not created for " + prop.getId() + "." + this.propertyName + "=" + propertyVal;
-                    throw new InvalidFactException(msg, ex);
                 }
             }
         }
     }
-    
-    private String handleUnits(Proposition prop) {
+
+    protected final void insert(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
+        Logger logger = TableUtil.logger();
+        if (obx.isRejected()) {
+            logger.log(Level.WARNING, "Rejected fact {0}", obx);
+        } else {
+            try {
+                setParameters(cn, obx);
+
+                ps.addBatch();
+                counter++;
+                commitCounter++;
+                if (counter >= batchSize) {
+                    this.importTimestamp =
+                            new Timestamp(System.currentTimeMillis());
+                    batchNumber++;
+                    ps.executeBatch();
+                    logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
+                    ps.clearBatch();
+                    counter = 0;
+                }
+                if (commitCounter >= commitSize) {
+                    cn.commit();
+                    commitCounter = 0;
+                }
+                ps.clearParameters();
+            } catch (SQLException e) {
+                logger.log(Level.FINEST, "DB_OBX_BATCH_FAIL={0}", batchNumber);
+                logger.log(Level.SEVERE, "Batch failed on ObservationFact. I2B2 will not be correct.", e);
+                try {
+                    ps.close();
+                } catch (SQLException sqle) {
+                }
+                throw e;
+            }
+        }
+    }
+
+    protected final String handleUnits(Proposition prop) {
         String value;
         if (this.unitsPropertyName != null) {
             Value unitsVal = prop.getProperty(this.unitsPropertyName);
@@ -171,8 +167,8 @@ public final class FactHandler {
         }
         return value;
     }
-    
-    private Value handleValue(Proposition prop) {
+
+    protected final Value handleValue(Proposition prop) {
         Value value = null;
         if (this.propertyName != null) {
             Value tvalCharVal = prop.getProperty(this.propertyName);
@@ -186,8 +182,8 @@ public final class FactHandler {
         }
         return value;
     }
-    
-    private Date handleStartDate(Proposition prop, Proposition encounterProp, Value propertyVal) throws InvalidFactException {
+
+    protected final Date handleStartDate(Proposition prop, Proposition encounterProp, Value propertyVal) throws InvalidFactException {
         Date start;
         if (prop instanceof TemporalProposition) {
             start = AbsoluteTimeGranularityUtil.asDate(((TemporalProposition) prop).getInterval().getMinStart());
@@ -204,8 +200,8 @@ public final class FactHandler {
         }
         return start;
     }
-    
-    private Date handleFinishDate(Proposition prop, Proposition encounterProp, Value propertyVal) throws InvalidFactException {
+
+    protected final Date handleFinishDate(Proposition prop, Proposition encounterProp, Value propertyVal) throws InvalidFactException {
         Date start;
         if (prop instanceof TemporalProposition) {
             start = AbsoluteTimeGranularityUtil.asDate(((TemporalProposition) prop).getInterval().getMinFinish());
@@ -222,66 +218,7 @@ public final class FactHandler {
         }
         return start;
     }
-    
-    public void clearOut(Connection cn) throws SQLException {
-        Logger logger = TableUtil.logger();
-        try {
-            if (ps != null) {
-                batchNumber++;
-                ps.executeBatch();
-                logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
-                ps.close();
-                ps = null;
-            }
-            
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException sqle) {
-                }
-            }
-        }
-    }
-    
-    private void insert(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
-        Logger logger = TableUtil.logger();
-        if (obx.isRejected()) {
-            logger.log(Level.WARNING, "Rejected fact {0}", obx);
-        } else {
-            try {
-                setParameters(cn, obx);
-                
-                ps.addBatch();
-                
-                if ((++idx % 8192) == 0) {
-                    this.importTimestamp =
-                            new Timestamp(System.currentTimeMillis());
-                    batchNumber++;
-                    ps.executeBatch();
-                    cn.commit();
-                    logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
-                    ps.clearBatch();
-                    plus += 8192;
-                    idx = 0;
-                    if (logger.isLoggable(Level.INFO)) {
-                        logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
-                    }
-                }
-                ps.clearParameters();
-            } catch (SQLException e) {
-                logger.log(Level.FINEST, "DB_OBX_BATCH_FAIL={0}", batchNumber);
-                logger.log(Level.SEVERE, "Batch failed on ObservationFact. I2B2 will not be correct.", e);
-                logger.log(Level.INFO, "loaded obx {0}:{1}", new Object[]{plus, minus});
-                try {
-                    ps.close();
-                } catch (SQLException sqle) {
-                }
-                throw e;
-            }
-        }
-    }
-    
+
     private void setParameters(Connection cn, ObservationFact obx) throws SQLException, InvalidConceptCodeException {
         if (!inited) {
             ps = cn.prepareStatement("insert into OBSERVATION_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -339,31 +276,5 @@ public final class FactHandler {
         ps.setTimestamp(20, this.importTimestamp);
         ps.setString(21, obx.getSourceSystem());
         ps.setObject(22, null);
-    }
-    
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
-    
-    private ObservationFact createObservationFact(Proposition prop,
-            Proposition encounterProp, PatientDimension patient,
-            VisitDimension visit, ProviderDimension provider, Concept concept)
-            throws InvalidFactException {
-        Date start = handleStartDate(prop, encounterProp, null);
-        Date finish = handleFinishDate(prop, encounterProp, null);
-        Value value = handleValue(prop);
-        ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
-        String units = handleUnits(prop);
-        ObservationFact derivedObx = new ObservationFact(
-                start, finish, patient,
-                visit, provider, concept,
-                value, valueFlagCode,
-                concept.getDisplayName(),
-                units,
-                prop.getDataSourceType().getStringRepresentation(),
-                start == null);
-        concept.setInUse(true);
-        return derivedObx;
     }
 }

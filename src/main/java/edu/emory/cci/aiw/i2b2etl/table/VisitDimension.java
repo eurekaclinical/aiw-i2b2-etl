@@ -90,8 +90,10 @@ public class VisitDimension {
     }
 
     public static void insertAll(Collection<VisitDimension> visits, Connection cn) throws SQLException {
-        int batchSize = 1000;
-        int counter = 0;
+        int batchSize = 500;
+        int commitSize = 5000;
+        int batchCounter = 0;
+        int commitCounter = 0;
         boolean ps2BatchAdded = false;
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -152,9 +154,10 @@ public class VisitDimension {
                         ps2.clearParameters();
                         ps2BatchAdded = true;
                     }
-                    counter++;
+                    batchCounter++;
+                    commitCounter++;
 
-                    if (counter >= batchSize) {
+                    if (batchCounter >= batchSize) {
                         importTimestamp =
                                 new Timestamp(System.currentTimeMillis());
                         ps.executeBatch();
@@ -164,8 +167,11 @@ public class VisitDimension {
                             ps2.clearBatch();
                             ps2BatchAdded = false;
                         }
+                        batchCounter = 0;
+                    }
+                    if (commitCounter >= commitSize) {
                         cn.commit();
-                        counter = 0;
+                        commitCounter = 0;
                     }
 
                     logger.log(Level.FINEST, "DB_VD_INSERT {0}", visit);
@@ -174,13 +180,16 @@ public class VisitDimension {
                     throw e;
                 }
             }
-            if (counter > 0) {
+            if (batchCounter > 0) {
                 ps.executeBatch();
                 ps.clearBatch();
                 if (ps2BatchAdded) {
                     ps2.executeBatch();
                     ps2.clearBatch();
                 }
+                cn.commit();
+            }
+            if (commitCounter > 0) {
                 cn.commit();
             }
             ps.close();

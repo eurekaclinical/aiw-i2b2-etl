@@ -61,6 +61,8 @@ public class ConceptDimension {
 
         int batchSize = 1000;
         int counter = 0;
+        int commitSize = 10000;
+        int commitCounter = 0;
         PreparedStatement ps = null;
         try {
             ps = cn.prepareStatement("insert into CONCEPT_DIMENSION values (?,?,?,?,?,?,?,?,?)");
@@ -83,18 +85,25 @@ public class ConceptDimension {
                     ps.setObject(9, null);
                     logger.log(Level.FINEST, "DB_CD_INSERT {0}", concept);
                     counter++;
+                    commitCounter++;
                     ps.addBatch();
+                    ps.clearParameters();
                     if (counter >= batchSize) {
                         ps.executeBatch();
                         ps.clearBatch();
-                        cn.commit();
                         counter = 0;
+                    }
+                    if (commitCounter >= commitSize) {
+                        cn.commit();
+                        commitCounter = 0;
                     }
                 }
             }
             if (counter > 0) {
                 ps.executeBatch();
                 ps.clearBatch();
+            }
+            if (commitCounter > 0) {
                 cn.commit();
             }
             ps.close();

@@ -134,6 +134,8 @@ public class PatientDimension {
     public static void insertAges(Collection<PatientDimension> patients, Connection cn, String ageConceptCodePrefix, Map<Long, VisitDimension> patientLevelFakeVisits) throws SQLException {
         int batchSize = 1000;
         int counter = 0;
+        int commitCounter = 0;
+        int commitSize = 10000;
         PreparedStatement ps = null;
         try {
             Timestamp importTimestamp =
@@ -152,13 +154,17 @@ public class PatientDimension {
                         ps.addBatch();
                         ps.clearParameters();
                         counter++;
+                        commitCounter++;
                         if (counter >= batchSize) {
                             importTimestamp =
                                     new Timestamp(System.currentTimeMillis());
                             ps.executeBatch();
                             ps.clearBatch();
-                            cn.commit();
                             counter = 0;
+                        }
+                        if (commitCounter >= commitSize) {
+                            cn.commit();
+                            commitCounter = 0;
                         }
                     } catch (SQLException e) {
                         logger.log(Level.SEVERE, "DB_PD_INSERT_FAIL {0}", patient);
@@ -169,6 +175,8 @@ public class PatientDimension {
             if (counter > 0) {
                 ps.executeBatch();
                 ps.clearBatch();
+            }
+            if (commitCounter > 0) {
                 cn.commit();
             }
             ps.close();
@@ -184,8 +192,10 @@ public class PatientDimension {
     }
 
     public static void insertAll(Collection<PatientDimension> patients, Connection cn) throws SQLException {
-        int batchSize = 1000;
+        int batchSize = 500;
         int counter = 0;
+        int commitSize = 5000;
+        int commitCounter = 0;
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
         try {
@@ -243,6 +253,7 @@ public class PatientDimension {
                     ps2.clearParameters();
                     
                     counter++;
+                    commitCounter++;
 
                     if (counter >= batchSize) {
                         importTimestamp =
@@ -251,8 +262,11 @@ public class PatientDimension {
                         ps.clearBatch();
                         ps2.executeBatch();
                         ps2.clearBatch();
-                        cn.commit();
                         counter = 0;
+                    }
+                    if (commitCounter >= commitSize) {
+                        cn.commit();
+                        commitSize = 0;
                     }
 
                     logger.log(Level.FINEST, "DB_PD_INSERT {0}", patient);

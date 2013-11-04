@@ -20,7 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl;
 
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
-import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
+import edu.emory.cci.aiw.i2b2etl.table.PropositionFactHandler;
 import edu.emory.cci.aiw.i2b2etl.configuration.*;
 import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
@@ -30,8 +30,10 @@ import edu.emory.cci.aiw.i2b2etl.metadata.OntologyBuildException;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.metadata.*;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimension;
+import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
+import edu.emory.cci.aiw.i2b2etl.table.ProviderFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
 import java.io.File;
 import java.io.StringReader;
@@ -65,8 +67,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
     private static final long serialVersionUID = -1503401944818776787L;
     private static final String[] OBX_FACT_IDXS = new String[]{"FACT_NOLOB",
-            "FACT_PATCON_DATE_PRVD_IDX", "FACT_CNPT_PAT_ENCT_IDX"};
-
+        "FACT_PATCON_DATE_PRVD_IDX", "FACT_CNPT_PAT_ENCT_IDX"};
     private final File confFile;
     private final boolean inferPropositionIdsNeeded;
     private KnowledgeSource knowledgeSource;
@@ -159,28 +160,50 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Disabling indices on observation_fact");
         Statement stmt = this.dataSchemaConnection.createStatement();
-        for (String idx : OBX_FACT_IDXS) {
-            if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, "Disabling index: {0}", idx);
+        try {
+            for (String idx : OBX_FACT_IDXS) {
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, "Disabling index: {0}", idx);
+                }
+                stmt.executeUpdate("ALTER INDEX " + idx + " UNUSABLE");
             }
-            stmt.executeUpdate("ALTER INDEX " + idx + " UNUSABLE");
+            stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = true");
+            stmt.close();
+            stmt = null;
+            logger.log(Level.INFO, "Disabled indices on observation_fact");
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ignore) {
+                }
+            }
         }
-        stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = true");
-        logger.log(Level.INFO, "Disabled indices on observation_fact");
     }
 
     private void enableObservationFactIndexes() throws SQLException {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Enabling indices on observation_fact");
         Statement stmt = this.dataSchemaConnection.createStatement();
-        for (String idx : OBX_FACT_IDXS) {
-            if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, "Enabling index: {0}", idx);
+        try {
+            for (String idx : OBX_FACT_IDXS) {
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, "Enabling index: {0}", idx);
+                }
+                stmt.executeUpdate("ALTER INDEX " + idx + " REBUILD");
             }
-            stmt.executeUpdate("ALTER INDEX " + idx + " REBUILD");
+            stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = false");
+            stmt.close();
+            stmt = null;
+            logger.log(Level.INFO, "Enabled indices on observation_fact");
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ignore) {
+                }
+            }
         }
-        stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = false");
-        logger.log(Level.INFO, "Enabled indices on observation_fact");
     }
 
     /**
@@ -225,40 +248,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     private void assembleFactHandlers() throws IllegalAccessException,
             InstantiationException, KnowledgeSourceReadException {
         this.factHandlers = new ArrayList<FactHandler>();
-
-        PropositionDefinition visitPropDef =
-                this.knowledgeSource.readPropositionDefinition(visitPropId);
-        DataSection dataSection = this.configurationReader.getDataSection();
-        for (DataSection.DataSpec obx : dataSection.getAll()) {
-            PropositionDefinition[] propDefs;
-            Link[] links;
-            if (obx.referenceName != null) {
-                links = new Link[]{new Reference(obx.referenceName)};
-                ReferenceDefinition refDef =
-                        visitPropDef.referenceDefinition(obx.referenceName);
-                String[] propIds = refDef.getPropositionIds();
-                propDefs = new PropositionDefinition[propIds.length + 1];
-                propDefs[0] = visitPropDef;
-                for (int i = 1; i < propDefs.length; i++) {
-                    propDefs[i] =
-                            this.knowledgeSource.readPropositionDefinition(
-                            propIds[i - 1]);
-                    assert propDefs[i] != null : "Invalid proposition id "
-                            + propIds[i - 1];
-                }
-            } else {
-                links = null;
-                propDefs = new PropositionDefinition[]{visitPropDef};
-            }
-
-            String[] potentialDerivedPropIdsArr =
-                    this.ontologyModel.extractDerived(propDefs);
-
-            FactHandler factHandler = new FactHandler(links, obx.propertyName,
-                    obx.start, obx.finish, obx.units,
-                    potentialDerivedPropIdsArr, this.ontologyModel);
-            this.factHandlers.add(factHandler);
-        }
+        addProviderFactHandler();
+        addPropositionFactHandlers();
     }
 
     @Override
@@ -337,14 +328,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
             // re-enable the indexes now that we're done populating the table
             enableObservationFactIndexes();
-
-            // gather statistics on observation_fact
-            logger.log(Level.INFO, "Gathering statistics on observation_fact");
-            CallableStatement stmt = this.dataSchemaConnection.prepareCall("{call dbms_stats.gather_table_stats(?, ?)}");
-            stmt.setString(1, this.configurationReader.getDatabaseSection().get("dataschema").user);
-            stmt.setString(2, "observation_fact");
-            stmt.execute();
-            logger.log(Level.INFO, "Finished gathering statistics on observation_fact");
+            gatherStatisticsOnObservationFact();
 
             this.ontologyModel.buildProviderHierarchy();
 
@@ -376,10 +360,6 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     "Populating provider dimension for query {0}", queryId);
             ProviderDimension.insertAll(this.ontologyModel.getProviders(),
                     this.dataSchemaConnection);
-            logger.log(Level.FINE,
-                    "Inserting providers into observation fact table for query {0}",
-                    queryId);
-            ProviderDimension.insertFacts(this.dataSchemaConnection);
 
             // flush hot concepts out of the tree. persist Concepts.
 
@@ -427,7 +407,6 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     @Override
     public void validate() {
     }
-
 
     private void readConfiguration() throws ConfigurationReadException {
         Logger logger = I2b2ETLUtil.logger();
@@ -621,9 +600,10 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         // )
 
 
-        int idx = 0;
-        int plus = 0;
-        int minus = 0;
+        int counter = 0;
+        int batchSize = 1000;
+        int commitCounter = 0;
+        int commitSize = 10000;
         String tableName = this.configurationReader.getDictionarySection().get("metaTableName");
         int batchNumber = 0;
         Logger logger = I2b2ETLUtil.logger();
@@ -687,28 +667,37 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     ps.setString(21, concept.getValueTypeCode().getCode());
 
                     ps.addBatch();
+                    ps.clearParameters();
 
-                    if ((++idx % 8192) == 0) {
+                    counter++;
+                    commitCounter++;
+
+                    if (counter >= batchSize) {
                         importTimestamp =
                                 new Timestamp(System.currentTimeMillis());
                         batchNumber++;
                         ps.executeBatch();
                         ps.clearBatch();
-                        cn.commit();
-                        idx = 0;
-                        plus += 8192;
+                        counter = 0;
                         logBatch(tableName, batchNumber);
-                        ps.clearBatch();
                         if (logger.isLoggable(Level.FINE)) {
-                            logger.log(Level.FINE, "loaded ontology {0}:{1}",
-                                    new Object[]{plus, minus});
+                            logger.log(Level.FINE, "loaded ontology batch {0}",
+                                    batchNumber);
                         }
                     }
+                    if (commitCounter >= commitSize) {
+                        cn.commit();
+                        commitCounter = 0;
+                    }
+
                 }
-                batchNumber++;
-                ps.executeBatch();
-                ps.clearBatch();
-                cn.commit();
+                if (counter > 0) {
+                    batchNumber++;
+                    ps.executeBatch();
+                }
+                if (commitCounter > 0) {
+                    cn.commit();
+                }
                 ps.close();
                 ps = null;
             } finally {
@@ -719,11 +708,9 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     }
                 }
             }
-            cn.commit();
             cn.close();
             cn = null;
             logBatch(tableName, batchNumber);
-            logger.log(Level.FINE, "TALLY_META_{0}_PM: {1}:{2}", new Object[]{tableName, plus, minus});
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Batch failed on OntologyTable " + tableName + ". I2B2 will not be correct.", e);
             throw e;
@@ -788,12 +775,76 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                 }
             }
 
-            for (PropositionDefinition pd :
-                    this.query.getPropositionDefinitions()) {
+            for (PropositionDefinition pd
+                    : this.query.getPropositionDefinitions()) {
                 result.add(pd.getId());
             }
 
             return result.toArray(new String[result.size()]);
+        }
+    }
+
+    private void addProviderFactHandler() {
+        ProviderFactHandler providerFactHandler =
+                new ProviderFactHandler();
+        this.factHandlers.add(providerFactHandler);
+    }
+
+    private void addPropositionFactHandlers() throws KnowledgeSourceReadException {
+        PropositionDefinition visitPropDef =
+                this.knowledgeSource.readPropositionDefinition(visitPropId);
+
+        DataSection dataSection = this.configurationReader.getDataSection();
+        for (DataSection.DataSpec obx : dataSection.getAll()) {
+            PropositionDefinition[] propDefs;
+            Link[] links;
+            if (obx.referenceName != null) {
+                links = new Link[]{new Reference(obx.referenceName)};
+                ReferenceDefinition refDef =
+                        visitPropDef.referenceDefinition(obx.referenceName);
+                String[] propIds = refDef.getPropositionIds();
+                propDefs = new PropositionDefinition[propIds.length + 1];
+                propDefs[0] = visitPropDef;
+                for (int i = 1; i < propDefs.length; i++) {
+                    propDefs[i] =
+                            this.knowledgeSource.readPropositionDefinition(
+                            propIds[i - 1]);
+                    assert propDefs[i] != null : "Invalid proposition id "
+                            + propIds[i - 1];
+                }
+            } else {
+                links = null;
+                propDefs = new PropositionDefinition[]{visitPropDef};
+            }
+
+            String[] potentialDerivedPropIdsArr =
+                    this.ontologyModel.extractDerived(propDefs);
+
+            PropositionFactHandler propFactHandler = new PropositionFactHandler(links, obx.propertyName,
+                    obx.start, obx.finish, obx.units,
+                    potentialDerivedPropIdsArr, this.ontologyModel);
+            this.factHandlers.add(propFactHandler);
+        }
+    }
+
+    private void gatherStatisticsOnObservationFact() throws SQLException {
+        Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.INFO, "Gathering statistics on observation_fact");
+        CallableStatement stmt = this.dataSchemaConnection.prepareCall("{call dbms_stats.gather_table_stats(?, ?)}");
+        try {
+            stmt.setString(1, this.configurationReader.getDatabaseSection().get("dataschema").user);
+            stmt.setString(2, "observation_fact");
+            stmt.execute();
+            stmt.close();
+            stmt = null;
+            logger.log(Level.INFO, "Finished gathering statistics on observation_fact");
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ignore) {
+                }
+            }
         }
     }
 }
