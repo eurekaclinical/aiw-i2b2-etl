@@ -1,4 +1,4 @@
-AIW i2b2 ETL 1.0.3 -- A Query Results Handler for Protempa for Loading
+AIW i2b2 ETL ${project.version} -- A Query Results Handler for Protempa for Loading
 Data and Abstractions into i2b2 
 Department of Biomedical Informatics, Emory University
 
@@ -9,6 +9,9 @@ support for loading data and abstractions retrieved and computed by
 Protempa into i2b2.
 
 WHAT'S NEW
+
+Version 1.0.5 adds performance enahancements and bug fixes. It also populates
+the i2b2 XML metadata for concepts with values.
 
 Version 1.0.3 contains minor bug fixes.
 
@@ -34,12 +37,12 @@ Use the following dependency declaration:
 <dependency>
     <groupId>edu.emory.cci</groupId>
     <artifactId>aiw-i2b2-etl</artifactId>
-    <version>1.0.3</version>
+    <version>${project.version}</version>
 </dependency>
 
 It is also available in tarball and zip file formats from
-http://aiw.sourceforge.net/dev/aiw-i2b2-etl-1.0.3. Put
-aiw-i2b2-etl-1.0.3.jar on your classpath to use.
+http://aiw.sourceforge.net/dev/aiw-i2b2-etl-${project.version}. Put
+aiw-i2b2-etl-${project.version}.jar on your classpath to use.
 
 LICENSING
 
@@ -51,5 +54,5 @@ AIW i2b2 ETL is Copyright (C) 2012-2013 Emory University.
 
 FOR MORE INFORMATION
 
-Please see http://aiw.sourceforge.net/dev/aiw-i2b2-etl-1.0.3 for
+Please see http://aiw.sourceforge.net/dev/aiw-i2b2-etl-${project.version} for
 technical documentation and more information.
