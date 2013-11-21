@@ -17,9 +17,8 @@ Version 1.0.3 contains minor bug fixes.
 
 REQUIREMENTS
 
-The current version is known to work with Oracle Java 6. It is
-expected to work with OpenJDK 6 as well. Compatibility with Java 7
-is unknown.
+The current version is known to work with Oracle Java 7. It is
+expected to work with OpenJDK 7 as well.
 
 This package uses the Maven build system, available from
 http://maven.apache.org. You must install maven, if you do not already
