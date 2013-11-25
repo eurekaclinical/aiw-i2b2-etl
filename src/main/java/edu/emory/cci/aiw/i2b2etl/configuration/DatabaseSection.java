@@ -39,7 +39,7 @@ public final class DatabaseSection extends ConfigurationSection {
         public String passwd;
         public String connect;
     }
-    private TreeMap<String, DatabaseSpec> dbs = new TreeMap<String, DatabaseSpec>();
+    private TreeMap<String, DatabaseSpec> dbs = new TreeMap<>();
     
     public DatabaseSpec get(String schema) {
         return this.dbs.get(schema);

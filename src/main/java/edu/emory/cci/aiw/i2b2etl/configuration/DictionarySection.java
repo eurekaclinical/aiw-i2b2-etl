@@ -28,7 +28,7 @@ import org.w3c.dom.*;
  * @author Andrew Post
  */
 public final class DictionarySection extends ConfigurationSection {
-    private TreeMap<String, String> dictionary = new TreeMap<String, String>();
+    private TreeMap<String, String> dictionary = new TreeMap<>();
 
     DictionarySection() {
     }

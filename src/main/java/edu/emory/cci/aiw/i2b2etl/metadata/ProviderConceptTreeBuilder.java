@@ -58,7 +58,7 @@ class ProviderConceptTreeBuilder {
             }
             String ca = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             TreeMap<Character, Concept> alpha =
-                    new TreeMap<Character, Concept>();
+                    new TreeMap<>();
             for (char c : ca.toCharArray()) {
                 ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|" + String.valueOf(c), this.metadata);
                 Concept ontologyNode = this.metadata.getFromIdCache(cid);

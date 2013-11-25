@@ -40,7 +40,7 @@ public final class ConceptsSection extends ConfigurationSection {
         public String conceptCodePrefix;
         public ValueTypeCode valueType;
     }
-    private List<FolderSpec> folders = new ArrayList<FolderSpec>();
+    private List<FolderSpec> folders = new ArrayList<>();
 
     ConceptsSection() {
     }

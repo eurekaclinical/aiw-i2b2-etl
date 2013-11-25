@@ -112,7 +112,7 @@ public final class PropositionFactHandler extends FactHandler {
                         throw new InvalidFactException(ex);
                     }
                     for (Proposition derivedProp
-                            : new HashSet<Proposition>(derivedProps)) {
+                            : new HashSet<>(derivedProps)) {
                         if (derivedPropositions.add(derivedProp)) {
                             Concept derivedConcept =
                                     this.metadata.getFromIdCache(derivedProp.getId(),

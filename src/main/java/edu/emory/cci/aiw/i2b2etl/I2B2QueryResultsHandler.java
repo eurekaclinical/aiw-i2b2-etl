@@ -126,7 +126,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                 this.confFile.getAbsolutePath()));
         this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
         this.patientLevelFakeVisits =
-                new HashMap<Long, VisitDimension>();
+                new HashMap<>();
     }
 
     /**
@@ -247,7 +247,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
 
     private void assembleFactHandlers() throws IllegalAccessException,
             InstantiationException, KnowledgeSourceReadException {
-        this.factHandlers = new ArrayList<FactHandler>();
+        this.factHandlers = new ArrayList<>();
         addProviderFactHandler();
         addPropositionFactHandlers();
     }
@@ -260,7 +260,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             throws QueryResultsHandlerProcessingException {
 
         try {
-            Set<Proposition> derivedPropositions = new HashSet<Proposition>();
+            Set<Proposition> derivedPropositions = new HashSet<>();
             for (Proposition prop : propositions) {
                 if (prop.getId().equals(visitPropId)) {
                     PatientDimension pd = this.ontologyModel.getPatient(keyId);
@@ -439,7 +439,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         PropositionDefinition[] allUserPropDefs =
                 this.query.getPropositionDefinitions();
         List<PropositionDefinition> result =
-                new ArrayList<PropositionDefinition>();
+                new ArrayList<>();
         Set<String> propIds =
                 org.arp.javautil.arrays.Arrays.asSet(
                 this.query.getPropositionIds());
@@ -620,7 +620,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                  */
                 Timestamp importTimestamp =
                         new Timestamp(System.currentTimeMillis());
-                Set<String> conceptCodes = new HashSet<String>();
+                Set<String> conceptCodes = new HashSet<>();
                 while (emu.hasMoreElements()) {
 
                     Concept concept = emu.nextElement();
@@ -738,7 +738,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         if (!this.inferPropositionIdsNeeded) {
             return ArrayUtils.EMPTY_STRING_ARRAY;
         } else {
-            Set<String> result = new HashSet<String>();
+            Set<String> result = new HashSet<>();
 
             DictionarySection dictionarySection =
                     this.configurationReader.getDictionarySection();

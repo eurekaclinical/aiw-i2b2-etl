@@ -41,7 +41,7 @@ public final class DataSection extends ConfigurationSection {
     }
 
     DataSection() {
-        this.obxSpecs = new HashMap<String, DataSpec>();
+        this.obxSpecs = new HashMap<>();
     }
     
     public DataSpec get(String key) {

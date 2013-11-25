@@ -33,7 +33,7 @@ abstract class BlobBuilder {
     public static final char DEFAULT_DELIMITER='|';
     
     private static final Map<String, String> REPLACE =
-            new HashMap<String, String>();
+            new HashMap<>();
     static {
         REPLACE.put(null, "");
     }

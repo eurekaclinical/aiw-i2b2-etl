@@ -98,13 +98,13 @@ public final class Metadata {
     private static final String NOT_RECORDED_PROVIDER_ID = PROVIDER_ID_PREFIX + "NotRecorded";
     private final Concept rootConcept;
     private final Map<ConceptId, Concept> CACHE =
-            new HashMap<ConceptId, Concept>();
+            new HashMap<>();
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap();
     private final TreeMap<String, PatientDimension> patientCache =
-            new TreeMap<String, PatientDimension>();
+            new TreeMap<>();
     private final TreeMap<Long, VisitDimension> visitCache =
-            new TreeMap<Long, VisitDimension>();
-    private final Set<String> conceptCodeCache = new HashSet<String>();
+            new TreeMap<>();
+    private final Set<String> conceptCodeCache = new HashSet<>();
     private final KnowledgeSource knowledgeSource;
     private final Map<String, ProviderDimension> providers;
     private final DataSection dataSection;
@@ -145,7 +145,7 @@ public final class Metadata {
         this.rootConcept.setSourceSystemCode(
                 MetadataUtil.toSourceSystemCode(
                 I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-        this.providers = new HashMap<String, ProviderDimension>();
+        this.providers = new HashMap<>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
 
@@ -545,7 +545,7 @@ public final class Metadata {
 
     public String[] extractDerived(PropositionDefinition[] propDefs)
             throws KnowledgeSourceReadException {
-        Set<String> potentialDerivedConceptCodes = new HashSet<String>();
+        Set<String> potentialDerivedConceptCodes = new HashSet<>();
 
         @SuppressWarnings("unchecked")
         Enumeration<Concept> emu = getRoot().depthFirstEnumeration();

@@ -145,7 +145,7 @@ public class ConceptId {
      */
     public static ConceptId getInstance(String propId,
             String propertyName, Value value, Metadata metadata) {
-        List<Object> key = new ArrayList<Object>(3);
+        List<Object> key = new ArrayList<>(3);
         key.add(propId);
         key.add(propertyName);
         key.add(value);
