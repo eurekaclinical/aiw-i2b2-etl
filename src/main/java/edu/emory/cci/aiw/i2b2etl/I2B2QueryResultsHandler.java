@@ -19,31 +19,30 @@
  */
 package edu.emory.cci.aiw.i2b2etl;
 
-import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
-import edu.emory.cci.aiw.i2b2etl.table.PropositionFactHandler;
-import edu.emory.cci.aiw.i2b2etl.configuration.*;
+import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection.FolderSpec;
-import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
-import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
-import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
-import edu.emory.cci.aiw.i2b2etl.metadata.OntologyBuildException;
+import edu.emory.cci.aiw.i2b2etl.configuration.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.configuration.ConfigurationReader;
+import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
-import edu.emory.cci.aiw.i2b2etl.metadata.*;
+import edu.emory.cci.aiw.i2b2etl.configuration.DatabaseSection;
+import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
+import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.metadata.InvalidPatientRecordException;
+import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
+import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
+import edu.emory.cci.aiw.i2b2etl.metadata.OntologyBuildException;
+import edu.emory.cci.aiw.i2b2etl.metadata.SynonymCode;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimension;
 import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
+import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
+import edu.emory.cci.aiw.i2b2etl.table.PropositionFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
-import java.io.File;
-import java.io.StringReader;
-import java.sql.*;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.lang3.ArrayUtils;
-
-
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
@@ -58,6 +57,25 @@ import org.protempa.query.handler.QueryResultsHandlerInitException;
 import org.protempa.query.handler.QueryResultsHandlerProcessingException;
 import org.protempa.query.handler.table.Link;
 import org.protempa.query.handler.table.Reference;
+
+import java.io.File;
+import java.io.StringReader;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -209,7 +227,8 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     /**
      * Builds most of the concept tree, truncates the data tables, opens a
      * connection to the i2b2 project database, and does some other prep. This
-     * method is called before the first call to{@link #handleQueryResult()}.
+     * method is called before the first call to
+	 * {@link #handleQueryResult(String, java.util.List, java.util.Map, java.util.Map, java.util.Map)}.
      *
      * @throws QueryResultsHandlerProcessingException
      */
