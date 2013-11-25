@@ -263,7 +263,7 @@ public final class Metadata {
             concept.setDisplayName(fullName);
             concept.setDataType(DataType.TEXT);
             concept.setInUse(true);
-            result = new ProviderDimension(concept, fullName, source);
+            result = new ProviderDimension(concept, source);
             this.providers.put(fullName, result);
         }
         return result;
