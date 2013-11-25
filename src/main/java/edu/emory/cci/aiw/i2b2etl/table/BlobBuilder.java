@@ -19,10 +19,11 @@
  */
 package edu.emory.cci.aiw.i2b2etl.table;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.arp.javautil.string.StringUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Abstract class for constructing i2b2 blobs.
@@ -69,7 +70,7 @@ abstract class BlobBuilder {
     /**
      * Returns a newly created array of field values.
      * 
-     * @return a {@link String[]}.
+     * @return a {@link String}<code>[]</code>.
      */
     protected abstract String[] getFields();
     
