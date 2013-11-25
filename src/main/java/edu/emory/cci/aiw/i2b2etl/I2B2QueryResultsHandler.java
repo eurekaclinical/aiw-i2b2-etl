@@ -227,23 +227,11 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
             logger.log(Level.INFO,
                     "Populating observation facts table for query {0}",
                     this.query.getId());
-        } catch (KnowledgeSourceReadException ex) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Error during i2b2 load", ex);
-        } catch (InstantiationException ex) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Error during i2b2 load", ex);
-        } catch (IllegalAccessException ex) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Error during i2b2 load", ex);
-        } catch (OntologyBuildException ex) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Error during i2b2 load", ex);
-        } catch (SQLException ex) {
+        } catch (KnowledgeSourceReadException | SQLException | OntologyBuildException | IllegalAccessException | InstantiationException ex) {
             throw new QueryResultsHandlerProcessingException(
                     "Error during i2b2 load", ex);
         }
-    }
+	}
 
     private void assembleFactHandlers() throws IllegalAccessException,
             InstantiationException, KnowledgeSourceReadException {
@@ -299,20 +287,12 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     }
                 }
             }
-        } catch (InvalidConceptCodeException ex) {
+        } catch (InvalidConceptCodeException | InvalidFactException | InvalidPatientRecordException ex) {
             throw new QueryResultsHandlerProcessingException(
                     "Load into i2b2 failed for query " + this.query.getId(),
                     ex);
-        } catch (InvalidPatientRecordException ex) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Load into i2b2 failed for query " + this.query.getId(),
-                    ex);
-        } catch (InvalidFactException ioe) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Load into i2b2 failed for query " + this.query.getId(),
-                    ioe);
         }
-    }
+	}
 
     @Override
     public void finish() throws QueryResultsHandlerProcessingException {
@@ -372,17 +352,11 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     "Done populating observation fact table for query {0}",
                     queryId);
             persistMetadata();
-        } catch (OntologyBuildException ex) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Load into i2b2 failed for query " + queryId, ex);
-        } catch (InvalidConceptCodeException ex) {
-            throw new QueryResultsHandlerProcessingException(
-                    "Load into i2b2 failed for query " + queryId, ex);
-        } catch (SQLException ex) {
+        } catch (OntologyBuildException | SQLException | InvalidConceptCodeException ex) {
             throw new QueryResultsHandlerProcessingException(
                     "Load into i2b2 failed for query " + queryId, ex);
         }
-    }
+	}
 
     @Override
     public void close() throws QueryResultsHandlerCloseException {

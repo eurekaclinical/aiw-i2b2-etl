@@ -135,13 +135,11 @@ class DemographicsConceptTreeBuilder {
                 if (this.propDef == null) {
                     throw new UnknownPropositionDefinitionException(visitDimensionPropId);
                 }
-            } catch (KnowledgeSourceReadException ex) {
-                throw new OntologyBuildException("Could not build descendants", ex);
-            } catch (UnknownPropositionDefinitionException ex) {
+            } catch (KnowledgeSourceReadException | UnknownPropositionDefinitionException ex) {
                 throw new OntologyBuildException("Could not build descendants", ex);
             }
 
-        }
+		}
 
         void build(String childName, String childSpec) throws OntologyBuildException {
             DataSpec dataSpec = getDataSection(childSpec);
@@ -149,12 +147,10 @@ class DemographicsConceptTreeBuilder {
             if (dataSpec != null && dataSpec.referenceName != null) {
                 try {
                     addChildrenFromValueSets(this.propDef, dataSpec, concept);
-                } catch (KnowledgeSourceReadException ex) {
-                    throw new OntologyBuildException("Could not build descendants", ex);
-                } catch (InvalidConceptCodeException ex) {
+                } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
                     throw new OntologyBuildException("Could not build descendants", ex);
                 }
-            }
+			}
             if (dataSpec != null) {
                 this.root.add(concept);
             }

@@ -74,17 +74,11 @@ final class PropositionConceptTreeBuilder {
                 result[i] = rootConcept;
             }
             return result;
-        } catch (UnknownPropositionDefinitionException ex) {
-            throw new OntologyBuildException(
-                    "Could not build proposition concept tree", ex);
-        } catch (KnowledgeSourceReadException ex) {
-            throw new OntologyBuildException(
-                    "Could not build proposition concept tree", ex);
-        } catch (InvalidConceptCodeException ex) {
+        } catch (UnknownPropositionDefinitionException | InvalidConceptCodeException | KnowledgeSourceReadException ex) {
             throw new OntologyBuildException(
                     "Could not build proposition concept tree", ex);
         }
-    }
+	}
 
     private void buildHelper(String[] childPropIds, Concept parent)
             throws UnknownPropositionDefinitionException,

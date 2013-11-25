@@ -70,14 +70,10 @@ public final class ConfigurationReader {
                     }
                 }
             }
-        } catch (SAXException ex) {
-            throw new ConfigurationReadException("Could not read configuration file " + this.conf.getAbsolutePath(), ex);
-        } catch (IOException ex) {
-            throw new ConfigurationReadException("Could not read configuration file " + this.conf.getAbsolutePath(), ex);
-        } catch (ParserConfigurationException ex) {
+        } catch (SAXException | ParserConfigurationException | IOException ex) {
             throw new ConfigurationReadException("Could not read configuration file " + this.conf.getAbsolutePath(), ex);
         }
-    }
+	}
     
     public DictionarySection getDictionarySection() {
         return this.dictionary;

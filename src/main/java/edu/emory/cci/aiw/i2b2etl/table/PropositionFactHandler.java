@@ -123,24 +123,18 @@ public final class PropositionFactHandler extends FactHandler {
                                         provider, derivedConcept);
                                 try {
                                     insert(derivedObx, cn);
-                                } catch (SQLException sqle) {
+                                } catch (SQLException | InvalidConceptCodeException sqle) {
                                     String msg = "Observation fact not created for " + prop.getId();
                                     throw new InvalidFactException(msg, sqle);
-                                } catch (InvalidConceptCodeException ex) {
-                                    String msg = "Observation fact not created for " + prop.getId();
-                                    throw new InvalidFactException(msg, ex);
                                 }
-                            }
+							}
                         }
                     }
-                } catch (SQLException ex) {
-                    String msg = "Observation fact not created for " + prop.getId() + "." + propertyName + "=" + propertyVal;
-                    throw new InvalidFactException(msg, ex);
-                } catch (InvalidConceptCodeException ex) {
+                } catch (SQLException | InvalidConceptCodeException ex) {
                     String msg = "Observation fact not created for " + prop.getId() + "." + propertyName + "=" + propertyVal;
                     throw new InvalidFactException(msg, ex);
                 }
-            }
+			}
         }
     }
 

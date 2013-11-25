@@ -50,12 +50,10 @@ public final class ProviderFactHandler extends FactHandler {
                 provider.getConcept());
         try {
             insert(providerFact, cn);
-        } catch (SQLException ex) {
-            throw new InvalidFactException("Provider fact not created", ex);
-        } catch (InvalidConceptCodeException ex) {
+        } catch (SQLException | InvalidConceptCodeException ex) {
             throw new InvalidFactException("Provider fact not created", ex);
         }
-    }
+	}
     
     private ObservationFact createProviderObservationFact(
             Proposition encounterProp, PatientDimension patient,

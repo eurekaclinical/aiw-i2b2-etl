@@ -204,20 +204,10 @@ public final class Metadata {
             // TODO: fix hard-coded symbol
 
             //samplePatientsVisitsProviders(numberSignFileSetZero);
-        } catch (InvalidPromoteArgumentException ex) {
-            throwOntologyBuildException(ex);
-        } catch (InvalidConceptCodeException ex) {
-            throwOntologyBuildException(ex);
-        } catch (KnowledgeSourceReadException ex) {
-            throwOntologyBuildException(ex);
-        } catch (UnknownPropositionDefinitionException ex) {
-            throwOntologyBuildException(ex);
-        } catch (IOException ex) {
-            throwOntologyBuildException(ex);
-        } catch (SQLException ex) {
+        } catch (InvalidPromoteArgumentException | SQLException | IOException | UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throwOntologyBuildException(ex);
         }
-    }
+	}
 
     private static void throwOntologyBuildException(Throwable ex) throws OntologyBuildException {
         throw new OntologyBuildException("Error building ontology", ex);

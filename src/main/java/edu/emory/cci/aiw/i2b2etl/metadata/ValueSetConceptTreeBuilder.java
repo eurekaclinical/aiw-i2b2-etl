@@ -84,10 +84,8 @@ class ValueSetConceptTreeBuilder {
                 result[i] = root;
             }
             return result;
-        } catch (KnowledgeSourceReadException ex) {
-            throw new OntologyBuildException("Could not build value set concept tree", ex);
-        } catch (InvalidConceptCodeException ex) {
+        } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throw new OntologyBuildException("Could not build value set concept tree", ex);
         }
-    }
+	}
 }
