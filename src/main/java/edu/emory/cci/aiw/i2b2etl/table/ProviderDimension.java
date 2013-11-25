@@ -21,11 +21,14 @@ package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
-import java.sql.*;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Represents records in the i2b2 provider dimension.
@@ -57,19 +60,12 @@ public class ProviderDimension {
     private final String sourceSystem;
 
     /**
-     * Constructs a provider dimension record. The provider path, which also is
-     * in this dimension, is added later on with the 
-     * {@link #setI2b2Path(java.lang.String) } after the ontology hierarchy is
-     * created.
-     *
-     * @param id the provider unique id, or <code>null</code> if the provider is
-     * not recorded or unknown.
-     * @param firstName the provider's first name, if known.
-     * @param middleName the provider's middle name, if known.
-     * @param lastName the provider's last name, if known.
-     * @param fullName the provider's full name, if known.
+     * Constructs a provider dimension record.
+	 *
+	 * @param concept the i2b2 concept representing the provider
+	 * @param sourceSystem the source system where the provider came from
      */
-    public ProviderDimension(Concept concept, String fullName, String sourceSystem) {
+	public ProviderDimension(Concept concept, String sourceSystem) {
         if (concept == null) {
             throw new IllegalArgumentException("concept cannot be null");
         }
