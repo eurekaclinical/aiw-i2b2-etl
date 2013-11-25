@@ -24,7 +24,7 @@
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import java.util.*;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.protempa.proposition.value.Value;
 
 /**

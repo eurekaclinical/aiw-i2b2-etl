@@ -20,7 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class UserObject {
 

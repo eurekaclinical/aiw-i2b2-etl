@@ -25,7 +25,7 @@ import java.sql.*;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Represents records in the i2b2 provider dimension.

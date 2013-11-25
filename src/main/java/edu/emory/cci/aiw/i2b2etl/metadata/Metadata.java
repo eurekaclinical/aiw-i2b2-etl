@@ -19,26 +19,15 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-
-import org.protempa.KnowledgeSource;
+import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
-import java.io.*;
-import java.sql.SQLException;
-import java.text.DateFormat;
-import java.util.*;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.protempa.ConstantDefinition;
+import org.apache.commons.collections4.map.ReferenceMap;
+import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
 import org.protempa.proposition.Proposition;
@@ -50,6 +39,20 @@ import org.protempa.proposition.value.AbsoluteTimeUnit;
 import org.protempa.proposition.value.DateValue;
 import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.Value;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controls the etl process for extracting data from files and a
@@ -99,7 +102,7 @@ public final class Metadata {
     private final Concept rootConcept;
     private final Map<ConceptId, Concept> CACHE =
             new HashMap<>();
-    private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap();
+    private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
     private final TreeMap<String, PatientDimension> patientCache =
             new TreeMap<>();
     private final TreeMap<Long, VisitDimension> visitCache =

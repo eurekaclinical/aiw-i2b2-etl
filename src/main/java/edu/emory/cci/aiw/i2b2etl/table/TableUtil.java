@@ -24,22 +24,22 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
+import org.apache.commons.collections4.map.ReferenceMap;
+
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Map;
 import java.util.logging.Logger;
-import org.apache.commons.collections.map.ReferenceMap;
 
 /**
  *
  * @author Andrew Post
  */
 public final class TableUtil {
-    @SuppressWarnings("unchecked")
-    private static final Map<Date, java.sql.Date> dateCache = new ReferenceMap();
+
+    private static final Map<Date, java.sql.Date> dateCache = new ReferenceMap<>();
     
-    @SuppressWarnings("unchecked")
-    private static final Map<Date, Timestamp> timestampCache = new ReferenceMap();
+    private static final Map<Date, Timestamp> timestampCache = new ReferenceMap<>();
     
     private TableUtil() {}
     

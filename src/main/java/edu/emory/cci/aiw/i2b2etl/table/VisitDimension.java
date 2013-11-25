@@ -19,8 +19,9 @@
  */
 package edu.emory.cci.aiw.i2b2etl.table;
 
-import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -30,7 +31,6 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class VisitDimension {
 
