@@ -82,7 +82,7 @@ public class GetPropositionIdsNeededTest {
     }
     
     private static Set<String> expectedPropIds() throws IOException {
-        final Set<String> result = new HashSet<String>();
+        final Set<String> result = new HashSet<>();
         InputStream is = 
                 GetPropositionIdsNeededTest.class.getResourceAsStream(
                 "/get-proposition-ids-needed-test-file");
