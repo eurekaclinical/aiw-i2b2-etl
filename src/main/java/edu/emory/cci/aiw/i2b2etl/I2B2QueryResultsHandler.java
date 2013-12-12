@@ -51,8 +51,9 @@ import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
 import org.protempa.query.Query;
-import org.protempa.query.handler.QueryResultsHandler;
+import org.protempa.query.handler.AbstractQueryResultsHandler;
 import org.protempa.query.handler.QueryResultsHandlerCloseException;
+import org.protempa.query.handler.QueryResultsHandlerCollectStatisticsException;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 import org.protempa.query.handler.QueryResultsHandlerProcessingException;
 import org.protempa.query.handler.table.Link;
@@ -64,6 +65,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -81,7 +83,7 @@ import java.util.logging.Logger;
  *
  * @author Andrew Post
  */
-public final class I2B2QueryResultsHandler implements QueryResultsHandler {
+public final class I2B2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private static final long serialVersionUID = -1503401944818776787L;
     private static final String[] OBX_FACT_IDXS = new String[]{"FACT_NOLOB",
@@ -173,7 +175,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
                     + query.getId(), ex);
         }
     }
-
+    
     private void disableObservationFactIndexes() throws SQLException {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Disabling indices on observation_fact");
@@ -401,6 +403,31 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
     public void validate() {
     }
 
+    @Override
+    public DefaultStatistics collectStatistics() throws QueryResultsHandlerCollectStatisticsException {
+        try {
+            readConfiguration();
+        } catch (ConfigurationReadException ex) {
+            throw new QueryResultsHandlerCollectStatisticsException("Could not read configuration for i2b2 destination", ex);
+        }
+        int count;
+        try (Connection conn = openDatabaseConnection("dataschema");) {
+            try (Statement stmt = conn.createStatement();) {
+                try (ResultSet resultSet = stmt.executeQuery("SELECT COUNT(*) FROM PATIENT_DIMENSION");) {
+                    if (!resultSet.next()) {
+                        throw new AssertionError("No count retrieved for i2b2 destination"); 
+                    }
+                    count = resultSet.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            throw new QueryResultsHandlerCollectStatisticsException("Could not retrieve statistics from i2b2 destination", ex);
+        }
+        DefaultStatisticsBuilder builder = new DefaultStatisticsBuilder();
+        builder.setNumberOfKeys(count);
+        return builder.toDefaultStatistics();
+    }
+
     private void readConfiguration() throws ConfigurationReadException {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.FINER, "STEP: read conf.xml");
@@ -529,7 +556,7 @@ public final class I2B2QueryResultsHandler implements QueryResultsHandler {
         }
     }
 
-    public Connection openDatabaseConnection(String schema) throws SQLException {
+    private Connection openDatabaseConnection(String schema) throws SQLException {
         DatabaseSection.DatabaseSpec db =
                 this.configurationReader.getDatabaseSection().get(schema);
         Logger logger = I2b2ETLUtil.logger();

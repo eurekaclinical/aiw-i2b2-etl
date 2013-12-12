@@ -291,7 +291,13 @@
                             <mainClass>
                                 edu.emory.cci.aiw.i2b2etl.cli.I2B2ETL
                             </mainClass>
-                            <name>aiw-run-i2b2-etl</name>
+                            <name>aiw-i2b2-etl-run</name>
+                        </program>
+                        <program>
+                            <mainClass>
+                                edu.emory.cci.aiw.i2b2etl.cli.GatherStatistics
+                            </mainClass>
+                            <name>aiw-i2b2-etl-stats</name>
                         </program>
                     </programs>
                 </configuration>
