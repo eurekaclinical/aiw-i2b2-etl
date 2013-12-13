@@ -39,12 +39,12 @@ import org.protempa.proposition.value.ValueComparator;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
-import org.protempa.query.handler.QueryResultsHandler;
 import org.protempa.query.handler.test.DataProviderException;
 import org.protempa.query.handler.test.DatabasePopulator;
 
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
+import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
+import org.protempa.query.handler.QueryResultsHandlerFactory;
 
 /**
  * Integration tests for the i2b2 ETL. This assumes that there is an i2b2
@@ -65,8 +65,7 @@ public class I2b2ETLTest {
      * @throws FinderException if executing the Protempa query failed.
      */
     @BeforeClass
-    public static void setUp()
-			throws ProtempaStartupException, IOException, QueryBuildException, FinderException, DataProviderException, SQLException, URISyntaxException, BackendProviderSpecLoaderException, ConfigurationsLoadException, InvalidConfigurationException, CloseException, ConfigurationsNotFoundException {
+    public static void setUp() throws Exception {
         new DatabasePopulator().doPopulate();
         Protempa protempa = new ProtempaFactory().newInstance();
         try {
@@ -176,7 +175,7 @@ public class I2b2ETLTest {
             q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
-            QueryResultsHandler tdqrh = new I2B2QueryResultsHandler(confXML);
+            QueryResultsHandlerFactory tdqrh = new I2B2QueryResultsHandlerFactory(confXML);
             protempa.execute(query, tdqrh);
         } finally {
             protempa.close();

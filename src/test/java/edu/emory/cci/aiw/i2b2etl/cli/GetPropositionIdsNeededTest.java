@@ -33,7 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.protempa.CloseException;
 import org.protempa.KnowledgeSource;
-import org.protempa.KnowledgeSourceReadException;
 import org.protempa.Protempa;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
@@ -42,7 +41,12 @@ import org.protempa.query.QueryBuilder;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 
 import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
+import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
+import org.protempa.query.handler.QueryResultsHandler.UsingKnowledgeSource;
+import org.protempa.query.handler.QueryResultsHandler.UsingKnowledgeSource.ForQuery;
+import org.protempa.query.handler.QueryResultsHandlerCloseException;
+import org.protempa.query.handler.QueryResultsHandlerProcessingException;
 
 /**
  *
@@ -63,15 +67,18 @@ public class GetPropositionIdsNeededTest {
 
     @Test
     public void testPropositionIds() throws
-            QueryResultsHandlerInitException, KnowledgeSourceReadException, 
-            QueryBuildException {
+            QueryResultsHandlerInitException, QueryResultsHandlerProcessingException,
+            QueryBuildException, QueryResultsHandlerCloseException {
         KnowledgeSource knowledgeSource = protempa.getKnowledgeSource();
-        I2B2QueryResultsHandler qrh = new I2B2QueryResultsHandler(confXML);
         QueryBuilder queryBuilder = new DefaultQueryBuilder();
         Query query = protempa.buildQuery(queryBuilder);
-        qrh.init(knowledgeSource, query);
-        String[] actualPropIds = qrh.getPropositionIdsNeeded();
-        Assert.assertEquals(expectedPropIds, Arrays.asSet(actualPropIds));
+        I2B2QueryResultsHandlerFactory f = new I2B2QueryResultsHandlerFactory(confXML);
+        try (I2B2QueryResultsHandler qrh = f.getInstance();
+                UsingKnowledgeSource uks = qrh.usingKnowledgeSource(knowledgeSource);
+                ForQuery fq = uks.forQuery(query)) {
+            String[] actualPropIds = fq.getPropositionIdsNeeded();
+            Assert.assertEquals(expectedPropIds, Arrays.asSet(actualPropIds));
+        }
     }
 
     @AfterClass
@@ -80,12 +87,12 @@ public class GetPropositionIdsNeededTest {
             protempa.close();
         }
     }
-    
+
     private static Set<String> expectedPropIds() throws IOException {
         final Set<String> result = new HashSet<>();
-        InputStream is = 
-                GetPropositionIdsNeededTest.class.getResourceAsStream(
-                "/get-proposition-ids-needed-test-file");
+        InputStream is
+                = GetPropositionIdsNeededTest.class.getResourceAsStream(
+                        "/get-proposition-ids-needed-test-file");
         new WithBufferedReaderByLine(is) {
 
             @Override
@@ -94,9 +101,9 @@ public class GetPropositionIdsNeededTest {
                 if (line.length() != 0) {
                     result.add(line);
                 }
-            }  
+            }
         }.execute();
-        
+
         return result;
     }
 }

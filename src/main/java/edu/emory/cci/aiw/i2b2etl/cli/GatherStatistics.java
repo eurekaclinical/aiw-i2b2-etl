@@ -19,11 +19,11 @@ package edu.emory.cci.aiw.i2b2etl.cli;
  * limitations under the License.
  * #L%
  */
-
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
+import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
 import java.io.File;
+import org.protempa.ProtempaException;
 import org.protempa.query.handler.QueryResultsHandler;
-import org.protempa.query.handler.QueryResultsHandlerCollectStatisticsException;
+import org.protempa.query.handler.QueryResultsHandlerFactory;
 
 /**
  *
@@ -42,15 +42,15 @@ public class GatherStatistics {
         }
         int totalKeys = 0;
         for (File confXML : configDir.listFiles()) {
-            QueryResultsHandler tdqrh = new I2B2QueryResultsHandler(confXML);
-            try {
+            QueryResultsHandlerFactory f = new I2B2QueryResultsHandlerFactory(confXML);
+            try (QueryResultsHandler tdqrh = f.getInstance()) {
                 int numberOfKeys = tdqrh.collectStatistics().getNumberOfKeys();
                 System.out.println("I2b2 destination " + confXML.getName() + " has " + numberOfKeys + " keys");
                 totalKeys += numberOfKeys;
-            } catch (QueryResultsHandlerCollectStatisticsException ex) {
+            } catch (ProtempaException ex) {
                 System.err.println("Error collecting statistics for i2b2 config " + confXML.getName() + ": " + ex.getMessage());
                 System.exit(3);
-            }            
+            }
         }
         System.out.println("Total number of keys: " + totalKeys);
     }
