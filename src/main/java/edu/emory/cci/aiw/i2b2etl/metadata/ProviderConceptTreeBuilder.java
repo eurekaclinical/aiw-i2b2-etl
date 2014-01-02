@@ -78,8 +78,8 @@ class ProviderConceptTreeBuilder {
                 //String id = pd.getId();
                 //if (id != null) {
                 String fullName = pd.getConcept().getDisplayName();
-                Concept parent = alpha.get(fullName.charAt(0));
-                if (parent == null && root.getChildCount() == ca.length()) {
+                Concept parent = alpha.get(fullName.toUpperCase().charAt(0));
+                if (parent == null) {
                     ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata);
                     parent = this.metadata.getFromIdCache(cid);
                     if (parent == null) {
@@ -88,11 +88,12 @@ class ProviderConceptTreeBuilder {
                         parent.setDataType(DataType.TEXT);
                         parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
                         this.metadata.addToIdCache(parent);
+                        root.add(parent);
                     } else {
                         throw new OntologyBuildException("Duplicate provider concept: " + parent.getConceptCode());
                     }
-                    root.add(parent);
                 }
+                assert parent != null : "Failed to get Other provider category for provider '" + fullName + "'";
                 //ConceptId cid = ConceptId.getInstance(id, this.metadata);
                 //Concept child = this.metadata.getFromIdCache(cid);
                 //if (child == null) {
