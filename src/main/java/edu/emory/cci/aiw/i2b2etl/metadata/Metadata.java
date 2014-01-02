@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Controls the etl process for extracting data from files and a
@@ -461,20 +462,21 @@ public final class Metadata {
         return vd;
     }
     
-    Concept getOrCreateHardCodedFolder(String conceptIdSuffix) throws InvalidConceptCodeException {
+    Concept getOrCreateHardCodedFolder(String... conceptIdSuffixes) throws InvalidConceptCodeException {
+        String conceptIdSuffix = StringUtils.join(conceptIdSuffixes, '|');
         ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|" + conceptIdSuffix, this);
         Concept root = getFromIdCache(conceptId);
         if (root == null) {
-            root = createHardCodedFolder(conceptIdSuffix);
+            root = createHardCodedFolder(conceptIdSuffix, conceptIdSuffixes[conceptIdSuffixes.length - 1]);
         }
         return root;
     }
 
-    private Concept createHardCodedFolder(String conceptIdSuffix) throws InvalidConceptCodeException {
+    private Concept createHardCodedFolder(String conceptIdSuffix, String displayName) throws InvalidConceptCodeException {
         ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|" + conceptIdSuffix, this);
         Concept root = new Concept(conceptId, null, this);
         root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-        root.setDisplayName(conceptIdSuffix);
+        root.setDisplayName(displayName);
         root.setDataType(DataType.TEXT);
         addToIdCache(root);
         return root;

@@ -74,7 +74,7 @@ class ProviderConceptTreeBuilder {
             String fullName = pd.getConcept().getDisplayName();
             Concept parent = alpha.get(fullName.toUpperCase().charAt(0));
             if (parent == null) {
-                parent = this.metadata.getOrCreateHardCodedFolder("Other");
+                parent = this.metadata.getOrCreateHardCodedFolder("Provider", "Other");
                 root.add(parent);
             }
             
@@ -89,7 +89,7 @@ class ProviderConceptTreeBuilder {
         String ca = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         TreeMap<Character, Concept> alpha = new TreeMap<>();
         for (char c : ca.toCharArray()) {
-            Concept ontologyNode = this.metadata.getOrCreateHardCodedFolder(String.valueOf(c));
+            Concept ontologyNode = this.metadata.getOrCreateHardCodedFolder("Provider", String.valueOf(c));
             alpha.put(c, ontologyNode);
             root.add(ontologyNode);
         }
