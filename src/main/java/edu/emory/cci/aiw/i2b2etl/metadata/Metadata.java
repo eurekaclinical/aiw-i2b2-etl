@@ -95,18 +95,18 @@ import java.util.logging.Logger;
  */
 public final class Metadata {
 
-    private static final PropositionDefinition[] EMPTY_PROPOSITION_DEFINITION_ARRAY =
-            new PropositionDefinition[0];
+    private static final PropositionDefinition[] EMPTY_PROPOSITION_DEFINITION_ARRAY
+            = new PropositionDefinition[0];
     private static final String PROVIDER_ID_PREFIX = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:";
     private static final String NOT_RECORDED_PROVIDER_ID = PROVIDER_ID_PREFIX + "NotRecorded";
     private final Concept rootConcept;
-    private final Map<ConceptId, Concept> CACHE =
-            new HashMap<>();
+    private final Map<ConceptId, Concept> CACHE
+            = new HashMap<>();
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
-    private final TreeMap<String, PatientDimension> patientCache =
-            new TreeMap<>();
-    private final TreeMap<Long, VisitDimension> visitCache =
-            new TreeMap<>();
+    private final TreeMap<String, PatientDimension> patientCache
+            = new TreeMap<>();
+    private final TreeMap<Long, VisitDimension> visitCache
+            = new TreeMap<>();
     private final Set<String> conceptCodeCache = new HashSet<>();
     private final KnowledgeSource knowledgeSource;
     private final Map<String, ProviderDimension> providers;
@@ -130,11 +130,11 @@ public final class Metadata {
             throw new IllegalArgumentException("folderSpecs cannot be null");
         }
         if (userDefinedPropositionDefinitions == null) {
-            this.userDefinedPropositionDefinitions =
-                    EMPTY_PROPOSITION_DEFINITION_ARRAY;
+            this.userDefinedPropositionDefinitions
+                    = EMPTY_PROPOSITION_DEFINITION_ARRAY;
         } else {
-            this.userDefinedPropositionDefinitions =
-                    userDefinedPropositionDefinitions.clone();
+            this.userDefinedPropositionDefinitions
+                    = userDefinedPropositionDefinitions.clone();
         }
         this.knowledgeSource = knowledgeSource;
         try {
@@ -147,7 +147,7 @@ public final class Metadata {
         this.rootConcept.setDataType(DataType.TEXT);
         this.rootConcept.setSourceSystemCode(
                 MetadataUtil.toSourceSystemCode(
-                I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                        I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
         this.providers = new HashMap<>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
@@ -180,26 +180,20 @@ public final class Metadata {
             // cache step
             // immediately after.
             //
-
             // ////
             // //// cache certain nodes of the ontology tree
             // ////
-
             logger.log(Level.FINE, "STEP: cache the proper ontology nodes within the ontology graph");
 
             // kludge to incorporate parent-of-leaf nodes for icd9d only
-
 //            logger.log(Level.FINE, "STEP: kludge... cache icd9d parent-of-leaf");
 //            captureICD9DParentNodesIntoCache();
-
             // the cache should be complete now.
-
             // sample and build the basic Patient-Visit-Provider relation.
             // these related objects hang around and are matched with each
             // observation_fact created. then they are inserted into the
             // data schema. the provider objects are also metadata... so they
             // exist as conceptNodes in the ontology.
-
             logger.log(Level.FINE, "STEP: sample patient-provider-visit relations");
             // TODO: fix hard-coded symbol
 
@@ -207,7 +201,7 @@ public final class Metadata {
         } catch (InvalidPromoteArgumentException | SQLException | IOException | UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throwOntologyBuildException(ex);
         }
-	}
+    }
 
     private static void throwOntologyBuildException(Throwable ex) throws OntologyBuildException {
         throw new OntologyBuildException("Error building ontology", ex);
@@ -271,8 +265,8 @@ public final class Metadata {
 
     private Proposition resolveReference(Proposition encounterProp, String namePartReference, Map<UniqueId, Proposition> references) {
         Proposition provider;
-        List<UniqueId> providerUIDs =
-                encounterProp.getReferences(namePartReference);
+        List<UniqueId> providerUIDs
+                = encounterProp.getReferences(namePartReference);
         int size = providerUIDs.size();
         if (size > 0) {
             if (size > 1) {
@@ -362,8 +356,8 @@ public final class Metadata {
             }
             Proposition prop = references.get(uids.get(0));
             if (prop == null) {
-                throw new InvalidPatientRecordException("Encounter's " 
-                        + dataSpec.referenceName 
+                throw new InvalidPatientRecordException("Encounter's "
+                        + dataSpec.referenceName
                         + " reference points to a non-existant proposition");
             }
             Value val = prop.getProperty(dataSpec.propertyName);
@@ -466,6 +460,25 @@ public final class Metadata {
         visitCache.put(vd.getEncounterNum(), vd);
         return vd;
     }
+    
+    Concept getOrCreateHardCodedFolder(String conceptIdSuffix) throws InvalidConceptCodeException {
+        ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|" + conceptIdSuffix, this);
+        Concept root = getFromIdCache(conceptId);
+        if (root == null) {
+            root = createHardCodedFolder(conceptIdSuffix);
+        }
+        return root;
+    }
+
+    private Concept createHardCodedFolder(String conceptIdSuffix) throws InvalidConceptCodeException {
+        ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|" + conceptIdSuffix, this);
+        Concept root = new Concept(conceptId, null, this);
+        root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+        root.setDisplayName(conceptIdSuffix);
+        root.setDataType(DataType.TEXT);
+        addToIdCache(root);
+        return root;
+    }
 
     private static Value getField(DictionarySection dictSection,
             DataSection obxSection, String field,
@@ -564,8 +577,8 @@ public final class Metadata {
         if (this.userDefinedPropositionDefinitions.length > 0) {
             FolderSpec folderSpec = new FolderSpec();
             folderSpec.displayName = "User-defined Derived Variables";
-            String[] propIds =
-                    new String[this.userDefinedPropositionDefinitions.length];
+            String[] propIds
+                    = new String[this.userDefinedPropositionDefinitions.length];
             for (int i = 0;
                     i < this.userDefinedPropositionDefinitions.length;
                     i++) {
@@ -607,15 +620,15 @@ public final class Metadata {
             throws InvalidConceptCodeException, KnowledgeSourceReadException,
             InvalidPromoteArgumentException,
             UnknownPropositionDefinitionException, OntologyBuildException {
-        ConceptId conceptId =
-                ConceptId.getInstance(folderSpec.displayName, this);
+        ConceptId conceptId
+                = ConceptId.getInstance(folderSpec.displayName, this);
         Concept concept = getFromIdCache(conceptId);
         if (concept == null) {
-            concept =
-                    new Concept(conceptId, folderSpec.conceptCodePrefix, this);
+            concept
+                    = new Concept(conceptId, folderSpec.conceptCodePrefix, this);
             concept.setSourceSystemCode(
                     MetadataUtil.toSourceSystemCode(
-                    I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                            I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
             concept.setDisplayName(folderSpec.displayName);
             concept.setDataType(DataType.TEXT);
             addToIdCache(concept);
@@ -623,17 +636,17 @@ public final class Metadata {
         }
         Concept[] concepts;
         if (folderSpec.property == null) {
-            PropositionConceptTreeBuilder propProxy =
-                    new PropositionConceptTreeBuilder(this.knowledgeSource,
-                    folderSpec.propositions, folderSpec.conceptCodePrefix,
-                    folderSpec.valueType, this);
+            PropositionConceptTreeBuilder propProxy
+                    = new PropositionConceptTreeBuilder(this.knowledgeSource,
+                            folderSpec.propositions, folderSpec.conceptCodePrefix,
+                            folderSpec.valueType, this);
             concepts = propProxy.build();
 
         } else {
-            ValueSetConceptTreeBuilder vsProxy =
-                    new ValueSetConceptTreeBuilder(this.knowledgeSource,
-                    folderSpec.propositions, folderSpec.property,
-                    folderSpec.conceptCodePrefix, this);
+            ValueSetConceptTreeBuilder vsProxy
+                    = new ValueSetConceptTreeBuilder(this.knowledgeSource,
+                            folderSpec.propositions, folderSpec.property,
+                            folderSpec.conceptCodePrefix, this);
             concepts = vsProxy.build();
         }
         for (Concept c : concepts) {
