@@ -40,11 +40,9 @@ import org.protempa.query.QueryBuildException;
 import org.protempa.query.QueryBuilder;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
 
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandler;
 import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
-import org.protempa.query.handler.QueryResultsHandler.UsingKnowledgeSource;
-import org.protempa.query.handler.QueryResultsHandler.UsingKnowledgeSource.ForQuery;
+import org.protempa.query.handler.QueryResultsHandler;
 import org.protempa.query.handler.QueryResultsHandlerCloseException;
 import org.protempa.query.handler.QueryResultsHandlerProcessingException;
 
@@ -73,10 +71,8 @@ public class GetPropositionIdsNeededTest {
         QueryBuilder queryBuilder = new DefaultQueryBuilder();
         Query query = protempa.buildQuery(queryBuilder);
         I2B2QueryResultsHandlerFactory f = new I2B2QueryResultsHandlerFactory(confXML);
-        try (I2B2QueryResultsHandler qrh = f.getInstance();
-                UsingKnowledgeSource uks = qrh.usingKnowledgeSource(knowledgeSource);
-                ForQuery fq = uks.forQuery(query)) {
-            String[] actualPropIds = fq.getPropositionIdsNeeded();
+        try (QueryResultsHandler qrh = f.getInstance(query, knowledgeSource)) {
+            String[] actualPropIds = qrh.getPropositionIdsNeeded();
             Assert.assertEquals(expectedPropIds, Arrays.asSet(actualPropIds));
         }
     }

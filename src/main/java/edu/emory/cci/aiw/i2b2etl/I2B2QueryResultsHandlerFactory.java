@@ -1,8 +1,34 @@
 package edu.emory.cci.aiw.i2b2etl;
 
+/*
+ * #%L
+ * AIW i2b2 ETL
+ * %%
+ * Copyright (C) 2012 - 2013 Emory University
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import java.io.File;
+import org.protempa.KnowledgeSource;
+import org.protempa.query.Query;
+import org.protempa.query.handler.CollectStatisticsException;
+import org.protempa.query.handler.QueryResultsHandler;
 import org.protempa.query.handler.QueryResultsHandlerFactory;
 import org.protempa.query.handler.QueryResultsHandlerInitException;
+import org.protempa.query.handler.StatisticsCollector;
+import org.protempa.query.handler.StatisticsCollectorInitException;
 
 /**
  *
@@ -50,8 +76,13 @@ public class I2B2QueryResultsHandlerFactory implements QueryResultsHandlerFactor
     }
 
     @Override
-    public I2B2QueryResultsHandler getInstance() throws QueryResultsHandlerInitException {
-       return new I2B2QueryResultsHandler(this.confXML, this.inferPropositionIdsNeeded);
+    public QueryResultsHandler getInstance(Query query, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
+       return new I2B2QueryResultsHandler(query, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded);
+    }
+
+    @Override
+    public StatisticsCollector getStatisticsCollector() throws StatisticsCollectorInitException {
+        return new I2B2StatisticsCollector(this.confXML);
     }
     
 }

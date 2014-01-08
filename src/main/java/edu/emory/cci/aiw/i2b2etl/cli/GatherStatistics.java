@@ -21,9 +21,9 @@ package edu.emory.cci.aiw.i2b2etl.cli;
  */
 import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
 import java.io.File;
-import org.protempa.ProtempaException;
-import org.protempa.query.handler.QueryResultsHandler;
+import org.protempa.query.handler.CollectStatisticsException;
 import org.protempa.query.handler.QueryResultsHandlerFactory;
+import org.protempa.query.handler.StatisticsCollector;
 
 /**
  *
@@ -43,11 +43,12 @@ public class GatherStatistics {
         int totalKeys = 0;
         for (File confXML : configDir.listFiles()) {
             QueryResultsHandlerFactory f = new I2B2QueryResultsHandlerFactory(confXML);
-            try (QueryResultsHandler tdqrh = f.getInstance()) {
+            try {
+                StatisticsCollector tdqrh = f.getStatisticsCollector();
                 int numberOfKeys = tdqrh.collectStatistics().getNumberOfKeys();
                 System.out.println("I2b2 destination " + confXML.getName() + " has " + numberOfKeys + " keys");
                 totalKeys += numberOfKeys;
-            } catch (ProtempaException ex) {
+            } catch (CollectStatisticsException ex) {
                 System.err.println("Error collecting statistics for i2b2 config " + confXML.getName() + ": " + ex.getMessage());
                 System.exit(3);
             }

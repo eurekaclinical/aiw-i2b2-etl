@@ -434,7 +434,7 @@ public final class Metadata {
                         + encounterProp);
             }
         } else {
-            throw new InvalidPatientRecordException("Multiple patient records in encounter "
+            throw new InvalidPatientRecordException("No patient dimension information for "
                     + encounterProp);
         }
         return null;

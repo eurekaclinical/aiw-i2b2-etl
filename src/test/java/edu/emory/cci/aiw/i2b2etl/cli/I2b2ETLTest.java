@@ -21,17 +21,11 @@ package edu.emory.cci.aiw.i2b2etl.cli;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.sql.SQLException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.protempa.*;
-import org.protempa.backend.BackendProviderSpecLoaderException;
-import org.protempa.backend.ConfigurationsLoadException;
-import org.protempa.backend.ConfigurationsNotFoundException;
-import org.protempa.backend.InvalidConfigurationException;
 import org.protempa.proposition.interval.Relation;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
@@ -39,7 +33,6 @@ import org.protempa.proposition.value.ValueComparator;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
-import org.protempa.query.handler.test.DataProviderException;
 import org.protempa.query.handler.test.DatabasePopulator;
 
 import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
