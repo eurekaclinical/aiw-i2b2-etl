@@ -23,18 +23,17 @@ package edu.emory.cci.aiw.i2b2etl;
 import java.io.File;
 import org.protempa.KnowledgeSource;
 import org.protempa.query.Query;
-import org.protempa.query.handler.CollectStatisticsException;
-import org.protempa.query.handler.QueryResultsHandler;
-import org.protempa.query.handler.QueryResultsHandlerFactory;
-import org.protempa.query.handler.QueryResultsHandlerInitException;
-import org.protempa.query.handler.StatisticsCollector;
-import org.protempa.query.handler.StatisticsCollectorInitException;
+import org.protempa.dest.AbstractDestination;
+import org.protempa.dest.QueryResultsHandler;
+import org.protempa.dest.QueryResultsHandlerInitException;
+import org.protempa.dest.Statistics;
+import org.protempa.dest.StatisticsException;
 
 /**
  *
  * @author Andrew Post
  */
-public class I2B2QueryResultsHandlerFactory implements QueryResultsHandlerFactory {
+public final class I2b2Destination extends AbstractDestination {
     private File confXML;
     private boolean inferPropositionIdsNeeded;
     
@@ -47,7 +46,7 @@ public class I2B2QueryResultsHandlerFactory implements QueryResultsHandlerFactor
      * @param confXML an i2b2 query results handler configuration file. Cannot
      * be <code>null</code>.
      */
-    public I2B2QueryResultsHandlerFactory(File confXML) {
+    public I2b2Destination(File confXML) {
         this(confXML, true);
     }
     
@@ -66,8 +65,7 @@ public class I2B2QueryResultsHandlerFactory implements QueryResultsHandlerFactor
      * proposition ids returned should be only those specified in the Protempa
      * {@link Query}.
      */
-    public I2B2QueryResultsHandlerFactory(File confXML,
-            boolean inferPropositionIdsNeeded) { 
+    public I2b2Destination(File confXML, boolean inferPropositionIdsNeeded) { 
         if (confXML == null) {
             throw new IllegalArgumentException("confXML cannot be null");
         }
@@ -76,13 +74,13 @@ public class I2B2QueryResultsHandlerFactory implements QueryResultsHandlerFactor
     }
 
     @Override
-    public QueryResultsHandler getInstance(Query query, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
-       return new I2B2QueryResultsHandler(query, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded);
+    public QueryResultsHandler getQueryResultsHandler(Query query, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
+       return new I2b2QueryResultsHandler(query, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded);
     }
 
     @Override
-    public StatisticsCollector getStatisticsCollector() throws StatisticsCollectorInitException {
-        return new I2B2StatisticsCollector(this.confXML);
+    public Statistics getStatistics() throws StatisticsException {
+        return new I2b2StatisticsCollector(this.confXML).collectStatistics();
     }
     
 }

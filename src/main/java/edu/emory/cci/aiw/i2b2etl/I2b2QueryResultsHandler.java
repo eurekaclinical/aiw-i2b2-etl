@@ -42,16 +42,14 @@ import edu.emory.cci.aiw.i2b2etl.table.ProviderFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
 import org.protempa.KnowledgeSource;
 import org.protempa.query.Query;
-import org.protempa.query.handler.AbstractQueryResultsHandler;
-import org.protempa.query.handler.CollectStatisticsException;
-import org.protempa.query.handler.QueryResultsHandlerInitException;
+import org.protempa.dest.AbstractQueryResultsHandler;
+import org.protempa.dest.QueryResultsHandlerInitException;
 
 import java.io.File;
 import java.io.StringReader;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -74,18 +72,15 @@ import org.protempa.ReferenceDefinition;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
-import org.protempa.query.handler.DefaultStatistics;
-import org.protempa.query.handler.DefaultStatisticsBuilder;
-import org.protempa.query.handler.QueryResultsHandlerProcessingException;
-import org.protempa.query.handler.StatisticsCollector;
-import org.protempa.query.handler.table.Link;
-import org.protempa.query.handler.table.Reference;
+import org.protempa.dest.QueryResultsHandlerProcessingException;
+import org.protempa.dest.table.Link;
+import org.protempa.dest.table.Reference;
 
 /**
  *
  * @author Andrew Post
  */
-public final class I2B2QueryResultsHandler extends AbstractQueryResultsHandler {
+public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private static final String[] OBX_FACT_IDXS = new String[]{"FACT_NOLOB", "FACT_PATCON_DATE_PRVD_IDX", "FACT_CNPT_PAT_ENCT_IDX"};
     
     private final Query query;
@@ -125,7 +120,7 @@ public final class I2B2QueryResultsHandler extends AbstractQueryResultsHandler {
      * proposition ids returned should be only those specified in the Protempa
      * {@link Query}.
      */
-    I2B2QueryResultsHandler(Query query, KnowledgeSource knowledgeSource, File confXML,
+    I2b2QueryResultsHandler(Query query, KnowledgeSource knowledgeSource, File confXML,
             boolean inferPropositionIdsNeeded) throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
         this.query = query;

@@ -35,9 +35,9 @@ import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.proposition.*;
 import org.protempa.proposition.value.*;
-import org.protempa.query.handler.table.Derivation;
-import org.protempa.query.handler.table.Link;
-import org.protempa.query.handler.table.LinkTraverser;
+import org.protempa.dest.table.Derivation;
+import org.protempa.dest.table.Link;
+import org.protempa.dest.table.LinkTraverser;
 
 public final class PropositionFactHandler extends FactHandler {
 

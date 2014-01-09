@@ -38,13 +38,13 @@ import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
 import org.protempa.query.QueryBuilder;
-import org.protempa.query.handler.QueryResultsHandlerInitException;
+import org.protempa.dest.QueryResultsHandlerInitException;
 
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
+import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
-import org.protempa.query.handler.QueryResultsHandler;
-import org.protempa.query.handler.QueryResultsHandlerCloseException;
-import org.protempa.query.handler.QueryResultsHandlerProcessingException;
+import org.protempa.dest.QueryResultsHandler;
+import org.protempa.dest.QueryResultsHandlerCloseException;
+import org.protempa.dest.QueryResultsHandlerProcessingException;
 
 /**
  *
@@ -65,13 +65,15 @@ public class GetPropositionIdsNeededTest {
 
     @Test
     public void testPropositionIds() throws
-            QueryResultsHandlerInitException, QueryResultsHandlerProcessingException,
-            QueryBuildException, QueryResultsHandlerCloseException {
+            QueryResultsHandlerInitException, 
+            QueryResultsHandlerProcessingException, QueryBuildException, 
+            QueryResultsHandlerCloseException {
         KnowledgeSource knowledgeSource = protempa.getKnowledgeSource();
         QueryBuilder queryBuilder = new DefaultQueryBuilder();
         Query query = protempa.buildQuery(queryBuilder);
-        I2B2QueryResultsHandlerFactory f = new I2B2QueryResultsHandlerFactory(confXML);
-        try (QueryResultsHandler qrh = f.getInstance(query, knowledgeSource)) {
+        I2b2Destination destination = new I2b2Destination(confXML);
+        try (QueryResultsHandler qrh = 
+                destination.getQueryResultsHandler(query, knowledgeSource)) {
             String[] actualPropIds = qrh.getPropositionIdsNeeded();
             Assert.assertEquals(expectedPropIds, Arrays.asSet(actualPropIds));
         }

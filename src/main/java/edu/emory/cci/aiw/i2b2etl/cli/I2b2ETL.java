@@ -19,7 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.cli;
 
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
+import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import java.io.File;
 import org.apache.commons.cli.CommandLine;
 import org.protempa.*;
@@ -28,7 +28,7 @@ import org.protempa.cli.CLIException;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
-import org.protempa.query.handler.QueryResultsHandlerFactory;
+import org.protempa.dest.Destination;
 
 /**
  *
@@ -54,9 +54,8 @@ public class I2b2ETL extends CLI {
         try {
             DefaultQueryBuilder q = new DefaultQueryBuilder();
             Query query = protempa.buildQuery(q);
-            QueryResultsHandlerFactory tdqrh = 
-                    new I2B2QueryResultsHandlerFactory(confXML);
-            protempa.execute(query, tdqrh);
+            Destination destination = new I2b2Destination(confXML);
+            protempa.execute(query, destination);
         } catch (FinderException ex) {
             throw new CLIException("Error executing ETL job", ex);
         } catch (QueryBuildException ex) {

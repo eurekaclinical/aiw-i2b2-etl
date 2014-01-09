@@ -11,26 +11,24 @@ import java.sql.Statement;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
-import org.protempa.query.handler.CollectStatisticsException;
-import org.protempa.query.handler.DefaultStatisticsBuilder;
-import org.protempa.query.handler.Statistics;
-import org.protempa.query.handler.StatisticsCollector;
-import org.protempa.query.handler.StatisticsCollectorInitException;
+import org.protempa.dest.DefaultStatisticsBuilder;
+import org.protempa.dest.Statistics;
+import org.protempa.dest.StatisticsException;
 
 /**
  *
  * @author Andrew Post
  */
-public class I2B2StatisticsCollector implements StatisticsCollector {
+final class I2b2StatisticsCollector {
     private final ConnectionSpec dataConnectionSpec;
 
-    public I2B2StatisticsCollector(File confFile) throws StatisticsCollectorInitException {
+    I2b2StatisticsCollector(File confFile) throws StatisticsException {
         
         ConfigurationReader configurationReader = new ConfigurationReader(confFile);
         try {
             configurationReader.read();
         } catch (ConfigurationReadException ex) {
-            throw new StatisticsCollectorInitException("Could not initialize statistics collector", ex);
+            throw new StatisticsException("Could not initialize statistics gathering", ex);
         }
         DatabaseSection databaseSection = configurationReader.getDatabaseSection();
 
@@ -38,12 +36,11 @@ public class I2B2StatisticsCollector implements StatisticsCollector {
         try {
             this.dataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(dataSchemaSpec.connect, dataSchemaSpec.user, dataSchemaSpec.passwd);
         } catch (InvalidConnectionSpecArguments ex) {
-            throw new StatisticsCollectorInitException("Could not initialize statistics collector", ex);
+            throw new StatisticsException("Could not initialize statistics gathering", ex);
         }
     }
 
-    @Override
-    public Statistics collectStatistics() throws CollectStatisticsException {
+    Statistics collectStatistics() throws StatisticsException {
         int count;
         try (Connection conn = this.dataConnectionSpec.getOrCreate();
                 Statement stmt = conn.createStatement();
@@ -53,7 +50,7 @@ public class I2B2StatisticsCollector implements StatisticsCollector {
             }
             count = resultSet.getInt(1);
         } catch (SQLException ex) {
-            throw new CollectStatisticsException("Could not retrieve statistics from i2b2 destination", ex);
+            throw new StatisticsException("Could not retrieve statistics from i2b2 destination", ex);
         }
         DefaultStatisticsBuilder builder = new DefaultStatisticsBuilder();
         builder.setNumberOfKeys(count);

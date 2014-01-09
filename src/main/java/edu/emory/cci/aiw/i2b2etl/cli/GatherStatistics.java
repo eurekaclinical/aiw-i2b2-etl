@@ -19,11 +19,11 @@ package edu.emory.cci.aiw.i2b2etl.cli;
  * limitations under the License.
  * #L%
  */
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
+import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import java.io.File;
-import org.protempa.query.handler.CollectStatisticsException;
-import org.protempa.query.handler.QueryResultsHandlerFactory;
-import org.protempa.query.handler.StatisticsCollector;
+import org.protempa.dest.Destination;
+import org.protempa.dest.Statistics;
+import org.protempa.dest.StatisticsException;
 
 /**
  *
@@ -42,13 +42,13 @@ public class GatherStatistics {
         }
         int totalKeys = 0;
         for (File confXML : configDir.listFiles()) {
-            QueryResultsHandlerFactory f = new I2B2QueryResultsHandlerFactory(confXML);
+            Destination destination = new I2b2Destination(confXML);
             try {
-                StatisticsCollector tdqrh = f.getStatisticsCollector();
-                int numberOfKeys = tdqrh.collectStatistics().getNumberOfKeys();
+                Statistics stats = destination.getStatistics();
+                int numberOfKeys = stats.getNumberOfKeys();
                 System.out.println("I2b2 destination " + confXML.getName() + " has " + numberOfKeys + " keys");
                 totalKeys += numberOfKeys;
-            } catch (CollectStatisticsException ex) {
+            } catch (StatisticsException ex) {
                 System.err.println("Error collecting statistics for i2b2 config " + confXML.getName() + ": " + ex.getMessage());
                 System.exit(3);
             }

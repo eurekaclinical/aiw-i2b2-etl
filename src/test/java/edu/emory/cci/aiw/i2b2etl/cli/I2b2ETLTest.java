@@ -33,11 +33,11 @@ import org.protempa.proposition.value.ValueComparator;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
-import org.protempa.query.handler.test.DatabasePopulator;
+import org.protempa.dest.test.DatabasePopulator;
 
-import edu.emory.cci.aiw.i2b2etl.I2B2QueryResultsHandlerFactory;
+import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
-import org.protempa.query.handler.QueryResultsHandlerFactory;
+import org.protempa.dest.Destination;
 
 /**
  * Integration tests for the i2b2 ETL. This assumes that there is an i2b2
@@ -168,8 +168,8 @@ public class I2b2ETLTest {
             q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
-            QueryResultsHandlerFactory tdqrh = new I2B2QueryResultsHandlerFactory(confXML);
-            protempa.execute(query, tdqrh);
+            Destination destination = new I2b2Destination(confXML);
+            protempa.execute(query, destination);
         } finally {
             protempa.close();
         }
