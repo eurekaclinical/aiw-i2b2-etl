@@ -43,67 +43,78 @@ class ProviderConceptTreeBuilder {
         this.metadata = metadata;
     }
 
-    Concept build() throws OntologyBuildException {
-        try {
-            ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider", this.metadata);
-            Concept root = this.metadata.getFromIdCache(conceptId);
-            if (root == null) {
-                root = new Concept(conceptId, null, this.metadata);
-                root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                root.setDisplayName("Providers");
-                root.setDataType(DataType.TEXT);
-                this.metadata.addToIdCache(root);
-            } else {
-                throw new OntologyBuildException("Duplicate provider concept: " + root.getConceptCode());
-            }
-            String ca = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            TreeMap<Character, Concept> alpha =
-                    new TreeMap<Character, Concept>();
-            for (char c : ca.toCharArray()) {
-                ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|" + String.valueOf(c), this.metadata);
-                Concept ontologyNode = this.metadata.getFromIdCache(cid);
-                if (ontologyNode == null) {
-                    ontologyNode = new Concept(cid, null, this.metadata);
-                    ontologyNode.setDisplayName(String.valueOf(c));
-                    ontologyNode.setDataType(DataType.TEXT);
-                    ontologyNode.setSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation());
-                    this.metadata.addToIdCache(ontologyNode);
-                    alpha.put(c, ontologyNode);
-                } else {
-                    throw new OntologyBuildException("Duplicate provider concept: " + ontologyNode.getConceptCode());
-                }
-                root.add(ontologyNode);
-            }
-            for (ProviderDimension pd : this.providers) {
-                //String id = pd.getId();
-                //if (id != null) {
-                String fullName = pd.getConcept().getDisplayName();
-                Concept parent = alpha.get(fullName.charAt(0));
-                if (parent == null && root.getChildCount() == ca.length()) {
-                    ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata);
-                    parent = this.metadata.getFromIdCache(cid);
-                    if (parent == null) {
-                        parent = new Concept(cid, null, this.metadata);
-                        parent.setDisplayName("Other");
-                        parent.setDataType(DataType.TEXT);
-                        parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                        this.metadata.addToIdCache(parent);
-                    } else {
-                        throw new OntologyBuildException("Duplicate provider concept: " + parent.getConceptCode());
-                    }
-                    root.add(parent);
-                }
-                //ConceptId cid = ConceptId.getInstance(id, this.metadata);
-                //Concept child = this.metadata.getFromIdCache(cid);
-                //if (child == null) {
-                Concept child = pd.getConcept();
-                //child = new Concept(cid, id, this.metadata);
-                parent.add(child);
-                
-                this.metadata.addToIdCache(child);
-                //} else {
-                //   throw new OntologyBuildException("Duplicate provider concept: " + child.getConceptCode());
-                //}
+	Concept build() throws OntologyBuildException {
+		try {
+			ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider", this.metadata);
+			Concept root = this.metadata.getFromIdCache(conceptId);
+			if (root == null) {
+				root = new Concept(conceptId, null, this.metadata);
+				root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+				root.setDisplayName("Providers");
+				root.setDataType(DataType.TEXT);
+				this.metadata.addToIdCache(root);
+			}
+			String ca = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+			TreeMap<Character, Concept> alpha =
+					new TreeMap<Character, Concept>();
+			for (char c : ca.toCharArray()) {
+				ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|" + String.valueOf(c), this.metadata);
+				Concept ontologyNode = this.metadata.getFromIdCache(cid);
+				if (ontologyNode == null) {
+					ontologyNode = new Concept(cid, null, this.metadata);
+					ontologyNode.setDisplayName(String.valueOf(c));
+					ontologyNode.setDataType(DataType.TEXT);
+					ontologyNode.setSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation());
+					this.metadata.addToIdCache(ontologyNode);
+					alpha.put(c, ontologyNode);
+				}
+				root.add(ontologyNode);
+			}
+			for (ProviderDimension pd : this.providers) {
+				//String id = pd.getId();
+				//if (id != null) {
+//                String fullName = pd.getConcept().getDisplayName();
+//                Concept parent = alpha.get(fullName.charAt(0));
+//                if (parent == null && root.getChildCount() == ca.length()) {
+//                    ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata);
+//                    parent = this.metadata.getFromIdCache(cid);
+//                    if (parent == null) {
+//                        parent = new Concept(cid, null, this.metadata);
+//                        parent.setDisplayName("Other");
+//                        parent.setDataType(DataType.TEXT);
+//                        parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+//                        this.metadata.addToIdCache(parent);
+//                    } else {
+//                        throw new OntologyBuildException("Duplicate provider concept: " + parent.getConceptCode());
+//                    }
+//                    root.add(parent);
+//                }
+				String fullName = pd.getConcept().getDisplayName();
+				Concept parent = alpha.get(fullName.toUpperCase().charAt(0));
+				if (parent == null) {
+					ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata);
+					parent = this.metadata.getFromIdCache(cid);
+					if (parent == null) {
+						parent = new Concept(cid, null, this.metadata);
+						parent.setDisplayName("Other");
+						parent.setDataType(DataType.TEXT);
+						parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+						this.metadata.addToIdCache(parent);
+						root.add(parent);
+					}
+				}
+				assert parent != null : "Failed to get Other provider category for provider '" + fullName + "'";
+				//ConceptId cid = ConceptId.getInstance(id, this.metadata);
+				//Concept child = this.metadata.getFromIdCache(cid);
+				//if (child == null) {
+				Concept child = pd.getConcept();
+				//child = new Concept(cid, id, this.metadata);
+				parent.add(child);
+
+				this.metadata.addToIdCache(child);
+				//} else {
+				//   throw new OntologyBuildException("Duplicate provider concept: " + child.getConceptCode());
+				//}
 //                } else {
 //                    Concept notRecordedConcept = new Concept(ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "Provider|NotRecorded", this.metadata), null, this.metadata);
 //                    notRecordedConcept.setDisplayName(notRecordedConcept.getDisplayName());
@@ -113,10 +124,10 @@ class ProviderConceptTreeBuilder {
 //                    root.add(notRecordedConcept);
 //                    pd.setI2b2Path(notRecordedConcept.getI2B2Path());
 //                }
-            }
-            return root;
-        } catch (InvalidConceptCodeException ex) {
-            throw new OntologyBuildException("Could not build provider concept tree", ex);
-        }
-    }
+			}
+			return root;
+		} catch (InvalidConceptCodeException ex) {
+			throw new OntologyBuildException("Could not build provider concept tree", ex);
+		}
+	}
 }
