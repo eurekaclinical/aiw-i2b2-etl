@@ -71,24 +71,6 @@ class ProviderConceptTreeBuilder {
 				root.add(ontologyNode);
 			}
 			for (ProviderDimension pd : this.providers) {
-				//String id = pd.getId();
-				//if (id != null) {
-//                String fullName = pd.getConcept().getDisplayName();
-//                Concept parent = alpha.get(fullName.charAt(0));
-//                if (parent == null && root.getChildCount() == ca.length()) {
-//                    ConceptId cid = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider|Other", this.metadata);
-//                    parent = this.metadata.getFromIdCache(cid);
-//                    if (parent == null) {
-//                        parent = new Concept(cid, null, this.metadata);
-//                        parent.setDisplayName("Other");
-//                        parent.setDataType(DataType.TEXT);
-//                        parent.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-//                        this.metadata.addToIdCache(parent);
-//                    } else {
-//                        throw new OntologyBuildException("Duplicate provider concept: " + parent.getConceptCode());
-//                    }
-//                    root.add(parent);
-//                }
 				String fullName = pd.getConcept().getDisplayName();
 				Concept parent = alpha.get(fullName.toUpperCase().charAt(0));
 				if (parent == null) {
