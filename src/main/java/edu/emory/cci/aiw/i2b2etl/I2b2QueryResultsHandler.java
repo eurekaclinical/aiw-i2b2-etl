@@ -208,7 +208,18 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         pd = this.ontologyModel.addPatient(keyId, prop, this.dictSection, this.obxSection, references);
                         this.patientLevelFakeVisits.put(pd.getPatientNum(), this.ontologyModel.addVisit(pd.getPatientNum(), pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), null, this.dictSection, this.obxSection, null));
                     }
-                    ProviderDimension provider = this.ontologyModel.addProviderIfNeeded(prop, this.providerFullNameSpec.referenceName, this.providerFullNameSpec.propertyName, this.providerFirstNameSpec.referenceName, this.providerFirstNameSpec.propertyName, this.providerMiddleNameSpec.referenceName, this.providerMiddleNameSpec.propertyName, this.providerLastNameSpec.referenceName, this.providerLastNameSpec.propertyName, references);
+                    ProviderDimension provider = 
+                            this.ontologyModel.addProviderIfNeeded(
+                                    prop, 
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.referenceName : null, 
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.propertyName : null, 
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.referenceName : null, 
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.propertyName : null, 
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.referenceName : null, 
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.propertyName : null, 
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null, 
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null, 
+                                    references);
                     VisitDimension vd = this.ontologyModel.addVisit(pd.getPatientNum(), pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references);
                     for (FactHandler factHandler : this.factHandlers) {
                         factHandler.handleRecord(pd, vd, provider, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions, this.dataSchemaConnection);

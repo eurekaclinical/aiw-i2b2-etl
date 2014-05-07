@@ -26,7 +26,22 @@ import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.collections4.map.ReferenceMap;
+import org.apache.commons.lang3.StringUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
@@ -39,21 +54,6 @@ import org.protempa.proposition.value.AbsoluteTimeUnit;
 import org.protempa.proposition.value.DateValue;
 import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.Value;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Controls the etl process for extracting data from files and a
@@ -226,26 +226,23 @@ public final class Metadata {
             String middleNameReference, String middleNameProperty,
             String lastNameReference, String lastNameProperty,
             Map<UniqueId, Proposition> references) throws InvalidConceptCodeException {
-        String firstName = getNamePart(resolveReference(encounterProp, firstNameReference, references), firstNameProperty);
-        String middleName = getNamePart(resolveReference(encounterProp, middleNameReference, references), middleNameProperty);
-        Proposition providerProp = resolveReference(encounterProp, lastNameReference, references);
-        String lastName = getNamePart(providerProp, lastNameProperty);
-
-        String fullName;
-        if (lastName != null) {
+        Set<String> sources = new HashSet<>(4);
+        
+        String firstName = extractNamePart(firstNameReference, firstNameProperty, encounterProp, references, sources);
+        String middleName = extractNamePart(middleNameReference, middleNameProperty, encounterProp, references, sources);
+        String lastName = extractNamePart(lastNameReference, lastNameProperty, encounterProp, references, sources);
+        String fullName = extractNamePart(fullNameReference, fullNameProperty, encounterProp, references, sources);
+        if (fullName == null) {
             fullName = constructFullName(firstName, middleName, lastName);
-        } else {
-            providerProp = resolveReference(encounterProp, fullNameReference, references);
-            fullName = getNamePart(providerProp, fullNameProperty);
         }
 
         ProviderDimension result = this.providers.get(fullName);
         if (result == null) {
             String id;
             String source;
-            if (providerProp != null) {
+            if (!sources.isEmpty()) {
                 id = PROVIDER_ID_PREFIX + fullName;
-                source = providerProp.getDataSourceType().getStringRepresentation();
+                source = MetadataUtil.toSourceSystemCode(StringUtils.join(sources, " & "));
             } else {
                 id = NOT_RECORDED_PROVIDER_ID;
                 source = MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation());
@@ -262,6 +259,22 @@ public final class Metadata {
             this.providers.put(fullName, result);
         }
         return result;
+    }
+
+    private String extractNamePart(String namePartReference, String namePartProperty, Proposition encounterProp, Map<UniqueId, Proposition> references, Set<String> sources) {
+        if (namePartReference != null && namePartProperty != null) {
+            Proposition provider = resolveReference(encounterProp, namePartReference, references);
+            extractSource(sources, provider);
+            return getNamePart(provider, namePartProperty);
+        } else {
+            return null;
+        }
+    }
+    
+    private void extractSource(Set<String> sources, Proposition provider) {
+        if (provider != null) {
+            sources.add(provider.getDataSourceType().getStringRepresentation());
+        }
     }
 
     private Proposition resolveReference(Proposition encounterProp, String namePartReference, Map<UniqueId, Proposition> references) {
@@ -283,14 +296,14 @@ public final class Metadata {
         return provider;
     }
 
-    private String getNamePart(Proposition providerProposition, String firstNameProperty) {
-        String firstName;
-        if (providerProposition != null) {
-            firstName = getProperty(firstNameProperty, providerProposition);
+    private String getNamePart(Proposition provider, String namePartProperty) {
+        String namePart;
+        if (provider != null) {
+            namePart = getProperty(namePartProperty, provider);
         } else {
-            firstName = null;
+            namePart = null;
         }
-        return firstName;
+        return namePart;
     }
 
     private String getProperty(String nameProperty, Proposition provider) {
