@@ -64,6 +64,8 @@ public class ObservationFact {
     private final String units;
     private final ValueFlagCode valueFlagCode;
     private final boolean rejected;
+    private final int instanceNum;
+    private final String modifierCd;
 
     public ObservationFact(java.util.Date startDate, 
             java.util.Date finishDate,
@@ -101,6 +103,8 @@ public class ObservationFact {
         this.units = units;
         this.valueFlagCode = valueFlagCode;
         this.rejected = rejected;
+        this.instanceNum = 1; //this is used in combination of modifier_CD. currently we do not use this feature hence assigning the default value.
+        this.modifierCd = "@";  //using the default value since we do not use this i2b2 feature currently
     }
 
     public boolean isRejected() {
@@ -149,6 +153,14 @@ public class ObservationFact {
     
     public String getSourceSystem() {
         return this.sourceSystem;
+    }
+
+    public int getInstanceNum() {
+        return this.instanceNum;
+    }
+
+    public String getModifierCd() {
+        return this.modifierCd;
     }
 
     @Override

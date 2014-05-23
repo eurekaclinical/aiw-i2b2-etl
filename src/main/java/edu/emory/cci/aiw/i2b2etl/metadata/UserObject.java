@@ -22,6 +22,8 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.ArrayList;
+
 public class UserObject {
 
     //	
@@ -43,6 +45,7 @@ public class UserObject {
     private String conceptCode;		//	concept_dimension.concept_cd   &&   ontology.c_basecode
     private DataType dataType;
     private ValueTypeCode valueTypeCode;
+    private boolean inUserDefined;
     //	ontology.c_fullname
     //		AND
     //	ontology.c_dimcode
@@ -58,6 +61,8 @@ public class UserObject {
     private String conceptCodePrefix;
     private String dimCode;
     private boolean copy;
+    private ArrayList<String> hierarchyPaths;
+    private String appliedPath;
 
 	// contains, eg, <ValueMetadata><loinc>...</loinc><ValueMetadata> to tell
 	// i2b2 that this concept has numerical values
@@ -78,6 +83,7 @@ public class UserObject {
         }
         this.valueTypeCode = ValueTypeCode.UNSPECIFIED;
         this.conceptCodePrefix = conceptCodePrefix;
+        this.appliedPath = "@";  //this field is mandatory in i2b2 1.7. assigning the default value
     }
     
     UserObject(UserObject usrObj, Concept concept) {
@@ -93,6 +99,7 @@ public class UserObject {
         this.inUse = usrObj.inUse;
         this.conceptCodePrefix = usrObj.conceptCodePrefix;
         this.copy = true;
+        this.appliedPath = usrObj.appliedPath;
     }
     
     public String getConceptCodePrefix() {
@@ -176,7 +183,7 @@ public class UserObject {
     }
 
     public ConceptOperator getOperator() {
-        if (isInDataSource() || isDerived()) {
+        if ((isInDataSource() || isDerived()) && (!getInUserDefined())) {
             return ConceptOperator.EQUAL;
         } else {
             return ConceptOperator.LIKE;
@@ -206,5 +213,30 @@ public class UserObject {
 
 	boolean isCopy() {
         return this.copy;
+    }
+
+    public ArrayList<String> getHierarchyPaths() {
+        return this.hierarchyPaths;
+    }
+
+    public void setHierarchyPath(String path) {
+        if (this.hierarchyPaths == null) {
+            hierarchyPaths = new ArrayList<String>();
+        }
+        if (!this.hierarchyPaths.contains(path)) {
+            hierarchyPaths.add(path);
+        }
+    }
+
+    public String getAppliedPath() {
+        return this.appliedPath;
+    }
+
+    public void setInUserDefined(boolean inUserDefined) {
+        this.inUserDefined = inUserDefined;
+    }
+
+    public boolean getInUserDefined() {
+        return this.inUserDefined;
     }
 }

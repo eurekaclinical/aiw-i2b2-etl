@@ -89,7 +89,7 @@ public class VisitDimension {
         return NUM_FACTORY.getSourceSystem();
     }
 
-    public static void insertAll(Collection<VisitDimension> visits, Connection cn) throws SQLException {
+    public static void insertAll(Collection<VisitDimension> visits, Connection cn, String projectName) throws SQLException {
         int batchSize = 500;
         int commitSize = 5000;
         int batchCounter = 0;
@@ -100,8 +100,12 @@ public class VisitDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into VISIT_DIMENSION values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            ps2 = cn.prepareStatement("insert into ENCOUNTER_MAPPING values (?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into VISIT_DIMENSION(encounter_num," +
+                    "patient_num,active_status_cd,start_date,end_date,inout_cd,location_cd,location_path,visit_blob," +
+                    "update_date,download_date,import_date,sourcesystem_cd,upload_id,length_of_stay) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps2 = cn.prepareStatement("insert into ENCOUNTER_MAPPING(encounter_ide,encounter_ide_source,encounter_num,patient_ide," +
+                    "patient_ide_source,encounter_ide_status,update_date,upload_date,download_date,import_date,sourcesystem_cd,upload_id,project_id)" +
+                    " values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             for (VisitDimension visit : visits) {
                 try {
@@ -119,6 +123,7 @@ public class VisitDimension {
                     ps.setTimestamp(12, importTimestamp);
                     ps.setString(13, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
                     ps.setObject(14, null);
+                    ps.setObject(15, null);
                     ps.addBatch();
                     ps.clearParameters();
 
@@ -135,6 +140,7 @@ public class VisitDimension {
                         ps2.setTimestamp(10, importTimestamp);
                         ps2.setString(11, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
                         ps2.setNull(12, Types.NUMERIC);
+                        ps2.setString(13, projectName);
                         ps2.addBatch();
                         ps2.clearParameters();
                         
@@ -150,6 +156,7 @@ public class VisitDimension {
                         ps2.setTimestamp(10, importTimestamp);
                         ps2.setString(11, null);
                         ps2.setNull(12, Types.NUMERIC);
+                        ps2.setString(13, projectName);
                         ps2.addBatch();
                         ps2.clearParameters();
                         ps2BatchAdded = true;

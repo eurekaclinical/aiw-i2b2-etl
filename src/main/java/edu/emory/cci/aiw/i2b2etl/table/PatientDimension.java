@@ -191,7 +191,7 @@ public class PatientDimension {
         }
     }
 
-    public static void insertAll(Collection<PatientDimension> patients, Connection cn) throws SQLException {
+    public static void insertAll(Collection<PatientDimension> patients, Connection cn, String projectName) throws SQLException {
         int batchSize = 500;
         int counter = 0;
         int commitSize = 5000;
@@ -201,8 +201,11 @@ public class PatientDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into PATIENT_DIMENSION values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            ps2 = cn.prepareStatement("insert into PATIENT_MAPPING values (?,?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into PATIENT_DIMENSION(patient_num,vital_status_cd,birth_date,death_date,sex_cd," +
+                    "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,income_cd,patient_blob,update_date," +
+                    "download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps2 = cn.prepareStatement("insert into PATIENT_MAPPING(patient_ide,patient_ide_source,patient_num,patient_ide_status,project_id,upload_date," +
+                    "update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?,?,?)");
             for (PatientDimension patient : patients) {
                 try {
                     ps.setLong(1, patient.patientNum);
@@ -217,12 +220,13 @@ public class PatientDimension {
                     ps.setString(10, patient.religion);
                     ps.setString(11, patient.zip);
                     ps.setString(12, null);
-                    ps.setObject(13, null);
-                    ps.setTimestamp(14, null);
+                    ps.setString(13, null);
+                    ps.setObject(14, null);
                     ps.setTimestamp(15, null);
-                    ps.setTimestamp(16, importTimestamp);
-                    ps.setString(17, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
-                    ps.setObject(18, null);
+                    ps.setTimestamp(16, null);
+                    ps.setTimestamp(17, importTimestamp);
+                    ps.setString(18, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
+                    ps.setObject(19, null);
                     ps.addBatch();
                     ps.clearParameters();
 
@@ -230,28 +234,30 @@ public class PatientDimension {
                     ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
                     ps2.setLong(3, patient.patientNum);
                     ps2.setString(4, PatientIdeStatusCode.ACTIVE.getCode());
-                    ps2.setDate(5, null);
+                    ps2.setString(5, projectName);
                     ps2.setDate(6, null);
                     ps2.setDate(7, null);
-                    ps2.setTimestamp(8, importTimestamp);
-                    ps2.setString(9, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
-                    ps2.setNull(10, Types.NUMERIC);
+                    ps2.setDate(8, null);
+                    ps2.setTimestamp(9, importTimestamp);
+                    ps2.setString(10, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
+                    ps2.setNull(11, Types.NUMERIC);
                     ps2.addBatch();
                     ps2.clearParameters();
-                    
+
                     ps2.setLong(1, patient.patientNum);
                     ps2.setString(2, "HIVE");
                     ps2.setLong(3, patient.patientNum);
                     ps2.setString(4, PatientIdeStatusCode.ACTIVE.getCode());
-                    ps2.setDate(5, null);
+                    ps2.setString(5, projectName);
                     ps2.setDate(6, null);
                     ps2.setDate(7, null);
-                    ps2.setTimestamp(8, importTimestamp);
-                    ps2.setString(9, null);
-                    ps2.setNull(10, Types.NUMERIC);
+                    ps2.setDate(8, null);
+                    ps2.setTimestamp(9, importTimestamp);
+                    ps2.setString(10, null);
+                    ps2.setNull(11, Types.NUMERIC);
                     ps2.addBatch();
                     ps2.clearParameters();
-                    
+
                     counter++;
                     commitCounter++;
 

@@ -579,6 +579,7 @@ public final class Metadata {
         if (this.userDefinedPropositionDefinitions.length > 0) {
             FolderSpec folderSpec = new FolderSpec();
             folderSpec.displayName = "User-defined Derived Variables";
+            folderSpec.userDefined = true;
             String[] propIds
                     = new String[this.userDefinedPropositionDefinitions.length];
             for (int i = 0;

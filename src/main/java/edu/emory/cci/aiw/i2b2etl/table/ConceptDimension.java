@@ -26,6 +26,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,7 +66,8 @@ public class ConceptDimension {
         int commitCounter = 0;
         PreparedStatement ps = null;
         try {
-            ps = cn.prepareStatement("insert into CONCEPT_DIMENSION values (?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into CONCEPT_DIMENSION(concept_cd,concept_path,name_char,concept_blob," +
+                    "update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?)");
             @SuppressWarnings("unchecked")
             Enumeration<Concept> emu = root.breadthFirstEnumeration();
             Timestamp importTimestamp = 
@@ -74,28 +76,59 @@ public class ConceptDimension {
 
                 Concept concept = emu.nextElement();
                 if (concept.isInUse()) {
-                    ps.setString(1, concept.getConceptCode());
-                    ps.setString(2, concept.getI2B2Path());
-                    ps.setString(3, concept.getDisplayName());
-                    ps.setObject(4, null);
-                    ps.setTimestamp(5, null);
-                    ps.setTimestamp(6, null);
-                    ps.setTimestamp(7, importTimestamp);
-                    ps.setString(8, concept.getSourceSystemCode());
-                    ps.setObject(9, null);
-                    logger.log(Level.FINEST, "DB_CD_INSERT {0}", concept);
-                    counter++;
-                    commitCounter++;
-                    ps.addBatch();
-                    ps.clearParameters();
-                    if (counter >= batchSize) {
-                        ps.executeBatch();
-                        ps.clearBatch();
-                        counter = 0;
-                    }
-                    if (commitCounter >= commitSize) {
-                        cn.commit();
-                        commitCounter = 0;
+                    ArrayList<String> paths = concept.getHierarchyPaths();
+                    if (paths != null) {
+                        for (int i = 0; i < paths.size(); i++) {
+                            ps.setString(1, concept.getConceptCode());
+                            //ps.setString(2, concept.getI2B2Path());
+                            ps.setString(2, paths.get(i));
+                            ps.setString(3, concept.getDisplayName());
+                            ps.setObject(4, null);
+                            ps.setTimestamp(5, null);
+                            ps.setTimestamp(6, null);
+                            ps.setTimestamp(7, importTimestamp);
+                            ps.setString(8, concept.getSourceSystemCode());
+                            ps.setObject(9, null);
+                            logger.log(Level.FINEST, "DB_CD_INSERT {0}", concept);
+                            counter++;
+                            commitCounter++;
+                            ps.addBatch();
+                            ps.clearParameters();
+                            if (counter >= batchSize) {
+                                ps.executeBatch();
+                                ps.clearBatch();
+                                counter = 0;
+                            }
+                            if (commitCounter >= commitSize) {
+                                cn.commit();
+                                commitCounter = 0;
+                            }
+                        }
+                    } else {
+                        ps.setString(1, concept.getConceptCode());
+                        ps.setString(2, concept.getI2B2Path());
+                        //ps.setString(2, paths.get(i));
+                        ps.setString(3, concept.getDisplayName());
+                        ps.setObject(4, null);
+                        ps.setTimestamp(5, null);
+                        ps.setTimestamp(6, null);
+                        ps.setTimestamp(7, importTimestamp);
+                        ps.setString(8, concept.getSourceSystemCode());
+                        ps.setObject(9, null);
+                        logger.log(Level.FINEST, "DB_CD_INSERT {0}", concept);
+                        counter++;
+                        commitCounter++;
+                        ps.addBatch();
+                        ps.clearParameters();
+                        if (counter >= batchSize) {
+                            ps.executeBatch();
+                            ps.clearBatch();
+                            counter = 0;
+                        }
+                        if (commitCounter >= commitSize) {
+                            cn.commit();
+                            commitCounter = 0;
+                        }
                     }
                 }
             }

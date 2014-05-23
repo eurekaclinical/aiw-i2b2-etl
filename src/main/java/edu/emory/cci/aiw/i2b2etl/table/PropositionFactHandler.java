@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.drools.util.StringUtils;
 import org.protempa.KnowledgeSource;
@@ -47,13 +48,13 @@ public final class PropositionFactHandler extends FactHandler {
     private final Link[] derivationLinks;
 
     public PropositionFactHandler(Link[] links, String propertyName, String start,
-            String finish, String unitsPropertyName,
-            String[] potentialDerivedPropIds, Metadata metadata) {
+                                  String finish, String unitsPropertyName,
+                                  String[] potentialDerivedPropIds, Metadata metadata) {
         super(propertyName, start, finish, unitsPropertyName);
         if (metadata == null) {
             throw new IllegalArgumentException("metadata cannot be null");
         }
-        
+
         this.metadata = metadata;
         this.linkTraverser = new LinkTraverser();
         this.links = links;
@@ -61,20 +62,20 @@ public final class PropositionFactHandler extends FactHandler {
             potentialDerivedPropIds = StringUtils.EMPTY_STRING_ARRAY;
         }
         this.derivationLinks = new Link[]{
-            new Derivation(potentialDerivedPropIds,
-            Derivation.Behavior.MULT_FORWARD)
+                new Derivation(potentialDerivedPropIds,
+                        Derivation.Behavior.MULT_FORWARD)
         };
     }
 
     @Override
     public void handleRecord(PatientDimension patient, VisitDimension visit,
-            ProviderDimension provider,
-            Proposition encounterProp,
-            Map<Proposition, List<Proposition>> forwardDerivations,
-            Map<Proposition, List<Proposition>> backwardDerivations,
-            Map<UniqueId, Proposition> references,
-            KnowledgeSource knowledgeSource,
-            Set<Proposition> derivedPropositions, Connection cn)
+                             ProviderDimension provider,
+                             Proposition encounterProp,
+                             Map<Proposition, List<Proposition>> forwardDerivations,
+                             Map<Proposition, List<Proposition>> backwardDerivations,
+                             Map<UniqueId, Proposition> references,
+                             KnowledgeSource knowledgeSource,
+                             Set<Proposition> derivedPropositions, Connection cn)
             throws InvalidFactException {
         assert patient != null : "patient cannot be null";
         assert visit != null : "visit cannot be null";
@@ -87,7 +88,7 @@ public final class PropositionFactHandler extends FactHandler {
         } catch (KnowledgeSourceReadException ex) {
             throw new InvalidFactException(ex);
         }
-        
+
         String propertyName = getPropertyName();
 
         for (Proposition prop : props) {
@@ -95,7 +96,7 @@ public final class PropositionFactHandler extends FactHandler {
                     ? prop.getProperty(propertyName) : null;
             Concept concept =
                     this.metadata.getFromIdCache(prop.getId(),
-                    propertyName, propertyVal);
+                            propertyName, propertyVal);
             if (concept != null) {
                 ObservationFact obx = createObservationFact(prop,
                         encounterProp, patient, visit, provider, concept);
@@ -116,7 +117,7 @@ public final class PropositionFactHandler extends FactHandler {
                         if (derivedPropositions.add(derivedProp)) {
                             Concept derivedConcept =
                                     this.metadata.getFromIdCache(derivedProp.getId(),
-                                    null, null);
+                                            null, null);
                             if (derivedConcept != null) {
                                 ObservationFact derivedObx = createObservationFact(
                                         derivedProp, encounterProp, patient, visit,
@@ -127,14 +128,14 @@ public final class PropositionFactHandler extends FactHandler {
                                     String msg = "Observation fact not created for " + prop.getId();
                                     throw new InvalidFactException(msg, sqle);
                                 }
-							}
+                            }
                         }
                     }
                 } catch (SQLException | InvalidConceptCodeException ex) {
                     String msg = "Observation fact not created for " + prop.getId() + "." + propertyName + "=" + propertyVal;
                     throw new InvalidFactException(msg, ex);
                 }
-			}
+            }
         }
     }
 
@@ -144,8 +145,8 @@ public final class PropositionFactHandler extends FactHandler {
     }
 
     private ObservationFact createObservationFact(Proposition prop,
-            Proposition encounterProp, PatientDimension patient,
-            VisitDimension visit, ProviderDimension provider, Concept concept)
+                                                  Proposition encounterProp, PatientDimension patient,
+                                                  VisitDimension visit, ProviderDimension provider, Concept concept)
             throws InvalidFactException {
         Date start = handleStartDate(prop, encounterProp, null);
         Date finish = handleFinishDate(prop, encounterProp, null);

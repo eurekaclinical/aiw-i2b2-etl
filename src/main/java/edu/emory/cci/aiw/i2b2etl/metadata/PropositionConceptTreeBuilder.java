@@ -35,10 +35,11 @@ final class PropositionConceptTreeBuilder {
     private final String conceptCode;
     private final Metadata metadata;
     private final ValueTypeCode valueTypeCode;
+    private final boolean isUserDefined;
 
     PropositionConceptTreeBuilder(KnowledgeSource knowledgeSource,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
-            Metadata metadata)
+                                  Metadata metadata, boolean isUserDefined)
             throws KnowledgeSourceReadException,
             UnknownPropositionDefinitionException {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
@@ -55,6 +56,7 @@ final class PropositionConceptTreeBuilder {
         this.conceptCode = conceptCode;
         this.metadata = metadata;
         this.valueTypeCode = valueTypeCode;
+        this.isUserDefined = isUserDefined;
     }
 
     Concept[] build() throws OntologyBuildException {
@@ -90,11 +92,12 @@ final class PropositionConceptTreeBuilder {
             if (parent != null) {
                 parent.add(child);
             }
-            if (child.isCopy()) {
+            /*if (child.isCopy()) {
                 parent.setDerived(true);
                 parent.removeAllChildren();
                 break;
-            }
+            }             */
+
             if (!child.isDerived()) {
                 String[] grandChildrenPropIds = childPropDef.getChildren();
                 buildHelper(grandChildrenPropIds, child);
@@ -104,12 +107,14 @@ final class PropositionConceptTreeBuilder {
 
     private Concept addNode(PropositionDefinition propDef)
             throws InvalidConceptCodeException {
+        int addCache = 0;
         ConceptId conceptId =
                 ConceptId.getInstance(propDef.getId(), this.metadata);
         Concept child = this.metadata.getFromIdCache(conceptId);
         if (child == null) {
-            child =
-                    new Concept(conceptId, this.conceptCode, this.metadata);
+            addCache = 1;
+        }
+            child = new Concept(conceptId, this.conceptCode, this.metadata);
             child.setInDataSource(propDef.getInDataSource());
             child.setDisplayName(propDef.getDisplayName());
             child.setSourceSystemCode(
@@ -132,11 +137,9 @@ final class PropositionConceptTreeBuilder {
             } else {
                 child.setDataType(DataType.TEXT);
             }
+        child.setInUserDefined(isUserDefined);
+        if (addCache == 1) {
             this.metadata.addToIdCache(child);
-        } else {
-            Concept childCopy = new Concept(child, this.metadata);
-            childCopy.setDimCode(child.getDimCode());
-            child = childCopy;
         }
 
         return child;

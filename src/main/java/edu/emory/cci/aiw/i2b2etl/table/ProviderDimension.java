@@ -100,7 +100,8 @@ public class ProviderDimension {
         int counter = 0;
         int commitSize = 10000;
         int commitCounter = 0;
-        PreparedStatement ps = cn.prepareStatement("insert into PROVIDER_DIMENSION values (?,?,?,?,?,?,?,?,?)");
+        PreparedStatement ps = cn.prepareStatement("insert into PROVIDER_DIMENSION(provider_id,provider_path,name_char," +
+                "provider_blob,update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?)");
         try {
             for (ProviderDimension provider : providers) {
                 if (provider.concept.getI2B2Path() == null) {
