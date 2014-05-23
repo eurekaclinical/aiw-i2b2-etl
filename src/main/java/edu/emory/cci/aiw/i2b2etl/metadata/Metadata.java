@@ -564,7 +564,7 @@ public final class Metadata {
         return this.conceptCodeCache.contains(conceptCode);
     }
 
-    public String[] extractDerived(PropositionDefinition[] propDefs)
+    public String[] extractDerived()
             throws KnowledgeSourceReadException {
         Set<String> potentialDerivedConceptCodes = new HashSet<>();
 

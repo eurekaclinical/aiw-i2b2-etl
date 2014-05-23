@@ -355,26 +355,20 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void addPropositionFactHandlers() throws KnowledgeSourceReadException {
-        PropositionDefinition visitPropDef = knowledgeSource.readPropositionDefinition(visitPropId);
+        String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived();
         for (DataSection.DataSpec obx : this.obxSection.getAll()) {
-            PropositionDefinition[] propDefs;
             Link[] links;
             if (obx.referenceName != null) {
-                links = new Link[]{new Reference(obx.referenceName)};
-                ReferenceDefinition refDef = visitPropDef.referenceDefinition(obx.referenceName);
-                String[] propIds = refDef.getPropositionIds();
-                propDefs = new PropositionDefinition[propIds.length + 1];
-                propDefs[0] = visitPropDef;
-                for (int i = 1; i < propDefs.length; i++) {
-                    propDefs[i] = knowledgeSource.readPropositionDefinition(propIds[i - 1]);
-                    assert propDefs[i] != null : "Invalid proposition id " + propIds[i - 1];
-                }
+                links = new Link[]{new Reference(obx.referenceName, this.knowledgeSource)};
             } else {
                 links = null;
-                propDefs = new PropositionDefinition[]{visitPropDef};
             }
-            String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived(propDefs);
-            PropositionFactHandler propFactHandler = new PropositionFactHandler(links, obx.propertyName, obx.start, obx.finish, obx.units, potentialDerivedPropIdsArr, this.ontologyModel);
+            
+            PropositionFactHandler propFactHandler = 
+                    new PropositionFactHandler(links, obx.propertyName, 
+                            obx.start, obx.finish, obx.units, 
+                            potentialDerivedPropIdsArr, this.ontologyModel, 
+                            this.knowledgeSource);
             this.factHandlers.add(propFactHandler);
         }
     }
