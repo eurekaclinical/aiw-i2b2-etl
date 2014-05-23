@@ -62,6 +62,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
@@ -77,12 +78,11 @@ import org.protempa.dest.table.Link;
 import org.protempa.dest.table.Reference;
 
 /**
- *
  * @author Andrew Post
  */
 public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private static final String[] OBX_FACT_IDXS = new String[]{"FACT_NOLOB", "FACT_PATCON_DATE_PRVD_IDX", "FACT_CNPT_PAT_ENCT_IDX"};
-    
+
     private final Query query;
     private final KnowledgeSource knowledgeSource;
     private final File confFile;
@@ -104,7 +104,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final ConnectionSpec metadataConnectionSpec;
     private final String visitPropId;
     private Connection dataSchemaConnection;
-    
+
     /**
      * Creates a new query results handler that will use the provided
      * configuration file. This constructor, through the
@@ -112,16 +112,16 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * whether proposition ids to be returned from the Protempa processing run
      * should be inferred from the i2b2 configuration file.
      *
-     * @param confXML an i2b2 query results handler configuration file. Cannot
-     * be <code>null</code>.
+     * @param confXML                   an i2b2 query results handler configuration file. Cannot
+     *                                  be <code>null</code>.
      * @param inferPropositionIdsNeeded <code>true</code> if proposition ids to
-     * be returned from the Protempa processing run should include all of those
-     * specified in the i2b2 configuration file, <code>false</code> if the
-     * proposition ids returned should be only those specified in the Protempa
-     * {@link Query}.
+     *                                  be returned from the Protempa processing run should include all of those
+     *                                  specified in the i2b2 configuration file, <code>false</code> if the
+     *                                  proposition ids returned should be only those specified in the Protempa
+     *                                  {@link Query}.
      */
     I2b2QueryResultsHandler(Query query, KnowledgeSource knowledgeSource, File confXML,
-            boolean inferPropositionIdsNeeded) throws QueryResultsHandlerInitException {
+                            boolean inferPropositionIdsNeeded) throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
@@ -150,7 +150,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         } catch (InvalidConnectionSpecArguments ex) {
             throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
         }
-        
+
         this.patientLevelFakeVisits = new HashMap<>();
         this.providerFullNameSpec = this.obxSection.get(this.dictSection.get("providerFullName"));
         this.providerFirstNameSpec = this.obxSection.get(this.dictSection.get("providerFirstName"));
@@ -224,6 +224,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     public void finish() throws QueryResultsHandlerProcessingException {
         Logger logger = I2b2ETLUtil.logger();
         String queryId = this.query.getId();
+        String projectName = this.dictSection.get("projectName");
         logger.log(Level.INFO, "Done populating observation facts table for query {0}", queryId);
         try {
             for (FactHandler factHandler : this.factHandlers) {
@@ -239,11 +240,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
             logger.log(Level.FINE, "Populating patient dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
-                PatientDimension.insertAll(this.ontologyModel.getPatients(), conn);
+                PatientDimension.insertAll(this.ontologyModel.getPatients(),
+                        this.dataSchemaConnection,projectName);
             }
             logger.log(Level.FINE, "Populating visit dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
-                VisitDimension.insertAll(this.ontologyModel.getVisits(), conn);
+                VisitDimension.insertAll(this.ontologyModel.getVisits(),
+                        this.dataSchemaConnection,projectName);
             }
             logger.log(Level.FINE, "Inserting ages into observation fact table for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
@@ -288,7 +291,20 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void mostlyBuildOntology() throws OntologyBuildException {
         this.ontologyModel = new Metadata(knowledgeSource, collectUserPropositionDefinitions(), this.dictSection.get("rootNodeName"), this.conceptsSection.getFolderSpecs(), dictSection, this.obxSection);
+        setI2B2PathsToConcepts();
     }
+
+    private void setI2B2PathsToConcepts() {
+        Enumeration<Concept> emu = this.ontologyModel.getRoot().breadthFirstEnumeration();
+        while (emu.hasMoreElements()) {
+            Concept concept = emu.nextElement();
+            Concept conceptFromCache = this.ontologyModel.getFromIdCache(concept.getId());
+            if (conceptFromCache != null) {
+                conceptFromCache.setHierarchyPath(concept.getI2B2Path());
+            }
+        }
+    }
+
 
     private PropositionDefinition[] collectUserPropositionDefinitions() {
         PropositionDefinition[] allUserPropDefs = this.query.getPropositionDefinitions();
@@ -394,7 +410,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         try (Connection cn = openMetadataDatabaseConnection()) {
             logger.log(Level.FINE, "batch inserting on table {0}", tableName);
-            try (PreparedStatement ps = cn.prepareStatement("insert into " + tableName + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            try (PreparedStatement ps = cn.prepareStatement("insert into " + tableName + "(c_hlevel,c_fullname,c_name,c_synonym_cd,c_visualattributes,c_totalnum," +
+                    "c_basecode,c_metadataxml,c_facttablecolumn,c_tablename,c_columnname,c_columndatatype,c_operator,c_dimcode,c_comment,c_tooltip," +
+                    "update_date,download_Date,import_date,sourcesystem_cd,valuetype_cd,m_applied_path,m_exclusion_cd,c_path,c_symbol)" +
+                    " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
                 @SuppressWarnings(value = "unchecked")
                 Enumeration<Concept> emu = model.getRoot().depthFirstEnumeration();
                 /*
@@ -410,11 +429,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     assert concept.getDisplayName() != null && concept.getDisplayName().length() > 0 : "concept " + concept.getConceptCode() + " (" + concept.getI2B2Path() + ") " + " has an invalid display name '" + concept.getDisplayName() + "'";
                     ps.setString(3, concept.getDisplayName());
                     String conceptCode = concept.getConceptCode();
-                    if (conceptCodes.add(conceptCode)) {
-                        ps.setString(4, SynonymCode.NOT_SYNONYM.getCode());
-                    } else {
-                        ps.setString(4, SynonymCode.SYNONYM.getCode());
-                    }
+                    ps.setString(4, SynonymCode.NOT_SYNONYM.getCode());
                     ps.setString(5, concept.getCVisualAttributes());
                     ps.setObject(6, null);
                     ps.setString(7, conceptCode);
@@ -438,6 +453,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     ps.setTimestamp(19, importTimestamp);
                     ps.setString(20, MetadataUtil.toSourceSystemCode(concept.getSourceSystemCode()));
                     ps.setString(21, concept.getValueTypeCode().getCode());
+                    ps.setString(22, concept.getAppliedPath());
+                    ps.setString(23, null);
+                    ps.setString(24, null);
+                    ps.setString(25, null);
                     ps.addBatch();
                     ps.clearParameters();
                     counter++;
@@ -520,7 +539,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Disabling indices on observation_fact");
         try (Connection conn = openDataDatabaseConnection();
-                Statement stmt = conn.createStatement()) {
+             Statement stmt = conn.createStatement()) {
             for (String idx : OBX_FACT_IDXS) {
                 if (logger.isLoggable(Level.FINE)) {
                     logger.log(Level.FINE, "Disabling index: {0}", idx);
@@ -536,7 +555,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Enabling indices on observation_fact");
         try (Connection conn = openDataDatabaseConnection();
-                Statement stmt = conn.createStatement()) {
+             Statement stmt = conn.createStatement()) {
             for (String idx : OBX_FACT_IDXS) {
                 if (logger.isLoggable(Level.FINE)) {
                     logger.log(Level.FINE, "Enabling index: {0}", idx);
@@ -552,7 +571,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Gathering statistics on observation_fact");
         try (Connection conn = openDataDatabaseConnection();
-                CallableStatement stmt = conn.prepareCall("{call dbms_stats.gather_table_stats(?, ?)}")) {
+             CallableStatement stmt = conn.prepareCall("{call dbms_stats.gather_table_stats(?, ?)}")) {
             stmt.setString(1, this.databaseSection.get("dataschema").user);
             stmt.setString(2, "observation_fact");
             stmt.execute();

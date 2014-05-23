@@ -642,7 +642,7 @@ public final class Metadata {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.knowledgeSource,
                             folderSpec.propositions, folderSpec.conceptCodePrefix,
-                            folderSpec.valueType, this);
+                    folderSpec.valueType, this, folderSpec.userDefined);
             concepts = propProxy.build();
 
         } else {

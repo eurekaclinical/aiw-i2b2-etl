@@ -39,6 +39,7 @@ public final class ConceptsSection extends ConfigurationSection {
         public String property;
         public String conceptCodePrefix;
         public ValueTypeCode valueType;
+        public boolean userDefined;
     }
     private List<FolderSpec> folders = new ArrayList<>();
 
@@ -68,6 +69,7 @@ public final class ConceptsSection extends ConfigurationSection {
         } else {
             folderSpec.valueType = ValueTypeCode.UNSPECIFIED;
         }
+        folderSpec.userDefined = false;
         this.folders.add(folderSpec);
     }
 
