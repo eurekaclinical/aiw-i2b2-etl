@@ -241,12 +241,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             logger.log(Level.FINE, "Populating patient dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 PatientDimension.insertAll(this.ontologyModel.getPatients(),
-                        this.dataSchemaConnection,projectName);
+                        conn,projectName);
             }
             logger.log(Level.FINE, "Populating visit dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
-                        this.dataSchemaConnection,projectName);
+                        conn,projectName);
             }
             logger.log(Level.FINE, "Inserting ages into observation fact table for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
