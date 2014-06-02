@@ -21,7 +21,8 @@
     </properties>
     
     <scm>
-		<developerConnection>scm:git:ssh://git.cci.emory.edu/opt/git/aiw/aiw-i2b2-etl</developerConnection>
+		<developerConnection>scm:git:ssh://git.cci.emory.edu/opt/git/aiw/aiw-i2b2-etl.git</developerConnection>
+		<tag>HEAD</tag>
     </scm>
 
     <issueManagement>
