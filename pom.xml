@@ -21,9 +21,7 @@
     </properties>
     
     <scm>
-        <developerConnection>scm:svn:https://scm.cci.emory.edu/svn/aiw/trunk/aiw-i2b2-etl
-        </developerConnection>
-        <url>https://scm.cci.emory.edu/svn/aiw/trunk/aiw-i2b2-etl</url>
+		<developerConnection>scm:git:ssh://git.cci.emory.edu/opt/git/aiw/{projectName}</developerConnection>
     </scm>
 
     <issueManagement>
