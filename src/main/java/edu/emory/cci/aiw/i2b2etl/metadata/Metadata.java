@@ -273,7 +273,7 @@ public final class Metadata {
     
     private void extractSource(Set<String> sources, Proposition provider) {
         if (provider != null) {
-            sources.add(provider.getDataSourceType().getStringRepresentation());
+            sources.add(provider.getSourceSystem().getStringRepresentation());
         }
     }
 
@@ -438,7 +438,7 @@ public final class Metadata {
                             birthdate, null,
                             maritalStatus != null ? maritalStatus.getFormatted() : null,
                             race != null ? race.getFormatted() : null,
-                            prop.getDataSourceType().getStringRepresentation());
+                            prop.getSourceSystem().getStringRepresentation());
                     this.patientCache.put(keyId, patientDimension);
                     return patientDimension;
                 }
@@ -467,10 +467,21 @@ public final class Metadata {
         } else {
             encryptedIdStr = null;
         }
+        Date updateDate;
+        if (encounterProp != null) {
+            updateDate = encounterProp.getUpdateDate();
+            if (updateDate == null) {
+                updateDate = encounterProp.getCreateDate();
+            }
+        } else {
+            updateDate = null;
+        }
+
         VisitDimension vd = new VisitDimension(patientNum, encryptedPatientId,
                 visitStartDate, visitEndDate, encryptedIdStr,
-                encounterProp != null ? encounterProp.getDataSourceType().getStringRepresentation() : I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
-                encryptedPatientIdSourceSystem);
+                encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
+                encryptedPatientIdSourceSystem, 
+                encounterProp != null ? encounterProp.getDownloadDate() : null, updateDate);
         visitCache.put(vd.getEncounterNum(), vd);
         return vd;
     }

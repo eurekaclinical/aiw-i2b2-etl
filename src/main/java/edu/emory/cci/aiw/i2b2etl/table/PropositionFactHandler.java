@@ -153,14 +153,20 @@ public final class PropositionFactHandler extends FactHandler {
         Value value = handleValue(prop);
         ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
         String units = handleUnits(prop);
+        Date updateDate = prop.getUpdateDate();
+        if (updateDate == null) {
+            updateDate = prop.getCreateDate();
+        }
         ObservationFact derivedObx = new ObservationFact(
                 start, finish, patient,
                 visit, provider, concept,
                 value, valueFlagCode,
                 concept.getDisplayName(),
                 units,
-                prop.getDataSourceType().getStringRepresentation(),
-                start == null);
+                prop.getSourceSystem().getStringRepresentation(),
+                start == null,
+                prop.getDownloadDate(),
+                updateDate);
         concept.setInUse(true);
         return derivedObx;
     }

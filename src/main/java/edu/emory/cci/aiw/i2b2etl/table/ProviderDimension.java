@@ -65,7 +65,7 @@ public class ProviderDimension {
 	 * @param concept the i2b2 concept representing the provider
 	 * @param sourceSystem the source system where the provider came from
      */
-	public ProviderDimension(Concept concept, String sourceSystem) {
+    public ProviderDimension(Concept concept, String sourceSystem) {
         if (concept == null) {
             throw new IllegalArgumentException("concept cannot be null");
         }

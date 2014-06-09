@@ -20,6 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
+import java.util.Date;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.protempa.proposition.value.*;
 
@@ -66,6 +67,8 @@ public class ObservationFact {
     private final boolean rejected;
     private final int instanceNum;
     private final String modifierCd;
+    private Date updateDate;
+    private Date downloadDate;
 
     public ObservationFact(java.util.Date startDate, 
             java.util.Date finishDate,
@@ -75,7 +78,8 @@ public class ObservationFact {
             String displayName,
             String units,
             String sourceSystem,
-            boolean rejected) {
+            boolean rejected,
+            Date downloadDate, Date updateDate) {
         if (patient == null) {
             throw new IllegalArgumentException("patient cannot be null");
         }
@@ -105,6 +109,8 @@ public class ObservationFact {
         this.rejected = rejected;
         this.instanceNum = 1; //this is used in combination of modifier_CD. currently we do not use this feature hence assigning the default value.
         this.modifierCd = "@";  //using the default value since we do not use this i2b2 feature currently
+        this.downloadDate = downloadDate;
+        this.updateDate = updateDate;
     }
 
     public boolean isRejected() {
@@ -115,11 +121,11 @@ public class ObservationFact {
         return concept;
     }
 
-    public java.util.Date getStartDate() {
+    public Date getStartDate() {
         return startDate;
     }
 
-    public java.util.Date getEndDate() {
+    public Date getEndDate() {
         return endDate;
     }
 
@@ -162,7 +168,15 @@ public class ObservationFact {
     public String getModifierCd() {
         return this.modifierCd;
     }
+    
+    public Date getDownloadDate() {
+        return this.downloadDate;
+    }
 
+    public Date getUpdateDate() {
+        return updateDate;
+    }
+    
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);

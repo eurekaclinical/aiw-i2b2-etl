@@ -65,11 +65,14 @@ public class VisitDimension {
     private final String encryptedPatientId;
     private static final Logger logger = Logger.getLogger(VisitDimension.class.getName());
     private static final NumFactory NUM_FACTORY = new IncrNumFactory();
+    private final Date updateDate;
+    private final Date downloadDate;
 
     public VisitDimension(long patientNum, String encryptedPatientId,
             java.util.Date startDate, java.util.Date endDate,
             String encryptedVisitId, String visitSourceSystem,
-            String encryptedPatientIdSourceSystem) {
+            String encryptedPatientIdSourceSystem,
+            Date downloadDate, Date updateDate) {
         this.encounterNum = NUM_FACTORY.getInstance();
         this.encryptedVisitId = TableUtil.setStringAttribute(encryptedVisitId);
         this.patientNum = patientNum;
@@ -79,6 +82,8 @@ public class VisitDimension {
         this.visitSourceSystem = visitSourceSystem;
         this.encryptedPatientIdSourceSystem = encryptedPatientIdSourceSystem;
         this.activeStatus = ActiveStatusCode.getInstance(true, startDate, endDate);
+        this.downloadDate = downloadDate;
+        this.updateDate = updateDate;
     }
 
     public long getEncounterNum() {
@@ -89,6 +94,14 @@ public class VisitDimension {
         return NUM_FACTORY.getSourceSystem();
     }
 
+    public Date getUpdateDate() {
+        return updateDate;
+    }
+
+    public Date getDownloadDate() {
+        return downloadDate;
+    }
+    
     public static void insertAll(Collection<VisitDimension> visits, Connection cn, String projectName) throws SQLException {
         int batchSize = 500;
         int commitSize = 5000;
@@ -118,8 +131,8 @@ public class VisitDimension {
                     ps.setString(7, null);
                     ps.setString(8, null);
                     ps.setObject(9, null);
-                    ps.setDate(10, null);
-                    ps.setDate(11, null);
+                    ps.setTimestamp(10, TableUtil.setTimestampAttribute(visit.updateDate));
+                    ps.setTimestamp(11, TableUtil.setTimestampAttribute(visit.downloadDate));
                     ps.setTimestamp(12, importTimestamp);
                     ps.setString(13, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
                     ps.setObject(14, null);
