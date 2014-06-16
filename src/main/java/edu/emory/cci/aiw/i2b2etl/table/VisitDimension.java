@@ -65,14 +65,14 @@ public class VisitDimension {
     private final String encryptedPatientId;
     private static final Logger logger = Logger.getLogger(VisitDimension.class.getName());
     private static final NumFactory NUM_FACTORY = new IncrNumFactory();
-    private final Date updateDate;
-    private final Date downloadDate;
+    private final Timestamp updateDate;
+    private final Timestamp downloadDate;
 
     public VisitDimension(long patientNum, String encryptedPatientId,
             java.util.Date startDate, java.util.Date endDate,
             String encryptedVisitId, String visitSourceSystem,
             String encryptedPatientIdSourceSystem,
-            Date downloadDate, Date updateDate) {
+            java.util.Date downloadDate, java.util.Date updateDate) {
         this.encounterNum = NUM_FACTORY.getInstance();
         this.encryptedVisitId = TableUtil.setStringAttribute(encryptedVisitId);
         this.patientNum = patientNum;
@@ -82,8 +82,8 @@ public class VisitDimension {
         this.visitSourceSystem = visitSourceSystem;
         this.encryptedPatientIdSourceSystem = encryptedPatientIdSourceSystem;
         this.activeStatus = ActiveStatusCode.getInstance(true, startDate, endDate);
-        this.downloadDate = downloadDate;
-        this.updateDate = updateDate;
+        this.downloadDate = TableUtil.setTimestampAttribute(downloadDate);
+        this.updateDate = TableUtil.setTimestampAttribute(updateDate);
     }
 
     public long getEncounterNum() {
@@ -94,14 +94,6 @@ public class VisitDimension {
         return NUM_FACTORY.getSourceSystem();
     }
 
-    public Date getUpdateDate() {
-        return updateDate;
-    }
-
-    public Date getDownloadDate() {
-        return downloadDate;
-    }
-    
     public static void insertAll(Collection<VisitDimension> visits, Connection cn, String projectName) throws SQLException {
         int batchSize = 500;
         int commitSize = 5000;
