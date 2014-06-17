@@ -23,6 +23,7 @@ import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.ArrayList;
+import javax.swing.tree.TreeNode;
 
 public class UserObject {
 
@@ -45,7 +46,6 @@ public class UserObject {
     private String conceptCode;		//	concept_dimension.concept_cd   &&   ontology.c_basecode
     private DataType dataType;
     private ValueTypeCode valueTypeCode;
-    private boolean inUserDefined;
     //	ontology.c_fullname
     //		AND
     //	ontology.c_dimcode
@@ -183,7 +183,7 @@ public class UserObject {
     }
 
     public ConceptOperator getOperator() {
-        if ((isInDataSource() || isDerived()) && (!getInUserDefined())) {
+        if (isInDataSource() && !getDimCode().contains("_")) {
             return ConceptOperator.EQUAL;
         } else {
             return ConceptOperator.LIKE;
@@ -199,20 +199,31 @@ public class UserObject {
         this.dimCode = dimCode;
     }
     
+    public String getI2B2Path() {
+        TreeNode[] tna = this.concept.getPath();
+        StringBuilder path = new StringBuilder();
+        for (TreeNode tn : tna) {
+            path.append('\\');
+            path.append(((Concept) tn).getConceptCode());
+        }
+        path.append('\\');
+        return path.toString();
+    }
+    
     String getDimCode() {
-        return this.dimCode;
+        String result = this.dimCode;
+        if (result == null) {
+            result = getI2B2Path();
+        }
+        return result;
     }
 
-	public String getMetadataXml() {
-		return metadataXml;
-	}
+    public String getMetadataXml() {
+            return metadataXml;
+    }
 
-	public void setMetadataXml(String metadataXml) {
-		this.metadataXml = metadataXml;
-	}
-
-	boolean isCopy() {
-        return this.copy;
+    public void setMetadataXml(String metadataXml) {
+            this.metadataXml = metadataXml;
     }
 
     public ArrayList<String> getHierarchyPaths() {
@@ -232,11 +243,4 @@ public class UserObject {
         return this.appliedPath;
     }
 
-    public void setInUserDefined(boolean inUserDefined) {
-        this.inUserDefined = inUserDefined;
-    }
-
-    public boolean getInUserDefined() {
-        return this.inUserDefined;
-    }
 }

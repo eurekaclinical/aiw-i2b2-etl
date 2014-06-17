@@ -447,7 +447,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     ps.setString(13, concept.getOperator().getSQLOperator());
                     ps.setString(14, concept.getDimCode());
                     ps.setObject(15, null);
-                    ps.setString(16, null);
+                    ps.setString(16, concept.getDisplayName());
                     ps.setTimestamp(17, importTimestamp);
                     ps.setDate(18, null);
                     ps.setTimestamp(19, importTimestamp);

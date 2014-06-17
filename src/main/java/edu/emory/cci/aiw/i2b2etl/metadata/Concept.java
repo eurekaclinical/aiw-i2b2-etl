@@ -20,7 +20,6 @@
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
 import java.util.ArrayList;
 
 public final class Concept extends DefaultMutableTreeNode {
@@ -115,14 +114,7 @@ public final class Concept extends DefaultMutableTreeNode {
     }
 
     public String getI2B2Path() {
-        TreeNode[] tna = this.getPath();
-        StringBuilder path = new StringBuilder();
-        for (TreeNode tn : tna) {
-            path.append('\\');
-            path.append(((Concept) tn).getConceptCode());
-        }
-        path.append('\\');
-        return path.toString();
+        return usrObj.getI2B2Path();
     }
     
     public void setDimCode(String dimCode) {
@@ -130,11 +122,7 @@ public final class Concept extends DefaultMutableTreeNode {
     }
     
     public String getDimCode() {
-        String result = usrObj.getDimCode();
-        if (result == null) {
-            result = getI2B2Path();
-        }
-        return result;
+        return this.usrObj.getDimCode();
     }
 
     public String getCVisualAttributes() {
@@ -181,10 +169,6 @@ public final class Concept extends DefaultMutableTreeNode {
 		return usrObj.getMetadataXml();
 	}
     
-    public boolean isCopy() {
-        return usrObj.isCopy();
-    }
-
     @Override
     public String toString() {
         return getConceptCode();
@@ -202,11 +186,4 @@ public final class Concept extends DefaultMutableTreeNode {
         return usrObj.getAppliedPath();
     }
 
-    public void setInUserDefined(boolean inUserDefined) {
-        usrObj.setInUserDefined(inUserDefined);
-    }
-
-    public boolean getInUserDefined() {
-        return usrObj.getInUserDefined();
-    }
 }

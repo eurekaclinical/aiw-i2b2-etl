@@ -19,7 +19,6 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import org.protempa.AbstractionDefinition;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
@@ -35,11 +34,10 @@ final class PropositionConceptTreeBuilder {
     private final String conceptCode;
     private final Metadata metadata;
     private final ValueTypeCode valueTypeCode;
-    private final boolean isUserDefined;
 
     PropositionConceptTreeBuilder(KnowledgeSource knowledgeSource,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
-                                  Metadata metadata, boolean isUserDefined)
+                                  Metadata metadata)
             throws KnowledgeSourceReadException,
             UnknownPropositionDefinitionException {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
@@ -56,7 +54,6 @@ final class PropositionConceptTreeBuilder {
         this.conceptCode = conceptCode;
         this.metadata = metadata;
         this.valueTypeCode = valueTypeCode;
-        this.isUserDefined = isUserDefined;
     }
 
     Concept[] build() throws OntologyBuildException {
@@ -68,11 +65,7 @@ final class PropositionConceptTreeBuilder {
                         this.rootPropositionDefinitions[i];
                 Concept rootConcept =
                         addNode(rootPropositionDefinition);
-                if (!rootConcept.isDerived()) {
-                    String[] children =
-                            rootPropositionDefinition.getChildren();
-                    buildHelper(children, rootConcept);
-                }
+                buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
                 result[i] = rootConcept;
             }
             return result;
@@ -92,57 +85,41 @@ final class PropositionConceptTreeBuilder {
             if (parent != null) {
                 parent.add(child);
             }
-            /*if (child.isCopy()) {
-                parent.setDerived(true);
-                parent.removeAllChildren();
-                break;
-            }             */
-
-            if (!child.isDerived()) {
-                String[] grandChildrenPropIds = childPropDef.getChildren();
-                buildHelper(grandChildrenPropIds, child);
-            }
+            buildHelper(childPropDef.getInverseIsA(), child);
         }
     }
 
     private Concept addNode(PropositionDefinition propDef)
             throws InvalidConceptCodeException {
-        int addCache = 0;
         ConceptId conceptId =
                 ConceptId.getInstance(propDef.getId(), this.metadata);
-        Concept child = this.metadata.getFromIdCache(conceptId);
-        if (child == null) {
-            addCache = 1;
+        Concept newChild = new Concept(conceptId, this.conceptCode, this.metadata);
+        String[] children = propDef.getChildren();
+        String[] inverseIsAs = propDef.getInverseIsA();
+        newChild.setInDataSource(children.length == 0 //is a leaf
+                || inverseIsAs.length == 0 /* is abstracted */);
+        newChild.setDerived(children.length > inverseIsAs.length);
+        newChild.setDisplayName(propDef.getDisplayName());
+        newChild.setSourceSystemCode(
+                MetadataUtil.toSourceSystemCode(
+                propDef.getSourceId().getStringRepresentation()));
+        newChild.setValueTypeCode(this.valueTypeCode);
+        if (propDef instanceof PrimitiveParameterDefinition && 
+                children.length < 1) {
+            newChild.setMetadataXml("<ValueMetadata><Loinc>" + newChild
+                    .getConceptCode() + "</Loinc></ValueMetadata>");
         }
-            child = new Concept(conceptId, this.conceptCode, this.metadata);
-            child.setInDataSource(propDef.getInDataSource());
-            child.setDisplayName(propDef.getDisplayName());
-            child.setSourceSystemCode(
-                    MetadataUtil.toSourceSystemCode(
-                    propDef.getSourceId().getStringRepresentation()));
-            child.setValueTypeCode(this.valueTypeCode);
-            if (propDef instanceof AbstractionDefinition) {
-                child.setDerived(true);
-            }
-			if (propDef instanceof PrimitiveParameterDefinition && (null ==
-					propDef.getChildren() || propDef.getChildren().length <
-					1)) {
-				child.setMetadataXml("<ValueMetadata><Loinc>" + child
-						.getConceptCode() + "</Loinc></ValueMetadata>");
-			}
-            if (propDef instanceof ParameterDefinition) {
-                ValueType valueType =
-                        ((ParameterDefinition) propDef).getValueType();
-                child.setDataType(DataType.dataTypeFor(valueType));
-            } else {
-                child.setDataType(DataType.TEXT);
-            }
-        child.setInUserDefined(isUserDefined);
-        if (addCache == 1) {
-            this.metadata.addToIdCache(child);
+        if (propDef instanceof ParameterDefinition) {
+            ValueType valueType =
+                    ((ParameterDefinition) propDef).getValueType();
+            newChild.setDataType(DataType.dataTypeFor(valueType));
+        } else {
+            newChild.setDataType(DataType.TEXT);
         }
-
-        return child;
+        if (this.metadata.getFromIdCache(conceptId) == null) {
+            this.metadata.addToIdCache(newChild);
+        }
+        return newChild;
     }
 
     private PropositionDefinition readPropositionDefinition(String propId)
