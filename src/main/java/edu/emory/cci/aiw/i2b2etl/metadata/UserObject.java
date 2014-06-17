@@ -122,10 +122,21 @@ public class UserObject {
         this.displayName = displayName;
     }
 
+    /**
+     * Gets whether this concept should be queried with = or LIKE.
+     * @return <code>true</code> if this concept should be queried with 
+     * <code>=</code>, <code>false</code> if this concept should be queried
+     * with <code>LIKE</code>.
+     */
     public boolean isInDataSource() {
         return inDataSource;
     }
 
+    /**
+     * Sets whether this concept should be queried with = or LIKE.
+     * @param b <code>true</code> to query for this concept with <code>=</code>,
+     * <code>false</code> to query for it with <code>LIKE</code>.
+     */
     public void setInDataSource(boolean inDataSource) {
         this.inDataSource = inDataSource;
     }
@@ -182,6 +193,14 @@ public class UserObject {
         return this.valueTypeCode;
     }
 
+    /**
+     * Returns which operator will be used to query this concept (
+     * <code>EQUAL</code> or <code>LIKE</code>). To work around an i2b2 1.7 
+     * bug, we force concepts with a dimcode containing a <code>_</code> to be 
+     * queried with <code>LIKE</code>.
+     * 
+     * @return a concept operator.
+     */
     public ConceptOperator getOperator() {
         if (isInDataSource() && !getDimCode().contains("_")) {
             return ConceptOperator.EQUAL;

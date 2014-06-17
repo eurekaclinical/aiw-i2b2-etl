@@ -89,10 +89,21 @@ public final class Concept extends DefaultMutableTreeNode {
         usrObj.setDerived(derived);
     }
 
+    /**
+     * Gets whether this concept should be queried with = or LIKE.
+     * @return <code>true</code> if this concept should be queried with 
+     * <code>=</code>, <code>false</code> if this concept should be queried
+     * with <code>LIKE</code>.
+     */
     public boolean isInDataSource() {
         return usrObj.isInDataSource();
     }
 
+    /**
+     * Sets whether this concept should be queried with = or LIKE.
+     * @param b <code>true</code> to query for this concept with <code>=</code>,
+     * <code>false</code> to query for it with <code>LIKE</code>.
+     */
     public void setInDataSource(boolean b) {
         usrObj.setInDataSource(b);
     }
