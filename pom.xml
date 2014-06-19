@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.emory.cci</groupId>
     <artifactId>aiw-i2b2-etl</artifactId>
-    <version>1.0.6-SNAPSHOT</version>
+    <version>1.0.6</version>
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>AIW i2b2 ETL is a Protempa query results handler for loading data and abstractions into i2b2.</description>
@@ -22,7 +22,7 @@
     
     <scm>
 		<developerConnection>scm:git:ssh://git.cci.emory.edu/opt/git/aiw/aiw-i2b2-etl.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>1.0.6</tag>
     </scm>
 
     <issueManagement>
@@ -191,7 +191,7 @@
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-framework</artifactId>
-            <version>${protempa.version}</version>
+            <version>2.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -203,31 +203,31 @@
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-handler-test</artifactId>
-            <version>1.0.4-SNAPSHOT</version>
+            <version>1.0.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-bconfigs-commons-ini</artifactId>
-            <version>${protempa.version}</version>
+            <version>2.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-ksb-protege</artifactId>
-            <version>${protempa.version}</version>
+            <version>2.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-tsb-umls</artifactId>
-            <version>${protempa.version}</version>
+            <version>2.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-dsb-relationaldb</artifactId>
-            <version>${protempa.version}</version>
+            <version>2.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
