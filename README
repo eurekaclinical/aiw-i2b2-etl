@@ -10,6 +10,9 @@ Protempa into i2b2.
 
 WHAT'S NEW
 
+Version 1.0.6 requires Java 7. It also supports i2b2 version 1.7.  Also 
+adds capability to gather statistics on the destination data storage.
+
 Version 1.0.5 adds performance enahancements and bug fixes. It also populates
 the i2b2 XML metadata for concepts with values.
 
