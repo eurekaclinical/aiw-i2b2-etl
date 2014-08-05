@@ -477,6 +477,7 @@
                         <filtering>true</filtering>
                         <includes>
                             <include>conf.xml</include>
+                            <include>logging.properties</include>
                         </includes>
                     </testResource>
                     <testResource>

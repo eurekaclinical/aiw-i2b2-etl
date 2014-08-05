@@ -47,12 +47,7 @@ import org.protempa.dest.QueryResultsHandlerInitException;
 
 import java.io.File;
 import java.io.StringReader;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -184,11 +179,101 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             assembleFactHandlers();
             // disable indexes on observation_fact to speed up inserts
             disableObservationFactIndexes();
+            // create i2b2 temporary tables using stored procedures
+            createTempTables();
             this.dataSchemaConnection = openDataDatabaseConnection();
             logger.log(Level.INFO, "Populating observation facts table for query {0}", this.query.getId());
         } catch (KnowledgeSourceReadException | SQLException | OntologyBuildException | IllegalAccessException | InstantiationException ex) {
             throw new QueryResultsHandlerProcessingException("Error during i2b2 load", ex);
         }
+    }
+
+    private String tempPatientTableName() {
+        return "temp_patient_" + this.query.getId();
+    }
+
+    private String tempVisitTableName() {
+        return "temp_visit_" + this.query.getId();
+    }
+
+    private String tempProviderTableName() {
+        return "temp_provider_" + this.query.getId();
+    }
+
+    private String tempConceptTableName() {
+        return "temp_concept_" + this.query.getId();
+    }
+
+    private String tempObservationFactTableName() {
+        return "temp_observation_fact_" + this.query.getId();
+    }
+
+    /**
+     * Calls stored procedures in the i2b2 data schema to create temporary
+     * tables for patient, visit, provider, and concept dimension, and for
+     * observation fact tables. These are the tables that will be populated
+     * by the query results handler. At that point, more i2b2 stored procedures
+     * will be called to "upsert" the temporary data into the permanent tables.
+     *
+     * @throws SQLException if an error occurs while interacting with the database
+     */
+    private void createTempTables() throws SQLException {
+        I2b2ETLUtil.logger().log(Level.INFO, "Creating temporary tables");
+        final Connection conn = openDataDatabaseConnection();
+        // for all of the procedures, the first parameter is an IN parameter
+        // specifying the table name, and the second is an OUT paremeter
+        // that contains an error message
+        // create the patient table
+        CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PATIENT_TABLE(?, ?) }");
+        call.setString(1, tempPatientTableName());
+        call.registerOutParameter(2, Types.VARCHAR);
+        call.executeQuery();
+        // create the visit table
+        call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }");
+        call.setString(1, tempVisitTableName());
+        call.registerOutParameter(2, Types.VARCHAR);
+        call.executeQuery();
+        // create the provider table
+        call = conn.prepareCall("{ call CREATE_TEMP_PROVIDER_TABLE(?, ?) }");
+        call.setString(1, tempProviderTableName());
+        call.registerOutParameter(2, Types.VARCHAR);
+        call.executeQuery();
+        // create the concept table
+        call = conn.prepareCall("{ call CREATE_TEMP_CONCEPT_TABLE(?, ?) }");
+        call.setString(1, tempConceptTableName());
+        call.registerOutParameter(2, Types.VARCHAR);
+        call.executeQuery();
+        // create the observation fact table
+        call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }");
+        call.setString(1, tempObservationFactTableName());
+        call.registerOutParameter(2, Types.VARCHAR);
+        call.executeQuery();
+
+        I2b2ETLUtil.logger().log(Level.INFO, "Created temporary tables");
+    }
+
+    /**
+     * Calls stored procedures to drop all of the temp tables created.
+     *
+     * @throws SQLException if an error occurs while interacting with the database
+     */
+    private void dropTempTables() throws SQLException {
+        final Connection conn = openDataDatabaseConnection();
+        CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }");
+        call.setString(1, tempPatientTableName());
+        call.executeQuery();
+
+        call.setString(1, tempVisitTableName());
+        call.executeQuery();
+
+        call.setString(1, tempProviderTableName());
+        call.executeQuery();
+
+        call.setString(1, tempConceptTableName());
+        call.executeQuery();
+
+        call.setString(1, tempObservationFactTableName());
+        call.executeQuery();
     }
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException {
@@ -264,8 +349,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
+            dropTempTables();
             persistMetadata();
         } catch (OntologyBuildException | SQLException | InvalidConceptCodeException ex) {
+            logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, ex);
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + queryId, ex);
         } finally {
             if (this.dataSchemaConnection != null) {
