@@ -219,37 +219,38 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      */
     private void createTempTables() throws SQLException {
         I2b2ETLUtil.logger().log(Level.INFO, "Creating temporary tables");
-        final Connection conn = openDataDatabaseConnection();
-        // for all of the procedures, the first parameter is an IN parameter
-        // specifying the table name, and the second is an OUT paremeter
-        // that contains an error message
-        // create the patient table
-        CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PATIENT_TABLE(?, ?) }");
-        call.setString(1, tempPatientTableName());
-        call.registerOutParameter(2, Types.VARCHAR);
-        call.executeQuery();
-        // create the visit table
-        call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }");
-        call.setString(1, tempVisitTableName());
-        call.registerOutParameter(2, Types.VARCHAR);
-        call.executeQuery();
-        // create the provider table
-        call = conn.prepareCall("{ call CREATE_TEMP_PROVIDER_TABLE(?, ?) }");
-        call.setString(1, tempProviderTableName());
-        call.registerOutParameter(2, Types.VARCHAR);
-        call.executeQuery();
-        // create the concept table
-        call = conn.prepareCall("{ call CREATE_TEMP_CONCEPT_TABLE(?, ?) }");
-        call.setString(1, tempConceptTableName());
-        call.registerOutParameter(2, Types.VARCHAR);
-        call.executeQuery();
-        // create the observation fact table
-        call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }");
-        call.setString(1, tempObservationFactTableName());
-        call.registerOutParameter(2, Types.VARCHAR);
-        call.executeQuery();
+        try (final Connection conn = openDataDatabaseConnection()) {
+            // for all of the procedures, the first parameter is an IN parameter
+            // specifying the table name, and the second is an OUT paremeter
+            // that contains an error message
+            // create the patient table
+            CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PATIENT_TABLE(?, ?) }");
+            call.setString(1, tempPatientTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the visit table
+            call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }");
+            call.setString(1, tempVisitTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the provider table
+            call = conn.prepareCall("{ call CREATE_TEMP_PROVIDER_TABLE(?, ?) }");
+            call.setString(1, tempProviderTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the concept table
+            call = conn.prepareCall("{ call CREATE_TEMP_CONCEPT_TABLE(?, ?) }");
+            call.setString(1, tempConceptTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the observation fact table
+            call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }");
+            call.setString(1, tempObservationFactTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
 
-        I2b2ETLUtil.logger().log(Level.INFO, "Created temporary tables");
+            I2b2ETLUtil.logger().log(Level.INFO, "Created temporary tables");
+        }
     }
 
     /**
@@ -258,22 +259,23 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * @throws SQLException if an error occurs while interacting with the database
      */
     private void dropTempTables() throws SQLException {
-        final Connection conn = openDataDatabaseConnection();
-        CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }");
-        call.setString(1, tempPatientTableName());
-        call.executeQuery();
+        try (final Connection conn = openDataDatabaseConnection()) {
+            CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }");
+            call.setString(1, tempPatientTableName());
+            call.executeQuery();
 
-        call.setString(1, tempVisitTableName());
-        call.executeQuery();
+            call.setString(1, tempVisitTableName());
+            call.executeQuery();
 
-        call.setString(1, tempProviderTableName());
-        call.executeQuery();
+            call.setString(1, tempProviderTableName());
+            call.executeQuery();
 
-        call.setString(1, tempConceptTableName());
-        call.executeQuery();
+            call.setString(1, tempConceptTableName());
+            call.executeQuery();
 
-        call.setString(1, tempObservationFactTableName());
-        call.executeQuery();
+            call.setString(1, tempObservationFactTableName());
+            call.executeQuery();
+        }
     }
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException {
