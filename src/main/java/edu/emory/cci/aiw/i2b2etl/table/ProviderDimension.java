@@ -59,13 +59,15 @@ public class ProviderDimension {
     private final Concept concept;
     private final String sourceSystem;
 
+    public static final String TEMP_PROVIDER_TABLE = "temp_provider";
+
     /**
      * Constructs a provider dimension record.
-	 *
-	 * @param concept the i2b2 concept representing the provider
-	 * @param sourceSystem the source system where the provider came from
+     *
+     * @param concept the i2b2 concept representing the provider
+     * @param sourceSystem the source system where the provider came from
      */
-	public ProviderDimension(Concept concept, String sourceSystem) {
+    public ProviderDimension(Concept concept, String sourceSystem) {
         if (concept == null) {
             throw new IllegalArgumentException("concept cannot be null");
         }
@@ -100,7 +102,7 @@ public class ProviderDimension {
         int counter = 0;
         int commitSize = 10000;
         int commitCounter = 0;
-        PreparedStatement ps = cn.prepareStatement("insert into PROVIDER_DIMENSION(provider_id,provider_path,name_char," +
+        PreparedStatement ps = cn.prepareStatement("insert into " + TEMP_PROVIDER_TABLE + " (provider_id,provider_path,name_char," +
                 "provider_blob,update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?)");
         try {
             for (ProviderDimension provider : providers) {

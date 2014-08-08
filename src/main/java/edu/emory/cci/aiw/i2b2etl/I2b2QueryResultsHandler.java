@@ -197,7 +197,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private String tempProviderTableName() {
-        return "temp_provider_" + this.query.getId();
+        return ProviderDimension.TEMP_PROVIDER_TABLE;
     }
 
     private String tempConceptTableName() {
@@ -309,6 +309,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     @Override
     public void finish() throws QueryResultsHandlerProcessingException {
+        // upload_id for all the dimension table stored procedures
+        final int UPLOAD_ID = 0;
+
         Logger logger = I2b2ETLUtil.logger();
         String queryId = this.query.getId();
         String projectName = this.dictSection.get("projectName");
@@ -331,7 +334,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         conn,projectName);
                 CallableStatement call = conn.prepareCall("{ call INSERT_PATIENT_FROMTEMP(?, ?, ?) }");
                 call.setString(1, tempPatientTableName());
-                call.setInt(2, 0);
+                call.setInt(2, UPLOAD_ID);
                 call.registerOutParameter(3, Types.VARCHAR);
                 call.executeQuery();
                 logger.log(Level.INFO, "INSERT_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
@@ -342,7 +345,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         conn,projectName);
                 CallableStatement call = conn.prepareCall("{ call INSERT_ENCOUNTERVISIT_FROMTEMP(?, ?, ?) }");
                 call.setString(1, tempVisitTableName());
-                call.setInt(2, 0);
+                call.setInt(2, UPLOAD_ID);
                 call.registerOutParameter(3, Types.VARCHAR);
                 call.executeQuery();
                 logger.log(Level.INFO, "INSERT_ENCOUNTERVISIT_FROMTEMP errmsg: {0}", call.getString(3));
@@ -355,6 +358,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             logger.log(Level.FINE, "Populating provider dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 ProviderDimension.insertAll(this.ontologyModel.getProviders(), conn);
+                CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }");
+                call.setString(1, tempProviderTableName());
+                call.setInt(2, UPLOAD_ID);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
             }
             // flush hot concepts out of the tree. persist Concepts.
             logger.log(Level.FINE, "Populating concept dimension for query {0}", this.query.getId());
