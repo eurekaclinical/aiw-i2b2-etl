@@ -189,11 +189,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private String tempPatientTableName() {
-        return "temp_patient_" + this.query.getId();
+        return PatientDimension.TEMP_PATIENT_TABLE;
     }
 
     private String tempVisitTableName() {
-        return "temp_visit_" + this.query.getId();
+        return VisitDimension.TEMP_VISIT_TABLE;
     }
 
     private String tempProviderTableName() {
@@ -329,11 +329,23 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try (Connection conn = openDataDatabaseConnection()) {
                 PatientDimension.insertAll(this.ontologyModel.getPatients(),
                         conn,projectName);
+                CallableStatement call = conn.prepareCall("{ call INSERT_PATIENT_FROMTEMP(?, ?, ?) }");
+                call.setString(1, tempPatientTableName());
+                call.setInt(2, 0);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "INSERT_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
             }
             logger.log(Level.FINE, "Populating visit dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
                         conn,projectName);
+                CallableStatement call = conn.prepareCall("{ call INSERT_ENCOUNTERVISIT_FROMTEMP(?, ?, ?) }");
+                call.setString(1, tempVisitTableName());
+                call.setInt(2, 0);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "INSERT_ENCOUNTERVISIT_FROMTEMP errmsg: {0}", call.getString(3));
             }
             logger.log(Level.FINE, "Inserting ages into observation fact table for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
@@ -351,7 +363,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
-            dropTempTables();
+//            dropTempTables();
             persistMetadata();
         } catch (OntologyBuildException | SQLException | InvalidConceptCodeException ex) {
             logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, ex);

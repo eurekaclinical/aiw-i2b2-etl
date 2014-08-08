@@ -92,6 +92,8 @@ public class PatientDimension {
     private static final NumFactory NUM_FACTORY = new IncrNumFactory();
     private static final Logger logger = Logger.getLogger(PatientDimension.class.getName());
 
+    public static final String TEMP_PATIENT_TABLE = "temp_patient";
+
     public PatientDimension(String encryptedPatientId, String zipCode,
             Long ageInYears,
             String gender, String language, String religion,
@@ -201,9 +203,9 @@ public class PatientDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into PATIENT_DIMENSION(patient_num,vital_status_cd,birth_date,death_date,sex_cd," +
-                    "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,income_cd,patient_blob,update_date," +
-                    "download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into " + TEMP_PATIENT_TABLE + "(patient_num,vital_status_cd,birth_date,death_date,sex_cd," +
+                    "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,patient_blob,update_date," +
+                    "download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             ps2 = cn.prepareStatement("insert into PATIENT_MAPPING(patient_ide,patient_ide_source,patient_num,patient_ide_status,project_id,upload_date," +
                     "update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?,?,?)");
             for (PatientDimension patient : patients) {
@@ -220,13 +222,11 @@ public class PatientDimension {
                     ps.setString(10, patient.religion);
                     ps.setString(11, patient.zip);
                     ps.setString(12, null);
-                    ps.setString(13, null);
-                    ps.setObject(14, null);
+                    ps.setObject(13, null);
+                    ps.setTimestamp(14, null);
                     ps.setTimestamp(15, null);
-                    ps.setTimestamp(16, null);
-                    ps.setTimestamp(17, importTimestamp);
-                    ps.setString(18, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
-                    ps.setObject(19, null);
+                    ps.setTimestamp(16, importTimestamp);
+                    ps.setString(17, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
                     ps.addBatch();
                     ps.clearParameters();
 

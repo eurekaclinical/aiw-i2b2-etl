@@ -66,6 +66,8 @@ public class VisitDimension {
     private static final Logger logger = Logger.getLogger(VisitDimension.class.getName());
     private static final NumFactory NUM_FACTORY = new IncrNumFactory();
 
+    public static final String TEMP_VISIT_TABLE = "temp_visit";
+
     public VisitDimension(long patientNum, String encryptedPatientId,
             java.util.Date startDate, java.util.Date endDate,
             String encryptedVisitId, String visitSourceSystem,
@@ -100,30 +102,44 @@ public class VisitDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into VISIT_DIMENSION(encounter_num," +
-                    "patient_num,active_status_cd,start_date,end_date,inout_cd,location_cd,location_path,visit_blob," +
-                    "update_date,download_date,import_date,sourcesystem_cd,upload_id,length_of_stay) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into " + TEMP_VISIT_TABLE + "(encounter_id, encounter_id_source," +
+                    "patient_id, patient_id_source, encounter_num, inout_cd, location_cd, location_path, start_date, end_date, " +
+                    "visit_blob, update_date, download_date, import_date, sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             ps2 = cn.prepareStatement("insert into ENCOUNTER_MAPPING(encounter_ide,encounter_ide_source,encounter_num,patient_ide," +
                     "patient_ide_source,encounter_ide_status,update_date,upload_date,download_date,import_date,sourcesystem_cd,upload_id,project_id)" +
                     " values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             for (VisitDimension visit : visits) {
                 try {
-                    ps.setLong(1, visit.encounterNum);
-                    ps.setLong(2, visit.patientNum);
-                    ps.setString(3, visit.activeStatus.getCode());
-                    ps.setDate(4, visit.startDate);
-                    ps.setDate(5, visit.endDate);
+                    ps.setString(1, visit.encryptedVisitId);
+                    ps.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                    ps.setString(3, String.valueOf(visit.encryptedPatientId));
+                    ps.setString(4, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
+                    ps.setLong(5, visit.encounterNum);
                     ps.setString(6, null);
                     ps.setString(7, null);
                     ps.setString(8, null);
-                    ps.setObject(9, null);
-                    ps.setDate(10, null);
-                    ps.setDate(11, null);
-                    ps.setTimestamp(12, importTimestamp);
-                    ps.setString(13, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
-                    ps.setObject(14, null);
-                    ps.setObject(15, null);
+                    ps.setDate(9, visit.startDate);
+                    ps.setDate(10, visit.endDate);
+                    ps.setObject(11, null);
+                    ps.setDate(12, null);
+                    ps.setDate(13, null);
+                    ps.setDate(14, new java.sql.Date(importTimestamp.getTime()));
+                    ps.setString(15, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
+//                    ps.setLong(2, visit.patientNum);
+//                    ps.setString(3, visit.activeStatus.getCode());
+//                    ps.setDate(2, visit.startDate);
+//                    ps.setDate(3, visit.endDate);
+//                    ps.setString(4, null);
+//                    ps.setString(5, null);
+//                    ps.setString(6, null);
+//                    ps.setObject(7, null);
+//                    ps.setDate(8, null);
+//                    ps.setDate(9, null);
+//                    ps.setTimestamp(10, importTimestamp);
+//                    ps.setString(11, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
+//                    ps.setObject(14, null);
+//                    ps.setObject(15, null);
                     ps.addBatch();
                     ps.clearParameters();
 
