@@ -57,6 +57,7 @@ public class ConceptDimension {
 
     
     private static final Logger logger = Logger.getLogger(ConceptDimension.class.getName());
+    public static final String TEMP_CONCEPT_TABLE = "temp_concept";
 
     public static void insertAll(Concept root, Connection cn) throws SQLException, InvalidConceptCodeException {
 
@@ -66,8 +67,8 @@ public class ConceptDimension {
         int commitCounter = 0;
         PreparedStatement ps = null;
         try {
-            ps = cn.prepareStatement("insert into CONCEPT_DIMENSION(concept_cd,concept_path,name_char,concept_blob," +
-                    "update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into " + TEMP_CONCEPT_TABLE + " (concept_cd,concept_path,name_char,concept_blob," +
+                    "update_date,download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?)");
             @SuppressWarnings("unchecked")
             Enumeration<Concept> emu = root.breadthFirstEnumeration();
             Timestamp importTimestamp = 
@@ -88,7 +89,7 @@ public class ConceptDimension {
                             ps.setTimestamp(6, null);
                             ps.setTimestamp(7, importTimestamp);
                             ps.setString(8, concept.getSourceSystemCode());
-                            ps.setObject(9, null);
+//                            ps.setObject(9, null);
                             logger.log(Level.FINEST, "DB_CD_INSERT {0}", concept);
                             counter++;
                             commitCounter++;
@@ -114,7 +115,7 @@ public class ConceptDimension {
                         ps.setTimestamp(6, null);
                         ps.setTimestamp(7, importTimestamp);
                         ps.setString(8, concept.getSourceSystemCode());
-                        ps.setObject(9, null);
+//                        ps.setObject(9, null);
                         logger.log(Level.FINEST, "DB_CD_INSERT {0}", concept);
                         counter++;
                         commitCounter++;

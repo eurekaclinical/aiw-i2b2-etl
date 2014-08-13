@@ -87,6 +87,10 @@ public class VisitDimension {
         return this.encounterNum;
     }
 
+    public String getEncryptedVisitId() {
+        return this.encryptedVisitId;
+    }
+
     public String getEncryptedVisitIdSourceSystem() {
         return NUM_FACTORY.getSourceSystem();
     }

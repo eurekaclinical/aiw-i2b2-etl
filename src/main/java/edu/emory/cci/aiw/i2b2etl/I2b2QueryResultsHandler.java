@@ -35,19 +35,39 @@ import edu.emory.cci.aiw.i2b2etl.metadata.SynonymCode;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimension;
 import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
+import edu.emory.cci.aiw.i2b2etl.table.ObservationFact;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.PropositionFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
+import org.apache.commons.lang3.ArrayUtils;
+import org.arp.javautil.sql.ConnectionSpec;
+import org.arp.javautil.sql.DatabaseAPI;
+import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSource;
-import org.protempa.query.Query;
+import org.protempa.KnowledgeSourceReadException;
+import org.protempa.PropositionDefinition;
+import org.protempa.ReferenceDefinition;
 import org.protempa.dest.AbstractQueryResultsHandler;
 import org.protempa.dest.QueryResultsHandlerInitException;
+import org.protempa.dest.QueryResultsHandlerProcessingException;
+import org.protempa.dest.table.Link;
+import org.protempa.dest.table.Reference;
+import org.protempa.proposition.Proposition;
+import org.protempa.proposition.TemporalProposition;
+import org.protempa.proposition.UniqueId;
+import org.protempa.query.Query;
 
 import java.io.File;
 import java.io.StringReader;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -57,20 +77,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.arp.javautil.sql.ConnectionSpec;
-import org.arp.javautil.sql.DatabaseAPI;
-import org.arp.javautil.sql.InvalidConnectionSpecArguments;
-import org.protempa.KnowledgeSourceReadException;
-import org.protempa.PropositionDefinition;
-import org.protempa.ReferenceDefinition;
-import org.protempa.proposition.Proposition;
-import org.protempa.proposition.TemporalProposition;
-import org.protempa.proposition.UniqueId;
-import org.protempa.dest.QueryResultsHandlerProcessingException;
-import org.protempa.dest.table.Link;
-import org.protempa.dest.table.Reference;
 
 /**
  * @author Andrew Post
@@ -201,11 +207,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private String tempConceptTableName() {
-        return "temp_concept_" + this.query.getId();
+        return ConceptDimension.TEMP_CONCEPT_TABLE;
     }
 
     private String tempObservationFactTableName() {
-        return "temp_observation_fact_" + this.query.getId();
+        return ObservationFact.TEMP_OBSERVATION_TABLE;
     }
 
     /**
@@ -322,6 +328,18 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
+
+            try (Connection conn = openDataDatabaseConnection()) {
+                logger.log(Level.INFO, "Populating observation_fact from temporary table");
+                CallableStatement call = conn.prepareCall("{ call UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }");
+                call.setString(1, tempObservationFactTableName());
+                call.setLong(2, UPLOAD_ID);
+                call.setLong(3, 1); // appendFlag
+                call.registerOutParameter(4, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "UPDATE_OBSERVATION_FACT errmsg: {0}", call.getString(4));
+            }
+
             // re-enable the indexes now that we're done populating the table
             enableObservationFactIndexes();
             gatherStatisticsOnObservationFact();
@@ -369,6 +387,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             logger.log(Level.FINE, "Populating concept dimension for query {0}", this.query.getId());
             try (Connection conn = openDataDatabaseConnection()) {
                 ConceptDimension.insertAll(this.ontologyModel.getRoot(), conn);
+                CallableStatement call = conn.prepareCall("{ call INSERT_CONCEPT_FROMTEMP(?, ?, ?) }");
+                call.setString(1, tempConceptTableName());
+                call.setInt(2, UPLOAD_ID);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "INSERT_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
             }
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
