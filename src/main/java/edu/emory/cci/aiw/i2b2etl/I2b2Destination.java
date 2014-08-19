@@ -21,13 +21,14 @@ package edu.emory.cci.aiw.i2b2etl;
  */
 
 import java.io.File;
+import org.protempa.DataSource;
 import org.protempa.KnowledgeSource;
-import org.protempa.query.Query;
 import org.protempa.dest.AbstractDestination;
 import org.protempa.dest.QueryResultsHandler;
 import org.protempa.dest.QueryResultsHandlerInitException;
 import org.protempa.dest.Statistics;
 import org.protempa.dest.StatisticsException;
+import org.protempa.query.Query;
 
 /**
  *
@@ -74,7 +75,7 @@ public final class I2b2Destination extends AbstractDestination {
     }
 
     @Override
-    public QueryResultsHandler getQueryResultsHandler(Query query, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
+    public QueryResultsHandler getQueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
        return new I2b2QueryResultsHandler(query, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded);
     }
 
