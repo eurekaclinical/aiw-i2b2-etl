@@ -331,7 +331,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
             try (Connection conn = openDataDatabaseConnection()) {
                 logger.log(Level.INFO, "Populating observation_fact from temporary table");
-                CallableStatement call = conn.prepareCall("{ call UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }");
+                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }");
                 call.setString(1, tempObservationFactTableName());
                 call.setLong(2, UPLOAD_ID);
                 call.setLong(3, 1); // appendFlag
@@ -361,7 +361,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
                         conn,projectName);
-                CallableStatement call = conn.prepareCall("{ call INSERT_ENCOUNTERVISIT_FROMTEMP(?, ?, ?) }");
+                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROM_TEMP(?, ?, ?) }");
                 call.setString(1, tempVisitTableName());
                 call.setInt(2, UPLOAD_ID);
                 call.registerOutParameter(3, Types.VARCHAR);
