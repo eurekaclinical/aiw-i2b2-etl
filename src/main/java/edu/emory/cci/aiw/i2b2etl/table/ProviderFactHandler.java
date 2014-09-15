@@ -69,7 +69,8 @@ public final class ProviderFactHandler extends FactHandler {
                 concept.getDisplayName(),
                 null,
                 provider.getSourceSystem(),
-                start == null);
+                start == null,
+                null, null);
         concept.setInUse(true);
         return derivedObx;
     }

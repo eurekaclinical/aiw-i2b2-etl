@@ -191,7 +191,7 @@
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-framework</artifactId>
-            <version>2.3</version>
+            <version>2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -203,31 +203,31 @@
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-handler-test</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.5-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-bconfigs-commons-ini</artifactId>
-            <version>2.3</version>
+            <version>2.4-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-ksb-protege</artifactId>
-            <version>2.3</version>
+            <version>2.4-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-tsb-umls</artifactId>
-            <version>2.3</version>
+            <version>2.4-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
             <artifactId>protempa-dsb-relationaldb</artifactId>
-            <version>2.3</version>
+            <version>2.4-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -485,6 +485,8 @@
                         <filtering>false</filtering>
                         <includes>
                             <include>get-proposition-ids-needed-test-file</include>
+                            <include>sample-one.xlsx</include>
+                            <include>sample-new.xlsx</include>
                         </includes>
                     </testResource>
                 </testResources>

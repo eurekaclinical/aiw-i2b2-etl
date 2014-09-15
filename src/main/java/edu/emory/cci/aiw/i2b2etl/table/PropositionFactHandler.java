@@ -48,8 +48,8 @@ public final class PropositionFactHandler extends FactHandler {
     private final Link[] derivationLinks;
 
     public PropositionFactHandler(Link[] links, String propertyName, String start,
-                                  String finish, String unitsPropertyName,
-                                  String[] potentialDerivedPropIds, Metadata metadata) {
+            String finish, String unitsPropertyName,
+            String[] potentialDerivedPropIds, Metadata metadata, KnowledgeSource knowledgeSource) throws KnowledgeSourceReadException {
         super(propertyName, start, finish, unitsPropertyName);
         if (metadata == null) {
             throw new IllegalArgumentException("metadata cannot be null");
@@ -62,8 +62,8 @@ public final class PropositionFactHandler extends FactHandler {
             potentialDerivedPropIds = StringUtils.EMPTY_STRING_ARRAY;
         }
         this.derivationLinks = new Link[]{
-                new Derivation(potentialDerivedPropIds,
-                        Derivation.Behavior.MULT_FORWARD)
+            new Derivation(potentialDerivedPropIds,
+            Derivation.Behavior.MULT_FORWARD, knowledgeSource)
         };
     }
 
@@ -153,14 +153,20 @@ public final class PropositionFactHandler extends FactHandler {
         Value value = handleValue(prop);
         ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
         String units = handleUnits(prop);
+        Date updateDate = prop.getUpdateDate();
+        if (updateDate == null) {
+            updateDate = prop.getCreateDate();
+        }
         ObservationFact derivedObx = new ObservationFact(
                 start, finish, patient,
                 visit, provider, concept,
                 value, valueFlagCode,
                 concept.getDisplayName(),
                 units,
-                prop.getDataSourceType().getStringRepresentation(),
-                start == null);
+                prop.getSourceSystem().getStringRepresentation(),
+                start == null,
+                prop.getDownloadDate(),
+                updateDate);
         concept.setInUse(true);
         return derivedObx;
     }

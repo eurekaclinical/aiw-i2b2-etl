@@ -198,8 +198,16 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         return PatientDimension.TEMP_PATIENT_TABLE;
     }
 
+    private String tempPatientMappingTableName() {
+        return PatientDimension.TEMP_PATIENT_MAPPING_TABLE;
+    }
+
     private String tempVisitTableName() {
         return VisitDimension.TEMP_VISIT_TABLE;
+    }
+
+    private String tempEncounterMappingTableName() {
+        return VisitDimension.TEMP_ENC_MAPPING_TABLE;
     }
 
     private String tempProviderTableName() {
@@ -234,9 +242,19 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             call.setString(1, tempPatientTableName());
             call.registerOutParameter(2, Types.VARCHAR);
             call.executeQuery();
+            // create the patient mapping table
+            call = conn.prepareCall("{ call CREATE_TEMP_PID_TABLE(?, ?) }");
+            call.setString(1, tempPatientMappingTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
             // create the visit table
             call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }");
             call.setString(1, tempVisitTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the encounter mapping table
+            call = conn.prepareCall("{ call CREATE_TEMP_EID_TABLE(?, ?) }");
+            call.setString(1, tempEncounterMappingTableName());
             call.registerOutParameter(2, Types.VARCHAR);
             call.executeQuery();
             // create the provider table
@@ -301,7 +319,18 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         pd = this.ontologyModel.addPatient(keyId, prop, this.dictSection, this.obxSection, references);
                         this.patientLevelFakeVisits.put(pd.getPatientNum(), this.ontologyModel.addVisit(pd.getPatientNum(), pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), null, this.dictSection, this.obxSection, null));
                     }
-                    ProviderDimension provider = this.ontologyModel.addProviderIfNeeded(prop, this.providerFullNameSpec.referenceName, this.providerFullNameSpec.propertyName, this.providerFirstNameSpec.referenceName, this.providerFirstNameSpec.propertyName, this.providerMiddleNameSpec.referenceName, this.providerMiddleNameSpec.propertyName, this.providerLastNameSpec.referenceName, this.providerLastNameSpec.propertyName, references);
+                    ProviderDimension provider = 
+                            this.ontologyModel.addProviderIfNeeded(
+                                    prop, 
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.referenceName : null, 
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.propertyName : null, 
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.referenceName : null, 
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.propertyName : null, 
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.referenceName : null, 
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.propertyName : null, 
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null, 
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null, 
+                                    references);
                     VisitDimension vd = this.ontologyModel.addVisit(pd.getPatientNum(), pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references);
                     for (FactHandler factHandler : this.factHandlers) {
                         factHandler.handleRecord(pd, vd, provider, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions, this.dataSchemaConnection);
@@ -321,7 +350,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         String queryId = this.query.getId();
         String projectName = this.dictSection.get("projectName");
-        logger.log(Level.INFO, "Done populating observation facts table for query {0}", queryId);
+
         try {
             for (FactHandler factHandler : this.factHandlers) {
                 factHandler.clearOut(this.dataSchemaConnection);
@@ -329,27 +358,21 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
 
-            try (Connection conn = openDataDatabaseConnection()) {
-                logger.log(Level.INFO, "Populating observation_fact from temporary table");
-                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }");
-                call.setString(1, tempObservationFactTableName());
-                call.setLong(2, UPLOAD_ID);
-                call.setLong(3, 1); // appendFlag
-                call.registerOutParameter(4, Types.VARCHAR);
-                call.executeQuery();
-                logger.log(Level.INFO, "UPDATE_OBSERVATION_FACT errmsg: {0}", call.getString(4));
-            }
-
-            // re-enable the indexes now that we're done populating the table
-            enableObservationFactIndexes();
-            gatherStatisticsOnObservationFact();
             this.ontologyModel.buildProviderHierarchy();
             // persist Patients & Visits.
             logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
-            logger.log(Level.FINE, "Populating patient dimension for query {0}", queryId);
+            logger.log(Level.INFO, "Populating patient dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 PatientDimension.insertAll(this.ontologyModel.getPatients(),
                         conn,projectName);
+
+                CallableStatement mappingCall = conn.prepareCall("{ call INSERT_PID_MAP_FROMTEMP(?, ?, ?) }");
+                mappingCall.setString(1, tempPatientMappingTableName());
+                mappingCall.setInt(2, UPLOAD_ID);
+                mappingCall.registerOutParameter(3, Types.VARCHAR);
+                mappingCall.executeQuery();
+                logger.log(Level.INFO, "INSERT_PID_MAP_FROMTTEMP errmsg: {0}", mappingCall.getString(3));
+
                 CallableStatement call = conn.prepareCall("{ call INSERT_PATIENT_FROMTEMP(?, ?, ?) }");
                 call.setString(1, tempPatientTableName());
                 call.setInt(2, UPLOAD_ID);
@@ -357,23 +380,30 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 call.executeQuery();
                 logger.log(Level.INFO, "INSERT_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
             }
-            logger.log(Level.FINE, "Populating visit dimension for query {0}", queryId);
+            logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
                         conn,projectName);
+                CallableStatement mappingCall = conn.prepareCall("{ call INSERT_EID_MAP_FROMTEMP(?, ?, ?) }");
+                mappingCall.setString(1, tempEncounterMappingTableName());
+                mappingCall.setInt(2, UPLOAD_ID);
+                mappingCall.registerOutParameter(3, Types.VARCHAR);
+                mappingCall.executeQuery();
+                logger.log(Level.INFO, "INSERT_EID_MAP_FROMTEMP errmsg: {0}", mappingCall.getString(3));
+
                 CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROM_TEMP(?, ?, ?) }");
                 call.setString(1, tempVisitTableName());
                 call.setInt(2, UPLOAD_ID);
                 call.registerOutParameter(3, Types.VARCHAR);
                 call.executeQuery();
-                logger.log(Level.INFO, "INSERT_ENCOUNTERVISIT_FROMTEMP errmsg: {0}", call.getString(3));
+                logger.log(Level.INFO, "EUREKA.EK_INS_ENC_VISIT_FROM_TEMP errmsg: {0}", call.getString(3));
             }
-            logger.log(Level.FINE, "Inserting ages into observation fact table for query {0}", queryId);
+            logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 PatientDimension.insertAges(this.ontologyModel.getPatients(), conn, this.dictSection.get("ageConceptCodePrefix"), patientLevelFakeVisits);
             }
             // find Provider root. gather its leaf nodes. persist Providers.
-            logger.log(Level.FINE, "Populating provider dimension for query {0}", queryId);
+            logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 ProviderDimension.insertAll(this.ontologyModel.getProviders(), conn);
                 CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }");
@@ -384,7 +414,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
             }
             // flush hot concepts out of the tree. persist Concepts.
-            logger.log(Level.FINE, "Populating concept dimension for query {0}", this.query.getId());
+            logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
             try (Connection conn = openDataDatabaseConnection()) {
                 ConceptDimension.insertAll(this.ontologyModel.getRoot(), conn);
                 CallableStatement call = conn.prepareCall("{ call INSERT_CONCEPT_FROMTEMP(?, ?, ?) }");
@@ -395,6 +425,21 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 logger.log(Level.INFO, "INSERT_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
             }
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
+
+            try (Connection conn = openDataDatabaseConnection()) {
+                logger.log(Level.INFO, "Populating observation_fact from temporary table");
+                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }");
+                call.setString(1, tempObservationFactTableName());
+                call.setLong(2, UPLOAD_ID);
+                call.setLong(3, 1); // appendFlag
+                call.registerOutParameter(4, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "EUREKA.EK_UPDATE_OBSERVATION_FACT errmsg: {0}", call.getString(4));
+            }
+
+            // re-enable the indexes now that we're done populating the table
+            enableObservationFactIndexes();
+            gatherStatisticsOnObservationFact();
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
 //            dropTempTables();
             persistMetadata();
@@ -478,26 +523,20 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void addPropositionFactHandlers() throws KnowledgeSourceReadException {
-        PropositionDefinition visitPropDef = knowledgeSource.readPropositionDefinition(visitPropId);
+        String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived();
         for (DataSection.DataSpec obx : this.obxSection.getAll()) {
-            PropositionDefinition[] propDefs;
             Link[] links;
             if (obx.referenceName != null) {
-                links = new Link[]{new Reference(obx.referenceName)};
-                ReferenceDefinition refDef = visitPropDef.referenceDefinition(obx.referenceName);
-                String[] propIds = refDef.getPropositionIds();
-                propDefs = new PropositionDefinition[propIds.length + 1];
-                propDefs[0] = visitPropDef;
-                for (int i = 1; i < propDefs.length; i++) {
-                    propDefs[i] = knowledgeSource.readPropositionDefinition(propIds[i - 1]);
-                    assert propDefs[i] != null : "Invalid proposition id " + propIds[i - 1];
-                }
+                links = new Link[]{new Reference(obx.referenceName, this.knowledgeSource)};
             } else {
                 links = null;
-                propDefs = new PropositionDefinition[]{visitPropDef};
             }
-            String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived(propDefs);
-            PropositionFactHandler propFactHandler = new PropositionFactHandler(links, obx.propertyName, obx.start, obx.finish, obx.units, potentialDerivedPropIdsArr, this.ontologyModel);
+            
+            PropositionFactHandler propFactHandler = 
+                    new PropositionFactHandler(links, obx.propertyName, 
+                            obx.start, obx.finish, obx.units, 
+                            potentialDerivedPropIdsArr, this.ontologyModel, 
+                            this.knowledgeSource);
             this.factHandlers.add(propFactHandler);
         }
     }

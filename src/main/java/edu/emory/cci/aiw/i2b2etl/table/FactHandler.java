@@ -119,7 +119,7 @@ public abstract class FactHandler {
     protected final void insert(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
         Logger logger = TableUtil.logger();
         if (obx.isRejected()) {
-            logger.log(Level.WARNING, "Rejected fact {0}", obx);
+            //logger.log(Level.WARNING, "Rejected fact {0}", obx);
         } else {
             try {
                 setParameters(cn, obx);

@@ -21,11 +21,27 @@ package edu.emory.cci.aiw.i2b2etl.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.protempa.*;
+
+import org.protempa.CompoundLowLevelAbstractionDefinition;
+import org.protempa.EventDefinition;
+import org.protempa.HighLevelAbstractionDefinition;
+import org.protempa.LowLevelAbstractionDefinition;
+import org.protempa.LowLevelAbstractionValueDefinition;
+import org.protempa.PropositionDefinition;
+import org.protempa.Protempa;
+import org.protempa.SimpleGapFunction;
+import org.protempa.SliceDefinition;
+import org.protempa.SlidingWindowWidthMode;
+import org.protempa.TemporalExtendedParameterDefinition;
+import org.protempa.TemporalExtendedPropositionDefinition;
+import org.protempa.TemporalPatternOffset;
+import org.protempa.ValueClassification;
 import org.protempa.proposition.interval.Relation;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
@@ -34,6 +50,8 @@ import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
 import org.protempa.dest.test.DatabasePopulator;
+import org.protempa.FinderException;
+import org.protempa.ProtempaStartupException;
 
 import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
@@ -59,6 +77,7 @@ public class I2b2ETLTest {
      */
     @BeforeClass
     public static void setUp() throws Exception {
+//        new DatabasePopulator(I2b2ETLTest.class.getResourceAsStream("/sample-new.xlsx")).doPopulate();
         new DatabasePopulator().doPopulate();
         Protempa protempa = new ProtempaFactory().newInstance();
         try {
