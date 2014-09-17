@@ -36,6 +36,11 @@ import org.protempa.dest.StatisticsException;
 public final class I2b2Destination extends AbstractDestination {
     private File confXML;
     private boolean inferPropositionIdsNeeded;
+    private DataInsertMode dataInsertMode;
+
+    public enum DataInsertMode {
+        APPEND, TRUNCATE
+    }
     
     /**
      * Creates a new query results handler that will use the provided
@@ -46,8 +51,8 @@ public final class I2b2Destination extends AbstractDestination {
      * @param confXML an i2b2 query results handler configuration file. Cannot
      * be <code>null</code>.
      */
-    public I2b2Destination(File confXML) {
-        this(confXML, true);
+    public I2b2Destination(File confXML, DataInsertMode dataInsertMode) {
+        this(confXML, dataInsertMode, true);
     }
     
     /**
@@ -65,17 +70,18 @@ public final class I2b2Destination extends AbstractDestination {
      * proposition ids returned should be only those specified in the Protempa
      * {@link Query}.
      */
-    public I2b2Destination(File confXML, boolean inferPropositionIdsNeeded) { 
+    public I2b2Destination(File confXML, DataInsertMode dataInsertMode, boolean inferPropositionIdsNeeded) {
         if (confXML == null) {
             throw new IllegalArgumentException("confXML cannot be null");
         }
         this.confXML = confXML;
         this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
+        this.dataInsertMode = dataInsertMode;
     }
 
     @Override
     public QueryResultsHandler getQueryResultsHandler(Query query, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
-       return new I2b2QueryResultsHandler(query, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded);
+       return new I2b2QueryResultsHandler(query, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded, this.dataInsertMode);
     }
 
     @Override

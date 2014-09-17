@@ -77,8 +77,8 @@ public class I2b2ETLTest {
      */
     @BeforeClass
     public static void setUp() throws Exception {
-//        new DatabasePopulator(I2b2ETLTest.class.getResourceAsStream("/sample-new.xlsx")).doPopulate();
-        new DatabasePopulator().doPopulate();
+        new DatabasePopulator(I2b2ETLTest.class.getResourceAsStream("/sample-one.xlsx")).doPopulate();
+//        new DatabasePopulator().doPopulate();
         Protempa protempa = new ProtempaFactory().newInstance();
         try {
             File confXML = new I2b2ETLConfAsFile().getFile();
@@ -187,7 +187,7 @@ public class I2b2ETLTest {
             q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
-            Destination destination = new I2b2Destination(confXML);
+            Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.APPEND);
             protempa.execute(query, destination);
         } finally {
             protempa.close();

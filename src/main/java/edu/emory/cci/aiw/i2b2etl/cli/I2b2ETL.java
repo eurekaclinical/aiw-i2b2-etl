@@ -54,7 +54,7 @@ public class I2b2ETL extends CLI {
         try {
             DefaultQueryBuilder q = new DefaultQueryBuilder();
             Query query = protempa.buildQuery(q);
-            Destination destination = new I2b2Destination(confXML);
+            Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.TRUNCATE);
             protempa.execute(query, destination);
         } catch (FinderException ex) {
             throw new CLIException("Error executing ETL job", ex);

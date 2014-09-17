@@ -86,6 +86,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private final Query query;
     private final KnowledgeSource knowledgeSource;
+    private final I2b2Destination.DataInsertMode dataInsertMode;
     private final File confFile;
     private final boolean inferPropositionIdsNeeded;
     private final ConfigurationReader configurationReader;
@@ -120,12 +121,15 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      *                                  specified in the i2b2 configuration file, <code>false</code> if the
      *                                  proposition ids returned should be only those specified in the Protempa
      *                                  {@link Query}.
+     * @param dataInsertMode            whether to truncate existing data or append to it
      */
     I2b2QueryResultsHandler(Query query, KnowledgeSource knowledgeSource, File confXML,
-                            boolean inferPropositionIdsNeeded) throws QueryResultsHandlerInitException {
+                            boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
+            throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
+        this.dataInsertMode = dataInsertMode;
         this.confFile = confXML;
         logger.log(Level.FINE, String.format("Using configuration file: %s",
                 this.confFile.getAbsolutePath()));
@@ -181,7 +185,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         try {
             mostlyBuildOntology();
-            new TableTruncater().doTruncate();
+            if (this.dataInsertMode == I2b2Destination.DataInsertMode.TRUNCATE) {
+                new TableTruncater().doTruncate();
+            }
             assembleFactHandlers();
             // disable indexes on observation_fact to speed up inserts
             disableObservationFactIndexes();
@@ -288,7 +294,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             call.setString(1, tempPatientTableName());
             call.executeQuery();
 
+            call.setString(1, tempPatientMappingTableName());
+            call.executeQuery();
+
             call.setString(1, tempVisitTableName());
+            call.executeQuery();
+
+            call.setString(1, tempEncounterMappingTableName());
             call.executeQuery();
 
             call.setString(1, tempProviderTableName());
@@ -441,7 +453,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             enableObservationFactIndexes();
             gatherStatisticsOnObservationFact();
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
-//            dropTempTables();
+            dropTempTables();
             persistMetadata();
         } catch (OntologyBuildException | SQLException | InvalidConceptCodeException ex) {
             logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, ex);

@@ -71,7 +71,7 @@ public class GetPropositionIdsNeededTest {
         KnowledgeSource knowledgeSource = protempa.getKnowledgeSource();
         QueryBuilder queryBuilder = new DefaultQueryBuilder();
         Query query = protempa.buildQuery(queryBuilder);
-        I2b2Destination destination = new I2b2Destination(confXML);
+        I2b2Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.TRUNCATE);
         try (QueryResultsHandler qrh = 
                 destination.getQueryResultsHandler(query, knowledgeSource)) {
             String[] actualPropIds = qrh.getPropositionIdsNeeded();
