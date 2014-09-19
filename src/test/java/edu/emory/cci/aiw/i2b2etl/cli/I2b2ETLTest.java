@@ -21,11 +21,27 @@ package edu.emory.cci.aiw.i2b2etl.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.protempa.*;
+
+import org.protempa.CompoundLowLevelAbstractionDefinition;
+import org.protempa.EventDefinition;
+import org.protempa.HighLevelAbstractionDefinition;
+import org.protempa.LowLevelAbstractionDefinition;
+import org.protempa.LowLevelAbstractionValueDefinition;
+import org.protempa.PropositionDefinition;
+import org.protempa.Protempa;
+import org.protempa.SimpleGapFunction;
+import org.protempa.SliceDefinition;
+import org.protempa.SlidingWindowWidthMode;
+import org.protempa.TemporalExtendedParameterDefinition;
+import org.protempa.TemporalExtendedPropositionDefinition;
+import org.protempa.TemporalPatternOffset;
+import org.protempa.ValueClassification;
 import org.protempa.proposition.interval.Relation;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
@@ -34,6 +50,8 @@ import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
 import org.protempa.dest.test.DatabasePopulator;
+import org.protempa.FinderException;
+import org.protempa.ProtempaStartupException;
 
 import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
@@ -59,7 +77,8 @@ public class I2b2ETLTest {
      */
     @BeforeClass
     public static void setUp() throws Exception {
-        new DatabasePopulator().doPopulate();
+        new DatabasePopulator(I2b2ETLTest.class.getResourceAsStream("/sample-one.xlsx")).doPopulate();
+//        new DatabasePopulator().doPopulate();
         Protempa protempa = new ProtempaFactory().newInstance();
         try {
             File confXML = new I2b2ETLConfAsFile().getFile();
@@ -168,7 +187,7 @@ public class I2b2ETLTest {
             q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
-            Destination destination = new I2b2Destination(confXML);
+            Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.APPEND);
             protempa.execute(query, destination);
         } finally {
             protempa.close();

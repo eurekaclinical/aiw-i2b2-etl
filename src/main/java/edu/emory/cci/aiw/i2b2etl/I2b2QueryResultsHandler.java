@@ -35,15 +35,29 @@ import edu.emory.cci.aiw.i2b2etl.metadata.SynonymCode;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimension;
 import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
+import edu.emory.cci.aiw.i2b2etl.table.ObservationFact;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.PropositionFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
+import org.apache.commons.lang3.ArrayUtils;
+import org.arp.javautil.sql.ConnectionSpec;
+import org.arp.javautil.sql.DatabaseAPI;
+import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSource;
-import org.protempa.query.Query;
+import org.protempa.KnowledgeSourceReadException;
+import org.protempa.PropositionDefinition;
+import org.protempa.ReferenceDefinition;
 import org.protempa.dest.AbstractQueryResultsHandler;
 import org.protempa.dest.QueryResultsHandlerInitException;
+import org.protempa.dest.QueryResultsHandlerProcessingException;
+import org.protempa.dest.table.Link;
+import org.protempa.dest.table.Reference;
+import org.protempa.proposition.Proposition;
+import org.protempa.proposition.TemporalProposition;
+import org.protempa.proposition.UniqueId;
+import org.protempa.query.Query;
 
 import java.io.File;
 import java.io.StringReader;
@@ -53,6 +67,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -63,20 +78,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.arp.javautil.sql.ConnectionSpec;
-import org.arp.javautil.sql.DatabaseAPI;
-import org.arp.javautil.sql.InvalidConnectionSpecArguments;
-import org.protempa.KnowledgeSourceReadException;
-import org.protempa.PropositionDefinition;
-import org.protempa.ReferenceDefinition;
-import org.protempa.proposition.Proposition;
-import org.protempa.proposition.TemporalProposition;
-import org.protempa.proposition.UniqueId;
-import org.protempa.dest.QueryResultsHandlerProcessingException;
-import org.protempa.dest.table.Link;
-import org.protempa.dest.table.Reference;
-
 /**
  * @author Andrew Post
  */
@@ -85,6 +86,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private final Query query;
     private final KnowledgeSource knowledgeSource;
+    private final I2b2Destination.DataInsertMode dataInsertMode;
     private final File confFile;
     private final boolean inferPropositionIdsNeeded;
     private final ConfigurationReader configurationReader;
@@ -119,12 +121,15 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      *                                  specified in the i2b2 configuration file, <code>false</code> if the
      *                                  proposition ids returned should be only those specified in the Protempa
      *                                  {@link Query}.
+     * @param dataInsertMode            whether to truncate existing data or append to it
      */
     I2b2QueryResultsHandler(Query query, KnowledgeSource knowledgeSource, File confXML,
-                            boolean inferPropositionIdsNeeded) throws QueryResultsHandlerInitException {
+                            boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
+            throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
+        this.dataInsertMode = dataInsertMode;
         this.confFile = confXML;
         logger.log(Level.FINE, String.format("Using configuration file: %s",
                 this.confFile.getAbsolutePath()));
@@ -180,14 +185,132 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         try {
             mostlyBuildOntology();
-            new TableTruncater().doTruncate();
+            if (this.dataInsertMode == I2b2Destination.DataInsertMode.TRUNCATE) {
+                new TableTruncater().doTruncate();
+            }
             assembleFactHandlers();
             // disable indexes on observation_fact to speed up inserts
             disableObservationFactIndexes();
+            // create i2b2 temporary tables using stored procedures
+            createTempTables();
             this.dataSchemaConnection = openDataDatabaseConnection();
             logger.log(Level.INFO, "Populating observation facts table for query {0}", this.query.getId());
         } catch (KnowledgeSourceReadException | SQLException | OntologyBuildException | IllegalAccessException | InstantiationException ex) {
             throw new QueryResultsHandlerProcessingException("Error during i2b2 load", ex);
+        }
+    }
+
+    private String tempPatientTableName() {
+        return PatientDimension.TEMP_PATIENT_TABLE;
+    }
+
+    private String tempPatientMappingTableName() {
+        return PatientDimension.TEMP_PATIENT_MAPPING_TABLE;
+    }
+
+    private String tempVisitTableName() {
+        return VisitDimension.TEMP_VISIT_TABLE;
+    }
+
+    private String tempEncounterMappingTableName() {
+        return VisitDimension.TEMP_ENC_MAPPING_TABLE;
+    }
+
+    private String tempProviderTableName() {
+        return ProviderDimension.TEMP_PROVIDER_TABLE;
+    }
+
+    private String tempConceptTableName() {
+        return ConceptDimension.TEMP_CONCEPT_TABLE;
+    }
+
+    private String tempObservationFactTableName() {
+        return ObservationFact.TEMP_OBSERVATION_TABLE;
+    }
+
+    /**
+     * Calls stored procedures in the i2b2 data schema to create temporary
+     * tables for patient, visit, provider, and concept dimension, and for
+     * observation fact tables. These are the tables that will be populated
+     * by the query results handler. At that point, more i2b2 stored procedures
+     * will be called to "upsert" the temporary data into the permanent tables.
+     *
+     * @throws SQLException if an error occurs while interacting with the database
+     */
+    private void createTempTables() throws SQLException {
+        I2b2ETLUtil.logger().log(Level.INFO, "Creating temporary tables");
+        try (final Connection conn = openDataDatabaseConnection()) {
+            // for all of the procedures, the first parameter is an IN parameter
+            // specifying the table name, and the second is an OUT paremeter
+            // that contains an error message
+            // create the patient table
+            CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PATIENT_TABLE(?, ?) }");
+            call.setString(1, tempPatientTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the patient mapping table
+            call = conn.prepareCall("{ call CREATE_TEMP_PID_TABLE(?, ?) }");
+            call.setString(1, tempPatientMappingTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the visit table
+            call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }");
+            call.setString(1, tempVisitTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the encounter mapping table
+            call = conn.prepareCall("{ call CREATE_TEMP_EID_TABLE(?, ?) }");
+            call.setString(1, tempEncounterMappingTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the provider table
+            call = conn.prepareCall("{ call CREATE_TEMP_PROVIDER_TABLE(?, ?) }");
+            call.setString(1, tempProviderTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the concept table
+            call = conn.prepareCall("{ call CREATE_TEMP_CONCEPT_TABLE(?, ?) }");
+            call.setString(1, tempConceptTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+            // create the observation fact table
+            call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }");
+            call.setString(1, tempObservationFactTableName());
+            call.registerOutParameter(2, Types.VARCHAR);
+            call.executeQuery();
+
+            I2b2ETLUtil.logger().log(Level.INFO, "Created temporary tables");
+        }
+    }
+
+    /**
+     * Calls stored procedures to drop all of the temp tables created.
+     *
+     * @throws SQLException if an error occurs while interacting with the database
+     */
+    private void dropTempTables() throws SQLException {
+        try (final Connection conn = openDataDatabaseConnection()) {
+            CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }");
+            call.setString(1, tempPatientTableName());
+            call.executeQuery();
+
+            call.setString(1, tempPatientMappingTableName());
+            call.executeQuery();
+
+            call.setString(1, tempVisitTableName());
+            call.executeQuery();
+
+            call.setString(1, tempEncounterMappingTableName());
+            call.executeQuery();
+
+            call.setString(1, tempProviderTableName());
+            call.executeQuery();
+
+            call.setString(1, tempConceptTableName());
+            call.executeQuery();
+
+            call.setString(1, tempObservationFactTableName());
+            call.executeQuery();
         }
     }
 
@@ -233,50 +356,107 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     @Override
     public void finish() throws QueryResultsHandlerProcessingException {
+        // upload_id for all the dimension table stored procedures
+        final int UPLOAD_ID = 0;
+
         Logger logger = I2b2ETLUtil.logger();
         String queryId = this.query.getId();
         String projectName = this.dictSection.get("projectName");
-        logger.log(Level.INFO, "Done populating observation facts table for query {0}", queryId);
+
         try {
             for (FactHandler factHandler : this.factHandlers) {
                 factHandler.clearOut(this.dataSchemaConnection);
             }
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
-            // re-enable the indexes now that we're done populating the table
-            enableObservationFactIndexes();
-            gatherStatisticsOnObservationFact();
+
             this.ontologyModel.buildProviderHierarchy();
             // persist Patients & Visits.
             logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
-            logger.log(Level.FINE, "Populating patient dimension for query {0}", queryId);
+            logger.log(Level.INFO, "Populating patient dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 PatientDimension.insertAll(this.ontologyModel.getPatients(),
                         conn,projectName);
+
+                CallableStatement mappingCall = conn.prepareCall("{ call INSERT_PID_MAP_FROMTEMP(?, ?, ?) }");
+                mappingCall.setString(1, tempPatientMappingTableName());
+                mappingCall.setInt(2, UPLOAD_ID);
+                mappingCall.registerOutParameter(3, Types.VARCHAR);
+                mappingCall.executeQuery();
+                logger.log(Level.INFO, "INSERT_PID_MAP_FROMTTEMP errmsg: {0}", mappingCall.getString(3));
+
+                CallableStatement call = conn.prepareCall("{ call INSERT_PATIENT_FROMTEMP(?, ?, ?) }");
+                call.setString(1, tempPatientTableName());
+                call.setInt(2, UPLOAD_ID);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "INSERT_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
             }
-            logger.log(Level.FINE, "Populating visit dimension for query {0}", queryId);
+            logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
                         conn,projectName);
+                CallableStatement mappingCall = conn.prepareCall("{ call INSERT_EID_MAP_FROMTEMP(?, ?, ?) }");
+                mappingCall.setString(1, tempEncounterMappingTableName());
+                mappingCall.setInt(2, UPLOAD_ID);
+                mappingCall.registerOutParameter(3, Types.VARCHAR);
+                mappingCall.executeQuery();
+                logger.log(Level.INFO, "INSERT_EID_MAP_FROMTEMP errmsg: {0}", mappingCall.getString(3));
+
+                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROM_TEMP(?, ?, ?) }");
+                call.setString(1, tempVisitTableName());
+                call.setInt(2, UPLOAD_ID);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "EUREKA.EK_INS_ENC_VISIT_FROM_TEMP errmsg: {0}", call.getString(3));
             }
-            logger.log(Level.FINE, "Inserting ages into observation fact table for query {0}", queryId);
+            logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 PatientDimension.insertAges(this.ontologyModel.getPatients(), conn, this.dictSection.get("ageConceptCodePrefix"), patientLevelFakeVisits);
             }
             // find Provider root. gather its leaf nodes. persist Providers.
-            logger.log(Level.FINE, "Populating provider dimension for query {0}", queryId);
+            logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 ProviderDimension.insertAll(this.ontologyModel.getProviders(), conn);
+                CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }");
+                call.setString(1, tempProviderTableName());
+                call.setInt(2, UPLOAD_ID);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
             }
             // flush hot concepts out of the tree. persist Concepts.
-            logger.log(Level.FINE, "Populating concept dimension for query {0}", this.query.getId());
+            logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
             try (Connection conn = openDataDatabaseConnection()) {
                 ConceptDimension.insertAll(this.ontologyModel.getRoot(), conn);
+                CallableStatement call = conn.prepareCall("{ call INSERT_CONCEPT_FROMTEMP(?, ?, ?) }");
+                call.setString(1, tempConceptTableName());
+                call.setInt(2, UPLOAD_ID);
+                call.registerOutParameter(3, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "INSERT_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
             }
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
+
+            try (Connection conn = openDataDatabaseConnection()) {
+                logger.log(Level.INFO, "Populating observation_fact from temporary table");
+                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }");
+                call.setString(1, tempObservationFactTableName());
+                call.setLong(2, UPLOAD_ID);
+                call.setLong(3, 1); // appendFlag
+                call.registerOutParameter(4, Types.VARCHAR);
+                call.executeQuery();
+                logger.log(Level.INFO, "EUREKA.EK_UPDATE_OBSERVATION_FACT errmsg: {0}", call.getString(4));
+            }
+
+            // re-enable the indexes now that we're done populating the table
+            enableObservationFactIndexes();
+            gatherStatisticsOnObservationFact();
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
+            dropTempTables();
             persistMetadata();
         } catch (OntologyBuildException | SQLException | InvalidConceptCodeException ex) {
+            logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, ex);
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + queryId, ex);
         } finally {
             if (this.dataSchemaConnection != null) {

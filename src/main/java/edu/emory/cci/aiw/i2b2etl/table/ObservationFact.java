@@ -25,6 +25,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.protempa.proposition.value.*;
 
 public class ObservationFact {
+
+    public static final String TEMP_OBSERVATION_TABLE = "temp_observation";
     
     //	CREATE TABLE  "OBSERVATION_FACT" 
     //  (

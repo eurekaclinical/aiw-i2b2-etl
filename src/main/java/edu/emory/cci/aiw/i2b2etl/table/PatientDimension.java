@@ -92,6 +92,9 @@ public class PatientDimension {
     private static final NumFactory NUM_FACTORY = new IncrNumFactory();
     private static final Logger logger = Logger.getLogger(PatientDimension.class.getName());
 
+    public static final String TEMP_PATIENT_TABLE = "temp_patient";
+    public static final String TEMP_PATIENT_MAPPING_TABLE = "temp_patient_mapping";
+
     public PatientDimension(String encryptedPatientId, String zipCode,
             Long ageInYears,
             String gender, String language, String religion,
@@ -201,60 +204,46 @@ public class PatientDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into PATIENT_DIMENSION(patient_num,vital_status_cd,birth_date,death_date,sex_cd," +
-                    "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,income_cd,patient_blob,update_date," +
-                    "download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            ps2 = cn.prepareStatement("insert into PATIENT_MAPPING(patient_ide,patient_ide_source,patient_num,patient_ide_status,project_id,upload_date," +
-                    "update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into " + TEMP_PATIENT_TABLE + "(patient_id,patient_id_source,patient_num,vital_status_cd,birth_date,death_date,sex_cd," +
+                    "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,patient_blob,update_date," +
+                    "download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps2 = cn.prepareStatement("insert into " + TEMP_PATIENT_MAPPING_TABLE + " (patient_id,patient_id_source,patient_map_id,patient_map_id_source,patient_map_id_status,patient_num," +
+                    "update_date,download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?)");
             for (PatientDimension patient : patients) {
                 try {
-                    ps.setLong(1, patient.patientNum);
-                    ps.setString(2, patient.vital.getCode());
-                    ps.setDate(3, patient.birthDate);
-                    ps.setDate(4, patient.deathDate);
-                    ps.setString(5, patient.gender);
-                    ps.setObject(6, patient.ageInYears);
-                    ps.setString(7, patient.language);
-                    ps.setString(8, patient.race);
-                    ps.setString(9, patient.maritalStatus);
-                    ps.setString(10, patient.religion);
-                    ps.setString(11, patient.zip);
-                    ps.setString(12, null);
-                    ps.setString(13, null);
-                    ps.setObject(14, null);
-                    ps.setTimestamp(15, null);
+                    ps.setString(1, patient.encryptedPatientId);
+                    ps.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                    ps.setLong(3, patient.patientNum);
+                    ps.setString(4, patient.vital.getCode());
+                    ps.setDate(5, patient.birthDate);
+                    ps.setDate(6, patient.deathDate);
+                    ps.setString(7, patient.gender);
+                    ps.setObject(8, patient.ageInYears);
+                    ps.setString(9, patient.language);
+                    ps.setString(10, patient.race);
+                    ps.setString(11, patient.maritalStatus);
+                    ps.setString(12, patient.religion);
+                    ps.setString(13, patient.zip);
+                    ps.setString(14, null);
+                    ps.setObject(15, null);
                     ps.setTimestamp(16, null);
-                    ps.setTimestamp(17, importTimestamp);
-                    ps.setString(18, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
-                    ps.setObject(19, null);
+                    ps.setTimestamp(17, null);
+                    ps.setTimestamp(18, importTimestamp);
+                    ps.setString(19, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
                     ps.addBatch();
                     ps.clearParameters();
 
+                    System.out.println("Patient num: " + patient.patientNum);
                     ps2.setString(1, patient.encryptedPatientId);
                     ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
-                    ps2.setLong(3, patient.patientNum);
-                    ps2.setString(4, PatientIdeStatusCode.ACTIVE.getCode());
-                    ps2.setString(5, projectName);
-                    ps2.setDate(6, null);
+                    ps2.setString(3, patient.encryptedPatientId);
+                    ps2.setString(4, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                    ps2.setString(5, PatientIdeStatusCode.ACTIVE.getCode());
+                    ps2.setLong(6, patient.patientNum);
                     ps2.setDate(7, null);
                     ps2.setDate(8, null);
-                    ps2.setTimestamp(9, importTimestamp);
+                    ps2.setDate(9, null);
                     ps2.setString(10, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
-                    ps2.setNull(11, Types.NUMERIC);
-                    ps2.addBatch();
-                    ps2.clearParameters();
-
-                    ps2.setLong(1, patient.patientNum);
-                    ps2.setString(2, "HIVE");
-                    ps2.setLong(3, patient.patientNum);
-                    ps2.setString(4, PatientIdeStatusCode.ACTIVE.getCode());
-                    ps2.setString(5, projectName);
-                    ps2.setDate(6, null);
-                    ps2.setDate(7, null);
-                    ps2.setDate(8, null);
-                    ps2.setTimestamp(9, importTimestamp);
-                    ps2.setString(10, null);
-                    ps2.setNull(11, Types.NUMERIC);
                     ps2.addBatch();
                     ps2.clearParameters();
 
@@ -290,7 +279,6 @@ public class PatientDimension {
             }
             ps.close();
             ps = null;
-            ps2.close();
             ps2 = null;
         } finally {
             if (ps != null) {

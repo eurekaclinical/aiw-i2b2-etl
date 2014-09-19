@@ -477,6 +477,7 @@
                         <filtering>true</filtering>
                         <includes>
                             <include>conf.xml</include>
+                            <include>logging.properties</include>
                         </includes>
                     </testResource>
                     <testResource>
@@ -484,6 +485,8 @@
                         <filtering>false</filtering>
                         <includes>
                             <include>get-proposition-ids-needed-test-file</include>
+                            <include>sample-one.xlsx</include>
+                            <include>sample-new.xlsx</include>
                         </includes>
                     </testResource>
                 </testResources>

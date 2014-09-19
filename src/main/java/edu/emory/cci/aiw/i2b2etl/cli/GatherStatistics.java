@@ -42,7 +42,7 @@ public class GatherStatistics {
         }
         int totalKeys = 0;
         for (File confXML : configDir.listFiles()) {
-            Destination destination = new I2b2Destination(confXML);
+            Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.TRUNCATE);
             try {
                 Statistics stats = destination.getStatistics();
                 int numberOfKeys = stats.getNumberOfKeys();

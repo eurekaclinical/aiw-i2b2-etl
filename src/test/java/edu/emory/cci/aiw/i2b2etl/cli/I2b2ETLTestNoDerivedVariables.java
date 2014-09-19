@@ -66,7 +66,7 @@ public class I2b2ETLTestNoDerivedVariables {
             q.setId("i2b2 ETL Test Query No Derived Variables");
             
             Query query = protempa.buildQuery(q);
-            Destination destination = new I2b2Destination(confXML);
+            Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.TRUNCATE);
             protempa.execute(query, destination);
         } finally {
             protempa.close();

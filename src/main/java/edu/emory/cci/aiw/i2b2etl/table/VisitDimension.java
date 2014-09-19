@@ -68,6 +68,9 @@ public class VisitDimension {
     private final Timestamp updateDate;
     private final Timestamp downloadDate;
 
+    public static final String TEMP_VISIT_TABLE = "temp_visit";
+    public static final String TEMP_ENC_MAPPING_TABLE = "temp_encounter_mapping";
+
     public VisitDimension(long patientNum, String encryptedPatientId,
             java.util.Date startDate, java.util.Date endDate,
             String encryptedVisitId, String visitSourceSystem,
@@ -90,6 +93,10 @@ public class VisitDimension {
         return this.encounterNum;
     }
 
+    public String getEncryptedVisitId() {
+        return this.encryptedVisitId;
+    }
+
     public String getEncryptedVisitIdSourceSystem() {
         return NUM_FACTORY.getSourceSystem();
     }
@@ -105,65 +112,65 @@ public class VisitDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into VISIT_DIMENSION(encounter_num," +
-                    "patient_num,active_status_cd,start_date,end_date,inout_cd,location_cd,location_path,visit_blob," +
-                    "update_date,download_date,import_date,sourcesystem_cd,upload_id,length_of_stay) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            ps2 = cn.prepareStatement("insert into ENCOUNTER_MAPPING(encounter_ide,encounter_ide_source,encounter_num,patient_ide," +
-                    "patient_ide_source,encounter_ide_status,update_date,upload_date,download_date,import_date,sourcesystem_cd,upload_id,project_id)" +
-                    " values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into " + TEMP_VISIT_TABLE + "(encounter_id, encounter_id_source," +
+                    "patient_id, patient_id_source, encounter_num, inout_cd, location_cd, location_path, start_date, end_date, " +
+                    "visit_blob, update_date, download_date, import_date, sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps2 = cn.prepareStatement("insert into " + TEMP_ENC_MAPPING_TABLE + "(encounter_id, encounter_id_source, encounter_map_id, encounter_map_id_source, " +
+                    "encounter_map_id_status, encounter_num, patient_map_id, patient_map_id_source, update_date, download_date, import_date, sourcesystem_cd)" +
+                    " values (?,?,?,?,?,?,?,?,?,?,?,?)");
 
             for (VisitDimension visit : visits) {
                 try {
-                    ps.setLong(1, visit.encounterNum);
-                    ps.setLong(2, visit.patientNum);
-                    ps.setString(3, visit.activeStatus.getCode());
-                    ps.setDate(4, visit.startDate);
-                    ps.setDate(5, visit.endDate);
+                    ps.setString(1, visit.encryptedVisitId);
+                    ps.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                    ps.setString(3, String.valueOf(visit.encryptedPatientId));
+                    ps.setString(4, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
+                    ps.setLong(5, visit.encounterNum);
                     ps.setString(6, null);
                     ps.setString(7, null);
                     ps.setString(8, null);
-                    ps.setObject(9, null);
-                    ps.setTimestamp(10, TableUtil.setTimestampAttribute(visit.updateDate));
-                    ps.setTimestamp(11, TableUtil.setTimestampAttribute(visit.downloadDate));
-                    ps.setTimestamp(12, importTimestamp);
-                    ps.setString(13, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
-                    ps.setObject(14, null);
-                    ps.setObject(15, null);
+                    ps.setDate(9, visit.startDate);
+                    ps.setDate(10, visit.endDate);
+                    ps.setObject(11, null);
+                    ps.setDate(12, null);
+                    ps.setDate(13, null);
+                    ps.setDate(14, new java.sql.Date(importTimestamp.getTime()));
+                    ps.setString(15, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
+
                     ps.addBatch();
                     ps.clearParameters();
 
                     if (!visit.encryptedVisitId.equals("@")) {
                         ps2.setString(1, visit.encryptedVisitId);
                         ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
-                        ps2.setLong(3, visit.encounterNum);
-                        ps2.setString(4, visit.encryptedPatientId);
-                        ps2.setString(5, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
-                        ps2.setString(6, EncounterIdeStatusCode.ACTIVE.getCode());
-                        ps2.setDate(7, null);
-                        ps2.setDate(8, null);
+                        ps2.setString(3, visit.encryptedVisitId);
+                        ps2.setString(4, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                        ps2.setString(5, EncounterIdeStatusCode.ACTIVE.getCode());
+                        ps2.setLong(6, visit.encounterNum);
+                        ps2.setString(7, visit.encryptedPatientId);
+                        ps2.setString(8, MetadataUtil.toSourceSystemCode(visit.encryptedPatientIdSourceSystem));
                         ps2.setDate(9, null);
-                        ps2.setTimestamp(10, importTimestamp);
-                        ps2.setString(11, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
-                        ps2.setNull(12, Types.NUMERIC);
-                        ps2.setString(13, projectName);
+                        ps2.setDate(10, null);
+                        ps2.setTimestamp(11, importTimestamp);
+                        ps2.setString(12, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
                         ps2.addBatch();
                         ps2.clearParameters();
-                        
-                        ps2.setLong(1, visit.encounterNum);
-                        ps2.setString(2, "HIVE");
-                        ps2.setLong(3, visit.encounterNum);
-                        ps2.setLong(4, visit.patientNum);
-                        ps2.setString(5, "HIVE");
-                        ps2.setString(6, EncounterIdeStatusCode.ACTIVE.getCode());
-                        ps2.setDate(7, null);
-                        ps2.setDate(8, null);
-                        ps2.setDate(9, null);
-                        ps2.setTimestamp(10, importTimestamp);
-                        ps2.setString(11, null);
-                        ps2.setNull(12, Types.NUMERIC);
-                        ps2.setString(13, projectName);
-                        ps2.addBatch();
-                        ps2.clearParameters();
+
+//                        ps2.setString(1, visit.encryptedVisitId);
+//                        ps2.setString(2, "HIVE");
+//                        ps2.setString(3, visit.encryptedVisitId);
+//                        ps2.setString(4, "HIVE");
+//                        ps2.setString(5, EncounterIdeStatusCode.ACTIVE.getCode());
+//                        ps2.setLong(6, visit.encounterNum);
+//                        ps2.setString(7, visit.encryptedPatientId);
+//                        ps2.setString(8, "HIVE");
+//                        ps2.setDate(9, null);
+//                        ps2.setDate(10, null);
+//                        ps2.setTimestamp(11, importTimestamp);
+//                        ps2.setString(12, "HIVE");
+//                        ps2.addBatch();
+//                        ps2.clearParameters();
+
                         ps2BatchAdded = true;
                     }
                     batchCounter++;

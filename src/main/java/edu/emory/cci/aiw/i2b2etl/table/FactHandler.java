@@ -221,64 +221,66 @@ public abstract class FactHandler {
 
     private void setParameters(Connection cn, ObservationFact obx) throws SQLException, InvalidConceptCodeException {
         if (!inited) {
-            ps = cn.prepareStatement("insert into OBSERVATION_FACT(encounter_num," +
-                    "patient_num,concept_cd,provider_id,start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num," +
-                    "valueflag_cd,quantity_num,units_cd,end_date,location_cd,observation_blob,confidence_num,update_date,download_date,import_date,sourcesystem_cd,upload_id)" +
-                    " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps = cn.prepareStatement("insert into " + ObservationFact.TEMP_OBSERVATION_TABLE + "(encounter_num, encounter_id, encounter_id_source, concept_cd, " +
+                            "patient_num, patient_id, patient_id_source, provider_id, start_date, modifier_cd, instance_num, valtype_cd, tval_char, nval_num, valueflag_cd, quantity_num, " +
+                            "confidence_num, observation_blob, units_cd, end_date, location_cd, update_date, download_date, import_date, sourcesystem_cd, upload_id)" +
+                            " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             inited = true;
         }
         ps.setLong(1, obx.getVisit().getEncounterNum());
-        ps.setLong(2, obx.getPatient().getPatientNum());
-        ps.setString(3, obx.getConcept().getConceptCode());
-        ps.setString(4,
-                TableUtil.setStringAttribute(obx.getProvider().getConcept().getConceptCode()));							//	seems coupled to 'reports'
-        ps.setTimestamp(5,
-                TableUtil.setTimestampAttribute(obx.getStartDate()));
-        ps.setString(6, Long.toString(ctr++));                                //	used for admitting, primary, secondary on ICD9Diag
-        //ps.setString(6,obx.getModifierCd());
+        ps.setString(2, obx.getVisit().getEncryptedVisitId());
+        ps.setString(3, obx.getVisit().getEncryptedVisitIdSourceSystem());
+        ps.setString(4, obx.getConcept().getConceptCode());
+        ps.setLong(5, obx.getPatient().getPatientNum());
+        ps.setString(6, obx.getPatient().getEncryptedPatientId());
+        ps.setString(7, obx.getPatient().getEncryptedPatientIdSourceSystem());
+        ps.setString(8, TableUtil.setStringAttribute(obx.getProvider().getConcept().getConceptCode()));
+        ps.setDate(9, TableUtil.setDateAttribute(obx.getStartDate()));
+        ps.setString(10, Long.toString(ctr++));
+        ps.setLong(11, obx.getInstanceNum());
+
         Value value = obx.getValue();
-        //ps.setObject(7, 1);
-        ps.setInt(7, obx.getInstanceNum());
         if (value == null) {
-            ps.setString(8, ValTypeCode.NO_VALUE.getCode());
-            ps.setString(9, null);
-            ps.setString(10, null);
+            ps.setString(12, ValTypeCode.NO_VALUE.getCode());
+            ps.setString(13, null);
+            ps.setString(14, null);
         } else if (value instanceof NumericalValue) {
-            ps.setString(8, ValTypeCode.NUMERIC.getCode());
+            ps.setString(12, ValTypeCode.NUMERIC.getCode());
             if (value instanceof NumberValue) {
-                ps.setString(9, TValCharWhenNumberCode.EQUAL.getCode());
+                ps.setString(13, TValCharWhenNumberCode.EQUAL.getCode());
             } else {
                 InequalityNumberValue inv = (InequalityNumberValue) value;
                 TValCharWhenNumberCode tvalCode =
                         TValCharWhenNumberCode.codeFor(inv.getComparator());
-                ps.setString(9, tvalCode.getCode());
+                ps.setString(13, tvalCode.getCode());
             }
-            ps.setObject(10, ((NumericalValue) value).getNumber());
+            ps.setObject(14, ((NumericalValue) value).getNumber());
         } else {
-            ps.setString(8, ValTypeCode.TEXT.getCode());
+            ps.setString(12, ValTypeCode.TEXT.getCode());
             String tval = value.getFormatted();
             if (tval.length() > 255) {
-                ps.setString(9, tval.substring(0, 255));
+                ps.setString(13, tval.substring(0, 255));
                 TableUtil.logger().log(Level.WARNING, "Truncated text result to 255 characters: " + tval);
             } else {
-                ps.setString(9, tval);
+                ps.setString(13, tval);
             }
-            ps.setString(10, null);
+            ps.setString(14, null);
         }
-        ps.setString(11, obx.getValueFlagCode().getCode());
-        ps.setObject(12, null);
-        ps.setString(13, obx.getUnits());
-        ps.setTimestamp(14, TableUtil.setTimestampAttribute(obx.getEndDate()));
-        ps.setString(15, null);
+
+        ps.setString(15, obx.getValueFlagCode().getCode());
         ps.setObject(16, null);
-        ps.setString(17, null);
-        ps.setTimestamp(18, null);
-        ps.setTimestamp(19, null);
+        ps.setObject(17, null);
+        ps.setObject(18, null);
+        ps.setString(19, obx.getUnits());
+        ps.setDate(20, TableUtil.setDateAttribute(obx.getEndDate()));
+        ps.setString(21, null);
+        ps.setDate(22, null);
+        ps.setDate(23, null);
         if (this.importTimestamp == null) {
             this.importTimestamp = new Timestamp(System.currentTimeMillis());
         }
-        ps.setTimestamp(20, this.importTimestamp);
-        ps.setString(21, obx.getSourceSystem());
-        ps.setObject(22, null);
+        ps.setDate(24, TableUtil.setDateAttribute(new Date(this.importTimestamp.getTime())));
+        ps.setString(25, obx.getSourceSystem());
+        ps.setInt(26, 0);
     }
 }
