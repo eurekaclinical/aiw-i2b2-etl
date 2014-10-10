@@ -47,9 +47,9 @@ public final class PropositionFactHandler extends FactHandler {
     private Metadata metadata;
     private final Link[] derivationLinks;
 
-    public PropositionFactHandler(Link[] links, String propertyName, String start,
-            String finish, String unitsPropertyName,
-            String[] potentialDerivedPropIds, Metadata metadata, KnowledgeSource knowledgeSource) throws KnowledgeSourceReadException {
+    public PropositionFactHandler(Link[] links, String propertyName, 
+            String start, String finish, String unitsPropertyName,
+            String[] potentialDerivedPropIds, Metadata metadata) {
         super(propertyName, start, finish, unitsPropertyName);
         if (metadata == null) {
             throw new IllegalArgumentException("metadata cannot be null");
@@ -63,7 +63,7 @@ public final class PropositionFactHandler extends FactHandler {
         }
         this.derivationLinks = new Link[]{
             new Derivation(potentialDerivedPropIds,
-            Derivation.Behavior.MULT_FORWARD, knowledgeSource)
+            Derivation.Behavior.MULT_FORWARD)
         };
     }
 

@@ -539,7 +539,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         for (DataSection.DataSpec obx : this.obxSection.getAll()) {
             Link[] links;
             if (obx.referenceName != null) {
-                links = new Link[]{new Reference(obx.referenceName, this.knowledgeSource)};
+                links = new Link[]{new Reference(obx.referenceName)};
             } else {
                 links = null;
             }
@@ -547,8 +547,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             PropositionFactHandler propFactHandler = 
                     new PropositionFactHandler(links, obx.propertyName, 
                             obx.start, obx.finish, obx.units, 
-                            potentialDerivedPropIdsArr, this.ontologyModel, 
-                            this.knowledgeSource);
+                            potentialDerivedPropIdsArr, this.ontologyModel);
             this.factHandlers.add(propFactHandler);
         }
     }
