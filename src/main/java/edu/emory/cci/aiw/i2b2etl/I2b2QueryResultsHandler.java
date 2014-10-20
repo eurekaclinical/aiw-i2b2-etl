@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.protempa.dest.QueryResultsHandlerCloseException;
 
 /**
  * @author Andrew Post
@@ -192,6 +193,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             // disable indexes on observation_fact to speed up inserts
             disableObservationFactIndexes();
             // create i2b2 temporary tables using stored procedures
+            dropTempTables();
             createTempTables();
             this.dataSchemaConnection = openDataDatabaseConnection();
             logger.log(Level.INFO, "Populating observation facts table for query {0}", this.query.getId());
@@ -244,40 +246,47 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             // specifying the table name, and the second is an OUT paremeter
             // that contains an error message
             // create the patient table
-            CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PATIENT_TABLE(?, ?) }");
-            call.setString(1, tempPatientTableName());
-            call.registerOutParameter(2, Types.VARCHAR);
-            call.executeQuery();
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PATIENT_TABLE(?, ?) }")) {
+                call.setString(1, tempPatientTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
             // create the patient mapping table
-            call = conn.prepareCall("{ call CREATE_TEMP_PID_TABLE(?, ?) }");
-            call.setString(1, tempPatientMappingTableName());
-            call.registerOutParameter(2, Types.VARCHAR);
-            call.executeQuery();
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PID_TABLE(?, ?) }")) {
+                call.setString(1, tempPatientMappingTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
             // create the visit table
-            call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }");
-            call.setString(1, tempVisitTableName());
-            call.registerOutParameter(2, Types.VARCHAR);
-            call.executeQuery();
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }")) {
+                call.setString(1, tempVisitTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
             // create the encounter mapping table
-            call = conn.prepareCall("{ call CREATE_TEMP_EID_TABLE(?, ?) }");
-            call.setString(1, tempEncounterMappingTableName());
-            call.registerOutParameter(2, Types.VARCHAR);
-            call.executeQuery();
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_EID_TABLE(?, ?) }")) {
+                call.setString(1, tempEncounterMappingTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
             // create the provider table
-            call = conn.prepareCall("{ call CREATE_TEMP_PROVIDER_TABLE(?, ?) }");
-            call.setString(1, tempProviderTableName());
-            call.registerOutParameter(2, Types.VARCHAR);
-            call.executeQuery();
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PROVIDER_TABLE(?, ?) }")) {
+                call.setString(1, tempProviderTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
             // create the concept table
-            call = conn.prepareCall("{ call CREATE_TEMP_CONCEPT_TABLE(?, ?) }");
-            call.setString(1, tempConceptTableName());
-            call.registerOutParameter(2, Types.VARCHAR);
-            call.executeQuery();
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_CONCEPT_TABLE(?, ?) }")) {
+                call.setString(1, tempConceptTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
             // create the observation fact table
-            call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }");
-            call.setString(1, tempObservationFactTableName());
-            call.registerOutParameter(2, Types.VARCHAR);
-            call.executeQuery();
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }")) {
+                call.setString(1, tempObservationFactTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
 
             I2b2ETLUtil.logger().log(Level.INFO, "Created temporary tables");
         }
@@ -289,28 +298,28 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * @throws SQLException if an error occurs while interacting with the database
      */
     private void dropTempTables() throws SQLException {
-        try (final Connection conn = openDataDatabaseConnection()) {
-            CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }");
+        try (final Connection conn = openDataDatabaseConnection();
+            CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }")) {
             call.setString(1, tempPatientTableName());
-            call.executeQuery();
+            call.execute();
 
             call.setString(1, tempPatientMappingTableName());
-            call.executeQuery();
+            call.execute();
 
             call.setString(1, tempVisitTableName());
-            call.executeQuery();
+            call.execute();
 
             call.setString(1, tempEncounterMappingTableName());
-            call.executeQuery();
+            call.execute();
 
             call.setString(1, tempProviderTableName());
-            call.executeQuery();
+            call.execute();
 
             call.setString(1, tempConceptTableName());
-            call.executeQuery();
+            call.execute();
 
             call.setString(1, tempObservationFactTableName());
-            call.executeQuery();
+            call.execute();
         }
     }
 
@@ -378,37 +387,52 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 PatientDimension.insertAll(this.ontologyModel.getPatients(),
                         conn,projectName);
 
-                CallableStatement mappingCall = conn.prepareCall("{ call INSERT_PID_MAP_FROMTEMP(?, ?, ?) }");
-                mappingCall.setString(1, tempPatientMappingTableName());
-                mappingCall.setInt(2, UPLOAD_ID);
-                mappingCall.registerOutParameter(3, Types.VARCHAR);
-                mappingCall.executeQuery();
-                logger.log(Level.INFO, "INSERT_PID_MAP_FROMTTEMP errmsg: {0}", mappingCall.getString(3));
-
-                CallableStatement call = conn.prepareCall("{ call INSERT_PATIENT_FROMTEMP(?, ?, ?) }");
-                call.setString(1, tempPatientTableName());
-                call.setInt(2, UPLOAD_ID);
-                call.registerOutParameter(3, Types.VARCHAR);
-                call.executeQuery();
-                logger.log(Level.INFO, "INSERT_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
+                try (CallableStatement mappingCall = conn.prepareCall("{ call INSERT_PID_MAP_FROMTEMP(?, ?, ?) }")) {
+                    mappingCall.setString(1, tempPatientMappingTableName());
+                    mappingCall.setInt(2, UPLOAD_ID);
+                    mappingCall.registerOutParameter(3, Types.VARCHAR);
+                    mappingCall.execute();
+                    logger.log(Level.INFO, "INSERT_PID_MAP_FROMTTEMP errmsg: {0}", mappingCall.getString(3));
+                    //commit and rollback are called by stored procedure.
+                }
             }
-            logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
                         conn,projectName);
-                CallableStatement mappingCall = conn.prepareCall("{ call INSERT_EID_MAP_FROMTEMP(?, ?, ?) }");
-                mappingCall.setString(1, tempEncounterMappingTableName());
-                mappingCall.setInt(2, UPLOAD_ID);
-                mappingCall.registerOutParameter(3, Types.VARCHAR);
-                mappingCall.executeQuery();
-                logger.log(Level.INFO, "INSERT_EID_MAP_FROMTEMP errmsg: {0}", mappingCall.getString(3));
-
-                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROM_TEMP(?, ?, ?) }");
-                call.setString(1, tempVisitTableName());
-                call.setInt(2, UPLOAD_ID);
-                call.registerOutParameter(3, Types.VARCHAR);
-                call.executeQuery();
-                logger.log(Level.INFO, "EUREKA.EK_INS_ENC_VISIT_FROM_TEMP errmsg: {0}", call.getString(3));
+                try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?, ?) }")) {
+                    mappingCall.setString(1, tempEncounterMappingTableName());
+                    mappingCall.setInt(2, UPLOAD_ID);
+                    mappingCall.registerOutParameter(3, Types.VARCHAR);
+                    mappingCall.execute();
+                    logger.log(Level.INFO, "EUREKA.EK_INSERT_EID_MAP_FROMTEMP errmsg: {0}", mappingCall.getString(3));
+                    //commit and rollback are called by the stored procedure.
+                }
+            }
+            try (Connection conn = openDataDatabaseConnection()) {
+                try (CallableStatement call = conn.prepareCall("{ call INSERT_PATIENT_FROMTEMP(?, ?, ?) }")) {
+                    call.setString(1, tempPatientTableName());
+                    call.setInt(2, UPLOAD_ID);
+                    call.registerOutParameter(3, Types.VARCHAR);
+                    call.execute();
+                    logger.log(Level.INFO, "INSERT_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
+                    conn.commit();
+                } catch (SQLException ex) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException ignore) {}
+                    throw ex;
+                }
+            }
+            logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
+            try (Connection conn = openDataDatabaseConnection()) {
+                try (CallableStatement call = conn.prepareCall("{ call INSERT_ENCOUNTERVISIT_FROMTEMP(?, ?, ?) }")) {
+                    call.setString(1, tempVisitTableName());
+                    call.setInt(2, UPLOAD_ID);
+                    call.registerOutParameter(3, Types.VARCHAR);
+                    call.execute();
+                    logger.log(Level.INFO, "INSERT_ENCOUNTERVISIT_FROMTEMP errmsg: {0}", call.getString(3));
+                    //commit and rollback are called by the stored procedure.
+                }
             }
             logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
@@ -418,56 +442,74 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 ProviderDimension.insertAll(this.ontologyModel.getProviders(), conn);
-                CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }");
-                call.setString(1, tempProviderTableName());
-                call.setInt(2, UPLOAD_ID);
-                call.registerOutParameter(3, Types.VARCHAR);
-                call.executeQuery();
-                logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
+                try (CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }")) {
+                    call.setString(1, tempProviderTableName());
+                    call.setInt(2, UPLOAD_ID);
+                    call.registerOutParameter(3, Types.VARCHAR);
+                    call.execute();
+                    logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
+                    conn.commit();
+                } catch (SQLException ex) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException ignore) {}
+                    throw ex;
+                }
             }
             // flush hot concepts out of the tree. persist Concepts.
             logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
             try (Connection conn = openDataDatabaseConnection()) {
                 ConceptDimension.insertAll(this.ontologyModel.getRoot(), conn);
-                CallableStatement call = conn.prepareCall("{ call INSERT_CONCEPT_FROMTEMP(?, ?, ?) }");
-                call.setString(1, tempConceptTableName());
-                call.setInt(2, UPLOAD_ID);
-                call.registerOutParameter(3, Types.VARCHAR);
-                call.executeQuery();
-                logger.log(Level.INFO, "INSERT_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
+                try (CallableStatement call = conn.prepareCall("{ call INSERT_CONCEPT_FROMTEMP(?, ?, ?) }")) {
+                    call.setString(1, tempConceptTableName());
+                    call.setInt(2, UPLOAD_ID);
+                    call.registerOutParameter(3, Types.VARCHAR);
+                    call.execute();
+                    logger.log(Level.INFO, "INSERT_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
+                    conn.commit();
+                } catch (SQLException ex) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException ignore) {}
+                    throw ex;
+                }
             }
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
 
             try (Connection conn = openDataDatabaseConnection()) {
                 logger.log(Level.INFO, "Populating observation_fact from temporary table");
-                CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }");
-                call.setString(1, tempObservationFactTableName());
-                call.setLong(2, UPLOAD_ID);
-                call.setLong(3, 1); // appendFlag
-                call.registerOutParameter(4, Types.VARCHAR);
-                call.executeQuery();
-                logger.log(Level.INFO, "EUREKA.EK_UPDATE_OBSERVATION_FACT errmsg: {0}", call.getString(4));
+                try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }")) {
+                    call.setString(1, tempObservationFactTableName());
+                    call.setLong(2, UPLOAD_ID);
+                    call.setLong(3, 1); // appendFlag
+                    call.registerOutParameter(4, Types.VARCHAR);
+                    call.execute();
+                    logger.log(Level.INFO, "EUREKA.EK_UPDATE_OBSERVATION_FACT errmsg: {0}", call.getString(4));
+                    //commit and rollback are called by the stored procedure.
+                }
             }
 
             // re-enable the indexes now that we're done populating the table
             enableObservationFactIndexes();
             gatherStatisticsOnObservationFact();
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
-            dropTempTables();
             persistMetadata();
         } catch (OntologyBuildException | SQLException | InvalidConceptCodeException ex) {
             logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, ex);
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + queryId, ex);
-        } finally {
-            if (this.dataSchemaConnection != null) {
-                try {
-                    this.dataSchemaConnection.close();
-                } catch (SQLException ignore) {
-                }
-            }
         }
     }
 
+    @Override
+    public void close() throws QueryResultsHandlerCloseException {
+        if (this.dataSchemaConnection != null) {
+            try {
+                this.dataSchemaConnection.close();
+            } catch (SQLException ignore) {
+            }
+        }
+    }
+    
     @Override
     public String[] getPropositionIdsNeeded() {
         if (!inferPropositionIdsNeeded) {

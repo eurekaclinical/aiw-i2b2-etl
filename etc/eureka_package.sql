@@ -10,6 +10,11 @@ PROCEDURE EK_UPDATE_OBSERVATION_FACT(
     upload_id             IN NUMBER,
     appendFlag            IN NUMBER,
     errorMsg OUT VARCHAR ) ;
+
+PROCEDURE EK_INSERT_EID_MAP_FROMTEMP(
+    tempEidTableName IN VARCHAR,  
+    upload_id IN NUMBER,
+    errorMsg OUT VARCHAR ) ;
     
 END EUREKA ;
 
