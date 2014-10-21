@@ -98,7 +98,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final ConceptsSection conceptsSection;
     private List<FactHandler> factHandlers;
     private Metadata ontologyModel;
-    private final Map<Long, VisitDimension> patientLevelFakeVisits;
     private HashSet<Object> propIdsFromKnowledgeSource;
     private final DataSection.DataSpec providerFullNameSpec;
     private final DataSection.DataSpec providerFirstNameSpec;
@@ -157,7 +156,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
         }
 
-        this.patientLevelFakeVisits = new HashMap<>();
         this.providerFullNameSpec = this.obxSection.get(this.dictSection.get("providerFullName"));
         this.providerFirstNameSpec = this.obxSection.get(this.dictSection.get("providerFirstName"));
         this.providerMiddleNameSpec = this.obxSection.get(this.dictSection.get("providerMiddleName"));
@@ -338,7 +336,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     PatientDimension pd = this.ontologyModel.getPatient(keyId);
                     if (pd == null) {
                         pd = this.ontologyModel.addPatient(keyId, prop, this.dictSection, this.obxSection, references);
-                        this.patientLevelFakeVisits.put(pd.getPatientNum(), this.ontologyModel.addVisit(pd.getPatientNum(), pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), null, this.dictSection, this.obxSection, null));
                     }
                     ProviderDimension provider = 
                             this.ontologyModel.addProviderIfNeeded(
@@ -352,7 +349,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                                     this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null, 
                                     this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null, 
                                     references);
-                    VisitDimension vd = this.ontologyModel.addVisit(pd.getPatientNum(), pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references);
+                    VisitDimension vd = this.ontologyModel.addVisit(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references);
                     for (FactHandler factHandler : this.factHandlers) {
                         factHandler.handleRecord(pd, vd, provider, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions, this.dataSchemaConnection);
                     }
@@ -376,6 +373,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             for (FactHandler factHandler : this.factHandlers) {
                 factHandler.clearOut(this.dataSchemaConnection);
             }
+            
+            logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
+            PatientDimension.insertAges(this.ontologyModel, this.dataSchemaConnection, this.dictSection.get("ageConceptCodePrefix"), this.dictSection, this.obxSection);
+            
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
 
@@ -396,6 +397,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     //commit and rollback are called by stored procedure.
                 }
             }
+            
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
                         conn,projectName);
@@ -424,6 +426,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
             logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
+
             try (Connection conn = openDataDatabaseConnection()) {
                 try (CallableStatement call = conn.prepareCall("{ call INSERT_ENCOUNTERVISIT_FROMTEMP(?, ?, ?) }")) {
                     call.setString(1, tempVisitTableName());
@@ -434,10 +437,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     //commit and rollback are called by the stored procedure.
                 }
             }
-            logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
-            try (Connection conn = openDataDatabaseConnection()) {
-                PatientDimension.insertAges(this.ontologyModel.getPatients(), conn, this.dictSection.get("ageConceptCodePrefix"), patientLevelFakeVisits);
-            }
+            
             // find Provider root. gather its leaf nodes. persist Providers.
             logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {

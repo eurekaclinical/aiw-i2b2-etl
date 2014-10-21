@@ -53,7 +53,7 @@ public final class ProviderFactHandler extends FactHandler {
         } catch (SQLException | InvalidConceptCodeException ex) {
             throw new InvalidFactException("Provider fact not created", ex);
         }
-	}
+    }
     
     private ObservationFact createProviderObservationFact(
             Proposition encounterProp, PatientDimension patient,

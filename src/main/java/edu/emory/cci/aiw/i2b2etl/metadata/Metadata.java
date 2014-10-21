@@ -106,8 +106,7 @@ public final class Metadata {
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
     private final TreeMap<String, PatientDimension> patientCache
             = new TreeMap<>();
-    private final TreeMap<Long, VisitDimension> visitCache
-            = new TreeMap<>();
+    private final Set<VisitDimension> visitCache = new HashSet<>();
     private final Set<String> conceptCodeCache = new HashSet<>();
     private final KnowledgeSource knowledgeSource;
     private final Map<String, ProviderDimension> providers;
@@ -217,7 +216,7 @@ public final class Metadata {
     }
 
     public Collection<VisitDimension> getVisits() {
-        return visitCache.values();
+        return visitCache;
     }
 
     public ProviderDimension addProviderIfNeeded(Proposition encounterProp,
@@ -430,6 +429,7 @@ public final class Metadata {
                     }
 
                     patientDimension = new PatientDimension(keyId,
+                            prop.getSourceSystem().getStringRepresentation(),
                             zipCode != null ? zipCode.getFormatted() : null,
                             ageInYears,
                             gender != null ? gender.getFormatted() : null,
@@ -453,7 +453,7 @@ public final class Metadata {
         return null;
     }
 
-    public VisitDimension addVisit(long patientNum, String encryptedPatientId,
+    public VisitDimension addVisit(String encryptedPatientId,
             String encryptedPatientIdSourceSystem,
             TemporalProposition encounterProp, DictionarySection dictSection,
             DataSection obxSection,
@@ -465,7 +465,7 @@ public final class Metadata {
         if (encryptedId != null) {
             encryptedIdStr = encryptedId.getFormatted();
         } else {
-            encryptedIdStr = null;
+            encryptedIdStr = '@' + encryptedPatientId;
         }
         Date updateDate;
         if (encounterProp != null) {
@@ -477,12 +477,13 @@ public final class Metadata {
             updateDate = null;
         }
 
-        VisitDimension vd = new VisitDimension(patientNum, encryptedPatientId,
+        VisitDimension vd = new VisitDimension(encryptedPatientId,
                 visitStartDate, visitEndDate, encryptedIdStr,
                 encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
+                I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
                 encryptedPatientIdSourceSystem, 
                 encounterProp != null ? encounterProp.getDownloadDate() : null, updateDate);
-        visitCache.put(vd.getEncounterNum(), vd);
+        visitCache.add(vd);
         return vd;
     }
     

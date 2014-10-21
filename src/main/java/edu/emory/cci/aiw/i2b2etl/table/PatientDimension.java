@@ -19,10 +19,12 @@
  */
 package edu.emory.cci.aiw.i2b2etl.table;
 
+import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
+import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
+import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import java.sql.*;
 import java.util.Collection;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -76,8 +78,8 @@ public class PatientDimension {
     //  "UPLOAD_ID"            NUMBER(38,0),
     //  CONSTRAINT "PATIENT_MAPPING_PK" PRIMARY KEY ("PATIENT_IDE", "PATIENT_IDE_SOURCE")
     //  )
-    private final long patientNum;
     private final String encryptedPatientId;
+    private final String encryptedPatientIdSource;
     private Long ageInYears;
     private final String zip;
     private final String race;
@@ -95,13 +97,14 @@ public class PatientDimension {
     public static final String TEMP_PATIENT_TABLE = "temp_patient";
     public static final String TEMP_PATIENT_MAPPING_TABLE = "temp_patient_mapping";
 
-    public PatientDimension(String encryptedPatientId, String zipCode,
+    public PatientDimension(String encryptedPatientId, 
+            String encryptedPatientIdSource,
+            String zipCode,
             Long ageInYears,
             String gender, String language, String religion,
             java.util.Date birthDate, java.util.Date deathDate,
             String maritalStatus, String race, String sourceSystem) {
         //Required attributes
-        this.patientNum = NUM_FACTORY.getInstance();
         this.zip = zipCode;
         this.birthDate = TableUtil.setDateAttribute(birthDate);
         this.deathDate = TableUtil.setDateAttribute(deathDate);
@@ -116,25 +119,24 @@ public class PatientDimension {
         this.religion = religion;
         this.sourceSystem = sourceSystem;
         this.encryptedPatientId = encryptedPatientId;
+        this.encryptedPatientIdSource = encryptedPatientIdSource;
     }
 
-    public long getPatientNum() {
-        return this.patientNum;
-    }
 
     public String getEncryptedPatientId() {
         return this.encryptedPatientId;
     }
 
     public String getEncryptedPatientIdSourceSystem() {
-        return NUM_FACTORY.getSourceSystem();
+        return this.encryptedPatientIdSource;
     }
 
     public Long getAgeInYears() {
         return this.ageInYears;
     }
 
-    public static void insertAges(Collection<PatientDimension> patients, Connection cn, String ageConceptCodePrefix, Map<Long, VisitDimension> patientLevelFakeVisits) throws SQLException {
+    public static void insertAges(Metadata ontologyModel, Connection cn, String ageConceptCodePrefix, DictionarySection dictSection,
+            DataSection obxSection) throws SQLException {
         int batchSize = 1000;
         int counter = 0;
         int commitCounter = 0;
@@ -143,17 +145,20 @@ public class PatientDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("INSERT INTO OBSERVATION_FACT (ENCOUNTER_NUM, PATIENT_NUM, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE) VALUES (?, ?, CONCAT('" + ageConceptCodePrefix + ":', ?), '@', ?, ?, 0, ?)");
-            for (PatientDimension patient : patients) {
+            ps = cn.prepareStatement("INSERT INTO " + ObservationFact.TEMP_OBSERVATION_TABLE + " (encounter_id, encounter_id_source, patient_id, patient_id_source, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE, INSTANCE_NUM) VALUES (?, ?, ?, ?, CONCAT('" + ageConceptCodePrefix + ":', ?), '@', ?, ?, 0, ?, 1)");
+            for (PatientDimension patient : ontologyModel.getPatients()) {
                 Long ageInYrs = patient.getAgeInYears();
                 if (ageInYrs != null) {
+                    VisitDimension visit = ontologyModel.addVisit(patient.getEncryptedPatientId(), patient.getEncryptedPatientIdSourceSystem(), null, dictSection, obxSection, null);
                     try {
-                        ps.setLong(1, patientLevelFakeVisits.get(patient.getPatientNum()).getEncounterNum());
-                        ps.setLong(2, patient.getPatientNum());
-                        ps.setString(3, ageInYrs.toString());
-                        ps.setTimestamp(4, importTimestamp);
-                        ps.setTimestamp(5, importTimestamp);
+                        ps.setString(1, visit.getEncryptedVisitId());
+                        ps.setString(2, visit.getEncryptedVisitIdSourceSystem());
+                        ps.setString(3, patient.getEncryptedPatientId());
+                        ps.setString(4, patient.getEncryptedPatientIdSourceSystem());
+                        ps.setString(5, ageInYrs.toString());
                         ps.setTimestamp(6, importTimestamp);
+                        ps.setTimestamp(7, importTimestamp);
+                        ps.setTimestamp(8, importTimestamp);
                         ps.addBatch();
                         ps.clearParameters();
                         counter++;
@@ -204,46 +209,43 @@ public class PatientDimension {
         try {
             Timestamp importTimestamp =
                     new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into " + TEMP_PATIENT_TABLE + "(patient_id,patient_id_source,patient_num,vital_status_cd,birth_date,death_date,sex_cd," +
+            ps = cn.prepareStatement("insert into " + TEMP_PATIENT_TABLE + "(patient_id,patient_id_source,vital_status_cd,birth_date,death_date,sex_cd," +
                     "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,patient_blob,update_date," +
-                    "download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            ps2 = cn.prepareStatement("insert into " + TEMP_PATIENT_MAPPING_TABLE + " (patient_id,patient_id_source,patient_map_id,patient_map_id_source,patient_map_id_status,patient_num," +
-                    "update_date,download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?)");
+                    "download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps2 = cn.prepareStatement("insert into " + TEMP_PATIENT_MAPPING_TABLE + " (patient_id,patient_id_source,patient_map_id,patient_map_id_source,patient_map_id_status," +
+                    "update_date,download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?)");
             for (PatientDimension patient : patients) {
                 try {
                     ps.setString(1, patient.encryptedPatientId);
-                    ps.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
-                    ps.setLong(3, patient.patientNum);
-                    ps.setString(4, patient.vital.getCode());
-                    ps.setDate(5, patient.birthDate);
-                    ps.setDate(6, patient.deathDate);
-                    ps.setString(7, patient.gender);
-                    ps.setObject(8, patient.ageInYears);
-                    ps.setString(9, patient.language);
-                    ps.setString(10, patient.race);
-                    ps.setString(11, patient.maritalStatus);
-                    ps.setString(12, patient.religion);
-                    ps.setString(13, patient.zip);
-                    ps.setString(14, null);
-                    ps.setObject(15, null);
+                    ps.setString(2, MetadataUtil.toSourceSystemCode(patient.encryptedPatientIdSource));
+                    ps.setString(3, patient.vital.getCode());
+                    ps.setDate(4, patient.birthDate);
+                    ps.setDate(5, patient.deathDate);
+                    ps.setString(6, patient.gender);
+                    ps.setObject(7, patient.ageInYears);
+                    ps.setString(8, patient.language);
+                    ps.setString(9, patient.race);
+                    ps.setString(10, patient.maritalStatus);
+                    ps.setString(11, patient.religion);
+                    ps.setString(12, patient.zip);
+                    ps.setString(13, null);
+                    ps.setObject(14, null);
+                    ps.setTimestamp(15, null);
                     ps.setTimestamp(16, null);
-                    ps.setTimestamp(17, null);
-                    ps.setTimestamp(18, importTimestamp);
-                    ps.setString(19, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
+                    ps.setTimestamp(17, importTimestamp);
+                    ps.setString(18, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
                     ps.addBatch();
                     ps.clearParameters();
 
-                    System.out.println("Patient num: " + patient.patientNum);
                     ps2.setString(1, patient.encryptedPatientId);
-                    ps2.setString(2, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                    ps2.setString(2, MetadataUtil.toSourceSystemCode(patient.encryptedPatientIdSource));
                     ps2.setString(3, patient.encryptedPatientId);
-                    ps2.setString(4, MetadataUtil.toSourceSystemCode(NUM_FACTORY.getSourceSystem()));
+                    ps2.setString(4, MetadataUtil.toSourceSystemCode(patient.encryptedPatientIdSource));
                     ps2.setString(5, PatientIdeStatusCode.ACTIVE.getCode());
-                    ps2.setLong(6, patient.patientNum);
+                    ps2.setDate(6, null);
                     ps2.setDate(7, null);
                     ps2.setDate(8, null);
-                    ps2.setDate(9, null);
-                    ps2.setString(10, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
+                    ps2.setString(9, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
                     ps2.addBatch();
                     ps2.clearParameters();
 
