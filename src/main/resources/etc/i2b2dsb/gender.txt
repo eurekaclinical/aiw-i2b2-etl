@@ -1,0 +1,4 @@
+Female	DEM|SEX:f
+Male	DEM|SEX:m
+NotRecorded	DEM|SEX:@
+Unknown	DEM|SEX:u
