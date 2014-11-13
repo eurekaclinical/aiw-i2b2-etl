@@ -69,7 +69,12 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
 
     public I2B2DataSourceBackend() {
         setDefaultKeyIdTable(PATIENT_DIMENSION);
-        setDefaultKeyIdColumn("patient_num");
+        /*
+         * Per the i2b2 1.7 CRC design docs and stored procedure 
+         * implementation, 
+         * to_char(patient_num) = patient_ide when patient_ide_source = 'HIVE'.
+         */
+        setDefaultKeyIdColumn("patient_num"); 
         setDefaultKeyIdJoinKey("patient_num");
         setMapper(null);
     }
@@ -111,7 +116,10 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                     null, 
                     null, 
                     new PropertySpec[]{
-                        new PropertySpec("patientId", null, new ColumnSpec(keyIdSchema, keyIdTable, "patient_num"), ValueType.NOMINALVALUE)
+                        /*
+                         * This should be patient_ide where patient_ide_source = 'HIVE'.
+                         */
+                        new PropertySpec("patientId", null, new ColumnSpec(keyIdSchema, keyIdTable, keyIdColumn), ValueType.NOMINALVALUE)
                     }, 
                     new ReferenceSpec[]{
                         new ReferenceSpec("encounters", "Encounters", new ColumnSpec[]{new ColumnSpec(keyIdSchema, keyIdTable, new JoinSpec(keyIdJoinKey, "patient_num", new ColumnSpec(schemaName, VISIT_DIMENSION, "encounter_num")))}, ReferenceSpec.Type.MANY), 
@@ -133,6 +141,8 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                         new PropertySpec("race", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "RACE_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("race.txt"), true), ValueType.NOMINALVALUE), 
                         new PropertySpec("ethnicity", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "RACE_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("ethnicity.txt"), true), ValueType.NOMINALVALUE), 
                         new PropertySpec("dateOfBirth", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "BIRTH_DATE"), ValueType.DATEVALUE, new JDBCDateTimeTimestampDateValueFormat()),
+                        new PropertySpec("language", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "LANGUAGE_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("language.txt"), true), ValueType.NOMINALVALUE),
+                        new PropertySpec("maritalStatus", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "MARITAL_STATUS_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("marital_status.txt"), true), ValueType.NOMINALVALUE), 
                     },
                     new ReferenceSpec[]{
                         new ReferenceSpec("encounters", "Encounters", 
@@ -144,6 +154,18 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                                 }, ReferenceSpec.Type.ONE)
                     }, 
                     null, null, null, null, null, null, null, null),
+            new EntitySpec("Providers", null, 
+                    new String[]{"AttendingPhysician"}, 
+                    false, 
+                    new ColumnSpec(keyIdSchema, keyIdTable, keyIdColumn, new JoinSpec(keyIdJoinKey, "patient_num", new ColumnSpec(schemaName, PATIENT_DIMENSION, new JoinSpec("patient_num", "patient_num", new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, OBSERVATION_FACT, new JoinSpec("provider_id", "provider_id", new ColumnSpec(schemaName, PROVIDER_DIMENSION))))))))), 
+                    new ColumnSpec[]{
+                        new ColumnSpec(schemaName, PROVIDER_DIMENSION, "provider_id")
+                    }, 
+                    null, 
+                    null, 
+                    new PropertySpec[]{
+                        new PropertySpec("fullName", null, new ColumnSpec(schemaName, PROVIDER_DIMENSION, "NAME_CHAR"), ValueType.NOMINALVALUE)
+                    }, null, null, null, null, null, null, null, null, null),
         };
     }
 
@@ -157,13 +179,17 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                     true, 
                     new ColumnSpec(keyIdSchema, keyIdTable, keyIdColumn, new JoinSpec(keyIdJoinKey, "patient_num", new ColumnSpec(schemaName, PATIENT_DIMENSION, new JoinSpec("patient_num", "patient_num", new ColumnSpec(schemaName, VISIT_DIMENSION))))), 
                     new ColumnSpec[]{
+                        /*
+                         * This should be encounter_ide where encounter_ide_source = 'HIVE'.
+                         * Like with patient_num, encounter_num = encounter_ide
+                         * when encounter_ide_source = 'HIVE'.
+                         */
                         new ColumnSpec(schemaName, VISIT_DIMENSION, "encounter_num")
                     }, 
                     new ColumnSpec(schemaName, VISIT_DIMENSION, "START_DATE"), 
                     new ColumnSpec(schemaName, VISIT_DIMENSION, "END_DATE"), 
                     new PropertySpec[]{
                         new PropertySpec("encounterId", null, new ColumnSpec(schemaName, VISIT_DIMENSION, "encounter_num"), ValueType.NOMINALVALUE), 
-                        new PropertySpec("age", null, new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("patient_num", "patient_num", new ColumnSpec(schemaName, PATIENT_DIMENSION, "AGE_IN_YEARS_NUM"))), ValueType.NUMBERVALUE)
                         /*new PropertySpec("type", null, new ColumnSpec(schemaName, "ENCOUNTER", "PATIENTTYPE", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("type_encounter_07182011.txt"), true), ValueType.NOMINALVALUE), 
                         new PropertySpec("healthcareEntity", null, new ColumnSpec(schemaName, "ENCOUNTER", "UNIVCODE", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("entity_healthcare_07182011.txt"), true), ValueType.NOMINALVALUE), 
                         new PropertySpec("dischargeDisposition", null, new ColumnSpec(schemaName, "ENCOUNTER", "DISCHARGESTATUSCODE", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("disposition_discharge_07182011.txt"), true), ValueType.NOMINALVALUE), 
@@ -209,13 +235,14 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                                     new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, OBSERVATION_FACT, "provider_id"))),
                                     new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, OBSERVATION_FACT, "start_date")))
                                 }, ReferenceSpec.Type.ONE), 
-                        new ReferenceSpec("provider", "AttendingPhysicians", 
+                        /*
+                         * Assumes every fact for an encounter has the same provider. PCORI CDM requires this.
+                         * This is not quite right. It will cause providers to get duplicated x the number of encounters in which each appears. With the i2b2 destination, this appears
+                         * harmless because the aiw-i2b2-etl code ends up resolving the duplicates anyway.
+                         */
+                        new ReferenceSpec("provider", "Providers", 
                                 new ColumnSpec[]{
-                                    new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("provider_id", "provider_id", new ColumnSpec(schemaName, PROVIDER_DIMENSION, "provider_id")))
-                                }, ReferenceSpec.Type.ONE), 
-                        new ReferenceSpec("attendingPhysician", "AttendingPhysicians", 
-                                new ColumnSpec[]{
-                                     new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("provider_id", "provider_id", new ColumnSpec(schemaName, PROVIDER_DIMENSION, "provider_id")))
+                                    new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, OBSERVATION_FACT, "provider_id")))
                                 }, ReferenceSpec.Type.ONE)
                     /*new ReferenceSpec("chargeAmount", "Hospital Charge Amount", new ColumnSpec[]{new ColumnSpec(schemaName, "ENCOUNTER", "RECORD_ID")}, ReferenceSpec.Type.ONE)*/
                     }, 

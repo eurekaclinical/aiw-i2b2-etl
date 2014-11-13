@@ -1,0 +1,24 @@
+Single	DEM|MARITAL:s
+Single	DEM|MARITAL:single
+Married	DEM|MARITAL:m
+Married	DEM|MARITAL:married
+Divorced	DEM|MARITAL:d
+Divorced	DEM|MARITAL:divorced
+Separated	DEM|MARITAL:sep
+Separated	DEM|MARITAL:x
+Separated	DEM|MARITAL:l
+Separated	DEM|MARITAL:legal.sep
+Widowed	DEM|MARITAL:w
+Widowed	DEM|MARITAL:wi
+Widowed	DEM|MARITAL:wid-widr
+Widowed	DEM|MARITAL:widow
+LifePartner	DEM|MARITAL:life part
+LifePartner	DEM|MARITAL:p
+CommonLaw	DEM|MARITAL:c
+CommonLaw	DEM|MARITAL:mar-comm.law
+Unknown	DEM|MARITAL:@
+Unknown	DEM|MARITAL:u
+Unknown	DEM|MARITAL:unk
+Unknown	DEM|MARITAL:o
+Unknown	DEM|MARITAL:pa
+Unknown	DEM|MARITAL:partner
