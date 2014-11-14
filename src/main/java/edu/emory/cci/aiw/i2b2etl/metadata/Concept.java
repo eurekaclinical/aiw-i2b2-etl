@@ -152,6 +152,10 @@ public final class Concept extends DefaultMutableTreeNode {
         usrObj.setDisplayName(displayName);
     }
     
+    public void setOperator(ConceptOperator operator) {
+        usrObj.setOperator(operator);
+    }
+    
     public ConceptOperator getOperator() {
         return usrObj.getOperator();
     }
@@ -195,6 +199,30 @@ public final class Concept extends DefaultMutableTreeNode {
 
     public String getAppliedPath() {
         return usrObj.getAppliedPath();
+    }
+    
+    public void setFactTableColumn(String factTableColumn) {
+        usrObj.setFactTableColumn(factTableColumn);
+    }
+
+    public String getFactTableColumn() {
+        return usrObj.getFactTableColumn();
+    }
+    
+    public void setTableName(String tableName) {
+        usrObj.setTableName(tableName);
+    }
+
+    public String getTableName() {
+        return usrObj.getTableName();
+    }
+    
+    public void setColumnName(String columnName) {
+        usrObj.setColumnName(columnName);
+    }
+
+    public String getColumnName() {
+        return usrObj.getColumnName();
     }
 
 }

@@ -375,7 +375,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
             
             logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
-            PatientDimension.insertAges(this.ontologyModel, this.dataSchemaConnection, this.dictSection.get("ageConceptCodePrefix"), this.dictSection, this.obxSection);
             
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
@@ -666,12 +665,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     } else {
                         ps.setClob(8, new StringReader(concept.getMetadataXml()));
                     }
-                    ps.setString(9, "concept_cd");
-                    ps.setString(10, "concept_dimension");
-                    ps.setString(11, "concept_path");
-                    ps.setString(12, concept.getDataType().getCode());
-                    ps.setString(13, concept.getOperator().getSQLOperator());
-                    ps.setString(14, concept.getDimCode());
+                    ps.setString(9, concept.getFactTableColumn()); //patient_num
+                    ps.setString(10, concept.getTableName()); //patient_dimension
+                    ps.setString(11, concept.getColumnName()); //birth_date
+                    ps.setString(12, concept.getDataType().getCode()); 
+                    ps.setString(13, concept.getOperator().getSQLOperator());// >, BETWEEN
+                    ps.setString(14, concept.getDimCode()); //sysdate - (365.25*upperboundplusoneyear), sysdate - (365.25*upperboundplusoneyear) and sysdate - (365.25*lowerbound) 
                     ps.setObject(15, null);
                     ps.setString(16, concept.getDisplayName());
                     ps.setTimestamp(17, importTimestamp);

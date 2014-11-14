@@ -22,6 +22,8 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import java.text.ChoiceFormat;
+import java.text.MessageFormat;
 import org.protempa.*;
 import org.protempa.ValueSet.ValueSetElement;
 import org.protempa.proposition.value.NumberValue;
@@ -87,6 +89,24 @@ class DemographicsConceptTreeBuilder {
             String ageRangeDisplayName = String.valueOf(ages[0]) + '-'
                     + String.valueOf(ages[ages.length - 1]) + " years old";
             Concept ageCategory = newConcept(ageRangeDisplayName);
+            ageCategory.setFactTableColumn("patient_num");
+            ageCategory.setTableName("patient_dimension");
+            ageCategory.setColumnName("birth_date");
+            ageCategory.setDataType(DataType.NUMERIC);
+            if (i == 0) {
+                ageCategory.setOperator(ConceptOperator.GREATER_THAN);
+                ageCategory.setDimCode("sysdate - (365.25 * " + (ages[ages.length - 1] + 1) + ")");
+            } else {
+                ageCategory.setOperator(ConceptOperator.BETWEEN);
+                /*
+                 * This dimcode is what is recommended in i2b2's documentation at
+                 * https://community.i2b2.org/wiki/display/DevForum/Query+Building+from+Ontology.
+                 * There seems to be a problem with it, though. BETWEEN is inclusive on both
+                 * sides of the range. Thus, if sysdate happens to be exactly midnight, the
+                 * patient will end up in two adjacent age buckets.
+                 */
+                ageCategory.setDimCode("sysdate - (365.25 * " + (ages[ages.length - 1] + 1) + ") AND sysdate - (365.25 * " + ages[0] + ")");
+            }
             age.add(ageCategory);
             for (int j = 0; j < ages.length; j++) {
                 try {
@@ -107,7 +127,21 @@ class DemographicsConceptTreeBuilder {
                         ageConcept.setSourceSystemCode(
                                 MetadataUtil.toSourceSystemCode(
                                 I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
-                        ageConcept.setDataType(DataType.TEXT);
+                        ageConcept.setDataType(DataType.NUMERIC);
+                        ageConcept.setFactTableColumn("patient_num");
+                        ageConcept.setTableName("patient_dimension");
+                        ageConcept.setColumnName("birth_date");
+                        ageConcept.setOperator(ConceptOperator.BETWEEN);
+                        /*
+                         * This dimcode is what is recommended in i2b2's
+                         * documentation at
+                         * https://community.i2b2.org/wiki/display/DevForum/Query+Building+from+Ontology.
+                         * There seems to be a problem with it, though. BETWEEN
+                         * is inclusive on both sides of the range. Thus, if
+                         * sysdate happens to be exactly midnight, the patient
+                         * will end up in two adjacent age buckets.
+                         */
+                        ageConcept.setDimCode("sysdate - (365.25 * " + (ages[j] + 1) + ") AND sysdate - (365.25 * " + ages[j] + ")");
                         this.metadata.addToIdCache(ageConcept);
                     } else {
                         throw new OntologyBuildException("Duplicate age concept: " + ageConcept.getConceptCode());

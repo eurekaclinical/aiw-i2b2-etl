@@ -26,6 +26,10 @@ import java.util.ArrayList;
 import javax.swing.tree.TreeNode;
 
 public class UserObject {
+    
+    private static final String DEFAULT_FACT_TABLE_COLUMN = "concept_cd";
+    private static final String DEFAULT_TABLE_NAME = "concept_dimension";
+    private static final String DEFAULT_COLUMN_NAME = "concept_path";
 
     //	
     //	this class should eventually be split up into
@@ -67,6 +71,10 @@ public class UserObject {
 	// contains, eg, <ValueMetadata><loinc>...</loinc><ValueMetadata> to tell
 	// i2b2 that this concept has numerical values
 	private String metadataXml;
+    private String factTableColumn;
+    private String tableName;
+    private String columnName;
+    private ConceptOperator operator;
 
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
@@ -84,6 +92,10 @@ public class UserObject {
         this.valueTypeCode = ValueTypeCode.UNSPECIFIED;
         this.conceptCodePrefix = conceptCodePrefix;
         this.appliedPath = "@";  //this field is mandatory in i2b2 1.7. assigning the default value
+        this.factTableColumn = DEFAULT_FACT_TABLE_COLUMN;
+        this.tableName = DEFAULT_TABLE_NAME;
+        this.columnName = DEFAULT_COLUMN_NAME;
+        this.operator = defaultOperator();
     }
     
     UserObject(UserObject usrObj, Concept concept) {
@@ -100,6 +112,10 @@ public class UserObject {
         this.conceptCodePrefix = usrObj.conceptCodePrefix;
         this.copy = true;
         this.appliedPath = usrObj.appliedPath;
+        this.factTableColumn = usrObj.factTableColumn;
+        this.tableName = usrObj.tableName;
+        this.columnName = usrObj.columnName;
+        this.operator = usrObj.operator;
     }
     
     public String getConceptCodePrefix() {
@@ -192,6 +208,14 @@ public class UserObject {
     public ValueTypeCode getValueTypeCode() {
         return this.valueTypeCode;
     }
+    
+    public void setOperator(ConceptOperator operator) {
+        if (operator == null) {
+            this.operator = defaultOperator();
+        } else {
+            this.operator = operator;
+        }
+    }
 
     /**
      * Returns which operator will be used to query this concept (
@@ -202,6 +226,10 @@ public class UserObject {
      * @return a concept operator.
      */
     public ConceptOperator getOperator() {
+        return this.operator;
+    }
+    
+    private ConceptOperator defaultOperator() {
         if (isInDataSource() && !getDimCode().contains("_")) {
             return ConceptOperator.EQUAL;
         } else {
@@ -260,6 +288,42 @@ public class UserObject {
 
     public String getAppliedPath() {
         return this.appliedPath;
+    }
+
+    void setFactTableColumn(String factTableColumn) {
+        if (factTableColumn == null) {
+            this.factTableColumn = DEFAULT_FACT_TABLE_COLUMN;
+        } else {
+            this.factTableColumn = factTableColumn;
+        }
+    }
+
+    String getFactTableColumn() {
+        return this.factTableColumn;
+    }
+
+    void setTableName(String tableName) {
+        if (tableName == null) {
+            this.tableName = DEFAULT_TABLE_NAME;
+        } else {
+            this.tableName = tableName;
+        }
+    }
+
+    String getTableName() {
+        return this.tableName;
+    }
+
+    void setColumnName(String columnName) {
+        if (columnName == null) {
+            this.columnName = DEFAULT_COLUMN_NAME;
+        } else {
+            this.columnName = columnName;
+        }
+    }
+
+    String getColumnName() {
+        return this.columnName;
     }
 
 }

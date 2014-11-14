@@ -25,7 +25,10 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
  */
 public enum ConceptOperator {
     LIKE("LIKE"),
-    EQUAL("=");
+    EQUAL("="),
+    GREATER_THAN(">"),
+    BETWEEN("BETWEEN"),
+    IN("IN");
     
     private final String operator;
     

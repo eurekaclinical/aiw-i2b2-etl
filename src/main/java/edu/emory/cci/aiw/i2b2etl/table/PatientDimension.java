@@ -19,10 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.table;
 
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
-import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import java.sql.*;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -133,70 +130,6 @@ public class PatientDimension {
 
     public Long getAgeInYears() {
         return this.ageInYears;
-    }
-
-    public static void insertAges(Metadata ontologyModel, Connection cn, String ageConceptCodePrefix, DictionarySection dictSection,
-            DataSection obxSection) throws SQLException {
-        int batchSize = 1000;
-        int counter = 0;
-        int commitCounter = 0;
-        int commitSize = 10000;
-        PreparedStatement ps = null;
-        try {
-            Timestamp importTimestamp =
-                    new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("INSERT INTO " + ObservationFact.TEMP_OBSERVATION_TABLE + " (encounter_id, encounter_id_source, patient_id, patient_id_source, CONCEPT_CD, PROVIDER_ID, START_DATE, END_DATE, MODIFIER_CD, IMPORT_DATE, INSTANCE_NUM) VALUES (?, ?, ?, ?, CONCAT('" + ageConceptCodePrefix + ":', ?), '@', ?, ?, 0, ?, 1)");
-            for (PatientDimension patient : ontologyModel.getPatients()) {
-                Long ageInYrs = patient.getAgeInYears();
-                if (ageInYrs != null) {
-                    VisitDimension visit = ontologyModel.addVisit(patient.getEncryptedPatientId(), patient.getEncryptedPatientIdSourceSystem(), null, dictSection, obxSection, null);
-                    try {
-                        ps.setString(1, visit.getEncryptedVisitId());
-                        ps.setString(2, visit.getEncryptedVisitIdSourceSystem());
-                        ps.setString(3, patient.getEncryptedPatientId());
-                        ps.setString(4, patient.getEncryptedPatientIdSourceSystem());
-                        ps.setString(5, ageInYrs.toString());
-                        ps.setTimestamp(6, importTimestamp);
-                        ps.setTimestamp(7, importTimestamp);
-                        ps.setTimestamp(8, importTimestamp);
-                        ps.addBatch();
-                        ps.clearParameters();
-                        counter++;
-                        commitCounter++;
-                        if (counter >= batchSize) {
-                            importTimestamp =
-                                    new Timestamp(System.currentTimeMillis());
-                            ps.executeBatch();
-                            ps.clearBatch();
-                            counter = 0;
-                        }
-                        if (commitCounter >= commitSize) {
-                            cn.commit();
-                            commitCounter = 0;
-                        }
-                    } catch (SQLException e) {
-                        logger.log(Level.SEVERE, "DB_PD_INSERT_FAIL {0}", patient);
-                        throw e;
-                    }
-                }
-            }
-            if (counter > 0) {
-                ps.executeBatch();
-                ps.clearBatch();
-            }
-            if (commitCounter > 0) {
-                cn.commit();
-            }
-            ps.close();
-            ps = null;
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                }
-            }
-        }
     }
 
     public static void insertAll(Collection<PatientDimension> patients, Connection cn, String projectName) throws SQLException {
