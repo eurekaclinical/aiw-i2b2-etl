@@ -234,7 +234,7 @@ public abstract class FactHandler {
         ps.setString(5, obx.getPatient().getEncryptedPatientIdSourceSystem());
         ps.setString(6, TableUtil.setStringAttribute(obx.getProvider().getConcept().getConceptCode()));
         ps.setDate(7, TableUtil.setDateAttribute(obx.getStartDate()));
-        ps.setString(8, Long.toString(ctr++));
+        ps.setString(8, obx.getModifierCd());
         ps.setLong(9, obx.getInstanceNum());
 
         Value value = obx.getValue();
