@@ -327,7 +327,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException {
         this.factHandlers = new ArrayList<>();
-        if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equals("true")) {
+        if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equalsIgnoreCase("true")) {
             addProviderFactHandler();
         }
         addPropositionFactHandlers();
@@ -386,7 +386,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
 
-            if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equals("true")) {
+            if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equalsIgnoreCase("true")) {
                 this.ontologyModel.buildProviderHierarchy();
             }
             // persist Patients & Visits.

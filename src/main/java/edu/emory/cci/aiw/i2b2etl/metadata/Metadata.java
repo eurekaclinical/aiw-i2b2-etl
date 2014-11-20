@@ -164,7 +164,7 @@ public final class Metadata {
             constructTreePre(folderSpecs);
 
             String loadDemographicsHeirarchy = this.dictSection.get("loadDemographicsTree");
-            if (loadDemographicsHeirarchy == null || loadDemographicsHeirarchy.equals("true")) {
+            if (loadDemographicsHeirarchy == null || loadDemographicsHeirarchy.equalsIgnoreCase("true")) {
                 buildDemographicsHierarchy();
             }
 
