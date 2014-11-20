@@ -26,6 +26,7 @@ import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.lang3.StringUtils;
 import org.protempa.KnowledgeSource;
@@ -59,37 +61,37 @@ import org.protempa.proposition.value.Value;
  * Controls the etl process for extracting data from files and a
  * knowledgeSource(s) for transform and load into an i2b2 instance. It is
  * single-threaded and should be called only once per process.
- *
+ * <p/>
  * a data file has a corresponding edu.emory.cci.registry.i2b2datareader handler
  * class. the meta information about the data files also have handlers in
  * edu.emory.cci.registry.i2b2metareader.
- *
+ * <p/>
  * currently, meta information is found in both the knowledgeSource AND in the
  * data files. the data is found in the data files created by PROTEMPA and a
  * file created by an SQL that fetches demographics data.
- *
+ * <p/>
  * there is a conf.xml file that declares how some of this process works. the
  * database & filesystem nodes point to database and file resources. files, once
  * declared, can be grouped into sets of files. the concept dimensions used in
  * i2b2 are declared in the meta node. each branch under the meta node is
  * created from data from the knowledgeSource, file(s), or de novo (hard-coded
  * in a java class).
- *
+ * <p/>
  * the metadatatree node declares how to assemble branches into the final
  * product for i2b2 (the metadata schema).
- *
+ * <p/>
  * lastly, the observation node declares what to process into observation_fact
  * entities in i2b2. this, along with the implicit Patient, Provider, Visit &
  * Concept dimensions are laoded into the data schema.
- *
+ * <p/>
  * the 'resources' folder in this project contains 'conf.xml' and 'demmeta.zip'.
  * the demmeta file needs pointing to from within the conf.xml file; it holds
  * information necessary to build out the demographics portion of the ontology
  * tree.
- *
+ * <p/>
  * the method doETL() orchestrates the entire process. the steps are commented
  * within that method.
- *
+ * <p/>
  * as little information as is possible is kept in memory so that the
  * observations get streamed from flat files, matched with in-memory data, and
  * batch-loaded into the database.
@@ -115,11 +117,11 @@ public final class Metadata {
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
 
     public Metadata(KnowledgeSource knowledgeSource,
-            PropositionDefinition[] userDefinedPropositionDefinitions,
-            String rootNodeDisplayName,
-            FolderSpec[] folderSpecs,
-            DictionarySection dictSection,
-            DataSection dataSection) throws OntologyBuildException {
+                    PropositionDefinition[] userDefinedPropositionDefinitions,
+                    String rootNodeDisplayName,
+                    FolderSpec[] folderSpecs,
+                    DictionarySection dictSection,
+                    DataSection dataSection) throws OntologyBuildException {
         if (knowledgeSource == null) {
             throw new IllegalArgumentException("knowledgeSource cannot be null");
         }
@@ -161,7 +163,10 @@ public final class Metadata {
             logger.log(Level.FINE, "STEP: construct tree");
             constructTreePre(folderSpecs);
 
-            buildDemographicsHierarchy();
+            String loadDemographicsHeirarchy = this.dictSection.get("loadDemographicsTree");
+            if (loadDemographicsHeirarchy == null || loadDemographicsHeirarchy.equals("true")) {
+                buildDemographicsHierarchy();
+            }
 
             //
             // at this point, the in-memory representation of the ontology is
@@ -220,13 +225,13 @@ public final class Metadata {
     }
 
     public ProviderDimension addProviderIfNeeded(Proposition encounterProp,
-            String fullNameReference, String fullNameProperty,
-            String firstNameReference, String firstNameProperty,
-            String middleNameReference, String middleNameProperty,
-            String lastNameReference, String lastNameProperty,
-            Map<UniqueId, Proposition> references) throws InvalidConceptCodeException {
+                                                 String fullNameReference, String fullNameProperty,
+                                                 String firstNameReference, String firstNameProperty,
+                                                 String middleNameReference, String middleNameProperty,
+                                                 String lastNameReference, String lastNameProperty,
+                                                 Map<UniqueId, Proposition> references) throws InvalidConceptCodeException {
         Set<String> sources = new HashSet<>(4);
-        
+
         String firstName = extractNamePart(firstNameReference, firstNameProperty, encounterProp, references, sources);
         String middleName = extractNamePart(middleNameReference, middleNameProperty, encounterProp, references, sources);
         String lastName = extractNamePart(lastNameReference, lastNameProperty, encounterProp, references, sources);
@@ -269,7 +274,7 @@ public final class Metadata {
             return null;
         }
     }
-    
+
     private void extractSource(Set<String> sources, Proposition provider) {
         if (provider != null) {
             sources.add(provider.getSourceSystem().getStringRepresentation());
@@ -353,9 +358,9 @@ public final class Metadata {
     }
 
     public PatientDimension addPatient(String keyId, Proposition encounterProp,
-            DictionarySection dictSection,
-            DataSection obxSection,
-            Map<UniqueId, Proposition> references) throws InvalidPatientRecordException {
+                                       DictionarySection dictSection,
+                                       DataSection obxSection,
+                                       Map<UniqueId, Proposition> references) throws InvalidPatientRecordException {
         String obxSectionStr = dictSection.get("patientDimensionMRN");
         DataSpec dataSpec = obxSection.get(obxSectionStr);
         List<UniqueId> uids = encounterProp.getReferences(dataSpec.referenceName);
@@ -454,10 +459,10 @@ public final class Metadata {
     }
 
     public VisitDimension addVisit(String encryptedPatientId,
-            String encryptedPatientIdSourceSystem,
-            TemporalProposition encounterProp, DictionarySection dictSection,
-            DataSection obxSection,
-            Map<UniqueId, Proposition> references) {
+                                   String encryptedPatientIdSourceSystem,
+                                   TemporalProposition encounterProp, DictionarySection dictSection,
+                                   DataSection obxSection,
+                                   Map<UniqueId, Proposition> references) {
         java.util.Date visitStartDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinStart()) : null;
         java.util.Date visitEndDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinFinish()) : null;
         Value encryptedId = encounterProp != null ? getField(dictSection, obxSection, "visitDimensionDecipheredId", encounterProp, references) : null;
@@ -481,12 +486,12 @@ public final class Metadata {
                 visitStartDate, visitEndDate, encryptedIdStr,
                 encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
                 I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
-                encryptedPatientIdSourceSystem, 
+                encryptedPatientIdSourceSystem,
                 encounterProp != null ? encounterProp.getDownloadDate() : null, updateDate);
         visitCache.add(vd);
         return vd;
     }
-    
+
     Concept getOrCreateHardCodedFolder(String... conceptIdSuffixes) throws InvalidConceptCodeException {
         String conceptIdSuffix = StringUtils.join(conceptIdSuffixes, '|');
         ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|" + conceptIdSuffix, this);
@@ -508,8 +513,8 @@ public final class Metadata {
     }
 
     private static Value getField(DictionarySection dictSection,
-            DataSection obxSection, String field,
-            Proposition encounterProp, Map<UniqueId, Proposition> references) {
+                                  DataSection obxSection, String field,
+                                  Proposition encounterProp, Map<UniqueId, Proposition> references) {
         Value val;
         String obxSectionStr = dictSection.get(field);
         if (obxSectionStr != null) {
@@ -608,8 +613,8 @@ public final class Metadata {
             String[] propIds
                     = new String[this.userDefinedPropositionDefinitions.length];
             for (int i = 0;
-                    i < this.userDefinedPropositionDefinitions.length;
-                    i++) {
+                 i < this.userDefinedPropositionDefinitions.length;
+                 i++) {
                 propIds[i] = this.userDefinedPropositionDefinitions[i].getId();
             }
             folderSpec.propositions = propIds;
@@ -624,7 +629,7 @@ public final class Metadata {
      * of Protege (mostly).
      *
      * @param concept the root {@link Concept} of the tree or subtree.
-     * @param ctr the number of levels to remove.
+     * @param ctr     the number of levels to remove.
      */
     private static void promote(Concept concept, int ctr) throws InvalidPromoteArgumentException {
         if (ctr > 0) {
@@ -666,15 +671,15 @@ public final class Metadata {
         if (folderSpec.property == null) {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.knowledgeSource,
-                            folderSpec.propositions, folderSpec.conceptCodePrefix,
+                    folderSpec.propositions, folderSpec.conceptCodePrefix,
                     folderSpec.valueType, this);
             concepts = propProxy.build();
 
         } else {
             ValueSetConceptTreeBuilder vsProxy
                     = new ValueSetConceptTreeBuilder(this.knowledgeSource,
-                            folderSpec.propositions, folderSpec.property,
-                            folderSpec.conceptCodePrefix, this);
+                    folderSpec.propositions, folderSpec.property,
+                    folderSpec.conceptCodePrefix, this);
             concepts = vsProxy.build();
         }
         for (Concept c : concepts) {

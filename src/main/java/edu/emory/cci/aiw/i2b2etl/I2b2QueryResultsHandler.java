@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.protempa.dest.QueryResultsHandlerCloseException;
 
 /**
@@ -105,6 +106,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final DataSection.DataSpec providerLastNameSpec;
     private final ConnectionSpec metadataConnectionSpec;
     private final String visitPropId;
+    private final String loadProviderHeirarchy;
     private Connection dataSchemaConnection;
 
     /**
@@ -168,6 +170,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
             }
         }
+
+        this.loadProviderHeirarchy = this.dictSection.get("loadProvidersTree");
 
     }
 
@@ -297,7 +301,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      */
     private void dropTempTables() throws SQLException {
         try (final Connection conn = openDataDatabaseConnection();
-            CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }")) {
+             CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }")) {
             call.setString(1, tempPatientTableName());
             call.execute();
 
@@ -323,7 +327,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException {
         this.factHandlers = new ArrayList<>();
-        addProviderFactHandler();
+        if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equals("true")) {
+            addProviderFactHandler();
+        }
         addPropositionFactHandlers();
     }
 
@@ -337,17 +343,17 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     if (pd == null) {
                         pd = this.ontologyModel.addPatient(keyId, prop, this.dictSection, this.obxSection, references);
                     }
-                    ProviderDimension provider = 
+                    ProviderDimension provider =
                             this.ontologyModel.addProviderIfNeeded(
-                                    prop, 
-                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.referenceName : null, 
-                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.propertyName : null, 
-                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.referenceName : null, 
-                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.propertyName : null, 
-                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.referenceName : null, 
-                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.propertyName : null, 
-                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null, 
-                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null, 
+                                    prop,
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.referenceName : null,
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.propertyName : null,
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.referenceName : null,
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.propertyName : null,
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.referenceName : null,
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.propertyName : null,
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null,
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null,
                                     references);
                     VisitDimension vd = this.ontologyModel.addVisit(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references);
                     for (FactHandler factHandler : this.factHandlers) {
@@ -369,23 +375,26 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         String queryId = this.query.getId();
         String projectName = this.dictSection.get("projectName");
 
+
         try {
             for (FactHandler factHandler : this.factHandlers) {
                 factHandler.clearOut(this.dataSchemaConnection);
             }
-            
+
             logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
-            
+
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
 
-            this.ontologyModel.buildProviderHierarchy();
+            if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equals("true")) {
+                this.ontologyModel.buildProviderHierarchy();
+            }
             // persist Patients & Visits.
             logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
             logger.log(Level.INFO, "Populating patient dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
                 PatientDimension.insertAll(this.ontologyModel.getPatients(),
-                        conn,projectName);
+                        conn, projectName);
 
                 try (CallableStatement mappingCall = conn.prepareCall("{ call INSERT_PID_MAP_FROMTEMP(?, ?, ?) }")) {
                     mappingCall.setString(1, tempPatientMappingTableName());
@@ -396,10 +405,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     //commit and rollback are called by stored procedure.
                 }
             }
-            
+
             try (Connection conn = openDataDatabaseConnection()) {
                 VisitDimension.insertAll(this.ontologyModel.getVisits(),
-                        conn,projectName);
+                        conn, projectName);
                 try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?, ?) }")) {
                     mappingCall.setString(1, tempEncounterMappingTableName());
                     mappingCall.setInt(2, UPLOAD_ID);
@@ -420,7 +429,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 } catch (SQLException ex) {
                     try {
                         conn.rollback();
-                    } catch (SQLException ignore) {}
+                    } catch (SQLException ignore) {
+                    }
                     throw ex;
                 }
             }
@@ -436,7 +446,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     //commit and rollback are called by the stored procedure.
                 }
             }
-            
+
             // find Provider root. gather its leaf nodes. persist Providers.
             logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
@@ -451,7 +461,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 } catch (SQLException ex) {
                     try {
                         conn.rollback();
-                    } catch (SQLException ignore) {}
+                    } catch (SQLException ignore) {
+                    }
                     throw ex;
                 }
             }
@@ -469,7 +480,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 } catch (SQLException ex) {
                     try {
                         conn.rollback();
-                    } catch (SQLException ignore) {}
+                    } catch (SQLException ignore) {
+                    }
                     throw ex;
                 }
             }
@@ -508,7 +520,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
     }
-    
+
     @Override
     public String[] getPropositionIdsNeeded() {
         if (!inferPropositionIdsNeeded) {
@@ -584,10 +596,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             } else {
                 links = null;
             }
-            
-            PropositionFactHandler propFactHandler = 
-                    new PropositionFactHandler(links, obx.propertyName, 
-                            obx.start, obx.finish, obx.units, 
+
+            PropositionFactHandler propFactHandler =
+                    new PropositionFactHandler(links, obx.propertyName,
+                            obx.start, obx.finish, obx.units,
                             potentialDerivedPropIdsArr, this.ontologyModel);
             this.factHandlers.add(propFactHandler);
         }
@@ -668,7 +680,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     ps.setString(9, concept.getFactTableColumn()); //patient_num
                     ps.setString(10, concept.getTableName()); //patient_dimension
                     ps.setString(11, concept.getColumnName()); //birth_date
-                    ps.setString(12, concept.getDataType().getCode()); 
+                    ps.setString(12, concept.getDataType().getCode());
                     ps.setString(13, concept.getOperator().getSQLOperator());// >, BETWEEN
                     ps.setString(14, concept.getDimCode()); //sysdate - (365.25*upperboundplusoneyear), sysdate - (365.25*upperboundplusoneyear) and sysdate - (365.25*lowerbound) 
                     ps.setObject(15, null);
