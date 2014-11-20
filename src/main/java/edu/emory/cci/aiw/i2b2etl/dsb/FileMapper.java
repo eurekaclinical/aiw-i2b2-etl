@@ -19,12 +19,9 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dsb;
 
-import au.com.bytecode.opencsv.CSVReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.protempa.backend.dsb.relationaldb.ColumnSpec;
@@ -110,10 +107,9 @@ public final class FileMapper extends CSVMapper {
         if (filename == null) {
             throw new IllegalArgumentException("filename cannot be null");
         }
-        filename = this.pathnamePrefix + filename;
-        LOGGER.log(Level.FINER, "Attempting to get filename: {0}",
-                filename);
         File file = new File(this.pathnamePrefix, filename);
+        LOGGER.log(Level.FINER, "Attempting to get filename: {0}",
+                file.getAbsolutePath());
         return propertyNameOrPropIdToSqlCodeArray(new FileReader(file));
     }
 }
