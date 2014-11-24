@@ -70,7 +70,6 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -106,7 +105,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final DataSection.DataSpec providerLastNameSpec;
     private final ConnectionSpec metadataConnectionSpec;
     private final String visitPropId;
-    private final String loadProviderHeirarchy;
+    private boolean skipProviderHeirarchy;
     private Connection dataSchemaConnection;
 
     /**
@@ -171,7 +170,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
-        this.loadProviderHeirarchy = this.dictSection.get("loadProvidersTree");
+        this.skipProviderHeirarchy = Boolean.parseBoolean(this.dictSection.get("skipProviderHierarchy"));
 
     }
 
@@ -327,7 +326,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException {
         this.factHandlers = new ArrayList<>();
-        if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equalsIgnoreCase("true")) {
+        if (!this.skipProviderHeirarchy) {
             addProviderFactHandler();
         }
         addPropositionFactHandlers();
@@ -386,7 +385,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
 
-            if (this.loadProviderHeirarchy == null || this.loadProviderHeirarchy.equalsIgnoreCase("true")) {
+            if (!this.skipProviderHeirarchy) {
                 this.ontologyModel.buildProviderHierarchy();
             }
             // persist Patients & Visits.

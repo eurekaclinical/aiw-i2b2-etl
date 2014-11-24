@@ -163,8 +163,8 @@ public final class Metadata {
             logger.log(Level.FINE, "STEP: construct tree");
             constructTreePre(folderSpecs);
 
-            String loadDemographicsHeirarchy = this.dictSection.get("loadDemographicsTree");
-            if (loadDemographicsHeirarchy == null || loadDemographicsHeirarchy.equalsIgnoreCase("true")) {
+            boolean skipDemographicsHierarchy = Boolean.parseBoolean(this.dictSection.get("skipDemographicsHierarchy"));
+            if (!skipDemographicsHierarchy) {
                 buildDemographicsHierarchy();
             }
 
