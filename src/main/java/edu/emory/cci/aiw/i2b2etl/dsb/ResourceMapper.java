@@ -29,7 +29,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.arp.javautil.io.IOUtil;
 import org.protempa.backend.dsb.relationaldb.ColumnSpec;
-import org.protempa.backend.dsb.relationaldb.ColumnSpec.KnowledgeSourceIdToSqlCode;
+import org.protempa.backend.dsb.relationaldb.KnowledgeSourceIdToSqlCode;
+import org.protempa.backend.dsb.relationaldb.KnowledgeSourceIdToSqlCode;
 
 /**
  * Maps proposition IDs from the knowledge source to SQL. Looks for mapping
@@ -120,7 +121,7 @@ public final class ResourceMapper extends CSVMapper {
         resource = this.resourcePrefix + resource;
         LOGGER.log(Level.FINER, "Attempting to get resource: {0}",
                 resource);
-        List<ColumnSpec.KnowledgeSourceIdToSqlCode> cvs = new ArrayList<>(
+        List<KnowledgeSourceIdToSqlCode> cvs = new ArrayList<>(
                 1000);
         InputStream is = IOUtil.getResourceAsStream(resource, this.cls);
         return propertyNameOrPropIdToSqlCodeArray(new InputStreamReader(is));

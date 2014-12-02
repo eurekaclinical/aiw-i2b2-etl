@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import org.protempa.backend.dsb.relationaldb.ColumnSpec;
+import org.protempa.backend.dsb.relationaldb.KnowledgeSourceIdToSqlCode;
 
 /**
  *
@@ -40,8 +41,8 @@ public abstract class CSVMapper implements Mapper {
      * @return
      * @throws IOException 
      */
-    protected ColumnSpec.KnowledgeSourceIdToSqlCode[] propertyNameOrPropIdToSqlCodeArray(Reader reader) throws IOException {
-        List<ColumnSpec.KnowledgeSourceIdToSqlCode> cvs = new ArrayList<>(
+    protected KnowledgeSourceIdToSqlCode[] propertyNameOrPropIdToSqlCodeArray(Reader reader) throws IOException {
+        List<KnowledgeSourceIdToSqlCode> cvs = new ArrayList<>(
                 1000);
         try (CSVReader r = new CSVReader(reader, '\t')) {
             String[] cols;
@@ -50,17 +51,17 @@ public abstract class CSVMapper implements Mapper {
                 if (cols.length > 2) {
                     throw new AssertionError("Invalid mapping in line " + i + ": mapping has length " + cols.length);
                 } else if (cols.length == 1) {
-                    cvs.add(new ColumnSpec.KnowledgeSourceIdToSqlCode(cols[0],
+                    cvs.add(new KnowledgeSourceIdToSqlCode(cols[0],
                         ""));
                 } else if (cols.length == 2) {
-                    cvs.add(new ColumnSpec.KnowledgeSourceIdToSqlCode(cols[0],
+                    cvs.add(new KnowledgeSourceIdToSqlCode(cols[0],
                         cols[1]));
                 }
                 i++;
             }
         }
         return cvs
-                .toArray(new ColumnSpec.KnowledgeSourceIdToSqlCode[cvs.size()]);
+                .toArray(new KnowledgeSourceIdToSqlCode[cvs.size()]);
     }
 
     /**

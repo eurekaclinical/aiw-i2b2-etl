@@ -22,6 +22,7 @@ package edu.emory.cci.aiw.i2b2etl.dsb;
 
 import java.io.IOException;
 import org.protempa.backend.dsb.relationaldb.ColumnSpec;
+import org.protempa.backend.dsb.relationaldb.KnowledgeSourceIdToSqlCode;
 
 /**
  *
@@ -44,7 +45,7 @@ public interface Mapper {
      * @throws IOException
      *             if something goes wrong while accessing the resource
      */
-    ColumnSpec.KnowledgeSourceIdToSqlCode[] propertyNameOrPropIdToSqlCodeArray(String resource) throws IOException;
+    KnowledgeSourceIdToSqlCode[] propertyNameOrPropIdToSqlCodeArray(String resource) throws IOException;
 
     /**
      * Reads codes in a resource. The resource is prefixed by the resource

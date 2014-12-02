@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.protempa.backend.dsb.relationaldb.ColumnSpec;
-import org.protempa.backend.dsb.relationaldb.ColumnSpec.KnowledgeSourceIdToSqlCode;
+import org.protempa.backend.dsb.relationaldb.KnowledgeSourceIdToSqlCode;
 
 /**
  * Maps proposition IDs from the knowledge source to SQL. Looks for mapping

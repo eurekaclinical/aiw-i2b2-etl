@@ -27,6 +27,7 @@ import org.protempa.backend.BackendInstanceSpec;
 import org.protempa.backend.annotations.BackendInfo;
 import org.protempa.backend.annotations.BackendProperty;
 import org.protempa.backend.dsb.relationaldb.ColumnSpec;
+import org.protempa.backend.dsb.relationaldb.Operator;
 import org.protempa.backend.dsb.relationaldb.EntitySpec;
 import org.protempa.backend.dsb.relationaldb.JDBCDateTimeTimestampDateValueFormat;
 import org.protempa.backend.dsb.relationaldb.JDBCDateTimeTimestampPositionParser;
@@ -137,12 +138,12 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                     null, 
                     new PropertySpec[]{
                         new PropertySpec("patientId", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "patient_num"), ValueType.NOMINALVALUE), 
-                        new PropertySpec("gender", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "SEX_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("gender.txt"), true), ValueType.NOMINALVALUE), 
-                        new PropertySpec("race", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "RACE_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("race.txt"), true), ValueType.NOMINALVALUE), 
-                        new PropertySpec("ethnicity", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "RACE_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("ethnicity.txt"), true), ValueType.NOMINALVALUE), 
+                        new PropertySpec("gender", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "SEX_CD", Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("gender.txt"), true), ValueType.NOMINALVALUE), 
+                        new PropertySpec("race", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "RACE_CD", Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("race.txt"), true), ValueType.NOMINALVALUE), 
+                        new PropertySpec("ethnicity", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "RACE_CD", Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("ethnicity.txt"), true), ValueType.NOMINALVALUE), 
                         new PropertySpec("dateOfBirth", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "BIRTH_DATE"), ValueType.DATEVALUE, new JDBCDateTimeTimestampDateValueFormat()),
-                        new PropertySpec("language", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "LANGUAGE_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("language.txt"), true), ValueType.NOMINALVALUE),
-                        new PropertySpec("maritalStatus", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "MARITAL_STATUS_CD", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("marital_status.txt"), true), ValueType.NOMINALVALUE), 
+                        new PropertySpec("language", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "LANGUAGE_CD", Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("language.txt"), true), ValueType.NOMINALVALUE),
+                        new PropertySpec("maritalStatus", null, new ColumnSpec(schemaName, PATIENT_DIMENSION, "MARITAL_STATUS_CD", Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("marital_status.txt"), true), ValueType.NOMINALVALUE), 
                     },
                     new ReferenceSpec[]{
                         new ReferenceSpec("encounters", "Encounters", 
@@ -190,12 +191,12 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                     new ColumnSpec(schemaName, VISIT_DIMENSION, "END_DATE"), 
                     new PropertySpec[]{
                         new PropertySpec("encounterId", null, new ColumnSpec(schemaName, VISIT_DIMENSION, "encounter_num"), ValueType.NOMINALVALUE), 
-                        /*new PropertySpec("type", null, new ColumnSpec(schemaName, "ENCOUNTER", "PATIENTTYPE", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("type_encounter_07182011.txt"), true), ValueType.NOMINALVALUE), 
-                        new PropertySpec("healthcareEntity", null, new ColumnSpec(schemaName, "ENCOUNTER", "UNIVCODE", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("entity_healthcare_07182011.txt"), true), ValueType.NOMINALVALUE), 
-                        new PropertySpec("dischargeDisposition", null, new ColumnSpec(schemaName, "ENCOUNTER", "DISCHARGESTATUSCODE", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("disposition_discharge_07182011.txt"), true), ValueType.NOMINALVALUE), 
-                        new PropertySpec("dischargeDispositionCat", null, new ColumnSpec(schemaName, "ENCOUNTER", "DISCHARGESTATUSCODE", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("disposition_discharge_category_10072011.txt"), true), ValueType.NOMINALVALUE), 
+                        /*new PropertySpec("type", null, new ColumnSpec(schemaName, "ENCOUNTER", "PATIENTTYPE", ColumnSpec.Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("type_encounter_07182011.txt"), true), ValueType.NOMINALVALUE), 
+                        new PropertySpec("healthcareEntity", null, new ColumnSpec(schemaName, "ENCOUNTER", "UNIVCODE", ColumnSpec.Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("entity_healthcare_07182011.txt"), true), ValueType.NOMINALVALUE), 
+                        new PropertySpec("dischargeDisposition", null, new ColumnSpec(schemaName, "ENCOUNTER", "DISCHARGESTATUSCODE", ColumnSpec.Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("disposition_discharge_07182011.txt"), true), ValueType.NOMINALVALUE), 
+                        new PropertySpec("dischargeDispositionCat", null, new ColumnSpec(schemaName, "ENCOUNTER", "DISCHARGESTATUSCODE", ColumnSpec.Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("disposition_discharge_category_10072011.txt"), true), ValueType.NOMINALVALUE), 
                         new PropertySpec("aprdrgRiskMortalityValue", null, new ColumnSpec(schemaName, "ENCOUNTER", "APRRISKOFMORTALITY"), ValueType.NUMERICALVALUE), new PropertySpec("aprdrgSeverityValue", null, new ColumnSpec(schemaName, "ENCOUNTER", "APRSEVERITYOFILLNESS"), ValueType.NOMINALVALUE), 
-                        new PropertySpec("insuranceType", null, new ColumnSpec(schemaName, "ENCOUNTER", "HOSPITALPRIMARYPAYER", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("insurance_types_07182011.txt")), ValueType.NOMINALVALUE)*/
+                        new PropertySpec("insuranceType", null, new ColumnSpec(schemaName, "ENCOUNTER", "HOSPITALPRIMARYPAYER", ColumnSpec.Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("insurance_types_07182011.txt")), ValueType.NOMINALVALUE)*/
                         },
                     new ReferenceSpec[]{
                         new ReferenceSpec("patient", "Patients", 
@@ -262,11 +263,11 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                     null, 
                     new PropertySpec[]{
                         new PropertySpec("code", null, new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd"), ValueType.NOMINALVALUE), 
-                        //new PropertySpec("position", null, new ColumnSpec(schemaName, "ENCOUNTER", new JoinSpec("RECORD_ID", "RECORD_ID", new ColumnSpec(schemaName, "DIAGNOSIS", "SEQ_NBR", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("icd9_diagnosis_position_07182011.txt")))), ValueType.NOMINALVALUE)
+                        //new PropertySpec("position", null, new ColumnSpec(schemaName, "ENCOUNTER", new JoinSpec("RECORD_ID", "RECORD_ID", new ColumnSpec(schemaName, "DIAGNOSIS", "SEQ_NBR", ColumnSpec.Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("icd9_diagnosis_position_07182011.txt")))), ValueType.NOMINALVALUE)
                     }, 
                     null, 
                     null, 
-                    new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("icd9_diagnosis.txt"), false), 
+                    new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd", Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("icd9_diagnosis.txt"), false), 
                     null, null, null, 
                     AbsoluteTimeGranularity.DAY, 
                     POSITION_PARSER, 
@@ -287,7 +288,7 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
                     new PropertySpec[]{
                         new PropertySpec("code", null, new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd"), ValueType.NOMINALVALUE), 
                     }, null, null, 
-                    new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd", ColumnSpec.Constraint.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("icd9_procedure.txt"), false), 
+                    new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd", Operator.EQUAL_TO, this.mapper.propertyNameOrPropIdToSqlCodeArray("icd9_procedure.txt"), false), 
                     null, null, null, 
                     AbsoluteTimeGranularity.DAY, 
                     POSITION_PARSER, 
