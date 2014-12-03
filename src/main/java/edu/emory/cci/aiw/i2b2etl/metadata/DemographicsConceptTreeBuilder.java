@@ -52,16 +52,19 @@ class DemographicsConceptTreeBuilder {
     private final DataSection dataSection;
     private final Metadata metadata;
     private final String visitDimensionPropId;
+    private final String qrhId;
 
-    DemographicsConceptTreeBuilder(KnowledgeSource knowledgeSource, DictionarySection dictSection, DataSection dataSection, Metadata metadata) {
+    DemographicsConceptTreeBuilder(String qrhId, KnowledgeSource knowledgeSource, DictionarySection dictSection, DataSection dataSection, Metadata metadata) {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
         assert dataSection != null : "dataSection cannot be null";
         assert metadata != null : "metadata cannot be null";
+        assert qrhId != null : "qrhId cannot be null";
         this.knowledgeSource = knowledgeSource;
         this.dictionarySection = dictSection;
         this.dataSection = dataSection;
         this.metadata = metadata;
         this.visitDimensionPropId = dictSection.get("visitDimension");
+        this.qrhId = qrhId;
     }
 
     Concept build() throws OntologyBuildException {
@@ -125,8 +128,7 @@ class DemographicsConceptTreeBuilder {
                             ageConcept.setDisplayName(ages[j] + " years old");
                         }
                         ageConcept.setSourceSystemCode(
-                                MetadataUtil.toSourceSystemCode(
-                                I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                                MetadataUtil.toSourceSystemCode(this.qrhId));
                         ageConcept.setDataType(DataType.NUMERIC);
                         ageConcept.setFactTableColumn("patient_num");
                         ageConcept.setTableName("patient_dimension");
@@ -224,7 +226,7 @@ class DemographicsConceptTreeBuilder {
                         if (childConcept == null) {
                             childConcept = new Concept(conceptId, dataSpec.conceptCodePrefix, DemographicsConceptTreeBuilder.this.metadata);
                             childConcept.setDisplayName(valueSetElement.getDisplayName());
-                            childConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                            childConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(qrhId));
                             childConcept.setDataType(DataType.TEXT);
                             DemographicsConceptTreeBuilder.this.metadata.addToIdCache(childConcept);
                         } else {
@@ -247,7 +249,7 @@ class DemographicsConceptTreeBuilder {
             } catch (InvalidConceptCodeException ex) {
                 throw new OntologyBuildException("Error building ontology", ex);
             }
-            folder.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+            folder.setSourceSystemCode(MetadataUtil.toSourceSystemCode(this.qrhId));
             folder.setDisplayName(displayName);
             folder.setDataType(DataType.TEXT);
             this.metadata.addToIdCache(folder);

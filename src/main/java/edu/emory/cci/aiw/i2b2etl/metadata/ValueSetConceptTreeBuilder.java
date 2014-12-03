@@ -64,7 +64,7 @@ class ValueSetConceptTreeBuilder {
             for (int i = 0; i < this.rootPropositionDefinitions.length; i++) {
                 PropositionDefinition propDefinition = this.rootPropositionDefinitions[i];
                 Concept root = new Concept(ConceptId.getInstance(propDefinition.getId(), this.propertyName, this.metadata), this.conceptCodePrefix, this.metadata);
-                root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                root.setSourceSystemCode(propDefinition.getSourceId().getStringRepresentation());
                 root.setDataType(DataType.TEXT);
                 PropertyDefinition propertyDef =
                         propDefinition.propertyDefinition(propertyName);
@@ -74,7 +74,7 @@ class ValueSetConceptTreeBuilder {
                 for (ValueSetElement e : vse) {
                     Concept concept = new Concept(ConceptId.getInstance(
                             propDefinition.getId(), this.propertyName, e.getValue(), this.metadata), this.conceptCodePrefix, this.metadata);
-                    concept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(valueSet.getSourceId().getStringRepresentation()));
+                    concept.setSourceSystemCode(valueSet.getSourceId().getStringRepresentation());
                     concept.setInDataSource(true);
                     concept.setDisplayName(e.getDisplayName());
                     concept.setDataType(DataType.TEXT);

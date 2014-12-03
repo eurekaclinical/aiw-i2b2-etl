@@ -115,8 +115,9 @@ public final class Metadata {
     private final DataSection dataSection;
     private final DictionarySection dictSection;
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
+    private String qrhId;
 
-    public Metadata(KnowledgeSource knowledgeSource,
+    public Metadata(String qrhId, KnowledgeSource knowledgeSource,
                     PropositionDefinition[] userDefinedPropositionDefinitions,
                     String rootNodeDisplayName,
                     FolderSpec[] folderSpecs,
@@ -131,6 +132,10 @@ public final class Metadata {
         if (folderSpecs == null) {
             throw new IllegalArgumentException("folderSpecs cannot be null");
         }
+        if (qrhId == null) {
+            throw new IllegalArgumentException("qrhId cannot be null");
+        }
+        this.qrhId = qrhId;
         if (userDefinedPropositionDefinitions == null) {
             this.userDefinedPropositionDefinitions
                     = EMPTY_PROPOSITION_DEFINITION_ARRAY;
@@ -148,8 +153,7 @@ public final class Metadata {
         this.rootConcept.setDisplayName(rootNodeDisplayName);
         this.rootConcept.setDataType(DataType.TEXT);
         this.rootConcept.setSourceSystemCode(
-                MetadataUtil.toSourceSystemCode(
-                        I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                MetadataUtil.toSourceSystemCode(this.qrhId));
         this.providers = new HashMap<>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
@@ -249,7 +253,7 @@ public final class Metadata {
                 source = MetadataUtil.toSourceSystemCode(StringUtils.join(sources, " & "));
             } else {
                 id = NOT_RECORDED_PROVIDER_ID;
-                source = MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation());
+                source = MetadataUtil.toSourceSystemCode(this.qrhId);
                 fullName = "Not Recorded";
             }
             ConceptId cid = ConceptId.getInstance(id, this);
@@ -344,7 +348,7 @@ public final class Metadata {
     }
 
     public void buildDemographicsHierarchy() throws OntologyBuildException {
-        DemographicsConceptTreeBuilder builder = new DemographicsConceptTreeBuilder(this.knowledgeSource, this.dictSection, this.dataSection, this);
+        DemographicsConceptTreeBuilder builder = new DemographicsConceptTreeBuilder(this.qrhId, this.knowledgeSource, this.dictSection, this.dataSection, this);
         this.rootConcept.add(builder.build());
     }
 
@@ -484,8 +488,8 @@ public final class Metadata {
 
         VisitDimension vd = new VisitDimension(encryptedPatientId,
                 visitStartDate, visitEndDate, encryptedIdStr,
-                encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
-                I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation(),
+                encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : this.qrhId,
+                this.qrhId,
                 encryptedPatientIdSourceSystem,
                 encounterProp != null ? encounterProp.getDownloadDate() : null, updateDate);
         visitCache.add(vd);
@@ -505,7 +509,7 @@ public final class Metadata {
     private Concept createHardCodedFolder(String conceptIdSuffix, String displayName) throws InvalidConceptCodeException {
         ConceptId conceptId = ConceptId.getInstance(MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|" + conceptIdSuffix, this);
         Concept root = new Concept(conceptId, null, this);
-        root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+        root.setSourceSystemCode(MetadataUtil.toSourceSystemCode(this.qrhId));
         root.setDisplayName(displayName);
         root.setDataType(DataType.TEXT);
         addToIdCache(root);
@@ -660,8 +664,7 @@ public final class Metadata {
             concept
                     = new Concept(conceptId, folderSpec.conceptCodePrefix, this);
             concept.setSourceSystemCode(
-                    MetadataUtil.toSourceSystemCode(
-                            I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation()));
+                    MetadataUtil.toSourceSystemCode(this.qrhId));
             concept.setDisplayName(folderSpec.displayName);
             concept.setDataType(DataType.TEXT);
             addToIdCache(concept);

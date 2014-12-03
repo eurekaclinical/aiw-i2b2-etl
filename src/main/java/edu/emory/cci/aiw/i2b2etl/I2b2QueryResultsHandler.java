@@ -116,6 +116,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final RemoveMethod dataRemoveMethod;
     private RemoveMethod metaRemoveMethod;
     private final Set<String> knowledgeSourceBackendIds;
+    private final String qrhId;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -203,8 +204,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 this.dataSourceBackendIds.add(id);
             }
         }
-        String qrhId = I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
-        this.dataSourceBackendIds.add(qrhId);
+        String qrhIdFromConfig = this.dictSection.get("sourcesystem_cd");
+        if (qrhIdFromConfig != null) {
+            this.qrhId = qrhIdFromConfig;
+        } else {
+            this.qrhId = I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
+        }
+        this.dataSourceBackendIds.add(this.qrhId);
 
         KnowledgeSourceBackend[] ksBackends = knowledgeSource.getBackends();
         this.knowledgeSourceBackendIds = new HashSet<>();
@@ -214,7 +220,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 this.knowledgeSourceBackendIds.add(id);
             }
         }
-        this.knowledgeSourceBackendIds.add(qrhId);
+        this.knowledgeSourceBackendIds.add(this.qrhId);
+        
+        
     }
 
     /**
@@ -578,7 +586,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void mostlyBuildOntology() throws OntologyBuildException {
-        this.ontologyModel = new Metadata(knowledgeSource, collectUserPropositionDefinitions(), this.dictSection.get("rootNodeName"), this.conceptsSection.getFolderSpecs(), dictSection, this.obxSection);
+        this.ontologyModel = new Metadata(this.qrhId, knowledgeSource, collectUserPropositionDefinitions(), this.dictSection.get("rootNodeName"), this.conceptsSection.getFolderSpecs(), dictSection, this.obxSection);
         setI2B2PathsToConcepts();
     }
 
