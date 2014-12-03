@@ -82,7 +82,7 @@ public final class I2b2Destination extends AbstractDestination {
 
     @Override
     public QueryResultsHandler getQueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
-       return new I2b2QueryResultsHandler(query, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded, this.dataInsertMode);
+       return new I2b2QueryResultsHandler(query, dataSource, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded, this.dataInsertMode);
     }
 
     @Override

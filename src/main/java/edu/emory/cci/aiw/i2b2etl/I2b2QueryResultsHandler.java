@@ -26,6 +26,7 @@ import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DatabaseSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
+import edu.emory.cci.aiw.i2b2etl.metadata.I2B2QueryResultsHandlerSourceId;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
@@ -76,6 +77,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang.StringUtils;
+import org.protempa.DataSource;
+import org.protempa.backend.dsb.DataSourceBackend;
+import org.protempa.backend.ksb.KnowledgeSourceBackend;
 
 import org.protempa.dest.QueryResultsHandlerCloseException;
 
@@ -107,6 +112,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final String visitPropId;
     private boolean skipProviderHeirarchy;
     private Connection dataSchemaConnection;
+    private final Set<String> dataSourceBackendIds;
+    private final RemoveMethod dataRemoveMethod;
+    private RemoveMethod metaRemoveMethod;
+    private final Set<String> knowledgeSourceBackendIds;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -124,7 +133,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      *                                  {@link Query}.
      * @param dataInsertMode            whether to truncate existing data or append to it
      */
-    I2b2QueryResultsHandler(Query query, KnowledgeSource knowledgeSource, File confXML,
+    I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, File confXML,
                             boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
             throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
@@ -171,7 +180,41 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
 
         this.skipProviderHeirarchy = Boolean.parseBoolean(this.dictSection.get("skipProviderHierarchy"));
+        
+        String dataRemoveMethodString = this.dictSection.get("dataRemoveMethod");
+        if (dataRemoveMethodString == null) {
+            this.dataRemoveMethod = RemoveMethod.TRUNCATE;
+        } else {
+            this.dataRemoveMethod = RemoveMethod.valueOf(dataRemoveMethodString);
+        }
+        
+        String metaRemoveMethodString = this.dictSection.get("metaRemoveMethod");
+        if (metaRemoveMethodString == null) {
+            this.metaRemoveMethod = RemoveMethod.TRUNCATE;
+        } else {
+            this.metaRemoveMethod = RemoveMethod.valueOf(metaRemoveMethodString);
+        }
+        
+        DataSourceBackend[] dsBackends = dataSource.getBackends();
+        this.dataSourceBackendIds = new HashSet<>();
+        for (int i = 0; i < dsBackends.length; i++) {
+            String id = dsBackends[i].getId();
+            if (id != null) {
+                this.dataSourceBackendIds.add(id);
+            }
+        }
+        String qrhId = I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
+        this.dataSourceBackendIds.add(qrhId);
 
+        KnowledgeSourceBackend[] ksBackends = knowledgeSource.getBackends();
+        this.knowledgeSourceBackendIds = new HashSet<>();
+        for (int i = 0; i < ksBackends.length; i++) {
+            String id = ksBackends[i].getId();
+            if (id != null) {
+                this.knowledgeSourceBackendIds.add(id);
+            }
+        }
+        this.knowledgeSourceBackendIds.add(qrhId);
     }
 
     /**
@@ -188,7 +231,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         try {
             mostlyBuildOntology();
             if (this.dataInsertMode == I2b2Destination.DataInsertMode.TRUNCATE) {
-                new TableTruncater().doTruncate();
+                DataRemoverFactory f = new DataRemoverFactory();
+                f.getInstance(this.dataRemoveMethod).doRemoveData();
+                f.getInstance(this.metaRemoveMethod).doRemoveMetadata();
             }
             assembleFactHandlers();
             // disable indexes on observation_fact to speed up inserts
@@ -727,10 +772,29 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             throw e;
         }
     }
+    
+    private abstract class DataRemover {
+        abstract void doRemoveData() throws SQLException;
+        abstract void doRemoveMetadata() throws SQLException;
+    }
+    
+    private class DataRemoverFactory {
+        DataRemover getInstance(RemoveMethod removeMethod) {
+            switch (removeMethod) {
+                case TRUNCATE:
+                    return new TableTruncater();
+                case DELETE:
+                    return new TableDeleter();
+                default:
+                    throw new AssertionError("Unexpected remove method " + removeMethod);
+            }
+        }
+    }
 
-    private class TableTruncater {
+    private class TableTruncater extends DataRemover {
 
-        void doTruncate() throws SQLException {
+        @Override
+        void doRemoveData() throws SQLException {
             // Truncate the data tables
             // This is controlled by 'truncateTables' in conf.xml
             String truncateTables = dictSection.get("truncateTables");
@@ -746,6 +810,18 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     }
                     logger.log(Level.INFO, "Done truncating data tables for query {0}", queryId);
                 }
+            }
+        }
+        
+        @Override
+        void doRemoveMetadata() throws SQLException {
+            // Truncate the data tables
+            // This is controlled by 'truncateTables' in conf.xml
+            String truncateTables = dictSection.get("truncateTables");
+            if (truncateTables == null || truncateTables.equalsIgnoreCase("true")) {
+                // To do: table names should be parameterized in conf.xml and related to other data
+                String queryId = query.getId();
+                Logger logger = I2b2ETLUtil.logger();
                 logger.log(Level.INFO, "Truncating metadata tables for query {0}", queryId);
                 try (final Connection conn = openMetadataDatabaseConnection()) {
                     truncateTable(conn, dictSection.get("metaTableName")); // metaTableName in conf.xml
@@ -766,6 +842,53 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 logger.log(Level.FINE, "Done executing SQL for query {0}", queryId);
             } catch (SQLException ex) {
                 logger.log(Level.SEVERE, "An error occurred truncating the tables for query " + queryId, ex);
+                throw ex;
+            }
+        }
+    }
+    
+    private class TableDeleter extends DataRemover {
+
+        @Override
+        void doRemoveData() throws SQLException {
+            String queryId = query.getId();
+            Logger logger = I2b2ETLUtil.logger();
+            logger.log(Level.INFO, "Deleting data tables for query {0}", queryId);
+            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING"};
+            try (final Connection conn = openDataDatabaseConnection()) {
+                for (String tableName : dataschemaTables) {
+                    deleteTable(conn, tableName, dataSourceBackendIds);
+                }
+                logger.log(Level.INFO, "Done deleting data for query {0}", queryId);
+            }
+        }
+        
+        @Override
+        void doRemoveMetadata() throws SQLException {
+            String queryId = query.getId();
+            Logger logger = I2b2ETLUtil.logger();
+            logger.log(Level.INFO, "Deleting metadata for query {0}", queryId);
+            try (final Connection conn = openMetadataDatabaseConnection()) {
+                deleteTable(conn, dictSection.get("metaTableName"), knowledgeSourceBackendIds); // metaTableName in conf.xml
+                logger.log(Level.INFO, "Done deleting metadata for query {0}", queryId);
+            }
+        }
+
+        private void deleteTable(Connection conn, String tableName, Set<String> sourceSystemCodes) throws SQLException {
+            Logger logger = I2b2ETLUtil.logger();
+            String queryId = query.getId();
+            String sql = "DELETE FROM " + tableName;
+            if (sourceSystemCodes != null && !sourceSystemCodes.isEmpty()) {
+                sql += " WHERE SOURCESYSTEM_CD IN ('" + StringUtils.join(sourceSystemCodes, "','") + "')";
+            }
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "Executing the following SQL for query {0}: {1}", new Object[]{queryId, sql});
+            }
+            try (final Statement st = conn.createStatement()) {
+                st.execute(sql);
+                logger.log(Level.FINE, "Done executing SQL for query {0}", queryId);
+            } catch (SQLException ex) {
+                logger.log(Level.SEVERE, "An error occurred deleting for query " + queryId, ex);
                 throw ex;
             }
         }
