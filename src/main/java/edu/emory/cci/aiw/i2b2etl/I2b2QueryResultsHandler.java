@@ -110,7 +110,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final DataSection.DataSpec providerLastNameSpec;
     private final ConnectionSpec metadataConnectionSpec;
     private final String visitPropId;
-    private boolean skipProviderHeirarchy;
+    private boolean skipProviderHierarchy;
     private Connection dataSchemaConnection;
     private final Set<String> dataSourceBackendIds;
     private final RemoveMethod dataRemoveMethod;
@@ -180,7 +180,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
-        this.skipProviderHeirarchy = Boolean.parseBoolean(this.dictSection.get("skipProviderHierarchy"));
+        this.skipProviderHierarchy = Boolean.parseBoolean(this.dictSection.get("skipProviderHierarchy"));
         
         String dataRemoveMethodString = this.dictSection.get("dataRemoveMethod");
         if (dataRemoveMethodString == null) {
@@ -379,7 +379,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException {
         this.factHandlers = new ArrayList<>();
-        if (!this.skipProviderHeirarchy) {
+        if (!this.skipProviderHierarchy) {
             addProviderFactHandler();
         }
         addPropositionFactHandlers();
@@ -438,7 +438,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
 
-            if (!this.skipProviderHeirarchy) {
+            if (!this.skipProviderHierarchy) {
                 this.ontologyModel.buildProviderHierarchy();
             }
             // persist Patients & Visits.
@@ -500,24 +500,27 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
 
             // find Provider root. gather its leaf nodes. persist Providers.
-            logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
-            try (Connection conn = openDataDatabaseConnection()) {
-                ProviderDimension.insertAll(this.ontologyModel.getProviders(), conn);
-                try (CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }")) {
-                    call.setString(1, tempProviderTableName());
-                    call.setInt(2, UPLOAD_ID);
-                    call.registerOutParameter(3, Types.VARCHAR);
-                    call.execute();
-                    logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
-                    conn.commit();
-                } catch (SQLException ex) {
-                    try {
-                        conn.rollback();
-                    } catch (SQLException ignore) {
+            if (!this.skipProviderHierarchy) {
+                logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
+                try (Connection conn = openDataDatabaseConnection()) {
+                    ProviderDimension.insertAll(this.ontologyModel.getProviders(), conn);
+                    try (CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }")) {
+                        call.setString(1, tempProviderTableName());
+                        call.setInt(2, UPLOAD_ID);
+                        call.registerOutParameter(3, Types.VARCHAR);
+                        call.execute();
+                        logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
+                        conn.commit();
+                    } catch (SQLException ex) {
+                        try {
+                            conn.rollback();
+                        } catch (SQLException ignore) {
+                        }
+                        throw ex;
                     }
-                    throw ex;
                 }
             }
+            
             // flush hot concepts out of the tree. persist Concepts.
             logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
             try (Connection conn = openDataDatabaseConnection()) {
@@ -537,6 +540,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     throw ex;
                 }
             }
+            
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
 
             try (Connection conn = openDataDatabaseConnection()) {
