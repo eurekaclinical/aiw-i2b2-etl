@@ -277,7 +277,7 @@ public abstract class FactHandler {
         if (this.importTimestamp == null) {
             this.importTimestamp = new Timestamp(System.currentTimeMillis());
         }
-        ps.setDate(22, TableUtil.setDateAttribute(new Date(this.importTimestamp.getTime())));
+        ps.setTimestamp(22, this.importTimestamp);
         ps.setString(23, obx.getSourceSystem());
         ps.setInt(24, 0);
     }

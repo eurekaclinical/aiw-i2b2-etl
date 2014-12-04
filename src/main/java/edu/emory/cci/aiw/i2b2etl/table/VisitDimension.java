@@ -128,7 +128,7 @@ public class VisitDimension {
                     ps.setObject(10, null);
                     ps.setDate(11, null);
                     ps.setDate(12, null);
-                    ps.setDate(13, new java.sql.Date(importTimestamp.getTime()));
+                    ps.setTimestamp(13, importTimestamp);
                     ps.setString(14, MetadataUtil.toSourceSystemCode(visit.visitSourceSystem));
 
                     ps.addBatch();
