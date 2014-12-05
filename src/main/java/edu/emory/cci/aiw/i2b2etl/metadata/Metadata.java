@@ -431,7 +431,7 @@ public final class Metadata {
                         if (ageConcept != null) {
                             ageConcept.setInUse(true);
                         } else {
-                            logger.log(Level.WARNING, "Likely wrong birthdate '{0,date,yyyy-MM-dd}' and age in years '{1}'", new Object[]{birthdate, ageInYears});
+                            logger.log(Level.WARNING, "Likely wrong birthdate ''{0,date,yyyy-MM-dd}'' and age in years ''{1}''", new Object[]{birthdate, ageInYears});
                         }
                     } else {
                         ageInYears = null;

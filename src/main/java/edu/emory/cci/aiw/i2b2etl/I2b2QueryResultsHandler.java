@@ -448,12 +448,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 PatientDimension.insertAll(this.ontologyModel.getPatients(),
                         conn, projectName);
 
-                try (CallableStatement mappingCall = conn.prepareCall("{ call INSERT_PID_MAP_FROMTEMP(?, ?, ?) }")) {
+                try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_PID_MAP_FROMTEMP(?, ?, ?) }")) {
                     mappingCall.setString(1, tempPatientMappingTableName());
                     mappingCall.setInt(2, UPLOAD_ID);
                     mappingCall.registerOutParameter(3, Types.VARCHAR);
                     mappingCall.execute();
-                    logger.log(Level.INFO, "INSERT_PID_MAP_FROMTTEMP errmsg: {0}", mappingCall.getString(3));
+                    logger.log(Level.INFO, "EUREKA.EK_INSERT_PID_MAP_FROMTEMP errmsg: {0}", mappingCall.getString(3));
                     //commit and rollback are called by stored procedure.
                 }
             }
