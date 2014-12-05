@@ -276,7 +276,7 @@ end if;
     end;
    if existingEncounterNum is not null then 
         execute immediate ' update ' || tempEidTableName ||' set encounter_num = encounter_id, process_status_flag = ''P''
-        where encounter_id = :x and not exists (select 1 from encounter_mapping em where em.encounter_ide = encounter_map_id
+        where encounter_id = :x and encounter_id_source = ''HIVE'' and not exists (select 1 from encounter_mapping em where em.encounter_ide = encounter_map_id
         and em.encounter_ide_source = encounter_map_id_source)' using disEncounterId;
 	
    else 
@@ -305,8 +305,8 @@ end if;
        end;
        if existingEncounterNum is not  null then 
             execute immediate ' update ' || tempEidTableName ||' set encounter_num = :x , process_status_flag = ''P''
-            where encounter_id = :y and not exists (select 1 from encounter_mapping em where em.encounter_ide = encounter_map_id
-        and em.encounter_ide_source = encounter_map_id_source)' using existingEncounterNum, disEncounterId;
+            where encounter_id = :y and encounter_id_source = :z and not exists (select 1 from encounter_mapping em where em.encounter_ide = encounter_map_id
+        and em.encounter_ide_source = encounter_map_id_source)' using existingEncounterNum, disEncounterId, disEncounterIdSource;
        else 
 
             maxEncounterNum := maxEncounterNum + 1 ;
@@ -315,9 +315,9 @@ end if;
              ,encounter_map_id_status,update_date,download_date,import_date,sourcesystem_cd) 
              values(:x,''HIVE'',:y,''HIVE'',:z,:w,:v,''P'',''A'',sysdate,sysdate,sysdate,''edu.harvard.i2b2.crc'')' using maxEncounterNum,maxEncounterNum,maxEncounterNum,patientMapId,patientMapIdSource; 
             execute immediate ' update ' || tempEidTableName ||' set encounter_num =  :x , process_status_flag = ''P'' 
-            where encounter_id = :y and  not exists (select 1 from 
+            where encounter_id = :y and encounter_id_source = :z and not exists (select 1 from 
             encounter_mapping em where em.encounter_ide = encounter_map_id
-            and em.encounter_ide_source = encounter_map_id_source)' using maxEncounterNum, disEncounterId;
+            and em.encounter_ide_source = encounter_map_id_source)' using maxEncounterNum, disEncounterId, disEncounterIdSource;
             
        end if ;
     
@@ -407,7 +407,7 @@ end if;
     end;
    if existingPatientNum is not null then 
         execute immediate ' update ' || tempPidTableName ||' set patient_num = patient_id, process_status_flag = ''P''
-        where patient_id = :x and not exists (select 1 from patient_mapping pm where pm.patient_ide = patient_map_id
+        where patient_id = :x and patient_id_source = ''HIVE'' and not exists (select 1 from patient_mapping pm where pm.patient_ide = patient_map_id
         and pm.patient_ide_source = patient_map_id_source)' using disPatientId;
    else 
         -- generate new patient_num i.e. take max(patient_num) + 1 
@@ -417,7 +417,7 @@ end if;
         execute immediate ' update ' || tempPidTableName ||' set patient_num = patient_id, process_status_flag = ''P'' where 
         patient_id = :x and patient_id_source = ''HIVE'' and not exists (select 1 from patient_mapping pm where pm.patient_ide = patient_map_id
         and pm.patient_ide_source = patient_map_id_source)' using disPatientId;
-   end if;    
+   end if;
     
    -- test if record fectched
    -- dbms_output.put_line(' HIVE ');
