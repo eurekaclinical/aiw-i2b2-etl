@@ -430,8 +430,6 @@ public final class Metadata {
                                 NumberValue.getInstance(ageInYears));
                         if (ageConcept != null) {
                             ageConcept.setInUse(true);
-                        } else {
-                            logger.log(Level.WARNING, "Likely wrong birthdate ''{0,date,yyyy-MM-dd}'' and age in years ''{1}''", new Object[]{birthdate, ageInYears});
                         }
                     } else {
                         ageInYears = null;
