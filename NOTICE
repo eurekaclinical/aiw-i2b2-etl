@@ -15,6 +15,7 @@ limitations under the License.
 This project includes:
   AIW i2b2 ETL under Apache License, Version 2.0
   Apache Commons Collections under The Apache Software License, Version 2.0
+  Apache Commons Lang under The Apache Software License, Version 2.0
   Apache POI under The Apache Software License, Version 2.0
   Apache ServiceMix :: Bundles :: xstream under The Apache Software License, Version 2.0
   Commons BeanUtils Core under The Apache Software License, Version 2.0
