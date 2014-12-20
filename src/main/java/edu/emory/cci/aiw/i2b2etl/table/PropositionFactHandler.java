@@ -21,13 +21,16 @@ package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
-import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -39,8 +42,12 @@ import org.protempa.proposition.value.*;
 import org.protempa.dest.table.Derivation;
 import org.protempa.dest.table.Link;
 import org.protempa.dest.table.LinkTraverser;
+import org.protempa.proposition.comparator.AllPropositionIntervalComparator;
 
 public final class PropositionFactHandler extends FactHandler {
+    
+    private static final Comparator<Proposition> PROP_COMP =
+            new AllPropositionIntervalComparator();
 
     private final LinkTraverser linkTraverser;
     private final Link[] links;
@@ -66,6 +73,15 @@ public final class PropositionFactHandler extends FactHandler {
             Derivation.Behavior.MULT_FORWARD)
         };
     }
+    
+    private abstract class PropositionWrapper implements Comparable<PropositionWrapper> {
+        abstract Concept getConcept();
+        abstract Proposition getProposition();
+        @Override
+        public int compareTo(PropositionWrapper o) {
+            return PROP_COMP.compare(getProposition(), o.getProposition());
+        }
+    }
 
     @Override
     public void handleRecord(PatientDimension patient, VisitDimension visit,
@@ -89,52 +105,41 @@ public final class PropositionFactHandler extends FactHandler {
             throw new InvalidFactException(ex);
         }
 
-        String propertyName = getPropertyName();
-
         for (Proposition prop : props) {
+            String propertyName = getPropertyName();
             Value propertyVal = propertyName != null
                     ? prop.getProperty(propertyName) : null;
             Concept concept =
-                    this.metadata.getFromIdCache(prop.getId(),
+                    metadata.getFromIdCache(prop.getId(),
                             propertyName, propertyVal);
-            if (concept != null) {
-                ObservationFact obx = createObservationFact(prop,
-                        encounterProp, patient, visit, provider, concept);
-                try {
-                    insert(obx, cn);
+            doInsert(concept, prop, encounterProp, patient, visit, provider, cn);
+            List<Proposition> derivedProps;
+            try {
+                derivedProps = this.linkTraverser.traverseLinks(
+                        this.derivationLinks, prop, forwardDerivations,
+                        backwardDerivations, references,
+                        knowledgeSource);
+            } catch (KnowledgeSourceReadException ex) {
+                throw new InvalidFactException(ex);
+            }
+            for (Proposition derivedProp : derivedProps) {
+                Concept derivedConcept =
+                    metadata.getFromIdCache(derivedProp.getId(), null, null);
+                doInsert(derivedConcept, derivedProp, encounterProp, patient, visit, provider, cn);
+            }
+        }
+    }
 
-                    List<Proposition> derivedProps;
-                    try {
-                        derivedProps = this.linkTraverser.traverseLinks(
-                                this.derivationLinks, prop, forwardDerivations,
-                                backwardDerivations, references,
-                                knowledgeSource);
-                    } catch (KnowledgeSourceReadException ex) {
-                        throw new InvalidFactException(ex);
-                    }
-                    for (Proposition derivedProp
-                            : new HashSet<>(derivedProps)) {
-                        if (derivedPropositions.add(derivedProp)) {
-                            Concept derivedConcept =
-                                    this.metadata.getFromIdCache(derivedProp.getId(),
-                                            null, null);
-                            if (derivedConcept != null) {
-                                ObservationFact derivedObx = createObservationFact(
-                                        derivedProp, encounterProp, patient, visit,
-                                        provider, derivedConcept);
-                                try {
-                                    insert(derivedObx, cn);
-                                } catch (SQLException | InvalidConceptCodeException sqle) {
-                                    String msg = "Observation fact not created for " + prop.getId();
-                                    throw new InvalidFactException(msg, sqle);
-                                }
-                            }
-                        }
-                    }
-                } catch (SQLException | InvalidConceptCodeException ex) {
-                    String msg = "Observation fact not created for " + prop.getId() + "." + propertyName + "=" + propertyVal;
-                    throw new InvalidFactException(msg, ex);
-                }
+    private void doInsert(Concept concept, Proposition prop, Proposition encounterProp, PatientDimension patient, VisitDimension visit, ProviderDimension provider, Connection cn) throws InvalidFactException {
+        if (concept != null) {
+            ObservationFact obx = createObservationFact(prop,
+                    encounterProp, patient, visit, provider, concept,
+                    1);
+            try {
+                insert(obx, cn);
+            } catch (SQLException ex) {
+                String msg = "Observation fact not created";
+                throw new InvalidFactException(msg, ex);
             }
         }
     }
@@ -146,7 +151,8 @@ public final class PropositionFactHandler extends FactHandler {
 
     private ObservationFact createObservationFact(Proposition prop,
                                                   Proposition encounterProp, PatientDimension patient,
-                                                  VisitDimension visit, ProviderDimension provider, Concept concept)
+                                                  VisitDimension visit, ProviderDimension provider, 
+                                                  Concept concept, int instanceNum)
             throws InvalidFactException {
         Date start = handleStartDate(prop, encounterProp, null);
         Date finish = handleFinishDate(prop, encounterProp, null);
@@ -166,7 +172,7 @@ public final class PropositionFactHandler extends FactHandler {
                 prop.getSourceSystem().getStringRepresentation(),
                 start == null,
                 prop.getDownloadDate(),
-                updateDate);
+                updateDate, instanceNum);
         concept.setInUse(true);
         return derivedObx;
     }

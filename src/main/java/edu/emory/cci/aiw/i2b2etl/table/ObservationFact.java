@@ -67,7 +67,7 @@ public class ObservationFact {
     private final String units;
     private final ValueFlagCode valueFlagCode;
     private final boolean rejected;
-    private final int instanceNum;
+    private final long instanceNum;
     private final String modifierCd;
     private Date updateDate;
     private Date downloadDate;
@@ -81,7 +81,7 @@ public class ObservationFact {
             String units,
             String sourceSystem,
             boolean rejected,
-            Date downloadDate, Date updateDate) {
+            Date downloadDate, Date updateDate, long instanceNum) {
         if (patient == null) {
             throw new IllegalArgumentException("patient cannot be null");
         }
@@ -109,7 +109,7 @@ public class ObservationFact {
         this.units = units;
         this.valueFlagCode = valueFlagCode;
         this.rejected = rejected;
-        this.instanceNum = 1; //this is used in combination of modifier_CD. currently we do not use this feature hence assigning the default value.
+        this.instanceNum = instanceNum; //this is used in combination of modifier_CD. currently we do not use this feature hence assigning the default value.
         this.modifierCd = "@";  //using the default value since we do not use this i2b2 feature currently
         this.downloadDate = downloadDate;
         this.updateDate = updateDate;
@@ -163,7 +163,7 @@ public class ObservationFact {
         return this.sourceSystem;
     }
 
-    public int getInstanceNum() {
+    public long getInstanceNum() {
         return this.instanceNum;
     }
 

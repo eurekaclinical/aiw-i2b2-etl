@@ -21,7 +21,6 @@ package edu.emory.cci.aiw.i2b2etl.table;
  */
 
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
-import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
@@ -50,7 +49,7 @@ public final class ProviderFactHandler extends FactHandler {
                 provider.getConcept());
         try {
             insert(providerFact, cn);
-        } catch (SQLException | InvalidConceptCodeException ex) {
+        } catch (SQLException ex) {
             throw new InvalidFactException("Provider fact not created", ex);
         }
     }
@@ -70,7 +69,7 @@ public final class ProviderFactHandler extends FactHandler {
                 null,
                 provider.getSourceSystem(),
                 start == null,
-                null, null);
+                null, null, 1);
         concept.setInUse(true);
         return derivedObx;
     }

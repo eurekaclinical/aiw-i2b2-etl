@@ -23,7 +23,6 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * limitations under the License.
  * #L%
  */
-import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -116,7 +115,7 @@ public abstract class FactHandler {
         }
     }
 
-    protected final void insert(ObservationFact obx, Connection cn) throws SQLException, InvalidConceptCodeException {
+    protected final void insert(ObservationFact obx, Connection cn) throws SQLException {
         Logger logger = TableUtil.logger();
         if (obx.isRejected()) {
             //logger.log(Level.WARNING, "Rejected fact {0}", obx);
@@ -219,7 +218,7 @@ public abstract class FactHandler {
         return start;
     }
 
-    private void setParameters(Connection cn, ObservationFact obx) throws SQLException, InvalidConceptCodeException {
+    private void setParameters(Connection cn, ObservationFact obx) throws SQLException {
         if (!inited) {
             ps = cn.prepareStatement("insert into " + ObservationFact.TEMP_OBSERVATION_TABLE + "(encounter_id, encounter_id_source, concept_cd, " +
                             "patient_id, patient_id_source, provider_id, start_date, modifier_cd, instance_num, valtype_cd, tval_char, nval_num, valueflag_cd, quantity_num, " +
