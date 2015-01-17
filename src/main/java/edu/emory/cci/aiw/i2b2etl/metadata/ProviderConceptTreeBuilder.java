@@ -20,8 +20,13 @@
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collection;
 import java.util.TreeMap;
+import org.arp.javautil.sql.ConnectionSpec;
 
 /**
  *
@@ -29,17 +34,12 @@ import java.util.TreeMap;
  */
 class ProviderConceptTreeBuilder {
 
-    private final ProviderDimension[] providers;
     private final Metadata metadata;
+    private Concept root;
+    private TreeMap<Character, Concept> alpha;
 
-    ProviderConceptTreeBuilder(Collection<ProviderDimension> providers, Metadata metadata) {
+    ProviderConceptTreeBuilder(Metadata metadata) {
         assert metadata != null : "metadata cannot be null";
-        if (providers == null) {
-            this.providers = new ProviderDimension[0];
-        } else {
-            this.providers =
-                    providers.toArray(new ProviderDimension[providers.size()]);
-        }
         this.metadata = metadata;
     }
 
@@ -53,36 +53,26 @@ class ProviderConceptTreeBuilder {
      */
     Concept build() throws OntologyBuildException {
         try {
-            Concept root = this.metadata.getOrCreateHardCodedFolder("Provider");
-            TreeMap<Character, Concept> alpha = 
+            root = this.metadata.getOrCreateHardCodedFolder("Provider");
+            alpha = 
                     createAlphaCategoryConcepts(root);
-            createProviderConcepts(alpha, root);
             return root;
         } catch (InvalidConceptCodeException ex) {
             throw new OntologyBuildException("Could not build provider concept tree", ex);
         }
     }
-
-    /**
-     * Creates provider concepts and assigns each provider to the correct group.
-     * @param alpha map of character to its corresponding category concept.
-     * @param root the root concept of the provider hierarchy.
-     * @throws InvalidConceptCodeException 
-     */
-    private void createProviderConcepts(TreeMap<Character, Concept> alpha, Concept root) throws InvalidConceptCodeException {
-        for (ProviderDimension pd : this.providers) {
-            String fullName = pd.getConcept().getDisplayName();
-            Concept parent = alpha.get(fullName.toUpperCase().charAt(0));
-            if (parent == null) {
-                parent = this.metadata.getOrCreateHardCodedFolder("Provider", "Other");
-                root.add(parent);
-            }
-            
-            Concept child = pd.getConcept();
-            parent.add(child);
-            
-            this.metadata.addToIdCache(child);
+    
+    void add(ProviderDimension pd) throws InvalidConceptCodeException {
+        String fullName = pd.getConcept().getDisplayName();
+        Concept parent = alpha.get(fullName.toUpperCase().charAt(0));
+        if (parent == null) {
+            parent = this.metadata.getOrCreateHardCodedFolder("Provider", "Other");
+            root.add(parent);
         }
+        Concept child = pd.getConcept();
+        parent.add(child);
+
+        this.metadata.addToIdCache(child);
     }
 
     private TreeMap<Character, Concept> createAlphaCategoryConcepts(Concept root) throws InvalidConceptCodeException {

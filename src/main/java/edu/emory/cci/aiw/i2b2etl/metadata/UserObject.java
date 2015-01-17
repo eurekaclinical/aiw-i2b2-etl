@@ -279,7 +279,7 @@ public class UserObject {
 
     public void setHierarchyPath(String path) {
         if (this.hierarchyPaths == null) {
-            hierarchyPaths = new ArrayList<String>();
+            hierarchyPaths = new ArrayList<>();
         }
         if (!this.hierarchyPaths.contains(path)) {
             hierarchyPaths.add(path);

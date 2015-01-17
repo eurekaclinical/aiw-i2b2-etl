@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.KnowledgeSource;
 import org.protempa.proposition.Parameter;
 import org.protempa.proposition.Proposition;
@@ -49,23 +49,21 @@ import org.protempa.proposition.value.Value;
  *
  * @author arpost
  */
-public abstract class FactHandler {
+public abstract class FactHandler extends RecordHandler<ObservationFact> {
+    
+    public static final String TEMP_OBSERVATION_TABLE = "temp_observation";
 
-    private boolean inited = false;
-    private int batchNumber = 0;
-    private long ctr = 0L;
-    private int counter = 0;
-    private int batchSize = 1000;
-    private int commitCounter = 0;
-    private int commitSize = 10000;
-    private PreparedStatement ps;
     private Timestamp importTimestamp;
     private final String startConfig;
     private final String finishConfig;
     private final String unitsPropertyName;
     private final String propertyName;
 
-    public FactHandler(String propertyName, String startConfig, String finishConfig, String unitsPropertyName) {
+    public FactHandler(ConnectionSpec connSpec, String propertyName, String startConfig, String finishConfig, String unitsPropertyName) throws SQLException {
+        super(connSpec, "insert into " + TEMP_OBSERVATION_TABLE + "(encounter_id, encounter_id_source, concept_cd, " +
+                            "patient_id, patient_id_source, provider_id, start_date, modifier_cd, instance_num, valtype_cd, tval_char, nval_num, valueflag_cd, quantity_num, " +
+                            "confidence_num, observation_blob, units_cd, end_date, location_cd, update_date, download_date, import_date, sourcesystem_cd, upload_id)" +
+                            " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         this.propertyName = propertyName;
         this.startConfig = startConfig;
         this.finishConfig = finishConfig;
@@ -89,68 +87,6 @@ public abstract class FactHandler {
     }
 
     public abstract void handleRecord(PatientDimension patient, VisitDimension visit, ProviderDimension provider, Proposition encounterProp, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references, KnowledgeSource knowledgeSource, Set<Proposition> derivedPropositions, Connection cn) throws InvalidFactException;
-
-    public final void clearOut(Connection cn) throws SQLException {
-        Logger logger = TableUtil.logger();
-        if (this.ps != null) {
-            try {
-                if (counter > 0) {
-                    batchNumber++;
-                    ps.executeBatch();
-                    logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
-                }
-                if (commitCounter > 0) {
-                    cn.commit();
-                }
-                ps.close();
-                ps = null;
-            } finally {
-                if (ps != null) {
-                    try {
-                        ps.close();
-                    } catch (SQLException ignore) {
-                    }
-                }
-            }
-        }
-    }
-
-    protected final void insert(ObservationFact obx, Connection cn) throws SQLException {
-        Logger logger = TableUtil.logger();
-        if (obx.isRejected()) {
-            //logger.log(Level.WARNING, "Rejected fact {0}", obx);
-        } else {
-            try {
-                setParameters(cn, obx);
-
-                ps.addBatch();
-                counter++;
-                commitCounter++;
-                if (counter >= batchSize) {
-                    this.importTimestamp =
-                            new Timestamp(System.currentTimeMillis());
-                    batchNumber++;
-                    ps.executeBatch();
-                    logger.log(Level.FINEST, "DB_OBX_BATCH={0}", batchNumber);
-                    ps.clearBatch();
-                    counter = 0;
-                }
-                if (commitCounter >= commitSize) {
-                    cn.commit();
-                    commitCounter = 0;
-                }
-                ps.clearParameters();
-            } catch (SQLException e) {
-                logger.log(Level.FINEST, "DB_OBX_BATCH_FAIL={0}", batchNumber);
-                logger.log(Level.SEVERE, "Batch failed on ObservationFact. I2B2 will not be correct.", e);
-                try {
-                    ps.close();
-                } catch (SQLException sqle) {
-                }
-                throw e;
-            }
-        }
-    }
 
     protected final String handleUnits(Proposition prop) {
         String value;
@@ -218,14 +154,8 @@ public abstract class FactHandler {
         return start;
     }
 
-    private void setParameters(Connection cn, ObservationFact obx) throws SQLException {
-        if (!inited) {
-            ps = cn.prepareStatement("insert into " + ObservationFact.TEMP_OBSERVATION_TABLE + "(encounter_id, encounter_id_source, concept_cd, " +
-                            "patient_id, patient_id_source, provider_id, start_date, modifier_cd, instance_num, valtype_cd, tval_char, nval_num, valueflag_cd, quantity_num, " +
-                            "confidence_num, observation_blob, units_cd, end_date, location_cd, update_date, download_date, import_date, sourcesystem_cd, upload_id)" +
-                            " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            inited = true;
-        }
+    @Override
+    protected void setParameters(PreparedStatement ps, ObservationFact obx) throws SQLException {
         ps.setString(1, obx.getVisit().getEncryptedVisitId());
         ps.setString(2, obx.getVisit().getEncryptedVisitIdSourceSystem());
         ps.setString(3, obx.getConcept().getConceptCode());

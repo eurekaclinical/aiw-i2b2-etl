@@ -27,7 +27,7 @@ import java.util.Date;
  * 
  * @author Andrew Post
  */
-enum VitalStatusCode {
+public enum VitalStatusCode {
     LIVING("N"),
     DECEASED_ACCURATE_TO_DAY("Y"),
     DECEASED_ACCURATE_TO_MONTH("M"),
@@ -35,7 +35,7 @@ enum VitalStatusCode {
     
     private final String code;
     
-    static VitalStatusCode getInstance(Date deathDate) {
+    public static VitalStatusCode getInstance(Date deathDate) {
         if (deathDate != null) {
             return DECEASED_ACCURATE_TO_DAY;
         } else {
@@ -52,7 +52,7 @@ enum VitalStatusCode {
      * 
      * @return a code {@link String}.
      */
-    String getCode() {
+    public String getCode() {
         return this.code;
     }
 }

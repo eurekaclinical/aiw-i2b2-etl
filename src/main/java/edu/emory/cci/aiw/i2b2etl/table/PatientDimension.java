@@ -57,68 +57,77 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  *
  * @author Andrew Post
  */
-public class PatientDimension {
-
-    //	This is a related table that we should leverage.
-    //
-    //  CREATE TABLE PATIENT_MAPPING
-    //  (
-    //  "PATIENT_IDE"          VARCHAR2(200 BYTE) NOT NULL ENABLE,
-    //  "PATIENT_IDE_SOURCE"   VARCHAR2(50 BYTE)  NOT NULL ENABLE,
-    //  "PATIENT_NUM"          NUMBER(38,0)       NOT NULL ENABLE,
-    //  "PATIENT_IDE_STATUS"   VARCHAR2(50 BYTE),
-    //  "UPLOAD_DATE"          DATE,
-    //  "UPDATE_DATE"          DATE,
-    //  "DOWNLOAD_DATE"        DATE,
-    //  "IMPORT_DATE"          DATE,
-    //  "SOURCESYSTEM_CD"      VARCHAR2(50 BYTE),
-    //  "UPLOAD_ID"            NUMBER(38,0),
-    //  CONSTRAINT "PATIENT_MAPPING_PK" PRIMARY KEY ("PATIENT_IDE", "PATIENT_IDE_SOURCE")
-    //  )
-    private final String encryptedPatientId;
-    private final String encryptedPatientIdSource;
+public class PatientDimension implements Record {
+    
+    private String encryptedPatientId;
+    private String encryptedPatientIdSource;
     private Long ageInYears;
-    private final String zip;
-    private final String race;
-    private final String gender;
-    private final String language;
-    private final String maritalStatus;
-    private final String religion;
-    private final VitalStatusCode vital;
-    private final Date birthDate;
-    private final Date deathDate;
-    private final String sourceSystem;
-    private static final NumFactory NUM_FACTORY = new IncrNumFactory();
-    private static final Logger logger = Logger.getLogger(PatientDimension.class.getName());
+    private String zip;
+    private String race;
+    private String gender;
+    private String language;
+    private String maritalStatus;
+    private String religion;
+    private VitalStatusCode vital;
+    private Date birthDate;
+    private Date deathDate;
+    private String sourceSystem;
+    
+    public PatientDimension() {
+        
+    }
 
-    public static final String TEMP_PATIENT_TABLE = "temp_patient";
-    public static final String TEMP_PATIENT_MAPPING_TABLE = "temp_patient_mapping";
-
-    public PatientDimension(String encryptedPatientId, 
-            String encryptedPatientIdSource,
-            String zipCode,
-            Long ageInYears,
-            String gender, String language, String religion,
-            java.util.Date birthDate, java.util.Date deathDate,
-            String maritalStatus, String race, String sourceSystem) {
-        //Required attributes
-        this.zip = zipCode;
-        this.birthDate = TableUtil.setDateAttribute(birthDate);
-        this.deathDate = TableUtil.setDateAttribute(deathDate);
-        this.vital = VitalStatusCode.getInstance(deathDate);
-
-        //Optional attributes
-        this.ageInYears = ageInYears;
-        this.maritalStatus = maritalStatus;
-        this.race = race;
-        this.gender = gender;
-        this.language = language;
-        this.religion = religion;
-        this.sourceSystem = sourceSystem;
+    public void setEncryptedPatientId(String encryptedPatientId) {
         this.encryptedPatientId = encryptedPatientId;
+    }
+
+    public void setEncryptedPatientIdSource(String encryptedPatientIdSource) {
         this.encryptedPatientIdSource = encryptedPatientIdSource;
     }
 
+    public void setAgeInYears(Long ageInYears) {
+        this.ageInYears = ageInYears;
+    }
+
+    public void setZip(String zip) {
+        this.zip = zip;
+    }
+
+    public void setRace(String race) {
+        this.race = race;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public void setMaritalStatus(String maritalStatus) {
+        this.maritalStatus = maritalStatus;
+    }
+
+    public void setReligion(String religion) {
+        this.religion = religion;
+    }
+
+    public void setVital(VitalStatusCode vital) {
+        this.vital = vital;
+    }
+
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public void setDeathDate(Date deathDate) {
+        this.deathDate = deathDate;
+    }
+
+    public void setSourceSystem(String sourceSystem) {
+        this.sourceSystem = sourceSystem;
+    }
 
     public String getEncryptedPatientId() {
         return this.encryptedPatientId;
@@ -131,108 +140,59 @@ public class PatientDimension {
     public Long getAgeInYears() {
         return this.ageInYears;
     }
-
-    public static void insertAll(Collection<PatientDimension> patients, Connection cn, String projectName) throws SQLException {
-        int batchSize = 500;
-        int counter = 0;
-        int commitSize = 5000;
-        int commitCounter = 0;
-        PreparedStatement ps = null;
-        PreparedStatement ps2 = null;
-        try {
-            Timestamp importTimestamp =
-                    new Timestamp(System.currentTimeMillis());
-            ps = cn.prepareStatement("insert into " + TEMP_PATIENT_TABLE + "(patient_id,patient_id_source,vital_status_cd,birth_date,death_date,sex_cd," +
-                    "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,patient_blob,update_date," +
-                    "download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            ps2 = cn.prepareStatement("insert into " + TEMP_PATIENT_MAPPING_TABLE + " (patient_id,patient_id_source,patient_map_id,patient_map_id_source,patient_map_id_status," +
-                    "update_date,download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?,?)");
-            for (PatientDimension patient : patients) {
-                try {
-                    ps.setString(1, patient.encryptedPatientId);
-                    ps.setString(2, MetadataUtil.toSourceSystemCode(patient.encryptedPatientIdSource));
-                    ps.setString(3, patient.vital.getCode());
-                    ps.setDate(4, patient.birthDate);
-                    ps.setDate(5, patient.deathDate);
-                    ps.setString(6, patient.gender);
-                    ps.setObject(7, patient.ageInYears);
-                    ps.setString(8, patient.language);
-                    ps.setString(9, patient.race);
-                    ps.setString(10, patient.maritalStatus);
-                    ps.setString(11, patient.religion);
-                    ps.setString(12, patient.zip);
-                    ps.setString(13, null);
-                    ps.setObject(14, null);
-                    ps.setTimestamp(15, null);
-                    ps.setTimestamp(16, null);
-                    ps.setTimestamp(17, importTimestamp);
-                    ps.setString(18, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
-                    ps.addBatch();
-                    ps.clearParameters();
-
-                    ps2.setString(1, patient.encryptedPatientId);
-                    ps2.setString(2, MetadataUtil.toSourceSystemCode(patient.encryptedPatientIdSource));
-                    ps2.setString(3, patient.encryptedPatientId);
-                    ps2.setString(4, MetadataUtil.toSourceSystemCode(patient.encryptedPatientIdSource));
-                    ps2.setString(5, PatientIdeStatusCode.ACTIVE.getCode());
-                    ps2.setDate(6, null);
-                    ps2.setDate(7, null);
-                    ps2.setDate(8, null);
-                    ps2.setString(9, MetadataUtil.toSourceSystemCode(patient.sourceSystem));
-                    ps2.addBatch();
-                    ps2.clearParameters();
-
-                    counter++;
-                    commitCounter++;
-
-                    if (counter >= batchSize) {
-                        importTimestamp =
-                                new Timestamp(System.currentTimeMillis());
-                        ps.executeBatch();
-                        ps.clearBatch();
-                        ps2.executeBatch();
-                        ps2.clearBatch();
-                        counter = 0;
-                    }
-                    if (commitCounter >= commitSize) {
-                        cn.commit();
-                        commitSize = 0;
-                    }
-
-                    logger.log(Level.FINEST, "DB_PD_INSERT {0}", patient);
-                } catch (SQLException e) {
-                    logger.log(Level.SEVERE, "DB_PD_INSERT_FAIL {0}", patient);
-                    throw e;
-                }
-            }
-            if (counter > 0) {
-                ps.executeBatch();
-                ps.clearBatch();
-                ps2.executeBatch();
-                ps2.clearBatch();
-                cn.commit();
-            }
-            ps.close();
-            ps = null;
-            ps2 = null;
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                }
-            }
-            if (ps2 != null) {
-                try {
-                    ps2.close();
-                } catch (SQLException e) {
-                }
-            }
-        }
+    
+    @Override
+    public boolean isRejected() {
+        return false;
     }
 
+    public String getEncryptedPatientIdSource() {
+        return encryptedPatientIdSource;
+    }
+
+    public String getZip() {
+        return zip;
+    }
+
+    public String getRace() {
+        return race;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public String getMaritalStatus() {
+        return maritalStatus;
+    }
+
+    public String getReligion() {
+        return religion;
+    }
+
+    public VitalStatusCode getVital() {
+        return vital;
+    }
+
+    public Date getBirthDate() {
+        return birthDate;
+    }
+
+    public Date getDeathDate() {
+        return deathDate;
+    }
+
+    public String getSourceSystem() {
+        return sourceSystem;
+    }
+    
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
+
 }

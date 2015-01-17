@@ -34,14 +34,21 @@ import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import edu.emory.cci.aiw.i2b2etl.metadata.OntologyBuildException;
 import edu.emory.cci.aiw.i2b2etl.metadata.SynonymCode;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimension;
+import edu.emory.cci.aiw.i2b2etl.table.ConceptDimensionHandler;
+import edu.emory.cci.aiw.i2b2etl.table.ConceptHierarchyLoader;
+import edu.emory.cci.aiw.i2b2etl.table.EncounterMappingHandler;
 import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
 import edu.emory.cci.aiw.i2b2etl.table.ObservationFact;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
+import edu.emory.cci.aiw.i2b2etl.table.PatientDimensionHandler;
+import edu.emory.cci.aiw.i2b2etl.table.PatientMappingHandler;
 import edu.emory.cci.aiw.i2b2etl.table.PropositionFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
+import edu.emory.cci.aiw.i2b2etl.table.ProviderDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
+import edu.emory.cci.aiw.i2b2etl.table.VisitDimensionHandler;
 import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
@@ -102,6 +109,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final ConnectionSpec dataConnectionSpec;
     private final ConceptsSection conceptsSection;
     private List<FactHandler> factHandlers;
+    private PatientDimensionHandler patientDimensionHandler;
+    private PatientMappingHandler patientMappingHandler;
+    private VisitDimensionHandler visitDimensionHandler;
+    private EncounterMappingHandler encounterMappingHandler;
+    private ProviderDimensionHandler providerDimensionHandler;
+    private ConceptDimensionHandler conceptDimensionHandler;
     private Metadata ontologyModel;
     private HashSet<Object> propIdsFromKnowledgeSource;
     private final DataSection.DataSpec providerFullNameSpec;
@@ -117,6 +130,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private RemoveMethod metaRemoveMethod;
     private final Set<String> knowledgeSourceBackendIds;
     private final String qrhId;
+    private final ProviderDimension providerDimension;
+    private final PatientDimension patientDimension;
+    private final VisitDimension visitDimension;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -138,6 +154,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                             boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
             throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
+        this.patientDimension = new PatientDimension();
+        this.visitDimension = new VisitDimension();
+        this.providerDimension = new ProviderDimension();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
         this.dataInsertMode = dataInsertMode;
@@ -166,7 +185,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         } catch (InvalidConnectionSpecArguments ex) {
             throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
         }
-
+        
         this.providerFullNameSpec = this.obxSection.get(this.dictSection.get("providerFullName"));
         this.providerFirstNameSpec = this.obxSection.get(this.dictSection.get("providerFirstName"));
         this.providerMiddleNameSpec = this.obxSection.get(this.dictSection.get("providerMiddleName"));
@@ -222,7 +241,18 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
         this.knowledgeSourceBackendIds.add(this.qrhId);
         
-        
+        try {
+            this.patientDimensionHandler = new PatientDimensionHandler(dataConnectionSpec);
+            this.patientMappingHandler = new PatientMappingHandler(dataConnectionSpec);
+            this.visitDimensionHandler = new VisitDimensionHandler(dataConnectionSpec);
+            this.encounterMappingHandler = new EncounterMappingHandler(dataConnectionSpec);
+            if (!this.skipProviderHierarchy) {
+                this.providerDimensionHandler = new ProviderDimensionHandler(dataConnectionSpec);
+            }
+            this.conceptDimensionHandler = new ConceptDimensionHandler(dataConnectionSpec);
+        } catch (SQLException ex) {
+            throw new QueryResultsHandlerInitException(ex);
+        }
     }
 
     /**
@@ -257,31 +287,31 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private String tempPatientTableName() {
-        return PatientDimension.TEMP_PATIENT_TABLE;
+        return PatientDimensionHandler.TEMP_PATIENT_TABLE;
     }
 
     private String tempPatientMappingTableName() {
-        return PatientDimension.TEMP_PATIENT_MAPPING_TABLE;
+        return PatientMappingHandler.TEMP_PATIENT_MAPPING_TABLE;
     }
 
     private String tempVisitTableName() {
-        return VisitDimension.TEMP_VISIT_TABLE;
+        return VisitDimensionHandler.TEMP_VISIT_TABLE;
     }
 
     private String tempEncounterMappingTableName() {
-        return VisitDimension.TEMP_ENC_MAPPING_TABLE;
+        return EncounterMappingHandler.TEMP_ENC_MAPPING_TABLE;
     }
 
     private String tempProviderTableName() {
-        return ProviderDimension.TEMP_PROVIDER_TABLE;
+        return ProviderDimensionHandler.TEMP_PROVIDER_TABLE;
     }
 
     private String tempConceptTableName() {
-        return ConceptDimension.TEMP_CONCEPT_TABLE;
+        return ConceptDimensionHandler.TEMP_CONCEPT_TABLE;
     }
 
     private String tempObservationFactTableName() {
-        return ObservationFact.TEMP_OBSERVATION_TABLE;
+        return PropositionFactHandler.TEMP_OBSERVATION_TABLE;
     }
 
     /**
@@ -377,7 +407,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
     }
 
-    private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException {
+    private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException, SQLException {
         this.factHandlers = new ArrayList<>();
         if (!this.skipProviderHierarchy) {
             addProviderFactHandler();
@@ -389,15 +419,18 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     public void handleQueryResult(String keyId, List<Proposition> propositions, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references) throws QueryResultsHandlerProcessingException {
         try {
             Set<Proposition> derivedPropositions = new HashSet<>();
+            PatientDimension pd = null;
             for (Proposition prop : propositions) {
                 if (prop.getId().equals(this.visitPropId)) {
-                    PatientDimension pd = this.ontologyModel.getPatient(keyId);
                     if (pd == null) {
-                        pd = this.ontologyModel.addPatient(keyId, prop, this.dictSection, this.obxSection, references);
+                        pd = this.ontologyModel.addPatient(keyId, prop, this.dictSection, this.obxSection, references, this.patientDimension);
+                        this.patientDimensionHandler.insert(pd);
+                        this.patientMappingHandler.insert(pd);
                     }
                     ProviderDimension provider =
                             this.ontologyModel.addProviderIfNeeded(
                                     prop,
+                                    this.providerDimensionHandler,
                                     this.providerFullNameSpec != null ? this.providerFullNameSpec.referenceName : null,
                                     this.providerFullNameSpec != null ? this.providerFullNameSpec.propertyName : null,
                                     this.providerFirstNameSpec != null ? this.providerFirstNameSpec.referenceName : null,
@@ -406,14 +439,16 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                                     this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.propertyName : null,
                                     this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null,
                                     this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null,
-                                    references);
-                    VisitDimension vd = this.ontologyModel.addVisit(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references);
+                                    references, this.providerDimension);
+                    VisitDimension vd = this.ontologyModel.addVisit(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references, this.visitDimension);
+                    this.visitDimensionHandler.insert(vd);
+                    this.encounterMappingHandler.insert(vd);
                     for (FactHandler factHandler : this.factHandlers) {
                         factHandler.handleRecord(pd, vd, provider, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions, this.dataSchemaConnection);
                     }
                 }
             }
-        } catch (InvalidConceptCodeException | InvalidFactException | InvalidPatientRecordException ex) {
+        } catch (InvalidConceptCodeException | InvalidFactException | InvalidPatientRecordException | SQLException ex) {
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + this.query.getId(), ex);
         }
     }
@@ -430,7 +465,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         try {
             for (FactHandler factHandler : this.factHandlers) {
-                factHandler.clearOut(this.dataSchemaConnection);
+                factHandler.close();
             }
 
             logger.log(Level.INFO, "Inserting ages into observation fact table for query {0}", queryId);
@@ -438,16 +473,14 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.dataSchemaConnection.close();
             this.dataSchemaConnection = null;
 
-            if (!this.skipProviderHierarchy) {
-                this.ontologyModel.buildProviderHierarchy();
-            }
             // persist Patients & Visits.
+            this.patientDimensionHandler.close();
+            this.patientDimensionHandler = null;
+            this.patientMappingHandler.close();
+            this.patientMappingHandler = null;
             logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
             logger.log(Level.INFO, "Populating patient dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
-                PatientDimension.insertAll(this.ontologyModel.getPatients(),
-                        conn, projectName);
-
                 try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_PID_MAP_FROMTEMP(?, ?, ?) }")) {
                     mappingCall.setString(1, tempPatientMappingTableName());
                     mappingCall.setInt(2, UPLOAD_ID);
@@ -458,9 +491,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
 
+            this.visitDimensionHandler.close();
+            this.visitDimensionHandler = null;
+            this.encounterMappingHandler.close();
+            this.encounterMappingHandler = null;
             try (Connection conn = openDataDatabaseConnection()) {
-                VisitDimension.insertAll(this.ontologyModel.getVisits(),
-                        conn, projectName);
                 try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?, ?) }")) {
                     mappingCall.setString(1, tempEncounterMappingTableName());
                     mappingCall.setInt(2, UPLOAD_ID);
@@ -501,9 +536,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
             // find Provider root. gather its leaf nodes. persist Providers.
             if (!this.skipProviderHierarchy) {
+                this.providerDimensionHandler.close();
                 logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
                 try (Connection conn = openDataDatabaseConnection()) {
-                    ProviderDimension.insertAll(this.ontologyModel.getProviders(), conn);
                     try (CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }")) {
                         call.setString(1, tempProviderTableName());
                         call.setInt(2, UPLOAD_ID);
@@ -523,8 +558,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             
             // flush hot concepts out of the tree. persist Concepts.
             logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
+            new ConceptHierarchyLoader(this.conceptDimensionHandler).execute(this.ontologyModel.getRoot());
+            this.conceptDimensionHandler.close();
+            this.conceptDimensionHandler = null;
             try (Connection conn = openDataDatabaseConnection()) {
-                ConceptDimension.insertAll(this.ontologyModel.getRoot(), conn);
                 try (CallableStatement call = conn.prepareCall("{ call INSERT_CONCEPT_FROMTEMP(?, ?, ?) }")) {
                     call.setString(1, tempConceptTableName());
                     call.setInt(2, UPLOAD_ID);
@@ -561,7 +598,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             gatherStatisticsOnObservationFact();
             logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
             persistMetadata();
-        } catch (OntologyBuildException | SQLException | InvalidConceptCodeException ex) {
+        } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, ex);
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + queryId, ex);
         }
@@ -569,12 +606,44 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     @Override
     public void close() throws QueryResultsHandlerCloseException {
+        if (this.encounterMappingHandler != null) {
+            try {
+                this.encounterMappingHandler.close();
+            } catch (SQLException ignore) {
+            }
+        }
+        if (this.visitDimensionHandler != null) {
+            try {
+                this.visitDimensionHandler.close();
+            } catch (SQLException ignore) {
+            }
+        }
+        if (this.patientMappingHandler != null) {
+            try {
+                this.encounterMappingHandler.close();
+            } catch (SQLException ignore) {
+            }
+        }
+        if (this.patientDimensionHandler != null) {
+            try {
+                this.visitDimensionHandler.close();
+            } catch (SQLException ignore) {
+            }
+        }
+        if (this.conceptDimensionHandler != null) {
+            try {
+                this.conceptDimensionHandler.close();
+            } catch (SQLException ignore) {
+            }
+        }
         if (this.dataSchemaConnection != null) {
             try {
                 this.dataSchemaConnection.close();
             } catch (SQLException ignore) {
             }
         }
+        
+         
     }
 
     @Override
@@ -590,7 +659,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void mostlyBuildOntology() throws OntologyBuildException {
-        this.ontologyModel = new Metadata(this.qrhId, knowledgeSource, collectUserPropositionDefinitions(), this.dictSection.get("rootNodeName"), this.conceptsSection.getFolderSpecs(), dictSection, this.obxSection);
+        this.ontologyModel = new Metadata(this.qrhId, knowledgeSource, collectUserPropositionDefinitions(), this.dictSection.get("rootNodeName"), this.conceptsSection.getFolderSpecs(), dictSection, this.obxSection, this.skipProviderHierarchy);
         setI2B2PathsToConcepts();
     }
 
@@ -638,12 +707,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
     }
 
-    private void addProviderFactHandler() {
-        ProviderFactHandler providerFactHandler = new ProviderFactHandler();
+    private void addProviderFactHandler() throws SQLException {
+        ProviderFactHandler providerFactHandler = new ProviderFactHandler(this.dataConnectionSpec);
         this.factHandlers.add(providerFactHandler);
     }
 
-    private void addPropositionFactHandlers() throws KnowledgeSourceReadException {
+    private void addPropositionFactHandlers() throws KnowledgeSourceReadException, SQLException {
         String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived();
         for (DataSection.DataSpec obx : this.obxSection.getAll()) {
             Link[] links;
@@ -654,7 +723,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
 
             PropositionFactHandler propFactHandler =
-                    new PropositionFactHandler(links, obx.propertyName,
+                    new PropositionFactHandler(this.dataConnectionSpec, links, obx.propertyName,
                             obx.start, obx.finish, obx.units,
                             potentialDerivedPropIdsArr, this.ontologyModel);
             this.factHandlers.add(propFactHandler);
@@ -714,7 +783,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                  * in the order in which they were created.
                  */
                 Timestamp importTimestamp = new Timestamp(System.currentTimeMillis());
-                Set<String> conceptCodes = new HashSet<>();
                 while (emu.hasMoreElements()) {
                     Concept concept = emu.nextElement();
                     ps.setLong(1, concept.getLevel());

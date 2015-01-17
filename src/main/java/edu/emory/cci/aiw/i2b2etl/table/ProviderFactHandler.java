@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.KnowledgeSource;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.UniqueId;
@@ -37,8 +38,8 @@ import org.protempa.proposition.UniqueId;
  */
 public final class ProviderFactHandler extends FactHandler {
 
-    public ProviderFactHandler() {
-        super(null, "start", "finish", null);
+    public ProviderFactHandler(ConnectionSpec connSpec) throws SQLException {
+        super(connSpec, null, "start", "finish", null);
     }
     
     @Override
@@ -48,7 +49,7 @@ public final class ProviderFactHandler extends FactHandler {
                 encounterProp, patient, visit, provider,
                 provider.getConcept());
         try {
-            insert(providerFact, cn);
+            insert(providerFact);
         } catch (SQLException ex) {
             throw new InvalidFactException("Provider fact not created", ex);
         }

@@ -23,14 +23,16 @@ import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.table.ActiveStatusCode;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
+import edu.emory.cci.aiw.i2b2etl.table.ProviderDimensionHandler;
+import edu.emory.cci.aiw.i2b2etl.table.TableUtil;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
+import edu.emory.cci.aiw.i2b2etl.table.VitalStatusCode;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -38,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,23 +107,20 @@ public final class Metadata {
     private final Map<ConceptId, Concept> CACHE
             = new HashMap<>();
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
-    private final TreeMap<String, PatientDimension> patientCache
-            = new TreeMap<>();
-    private final Set<VisitDimension> visitCache = new HashSet<>();
     private final Set<String> conceptCodeCache = new HashSet<>();
     private final KnowledgeSource knowledgeSource;
-    private final Map<String, ProviderDimension> providers;
     private final DataSection dataSection;
     private final DictionarySection dictSection;
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
     private String qrhId;
+    private final ProviderConceptTreeBuilder providerConceptTreeBuilder;
 
     public Metadata(String qrhId, KnowledgeSource knowledgeSource,
-                    PropositionDefinition[] userDefinedPropositionDefinitions,
-                    String rootNodeDisplayName,
-                    FolderSpec[] folderSpecs,
-                    DictionarySection dictSection,
-                    DataSection dataSection) throws OntologyBuildException {
+            PropositionDefinition[] userDefinedPropositionDefinitions,
+            String rootNodeDisplayName,
+            FolderSpec[] folderSpecs,
+            DictionarySection dictSection,
+            DataSection dataSection, boolean skipProviderHierarchy) throws OntologyBuildException {
         if (knowledgeSource == null) {
             throw new IllegalArgumentException("knowledgeSource cannot be null");
         }
@@ -154,7 +152,6 @@ public final class Metadata {
         this.rootConcept.setDataType(DataType.TEXT);
         this.rootConcept.setSourceSystemCode(
                 MetadataUtil.toSourceSystemCode(this.qrhId));
-        this.providers = new HashMap<>();
         this.dictSection = dictSection;
         this.dataSection = dataSection;
 
@@ -210,6 +207,13 @@ public final class Metadata {
         } catch (InvalidPromoteArgumentException | SQLException | IOException | UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throwOntologyBuildException(ex);
         }
+        
+        if (!skipProviderHierarchy) {
+            this.providerConceptTreeBuilder = new ProviderConceptTreeBuilder(this);
+            this.rootConcept.add(this.providerConceptTreeBuilder.build());
+        } else {
+            this.providerConceptTreeBuilder = null;
+        }
     }
 
     private static void throwOntologyBuildException(Throwable ex) throws OntologyBuildException {
@@ -220,20 +224,13 @@ public final class Metadata {
         return this.rootConcept;
     }
 
-    public Collection<PatientDimension> getPatients() {
-        return patientCache.values();
-    }
-
-    public Collection<VisitDimension> getVisits() {
-        return visitCache;
-    }
-
     public ProviderDimension addProviderIfNeeded(Proposition encounterProp,
-                                                 String fullNameReference, String fullNameProperty,
-                                                 String firstNameReference, String firstNameProperty,
-                                                 String middleNameReference, String middleNameProperty,
-                                                 String lastNameReference, String lastNameProperty,
-                                                 Map<UniqueId, Proposition> references) throws InvalidConceptCodeException {
+            ProviderDimensionHandler providerDimensionHandler,
+            String fullNameReference, String fullNameProperty,
+            String firstNameReference, String firstNameProperty,
+            String middleNameReference, String middleNameProperty,
+            String lastNameReference, String lastNameProperty,
+            Map<UniqueId, Proposition> references, ProviderDimension providerDimension) throws InvalidConceptCodeException, SQLException {
         Set<String> sources = new HashSet<>(4);
 
         String firstName = extractNamePart(firstNameReference, firstNameProperty, encounterProp, references, sources);
@@ -244,29 +241,33 @@ public final class Metadata {
             fullName = constructFullName(firstName, middleName, lastName);
         }
 
-        ProviderDimension result = this.providers.get(fullName);
-        if (result == null) {
-            String id;
-            String source;
-            if (!sources.isEmpty()) {
-                id = PROVIDER_ID_PREFIX + fullName;
-                source = MetadataUtil.toSourceSystemCode(StringUtils.join(sources, " & "));
-            } else {
-                id = NOT_RECORDED_PROVIDER_ID;
-                source = MetadataUtil.toSourceSystemCode(this.qrhId);
-                fullName = "Not Recorded";
-            }
-            ConceptId cid = ConceptId.getInstance(id, this);
-            assert getFromIdCache(cid) == null : "duplicate provider concept " + cid;
-            Concept concept = new Concept(cid, null, this);
+        String id;
+        String source;
+        if (!sources.isEmpty()) {
+            id = PROVIDER_ID_PREFIX + fullName;
+            source = MetadataUtil.toSourceSystemCode(StringUtils.join(sources, " & "));
+        } else {
+            id = NOT_RECORDED_PROVIDER_ID;
+            source = MetadataUtil.toSourceSystemCode(this.qrhId);
+            fullName = "Not Recorded";
+        }
+        ConceptId cid = ConceptId.getInstance(id, this);
+        Concept concept = getFromIdCache(cid);
+        boolean found = concept != null;
+        if (!found) {
+            concept = new Concept(cid, null, this);
             concept.setSourceSystemCode(source);
             concept.setDisplayName(fullName);
             concept.setDataType(DataType.TEXT);
             concept.setInUse(true);
-            result = new ProviderDimension(concept, source);
-            this.providers.put(fullName, result);
         }
-        return result;
+        providerDimension.setConcept(concept);
+        providerDimension.setSourceSystem(source);
+        if (this.providerConceptTreeBuilder != null && !found) {
+            this.providerConceptTreeBuilder.add(providerDimension);
+            providerDimensionHandler.insert(providerDimension);
+        }
+        return providerDimension;
     }
 
     private String extractNamePart(String namePartReference, String namePartProperty, Proposition encounterProp, Map<UniqueId, Proposition> references, Set<String> sources) {
@@ -352,19 +353,10 @@ public final class Metadata {
         this.rootConcept.add(builder.build());
     }
 
-    public void buildProviderHierarchy() throws OntologyBuildException {
-        ProviderConceptTreeBuilder builder = new ProviderConceptTreeBuilder(this.providers.values(), this);
-        this.rootConcept.add(builder.build());
-    }
-
-    public Collection<ProviderDimension> getProviders() {
-        return this.providers.values();
-    }
-
     public PatientDimension addPatient(String keyId, Proposition encounterProp,
-                                       DictionarySection dictSection,
-                                       DataSection obxSection,
-                                       Map<UniqueId, Proposition> references) throws InvalidPatientRecordException {
+            DictionarySection dictSection,
+            DataSection obxSection,
+            Map<UniqueId, Proposition> references, PatientDimension patientDimension) throws InvalidPatientRecordException {
         String obxSectionStr = dictSection.get("patientDimensionMRN");
         DataSpec dataSpec = obxSection.get(obxSectionStr);
         List<UniqueId> uids = encounterProp.getReferences(dataSpec.referenceName);
@@ -384,71 +376,69 @@ public final class Metadata {
             }
             Value val = prop.getProperty(dataSpec.propertyName);
             if (val != null) {
-                PatientDimension patientDimension = this.patientCache.get(keyId);
-                if (patientDimension == null) {
-                    Value zipCode = getField(dictSection, obxSection,
-                            "patientDimensionZipCode", encounterProp,
-                            references);
-                    Value maritalStatus = getField(dictSection, obxSection,
-                            "patientDimensionMaritalStatus", encounterProp,
-                            references);
-                    Value race = getField(dictSection, obxSection,
-                            "patientDimensionRace", encounterProp,
-                            references);
-                    Value birthdateVal = getField(dictSection, obxSection,
-                            "patientDimensionBirthdate", encounterProp,
-                            references);
-                    Value gender = getField(dictSection, obxSection,
-                            "patientDimensionGender", encounterProp,
-                            references);
-                    Value language = getField(dictSection, obxSection,
-                            "patientDimensionLanguage", encounterProp,
-                            references);
-                    Value religion = getField(dictSection, obxSection,
-                            "patientDimensionReligion", encounterProp,
-                            references);
-                    Date birthdate;
-                    if (birthdateVal != null) {
-                        try {
-                            birthdate = ((DateValue) birthdateVal).getDate();
-                        } catch (ClassCastException cce) {
-                            birthdate = null;
-                            logger.log(Level.WARNING, "Birthdate property value not a DateValue");
-                        }
-                    } else {
+                Value zipCode = getField(dictSection, obxSection,
+                        "patientDimensionZipCode", encounterProp,
+                        references);
+                Value maritalStatus = getField(dictSection, obxSection,
+                        "patientDimensionMaritalStatus", encounterProp,
+                        references);
+                Value race = getField(dictSection, obxSection,
+                        "patientDimensionRace", encounterProp,
+                        references);
+                Value birthdateVal = getField(dictSection, obxSection,
+                        "patientDimensionBirthdate", encounterProp,
+                        references);
+                Value gender = getField(dictSection, obxSection,
+                        "patientDimensionGender", encounterProp,
+                        references);
+                Value language = getField(dictSection, obxSection,
+                        "patientDimensionLanguage", encounterProp,
+                        references);
+                Value religion = getField(dictSection, obxSection,
+                        "patientDimensionReligion", encounterProp,
+                        references);
+                Date birthdate;
+                if (birthdateVal != null) {
+                    try {
+                        birthdate = ((DateValue) birthdateVal).getDate();
+                    } catch (ClassCastException cce) {
                         birthdate = null;
+                        logger.log(Level.WARNING, "Birthdate property value not a DateValue");
                     }
-
-                    Long ageInYears;
-                    if (birthdate != null) {
-                        ageInYears = AbsoluteTimeGranularity.YEAR.distance(
-                                AbsoluteTimeGranularityUtil.asPosition(birthdate),
-                                AbsoluteTimeGranularityUtil.asPosition(new Date()),
-                                AbsoluteTimeGranularity.YEAR,
-                                AbsoluteTimeUnit.YEAR);
-                        Concept ageConcept = getFromIdCache(null, null,
-                                NumberValue.getInstance(ageInYears));
-                        if (ageConcept != null) {
-                            ageConcept.setInUse(true);
-                        }
-                    } else {
-                        ageInYears = null;
-                    }
-
-                    patientDimension = new PatientDimension(keyId,
-                            prop.getSourceSystem().getStringRepresentation(),
-                            zipCode != null ? zipCode.getFormatted() : null,
-                            ageInYears,
-                            gender != null ? gender.getFormatted() : null,
-                            language != null ? language.getFormatted() : null,
-                            religion != null ? religion.getFormatted() : null,
-                            birthdate, null,
-                            maritalStatus != null ? maritalStatus.getFormatted() : null,
-                            race != null ? race.getFormatted() : null,
-                            prop.getSourceSystem().getStringRepresentation());
-                    this.patientCache.put(keyId, patientDimension);
-                    return patientDimension;
+                } else {
+                    birthdate = null;
                 }
+
+                Long ageInYears;
+                if (birthdate != null) {
+                    ageInYears = AbsoluteTimeGranularity.YEAR.distance(
+                            AbsoluteTimeGranularityUtil.asPosition(birthdate),
+                            AbsoluteTimeGranularityUtil.asPosition(new Date()),
+                            AbsoluteTimeGranularity.YEAR,
+                            AbsoluteTimeUnit.YEAR);
+                    Concept ageConcept = getFromIdCache(null, null,
+                            NumberValue.getInstance(ageInYears));
+                    if (ageConcept != null) {
+                        ageConcept.setInUse(true);
+                    }
+                } else {
+                    ageInYears = null;
+                }
+
+                patientDimension.setEncryptedPatientId(keyId);
+                patientDimension.setEncryptedPatientIdSource(prop.getSourceSystem().getStringRepresentation());
+                patientDimension.setZip(zipCode != null ? zipCode.getFormatted() : null);
+                patientDimension.setAgeInYears(ageInYears);
+                patientDimension.setGender(gender != null ? gender.getFormatted() : null);
+                patientDimension.setLanguage(language != null ? language.getFormatted() : null);
+                patientDimension.setReligion(religion != null ? religion.getFormatted() : null);
+                patientDimension.setBirthDate(TableUtil.setDateAttribute(birthdate));
+                patientDimension.setDeathDate(null);
+                patientDimension.setMaritalStatus(maritalStatus != null ? maritalStatus.getFormatted() : null);
+                patientDimension.setRace(race != null ? race.getFormatted() : null);
+                patientDimension.setSourceSystem(prop.getSourceSystem().getStringRepresentation());
+                patientDimension.setVital(VitalStatusCode.getInstance(null));
+                return patientDimension;
             } else {
                 throw new InvalidPatientRecordException("Null patient MRN for encounter "
                         + encounterProp);
@@ -457,14 +447,14 @@ public final class Metadata {
             throw new InvalidPatientRecordException("No patient dimension information for "
                     + encounterProp);
         }
-        return null;
     }
 
     public VisitDimension addVisit(String encryptedPatientId,
-                                   String encryptedPatientIdSourceSystem,
-                                   TemporalProposition encounterProp, DictionarySection dictSection,
-                                   DataSection obxSection,
-                                   Map<UniqueId, Proposition> references) {
+            String encryptedPatientIdSourceSystem,
+            TemporalProposition encounterProp, DictionarySection dictSection,
+            DataSection obxSection,
+            Map<UniqueId, Proposition> references,
+            VisitDimension visitDimension) {
         java.util.Date visitStartDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinStart()) : null;
         java.util.Date visitEndDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinFinish()) : null;
         Value encryptedId = encounterProp != null ? getField(dictSection, obxSection, "visitDimensionDecipheredId", encounterProp, references) : null;
@@ -484,14 +474,17 @@ public final class Metadata {
             updateDate = null;
         }
 
-        VisitDimension vd = new VisitDimension(encryptedPatientId,
-                visitStartDate, visitEndDate, encryptedIdStr,
-                encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : this.qrhId,
-                this.qrhId,
-                encryptedPatientIdSourceSystem,
-                encounterProp != null ? encounterProp.getDownloadDate() : null, updateDate);
-        visitCache.add(vd);
-        return vd;
+        visitDimension.setEncryptedPatientId(TableUtil.setStringAttribute(encryptedPatientId));
+        visitDimension.setStartDate(TableUtil.setDateAttribute(visitStartDate));
+        visitDimension.setEndDate(TableUtil.setDateAttribute(visitEndDate));
+        visitDimension.setEncryptedVisitId(TableUtil.setStringAttribute(encryptedIdStr));
+        visitDimension.setEncryptedVisitIdSourceSystem(encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : this.qrhId);
+        visitDimension.setVisitSourceSystem(this.qrhId);
+        visitDimension.setEncryptedPatientIdSourceSystem(encryptedPatientIdSourceSystem);
+        visitDimension.setActiveStatus(ActiveStatusCode.getInstance(true, visitStartDate, visitEndDate));
+        visitDimension.setDownloadDate(TableUtil.setTimestampAttribute(encounterProp != null ? encounterProp.getDownloadDate() : null));
+        visitDimension.setUpdateDate(TableUtil.setTimestampAttribute(updateDate));
+        return visitDimension;
     }
 
     Concept getOrCreateHardCodedFolder(String... conceptIdSuffixes) throws InvalidConceptCodeException {
@@ -515,8 +508,8 @@ public final class Metadata {
     }
 
     private static Value getField(DictionarySection dictSection,
-                                  DataSection obxSection, String field,
-                                  Proposition encounterProp, Map<UniqueId, Proposition> references) {
+            DataSection obxSection, String field,
+            Proposition encounterProp, Map<UniqueId, Proposition> references) {
         Value val;
         String obxSectionStr = dictSection.get(field);
         if (obxSectionStr != null) {
@@ -561,10 +554,6 @@ public final class Metadata {
 
     public void addToIdCache(Concept concept) {
         this.CACHE.put(concept.getId(), concept);
-    }
-
-    public PatientDimension getPatient(String keyId) {
-        return patientCache.get(keyId);
     }
 
     void putInConceptIdCache(List<Object> key, ConceptId conceptId) {
@@ -615,8 +604,8 @@ public final class Metadata {
             String[] propIds
                     = new String[this.userDefinedPropositionDefinitions.length];
             for (int i = 0;
-                 i < this.userDefinedPropositionDefinitions.length;
-                 i++) {
+                    i < this.userDefinedPropositionDefinitions.length;
+                    i++) {
                 propIds[i] = this.userDefinedPropositionDefinitions[i].getId();
             }
             folderSpec.propositions = propIds;
@@ -631,7 +620,7 @@ public final class Metadata {
      * of Protege (mostly).
      *
      * @param concept the root {@link Concept} of the tree or subtree.
-     * @param ctr     the number of levels to remove.
+     * @param ctr the number of levels to remove.
      */
     private static void promote(Concept concept, int ctr) throws InvalidPromoteArgumentException {
         if (ctr > 0) {
@@ -672,15 +661,15 @@ public final class Metadata {
         if (folderSpec.property == null) {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.knowledgeSource,
-                    folderSpec.propositions, folderSpec.conceptCodePrefix,
-                    folderSpec.valueType, this);
+                            folderSpec.propositions, folderSpec.conceptCodePrefix,
+                            folderSpec.valueType, this);
             concepts = propProxy.build();
 
         } else {
             ValueSetConceptTreeBuilder vsProxy
                     = new ValueSetConceptTreeBuilder(this.knowledgeSource,
-                    folderSpec.propositions, folderSpec.property,
-                    folderSpec.conceptCodePrefix, this);
+                            folderSpec.propositions, folderSpec.property,
+                            folderSpec.conceptCodePrefix, this);
             concepts = vsProxy.build();
         }
         for (Concept c : concepts) {

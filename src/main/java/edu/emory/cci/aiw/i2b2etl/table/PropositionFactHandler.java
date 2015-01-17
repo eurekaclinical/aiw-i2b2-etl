@@ -23,17 +23,14 @@ import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.arp.javautil.sql.ConnectionSpec;
 import org.drools.util.StringUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
@@ -54,10 +51,11 @@ public final class PropositionFactHandler extends FactHandler {
     private Metadata metadata;
     private final Link[] derivationLinks;
 
-    public PropositionFactHandler(Link[] links, String propertyName, 
+    public PropositionFactHandler(ConnectionSpec connSpec,
+            Link[] links, String propertyName, 
             String start, String finish, String unitsPropertyName,
-            String[] potentialDerivedPropIds, Metadata metadata) {
-        super(propertyName, start, finish, unitsPropertyName);
+            String[] potentialDerivedPropIds, Metadata metadata) throws SQLException {
+        super(connSpec, propertyName, start, finish, unitsPropertyName);
         if (metadata == null) {
             throw new IllegalArgumentException("metadata cannot be null");
         }
@@ -136,7 +134,7 @@ public final class PropositionFactHandler extends FactHandler {
                     encounterProp, patient, visit, provider, concept,
                     1);
             try {
-                insert(obx, cn);
+                insert(obx);
             } catch (SQLException ex) {
                 String msg = "Observation fact not created";
                 throw new InvalidFactException(msg, ex);

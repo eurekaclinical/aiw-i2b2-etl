@@ -20,15 +20,8 @@
 package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
-import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Represents records in the i2b2 provider dimension.
@@ -53,28 +46,22 @@ import java.util.logging.Logger;
  *
  * @author Andrew Post
  */
-public class ProviderDimension {
+public class ProviderDimension implements Record {
 
-    private static final Logger LOGGER = TableUtil.logger();
-    private final Concept concept;
-    private final String sourceSystem;
+    private Concept concept;
+    private String sourceSystem;
 
-    public static final String TEMP_PROVIDER_TABLE = "temp_provider";
-
-    /**
-     * Constructs a provider dimension record.
-     *
-     * @param concept the i2b2 concept representing the provider
-     * @param sourceSystem the source system where the provider came from
-     */
-    public ProviderDimension(Concept concept, String sourceSystem) {
-        if (concept == null) {
-            throw new IllegalArgumentException("concept cannot be null");
-        }
+    public ProviderDimension() {
+    }
+    
+    public void setConcept(Concept concept) {
         this.concept = concept;
-        this.sourceSystem = sourceSystem;
     }
 
+    public void setSourceSystem(String sourceSystem) {
+        this.sourceSystem = sourceSystem;
+    }
+    
     /**
      * Returns the provider's unique id, or
      * <code>null</code> if the provider is not recorded or unknown.
@@ -95,71 +82,13 @@ public class ProviderDimension {
         return this.sourceSystem;
     }
 
-    public static void insertAll(Collection<ProviderDimension> providers,
-            Connection cn) throws SQLException {
-        Logger logger = TableUtil.logger();
-        int batchSize = 1000;
-        int counter = 0;
-        int commitSize = 10000;
-        int commitCounter = 0;
-        PreparedStatement ps = cn.prepareStatement("insert into " + TEMP_PROVIDER_TABLE + " (provider_id,provider_path,name_char," +
-                "provider_blob,update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?)");
-        try {
-            for (ProviderDimension provider : providers) {
-                if (provider.concept.getI2B2Path() == null) {
-                    throw new AssertionError("i2b2path cannot be null: " + provider);
-                }
-                try {
-                    ps.setString(1, TableUtil.setStringAttribute(provider.concept.getConceptCode()));
-                    ps.setString(2, provider.concept.getI2B2Path());
-                    ps.setString(3, provider.concept.getDisplayName());
-                    ps.setObject(4, null);
-                    ps.setTimestamp(5, null);
-                    ps.setTimestamp(6, null);
-                    ps.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
-                    ps.setString(8, MetadataUtil.toSourceSystemCode(provider.sourceSystem));
-                    ps.setObject(9, null);
-                    ps.addBatch();
-                    ps.clearParameters();
-                    counter++;
-                    commitCounter++;
-                    if (counter >= batchSize) {
-                        ps.executeBatch();
-                        ps.clearBatch();
-                        counter = 0;
-                    }
-                    if (commitCounter >= commitSize) {
-                        cn.commit();
-                        commitCounter = 0;
-                    }
-
-                    logger.log(Level.FINEST, "DB_RD_INSERT {0}", provider);
-                } catch (SQLException e) {
-                    logger.log(Level.SEVERE, "DB_RD_INSERT_FAIL {0}", provider);
-                    throw e;
-                }
-            }
-            if (counter > 0) {
-                ps.executeBatch();
-                ps.clearBatch();
-            }
-            if (commitCounter > 0) {
-                cn.commit();
-            }
-            ps.close();
-            ps = null;
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException sqle) {
-                }
-            }
-        }
-    }
-
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+
+    @Override
+    public boolean isRejected() {
+        return false;
     }
 }

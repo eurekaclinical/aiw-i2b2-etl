@@ -27,7 +27,7 @@ import java.util.Date;
  * 
  * @author Andrew Post
  */
-enum ActiveStatusCode {
+public enum ActiveStatusCode {
     FINAL("F"),
     PRELIMINARY("P"),
     ACTIVE("A"),
@@ -46,7 +46,7 @@ enum ActiveStatusCode {
      * @param endDate the end date of the visit. May be <code>null</code>.
      * @return the appropriate active status code.
      */
-    static ActiveStatusCode getInstance(boolean bFinal, 
+    public static ActiveStatusCode getInstance(boolean bFinal, 
             Date startDate, Date endDate) {
         if (startDate == null && endDate == null) {
             return NO_DATES;
@@ -68,7 +68,7 @@ enum ActiveStatusCode {
      * 
      * @return a code {@link String}.
      */
-    String getCode() {
+    public String getCode() {
         return this.code;
     }
 }

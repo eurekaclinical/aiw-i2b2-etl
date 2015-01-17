@@ -24,10 +24,8 @@ import java.util.Date;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.protempa.proposition.value.*;
 
-public class ObservationFact {
+public class ObservationFact implements Record {
 
-    public static final String TEMP_OBSERVATION_TABLE = "temp_observation";
-    
     //	CREATE TABLE  "OBSERVATION_FACT" 
     //  (
     //  "ENCOUNTER_NUM"		NUMBER(38,0)  NOT NULL ENABLE, 
@@ -115,6 +113,7 @@ public class ObservationFact {
         this.updateDate = updateDate;
     }
 
+    @Override
     public boolean isRejected() {
         return rejected;
     }
