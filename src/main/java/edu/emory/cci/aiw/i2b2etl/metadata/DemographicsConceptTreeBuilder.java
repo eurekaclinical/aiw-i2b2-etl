@@ -19,13 +19,9 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
-import java.text.ChoiceFormat;
-import java.text.MessageFormat;
-import org.protempa.*;
-import org.protempa.ValueSet.ValueSetElement;
+import org.protempa.KnowledgeSource;
+import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
 
 /**
@@ -47,55 +43,47 @@ class DemographicsConceptTreeBuilder {
         ageGroup(95, 104),
         ageGroup(105, 120)
     };
-    private final KnowledgeSource knowledgeSource;
     private final DictionarySection dictionarySection;
-    private final DataSection dataSection;
     private final Metadata metadata;
-    private final String visitDimensionPropId;
     private final String qrhId;
 
-    DemographicsConceptTreeBuilder(String qrhId, KnowledgeSource knowledgeSource, DictionarySection dictSection, DataSection dataSection, Metadata metadata) {
+    DemographicsConceptTreeBuilder(String qrhId, KnowledgeSource knowledgeSource, DictionarySection dictSection, Metadata metadata) {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
-        assert dataSection != null : "dataSection cannot be null";
         assert metadata != null : "metadata cannot be null";
         assert qrhId != null : "qrhId cannot be null";
-        this.knowledgeSource = knowledgeSource;
         this.dictionarySection = dictSection;
-        this.dataSection = dataSection;
         this.metadata = metadata;
-        this.visitDimensionPropId = dictSection.get("visitDimension");
         this.qrhId = qrhId;
     }
 
     Concept build() throws OntologyBuildException {
-        Concept root = newConcept("Demographics");
-
+        Concept root = newContainerConcept("Demographics", MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics");
         root.add(buildAge("Age"));
 
-        DescendantBuilder descendantBuilder = new DescendantBuilder(root);
-        descendantBuilder.build("Gender", "patientDimensionGender");
-        descendantBuilder.build("Language", "patientDimensionLanguage");
-        descendantBuilder.build("Marital Status", "patientDimensionMaritalStatus");
-        descendantBuilder.build("Race", "patientDimensionRace");
-        descendantBuilder.build("Religion", "patientDimensionReligion");
-        descendantBuilder.build("Vital Status", "patientDimensionVital");
+        DimensionValueSetFolderBuilder descendantBuilder = this.metadata.newDimensionValueSetFolderBuilder(root, "patient_num", "patient_dimension");
+        descendantBuilder.build("Gender", "patientDimensionGender", "sex_cd");
+        descendantBuilder.build("Language", "patientDimensionLanguage", "language_cd");
+        descendantBuilder.build("Marital Status", "patientDimensionMaritalStatus", "marital_status_cd");
+        descendantBuilder.build("Race", "patientDimensionRace", "race_cd");
+        descendantBuilder.build("Religion", "patientDimensionReligion", "religion_cd");
+        descendantBuilder.build("Vital Status", "patientDimensionVital", "vital_status_cd");
 
         return root;
     }
 
     private Concept buildAge(String displayName) throws OntologyBuildException {
-        Concept age = newConcept(displayName);
+        Concept age = newContainerConcept(displayName, MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics|Age");
         String ageConceptCodePrefix =
                 this.dictionarySection.get("ageConceptCodePrefix");
         for (int i = 0; i < ageCategories.length; i++) {
             int[] ages = ageCategories[i];
             String ageRangeDisplayName = String.valueOf(ages[0]) + '-'
                     + String.valueOf(ages[ages.length - 1]) + " years old";
-            Concept ageCategory = newConcept(ageRangeDisplayName);
-            ageCategory.setFactTableColumn("patient_num");
-            ageCategory.setTableName("patient_dimension");
+            ConceptId ageRangeConceptId = ConceptId.getInstance(null, null, NominalValue.getInstance(ageRangeDisplayName), metadata);
+            Concept ageCategory = newQueryableConcept(ageRangeConceptId, ageConceptCodePrefix);
             ageCategory.setColumnName("birth_date");
             ageCategory.setDataType(DataType.NUMERIC);
+            ageCategory.setDisplayName(ageRangeDisplayName);
             if (i == 0) {
                 ageCategory.setOperator(ConceptOperator.GREATER_THAN);
                 ageCategory.setDimCode("sysdate - (365.25 * " + (ages[ages.length - 1] + 1) + ")");
@@ -112,152 +100,48 @@ class DemographicsConceptTreeBuilder {
             }
             age.add(ageCategory);
             for (int j = 0; j < ages.length; j++) {
-                try {
-                    ConceptId conceptId = ConceptId.getInstance(
-                            null, null,
-                            NumberValue.getInstance(ages[j]),
-                            this.metadata);
-                    Concept ageConcept = this.metadata.getFromIdCache(conceptId);
-                    if (ageConcept == null) {
-                        ageConcept =
-                                new Concept(conceptId,
-                                ageConceptCodePrefix, this.metadata);
-                        if (ages[j] == 1) {
-                            ageConcept.setDisplayName(ages[j] + " year old");
-                        } else {
-                            ageConcept.setDisplayName(ages[j] + " years old");
-                        }
-                        ageConcept.setSourceSystemCode(
-                                MetadataUtil.toSourceSystemCode(this.qrhId));
-                        ageConcept.setDataType(DataType.NUMERIC);
-                        ageConcept.setFactTableColumn("patient_num");
-                        ageConcept.setTableName("patient_dimension");
-                        ageConcept.setColumnName("birth_date");
-                        ageConcept.setOperator(ConceptOperator.BETWEEN);
-                        /*
-                         * This dimcode is what is recommended in i2b2's
-                         * documentation at
-                         * https://community.i2b2.org/wiki/display/DevForum/Query+Building+from+Ontology.
-                         * There seems to be a problem with it, though. BETWEEN
-                         * is inclusive on both sides of the range. Thus, if
-                         * sysdate happens to be exactly midnight, the patient
-                         * will end up in two adjacent age buckets.
-                         */
-                        ageConcept.setDimCode("sysdate - (365.25 * " + (ages[j] + 1) + ") AND sysdate - (365.25 * " + ages[j] + ")");
-                        this.metadata.addToIdCache(ageConcept);
-                    } else {
-                        throw new OntologyBuildException("Duplicate age concept: " + ageConcept.getConceptCode());
-                    }
-                    ageCategory.add(ageConcept);
-                } catch (InvalidConceptCodeException ex) {
-                    throw new OntologyBuildException("Could not build age concept", ex);
+                ConceptId conceptId = ConceptId.getInstance(
+                        null, null,
+                        NumberValue.getInstance(ages[j]),
+                        this.metadata);
+                Concept ageConcept = newQueryableConcept(conceptId, ageConceptCodePrefix);
+                if (ages[j] == 1) {
+                    ageConcept.setDisplayName(ages[j] + " year old");
+                } else {
+                    ageConcept.setDisplayName(ages[j] + " years old");
                 }
+                ageConcept.setDataType(DataType.NUMERIC);
+                ageConcept.setColumnName("birth_date");
+                ageConcept.setOperator(ConceptOperator.BETWEEN);
+                /*
+                 * This dimcode is what is recommended in i2b2's
+                 * documentation at
+                 * https://community.i2b2.org/wiki/display/DevForum/Query+Building+from+Ontology.
+                 * There seems to be a problem with it, though. BETWEEN
+                 * is inclusive on both sides of the range. Thus, if
+                 * sysdate happens to be exactly midnight, the patient
+                 * will end up in two adjacent age buckets.
+                 */
+                ageConcept.setDimCode("sysdate - (365.25 * " + (ages[j] + 1) + ") AND sysdate - (365.25 * " + ages[j] + ")");
+                ageCategory.add(ageConcept);
             }
         }
 
         return age;
     }
-
-    private final class DescendantBuilder {
-
-        private final PropositionDefinition propDef;
-        private final Concept root;
-
-        DescendantBuilder(Concept root) throws OntologyBuildException {
-            this.root = root;
-
-            try {
-                this.propDef = DemographicsConceptTreeBuilder.this.knowledgeSource.readPropositionDefinition(visitDimensionPropId);
-                if (this.propDef == null) {
-                    throw new UnknownPropositionDefinitionException(visitDimensionPropId);
-                }
-            } catch (KnowledgeSourceReadException | UnknownPropositionDefinitionException ex) {
-                throw new OntologyBuildException("Could not build descendants", ex);
-            }
-
-		}
-
-        void build(String childName, String childSpec) throws OntologyBuildException {
-            DataSpec dataSpec = getDataSection(childSpec);
-            Concept concept = newConcept(childName);
-            if (dataSpec != null && dataSpec.referenceName != null) {
-                try {
-                    addChildrenFromValueSets(this.propDef, dataSpec, concept);
-                } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
-                    throw new OntologyBuildException("Could not build descendants", ex);
-                }
-			}
-            if (dataSpec != null) {
-                this.root.add(concept);
-            }
-        }
-
-        private DataSpec getDataSection(String dictSectionKey) {
-            String dictVal = DemographicsConceptTreeBuilder.this.dictionarySection.get(dictSectionKey);
-            if (dictVal != null) {
-                return DemographicsConceptTreeBuilder.this.dataSection.get(dictVal);
-            } else {
-                return null;
-            }
-        }
-
-        private void addChildrenFromValueSets(PropositionDefinition propDef,
-                DataSpec dataSpec, Concept concept) throws OntologyBuildException,
-                UnsupportedOperationException, KnowledgeSourceReadException,
-                InvalidConceptCodeException {
-            ReferenceDefinition refDef = propDef.referenceDefinition(dataSpec.referenceName);
-            String[] propIds = refDef.getPropositionIds();
-            for (String propId : propIds) {
-                PropositionDefinition genderPropositionDef =
-                        DemographicsConceptTreeBuilder.this.knowledgeSource.readPropositionDefinition(propId);
-                assert genderPropositionDef != null : "genderPropositionDef cannot be null";
-                PropertyDefinition genderPropertyDef = genderPropositionDef.propertyDefinition(dataSpec.propertyName);
-                if (genderPropertyDef != null) {
-                    String valueSetId = genderPropertyDef.getValueSetId();
-                    if (valueSetId == null) {
-                        throw new UnsupportedOperationException("We don't support non-enumerated property values for demographics yet!");
-                    }
-                    ValueSet valueSet =
-                            DemographicsConceptTreeBuilder.this.knowledgeSource.readValueSet(valueSetId);
-                    ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
-                    for (ValueSetElement valueSetElement : valueSetElements) {
-                        ConceptId conceptId = ConceptId.getInstance(propId, dataSpec.propertyName, valueSetElement.getValue(), DemographicsConceptTreeBuilder.this.metadata);
-                        Concept childConcept = DemographicsConceptTreeBuilder.this.metadata.getFromIdCache(conceptId);
-                        if (childConcept == null) {
-                            childConcept = new Concept(conceptId, dataSpec.conceptCodePrefix, DemographicsConceptTreeBuilder.this.metadata);
-                            childConcept.setDisplayName(valueSetElement.getDisplayName());
-                            childConcept.setSourceSystemCode(MetadataUtil.toSourceSystemCode(qrhId));
-                            childConcept.setDataType(DataType.TEXT);
-                            DemographicsConceptTreeBuilder.this.metadata.addToIdCache(childConcept);
-                        } else {
-                            throw new OntologyBuildException("Duplicate demographics concept: " + childConcept.getConceptCode());
-                        }
-                        concept.add(childConcept);
-                    }
-                }
-            }
-        }
-    }
-
-    private Concept newConcept(String displayName) throws OntologyBuildException {
-        String conceptIdPrefix = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics|";
+    
+    private Concept newContainerConcept(String displayName, String conceptCode) throws OntologyBuildException {
         ConceptId conceptId = ConceptId.getInstance(displayName, metadata);
-        Concept folder = this.metadata.getFromIdCache(conceptId);
-        if (folder == null) {
-            try {
-                folder = new Concept(conceptId, conceptIdPrefix + displayName, this.metadata);
-            } catch (InvalidConceptCodeException ex) {
-                throw new OntologyBuildException("Error building ontology", ex);
-            }
-            folder.setSourceSystemCode(MetadataUtil.toSourceSystemCode(this.qrhId));
-            folder.setDisplayName(displayName);
-            folder.setDataType(DataType.TEXT);
-            this.metadata.addToIdCache(folder);
-        } else {
-            throw new OntologyBuildException(
-                    "Duplicate demographics concept: " + folder.getConceptCode());
-        }
-        return folder;
+        Concept concept = this.metadata.newConcept(conceptId, conceptCode, this.qrhId);
+        concept.setCVisualAttributes("CAE");
+        return concept;
+    }
+    
+    private Concept newQueryableConcept(ConceptId conceptId, String conceptCodePrefix) throws OntologyBuildException {
+        Concept concept = this.metadata.newConcept(conceptId, conceptCodePrefix, this.qrhId);
+        concept.setFactTableColumn("patient_num");
+        concept.setTableName("patient_dimension");
+        return concept;
     }
 
     private static int[] ageGroup(int minAge, int maxAge) {

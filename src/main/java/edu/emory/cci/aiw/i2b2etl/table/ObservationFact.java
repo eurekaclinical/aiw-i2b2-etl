@@ -53,66 +53,91 @@ public class ObservationFact implements Record {
     //	CONSTRAINT "OBSERVATION_FACT_PK" PRIMARY KEY ("ENCOUNTER_NUM", "CONCEPT_CD", "PROVIDER_ID", "START_DATE", "MODIFIER_CD") ENABLE
     //  )
 //	private static long ctr = 0L;
-    private final String displayName;
-    private final Value value;
-    private final java.util.Date startDate;
-    private final java.util.Date endDate;
-    private final PatientDimension patient;
-    private final VisitDimension visit;
-    private final ProviderDimension provider;
-    private final Concept concept;
-    private final String sourceSystem;
-    private final String units;
-    private final ValueFlagCode valueFlagCode;
-    private final boolean rejected;
-    private final long instanceNum;
-    private final String modifierCd;
+    private String displayName;
+    private Value value;
+    private java.util.Date startDate;
+    private java.util.Date endDate;
+    private PatientDimension patient;
+    private VisitDimension visit;
+    private ProviderDimension provider;
+    private Concept concept;
+    private String sourceSystem;
+    private String units;
+    private ValueFlagCode valueFlagCode;
+    private boolean rejected;
+    private long instanceNum;
+    private String modifierCd;
     private Date updateDate;
     private Date downloadDate;
 
-    public ObservationFact(java.util.Date startDate, 
-            java.util.Date finishDate,
-            PatientDimension patient,
-            VisitDimension visit, ProviderDimension provider,
-            Concept concept, Value value, ValueFlagCode valueFlagCode,
-            String displayName,
-            String units,
-            String sourceSystem,
-            boolean rejected,
-            Date downloadDate, Date updateDate, long instanceNum) {
-        if (patient == null) {
-            throw new IllegalArgumentException("patient cannot be null");
-        }
-        if (visit == null) {
-            throw new IllegalArgumentException("visit cannot be null");
-        }
-        if (provider == null) {
-            throw new IllegalArgumentException("provider cannot be null");
-        }
-        //if (startDate == null) {
-        //    throw new IllegalArgumentException("startDate cannot be null");
-        //}
-        if (valueFlagCode == null) {
-            throw new IllegalArgumentException("valueFlagCode cannot be null");
-        }
-        this.startDate = startDate;
-        this.endDate = finishDate;
-        this.patient = patient;
-        this.visit = visit;
-        this.provider = provider;
-        this.concept = concept;
-        this.displayName = displayName;
-        this.value = value;
-        this.sourceSystem = sourceSystem;
-        this.units = units;
-        this.valueFlagCode = valueFlagCode;
-        this.rejected = rejected;
-        this.instanceNum = instanceNum; //this is used in combination of modifier_CD. currently we do not use this feature hence assigning the default value.
+    public ObservationFact() {
         this.modifierCd = "@";  //using the default value since we do not use this i2b2 feature currently
-        this.downloadDate = downloadDate;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public void setValue(Value value) {
+        this.value = value;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public void setPatient(PatientDimension patient) {
+        this.patient = patient;
+    }
+
+    public void setVisit(VisitDimension visit) {
+        this.visit = visit;
+    }
+
+    public void setProvider(ProviderDimension provider) {
+        this.provider = provider;
+    }
+
+    public void setConcept(Concept concept) {
+        this.concept = concept;
+    }
+
+    public void setSourceSystem(String sourceSystem) {
+        this.sourceSystem = sourceSystem;
+    }
+
+    public void setUnits(String units) {
+        this.units = units;
+    }
+
+    public void setValueFlagCode(ValueFlagCode valueFlagCode) {
+        this.valueFlagCode = valueFlagCode;
+    }
+
+    public void setRejected(boolean rejected) {
+        this.rejected = rejected;
+    }
+
+    public void setInstanceNum(long instanceNum) {
+        this.instanceNum = instanceNum;
+    }
+
+    public void setModifierCd(String modifierCd) {
+        this.modifierCd = modifierCd;
+    }
+
+    public void setUpdateDate(Date updateDate) {
         this.updateDate = updateDate;
     }
 
+    public void setDownloadDate(Date downloadDate) {
+        this.downloadDate = downloadDate;
+    }
+    
     @Override
     public boolean isRejected() {
         return rejected;

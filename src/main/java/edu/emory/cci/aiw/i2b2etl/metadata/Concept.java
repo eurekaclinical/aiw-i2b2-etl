@@ -135,9 +135,18 @@ public final class Concept extends DefaultMutableTreeNode {
     public String getDimCode() {
         return this.usrObj.getDimCode();
     }
+    
+    public void setCVisualAttributes(String attrs) {
+        usrObj.setCVisualAttributes(attrs);
+    }
 
     public String getCVisualAttributes() {
-        return isLeaf() ? "LAE" : "FAE";
+        String attrs = usrObj.getCVisualAttributes();
+        if (attrs == null) {
+            return isLeaf() ? "LAE" : "FAE";
+        } else {
+            return attrs;
+        }
     }
 
     public String getConceptCode() {
@@ -223,6 +232,14 @@ public final class Concept extends DefaultMutableTreeNode {
 
     public String getColumnName() {
         return usrObj.getColumnName();
+    }
+    
+    public void setComment(String comment) {
+        usrObj.setComment(comment);
+    }
+    
+    public String getComment() {
+        return usrObj.getComment();
     }
 
 }

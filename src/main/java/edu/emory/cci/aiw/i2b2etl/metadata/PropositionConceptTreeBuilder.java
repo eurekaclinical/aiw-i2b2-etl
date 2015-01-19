@@ -104,6 +104,7 @@ final class PropositionConceptTreeBuilder {
                 MetadataUtil.toSourceSystemCode(
                 propDef.getSourceId().getStringRepresentation()));
         newChild.setValueTypeCode(this.valueTypeCode);
+        newChild.setComment(propDef.getDescription());
         if (propDef instanceof PrimitiveParameterDefinition && 
                 children.length < 1) {
             newChild.setMetadataXml("<ValueMetadata><Loinc>" + newChild

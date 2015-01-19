@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package edu.emory.cci.aiw.i2b2etl.metadata;
+package edu.emory.cci.aiw.i2b2etl.table;
 
 /**
  *

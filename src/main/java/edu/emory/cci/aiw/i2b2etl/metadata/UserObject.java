@@ -30,6 +30,7 @@ public class UserObject {
     private static final String DEFAULT_FACT_TABLE_COLUMN = "concept_cd";
     private static final String DEFAULT_TABLE_NAME = "concept_dimension";
     private static final String DEFAULT_COLUMN_NAME = "concept_path";
+    private static final DataType DEFAULT_DATA_TYPE = DataType.TEXT;
 
     //	
     //	this class should eventually be split up into
@@ -75,6 +76,8 @@ public class UserObject {
     private String tableName;
     private String columnName;
     private ConceptOperator operator;
+    private String cVisualAttributes;
+    private String comment;
 
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
@@ -90,6 +93,7 @@ public class UserObject {
             this.conceptCode = id.toConceptCode();
         }
         this.valueTypeCode = ValueTypeCode.UNSPECIFIED;
+        this.dataType = DEFAULT_DATA_TYPE;
         this.conceptCodePrefix = conceptCodePrefix;
         this.appliedPath = "@";  //this field is mandatory in i2b2 1.7. assigning the default value
         this.factTableColumn = DEFAULT_FACT_TABLE_COLUMN;
@@ -191,7 +195,11 @@ public class UserObject {
     }
 
     public void setDataType(DataType dataType) {
-        this.dataType = dataType;
+        if (dataType == null) {
+            this.dataType = DEFAULT_DATA_TYPE;
+        } else {
+            this.dataType = dataType;
+        }
     }
 
     public DataType getDataType() {
@@ -200,9 +208,10 @@ public class UserObject {
 
     public void setValueTypeCode(ValueTypeCode valueTypeCode) {
         if (valueTypeCode == null) {
-            valueTypeCode = ValueTypeCode.UNSPECIFIED;
+            this.valueTypeCode = ValueTypeCode.UNSPECIFIED;
+        } else {
+            this.valueTypeCode = valueTypeCode;
         }
-        this.valueTypeCode = valueTypeCode;
     }
 
     public ValueTypeCode getValueTypeCode() {
@@ -262,7 +271,11 @@ public class UserObject {
         if (result == null) {
             result = getI2B2Path();
         }
-        return result;
+        if (result == null) {
+            return "";
+        } else {
+            return result;
+        }
     }
 
     public String getMetadataXml() {
@@ -326,4 +339,20 @@ public class UserObject {
         return this.columnName;
     }
 
+    void setCVisualAttributes(String attrs) {
+        this.cVisualAttributes = attrs;
+    }
+
+    String getCVisualAttributes() {
+        return this.cVisualAttributes;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+    
 }

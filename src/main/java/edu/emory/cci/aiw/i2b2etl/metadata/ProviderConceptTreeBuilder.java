@@ -20,13 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Collection;
 import java.util.TreeMap;
-import org.arp.javautil.sql.ConnectionSpec;
 
 /**
  *
@@ -54,6 +48,9 @@ class ProviderConceptTreeBuilder {
     Concept build() throws OntologyBuildException {
         try {
             root = this.metadata.getOrCreateHardCodedFolder("Provider");
+            root.setFactTableColumn("provider_id");
+            root.setTableName("provider_dimension");
+            root.setColumnName("provider_path");
             alpha = 
                     createAlphaCategoryConcepts(root);
             return root;
@@ -67,6 +64,9 @@ class ProviderConceptTreeBuilder {
         Concept parent = alpha.get(fullName.toUpperCase().charAt(0));
         if (parent == null) {
             parent = this.metadata.getOrCreateHardCodedFolder("Provider", "Other");
+            parent.setFactTableColumn("provider_id");
+            parent.setTableName("provider_dimension");
+            parent.setColumnName("provider_path");
             root.add(parent);
         }
         Concept child = pd.getConcept();
@@ -80,6 +80,9 @@ class ProviderConceptTreeBuilder {
         TreeMap<Character, Concept> alpha = new TreeMap<>();
         for (char c : ca.toCharArray()) {
             Concept ontologyNode = this.metadata.getOrCreateHardCodedFolder("Provider", String.valueOf(c));
+            ontologyNode.setFactTableColumn("provider_id");
+            ontologyNode.setTableName("provider_dimension");
+            ontologyNode.setColumnName("provider_path");
             alpha.put(c, ontologyNode);
             root.add(ontologyNode);
         }

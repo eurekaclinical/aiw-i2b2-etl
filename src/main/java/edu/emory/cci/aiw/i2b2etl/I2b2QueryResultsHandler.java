@@ -28,27 +28,27 @@ import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.metadata.I2B2QueryResultsHandlerSourceId;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
-import edu.emory.cci.aiw.i2b2etl.metadata.InvalidPatientRecordException;
+import edu.emory.cci.aiw.i2b2etl.table.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import edu.emory.cci.aiw.i2b2etl.metadata.OntologyBuildException;
 import edu.emory.cci.aiw.i2b2etl.metadata.SynonymCode;
-import edu.emory.cci.aiw.i2b2etl.table.ConceptDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptHierarchyLoader;
 import edu.emory.cci.aiw.i2b2etl.table.EncounterMappingHandler;
 import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
-import edu.emory.cci.aiw.i2b2etl.table.ObservationFact;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimensionHandler;
+import edu.emory.cci.aiw.i2b2etl.table.PatientDimensionFactory;
 import edu.emory.cci.aiw.i2b2etl.table.PatientMappingHandler;
 import edu.emory.cci.aiw.i2b2etl.table.PropositionFactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimensionHandler;
-import edu.emory.cci.aiw.i2b2etl.table.ProviderFactHandler;
+import edu.emory.cci.aiw.i2b2etl.table.ProviderDimensionFactory;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimension;
 import edu.emory.cci.aiw.i2b2etl.table.VisitDimensionHandler;
+import edu.emory.cci.aiw.i2b2etl.table.VisitDimensionFactory;
 import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
@@ -109,11 +109,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final ConnectionSpec dataConnectionSpec;
     private final ConceptsSection conceptsSection;
     private List<FactHandler> factHandlers;
-    private PatientDimensionHandler patientDimensionHandler;
-    private PatientMappingHandler patientMappingHandler;
-    private VisitDimensionHandler visitDimensionHandler;
-    private EncounterMappingHandler encounterMappingHandler;
-    private ProviderDimensionHandler providerDimensionHandler;
     private ConceptDimensionHandler conceptDimensionHandler;
     private Metadata ontologyModel;
     private HashSet<Object> propIdsFromKnowledgeSource;
@@ -130,9 +125,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private RemoveMethod metaRemoveMethod;
     private final Set<String> knowledgeSourceBackendIds;
     private final String qrhId;
-    private final ProviderDimension providerDimension;
-    private final PatientDimension patientDimension;
-    private final VisitDimension visitDimension;
+    private ProviderDimensionFactory providerDimensionFactory;
+    private PatientDimensionFactory patientDimensionFactory;
+    private VisitDimensionFactory visitDimensionFactory;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -154,9 +149,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                             boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
             throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
-        this.patientDimension = new PatientDimension();
-        this.visitDimension = new VisitDimension();
-        this.providerDimension = new ProviderDimension();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
         this.dataInsertMode = dataInsertMode;
@@ -242,13 +234,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.knowledgeSourceBackendIds.add(this.qrhId);
         
         try {
-            this.patientDimensionHandler = new PatientDimensionHandler(dataConnectionSpec);
-            this.patientMappingHandler = new PatientMappingHandler(dataConnectionSpec);
-            this.visitDimensionHandler = new VisitDimensionHandler(dataConnectionSpec);
-            this.encounterMappingHandler = new EncounterMappingHandler(dataConnectionSpec);
-            if (!this.skipProviderHierarchy) {
-                this.providerDimensionHandler = new ProviderDimensionHandler(dataConnectionSpec);
-            }
             this.conceptDimensionHandler = new ConceptDimensionHandler(dataConnectionSpec);
         } catch (SQLException ex) {
             throw new QueryResultsHandlerInitException(ex);
@@ -268,6 +253,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         try {
             mostlyBuildOntology();
+            this.providerDimensionFactory = new ProviderDimensionFactory(this.qrhId, this.ontologyModel, this.dataConnectionSpec, this.skipProviderHierarchy);
+            this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.dictSection, this.obxSection, this.dataConnectionSpec);
+            this.visitDimensionFactory = new VisitDimensionFactory(this.qrhId, this.dictSection, this.obxSection, this.dataConnectionSpec);
             if (this.dataInsertMode == I2b2Destination.DataInsertMode.TRUNCATE) {
                 DataRemoverFactory f = new DataRemoverFactory();
                 f.getInstance(this.dataRemoveMethod).doRemoveData();
@@ -409,9 +397,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void assembleFactHandlers() throws IllegalAccessException, InstantiationException, KnowledgeSourceReadException, SQLException {
         this.factHandlers = new ArrayList<>();
-        if (!this.skipProviderHierarchy) {
-            addProviderFactHandler();
-        }
         addPropositionFactHandlers();
     }
 
@@ -423,14 +408,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             for (Proposition prop : propositions) {
                 if (prop.getId().equals(this.visitPropId)) {
                     if (pd == null) {
-                        pd = this.ontologyModel.addPatient(keyId, prop, this.dictSection, this.obxSection, references, this.patientDimension);
-                        this.patientDimensionHandler.insert(pd);
-                        this.patientMappingHandler.insert(pd);
+                        pd = this.patientDimensionFactory.getInstance(keyId, prop, references);
                     }
-                    ProviderDimension provider =
-                            this.ontologyModel.addProviderIfNeeded(
+                    ProviderDimension providerDimension = this.providerDimensionFactory.getInstance(
                                     prop,
-                                    this.providerDimensionHandler,
                                     this.providerFullNameSpec != null ? this.providerFullNameSpec.referenceName : null,
                                     this.providerFullNameSpec != null ? this.providerFullNameSpec.propertyName : null,
                                     this.providerFirstNameSpec != null ? this.providerFirstNameSpec.referenceName : null,
@@ -439,12 +420,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                                     this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.propertyName : null,
                                     this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null,
                                     this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null,
-                                    references, this.providerDimension);
-                    VisitDimension vd = this.ontologyModel.addVisit(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, this.dictSection, this.obxSection, references, this.visitDimension);
-                    this.visitDimensionHandler.insert(vd);
-                    this.encounterMappingHandler.insert(vd);
+                                    references);
+                    VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, references);
                     for (FactHandler factHandler : this.factHandlers) {
-                        factHandler.handleRecord(pd, vd, provider, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions, this.dataSchemaConnection);
+                        factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions, this.dataSchemaConnection);
                     }
                 }
             }
@@ -460,8 +439,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         Logger logger = I2b2ETLUtil.logger();
         String queryId = this.query.getId();
-        String projectName = this.dictSection.get("projectName");
-
 
         try {
             for (FactHandler factHandler : this.factHandlers) {
@@ -474,10 +451,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.dataSchemaConnection = null;
 
             // persist Patients & Visits.
-            this.patientDimensionHandler.close();
-            this.patientDimensionHandler = null;
-            this.patientMappingHandler.close();
-            this.patientMappingHandler = null;
+            this.patientDimensionFactory.close();
+            this.patientDimensionFactory = null;
             logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
             logger.log(Level.INFO, "Populating patient dimension for query {0}", queryId);
             try (Connection conn = openDataDatabaseConnection()) {
@@ -491,10 +466,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
 
-            this.visitDimensionHandler.close();
-            this.visitDimensionHandler = null;
-            this.encounterMappingHandler.close();
-            this.encounterMappingHandler = null;
+            this.visitDimensionFactory.close();
+            this.visitDimensionFactory = null;
             try (Connection conn = openDataDatabaseConnection()) {
                 try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?, ?) }")) {
                     mappingCall.setString(1, tempEncounterMappingTableName());
@@ -535,8 +508,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
 
             // find Provider root. gather its leaf nodes. persist Providers.
+            this.providerDimensionFactory.close();
+            this.providerDimensionFactory = null;
             if (!this.skipProviderHierarchy) {
-                this.providerDimensionHandler.close();
                 logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
                 try (Connection conn = openDataDatabaseConnection()) {
                     try (CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }")) {
@@ -606,27 +580,15 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     @Override
     public void close() throws QueryResultsHandlerCloseException {
-        if (this.encounterMappingHandler != null) {
+        if (this.visitDimensionFactory != null) {
             try {
-                this.encounterMappingHandler.close();
+                this.visitDimensionFactory.close();
             } catch (SQLException ignore) {
             }
         }
-        if (this.visitDimensionHandler != null) {
+        if (this.patientDimensionFactory != null) {
             try {
-                this.visitDimensionHandler.close();
-            } catch (SQLException ignore) {
-            }
-        }
-        if (this.patientMappingHandler != null) {
-            try {
-                this.encounterMappingHandler.close();
-            } catch (SQLException ignore) {
-            }
-        }
-        if (this.patientDimensionHandler != null) {
-            try {
-                this.visitDimensionHandler.close();
+                this.patientDimensionFactory.close();
             } catch (SQLException ignore) {
             }
         }
@@ -642,8 +604,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             } catch (SQLException ignore) {
             }
         }
-        
-         
     }
 
     @Override
@@ -707,26 +667,40 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
     }
 
-    private void addProviderFactHandler() throws SQLException {
-        ProviderFactHandler providerFactHandler = new ProviderFactHandler(this.dataConnectionSpec);
-        this.factHandlers.add(providerFactHandler);
-    }
-
     private void addPropositionFactHandlers() throws KnowledgeSourceReadException, SQLException {
         String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived();
-        for (DataSection.DataSpec obx : this.obxSection.getAll()) {
-            Link[] links;
-            if (obx.referenceName != null) {
-                links = new Link[]{new Reference(obx.referenceName)};
-            } else {
-                links = null;
+        String[] patientDimensionDictEntries = {
+            "patientDimensionMRN",
+            "patientDimensionGender",
+            "patientDimensionRace",
+            "patientDimensionEthnicity",
+            "patientDimensionMaritalStatus",
+            "patientDimensionLanguage",
+            "patientDimensionReligion",
+            "patientDimensionBirthdate"
+        };
+        Set<String> patDimDataTypes = new HashSet<>();
+        for (String patDimDictEntry : patientDimensionDictEntries) {
+            String get = this.dictSection.get(patDimDictEntry);
+            if (get != null) {
+                patDimDataTypes.add(get);
             }
+        }
+        for (DataSection.DataSpec obx : this.obxSection.getAll()) {
+            if (!patDimDataTypes.contains(obx.key)) {
+                Link[] links;
+                if (obx.referenceName != null) {
+                    links = new Link[]{new Reference(obx.referenceName)};
+                } else {
+                    links = null;
+                }
 
-            PropositionFactHandler propFactHandler =
-                    new PropositionFactHandler(this.dataConnectionSpec, links, obx.propertyName,
-                            obx.start, obx.finish, obx.units,
-                            potentialDerivedPropIdsArr, this.ontologyModel);
-            this.factHandlers.add(propFactHandler);
+                PropositionFactHandler propFactHandler =
+                        new PropositionFactHandler(this.dataConnectionSpec, links, obx.propertyName,
+                                obx.start, obx.finish, obx.units,
+                                potentialDerivedPropIdsArr, this.ontologyModel);
+                this.factHandlers.add(propFactHandler);
+            }
         }
     }
 
@@ -807,7 +781,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     ps.setString(12, concept.getDataType().getCode());
                     ps.setString(13, concept.getOperator().getSQLOperator());// >, BETWEEN
                     ps.setString(14, concept.getDimCode()); //sysdate - (365.25*upperboundplusoneyear), sysdate - (365.25*upperboundplusoneyear) and sysdate - (365.25*lowerbound) 
-                    ps.setObject(15, null);
+                    ps.setObject(15, concept.getComment());
                     ps.setString(16, concept.getDisplayName());
                     ps.setTimestamp(17, importTimestamp);
                     ps.setDate(18, null);

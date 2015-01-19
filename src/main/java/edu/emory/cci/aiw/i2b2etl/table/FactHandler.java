@@ -23,6 +23,7 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * limitations under the License.
  * #L%
  */
+import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -58,6 +59,7 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
     private final String finishConfig;
     private final String unitsPropertyName;
     private final String propertyName;
+    private final ObservationFact obx;
 
     public FactHandler(ConnectionSpec connSpec, String propertyName, String startConfig, String finishConfig, String unitsPropertyName) throws SQLException {
         super(connSpec, "insert into " + TEMP_OBSERVATION_TABLE + "(encounter_id, encounter_id_source, concept_cd, " +
@@ -68,6 +70,7 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
         this.startConfig = startConfig;
         this.finishConfig = finishConfig;
         this.unitsPropertyName = unitsPropertyName;
+        this.obx = new ObservationFact();
     }
 
     public String getStartConfig() {
@@ -88,9 +91,42 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
 
     public abstract void handleRecord(PatientDimension patient, VisitDimension visit, ProviderDimension provider, Proposition encounterProp, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references, KnowledgeSource knowledgeSource, Set<Proposition> derivedPropositions, Connection cn) throws InvalidFactException;
 
+    protected ObservationFact populateObxFact(Proposition prop,
+                                                  Proposition encounterProp, PatientDimension patient,
+                                                  VisitDimension visit, ProviderDimension provider, 
+                                                  Concept concept, int instanceNum)
+            throws InvalidFactException {
+        Date start = handleStartDate(prop, encounterProp, null);
+        Date finish = handleFinishDate(prop, encounterProp, null);
+        Value value = handleValue(prop);
+        ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
+        String units = handleUnits(prop);
+        Date updateDate = prop.getUpdateDate();
+        if (updateDate == null) {
+            updateDate = prop.getCreateDate();
+        }
+        obx.setStartDate(start);
+        obx.setEndDate(finish);
+        obx.setPatient(patient);
+        obx.setVisit(visit);
+        obx.setProvider(provider);
+        obx.setConcept(concept);
+        obx.setValue(value);
+        obx.setValueFlagCode(valueFlagCode);
+        obx.setDisplayName(concept.getDisplayName());
+        obx.setUnits(units);
+        obx.setSourceSystem(prop.getSourceSystem().getStringRepresentation());
+        obx.setRejected(start == null);
+        obx.setDownloadDate(prop.getDownloadDate());
+        obx.setUpdateDate(updateDate);
+        obx.setInstanceNum(instanceNum);
+        concept.setInUse(true);
+        return obx;
+    }
+    
     protected final String handleUnits(Proposition prop) {
         String value;
-        if (this.unitsPropertyName != null) {
+        if (this.unitsPropertyName != null && prop != null) {
             Value unitsVal = prop.getProperty(this.unitsPropertyName);
             if (unitsVal != null) {
                 value = unitsVal.getFormatted();
@@ -105,15 +141,17 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
 
     protected final Value handleValue(Proposition prop) {
         Value value = null;
-        if (this.propertyName != null) {
-            Value tvalCharVal = prop.getProperty(this.propertyName);
-            if (tvalCharVal != null) {
-                value = tvalCharVal;
+        if (prop != null) {
+            if (this.propertyName != null) {
+                Value tvalCharVal = prop.getProperty(this.propertyName);
+                if (tvalCharVal != null) {
+                    value = tvalCharVal;
+                }
+            } else if (prop instanceof Parameter) {
+                value = ((Parameter) prop).getValue();
+            } else {
+                value = NominalValue.getInstance(prop.getId());
             }
-        } else if (prop instanceof Parameter) {
-            value = ((Parameter) prop).getValue();
-        } else {
-            value = NominalValue.getInstance(prop.getId());
         }
         return value;
     }

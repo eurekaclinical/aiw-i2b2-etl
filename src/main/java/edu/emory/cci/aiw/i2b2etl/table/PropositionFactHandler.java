@@ -130,7 +130,7 @@ public final class PropositionFactHandler extends FactHandler {
 
     private void doInsert(Concept concept, Proposition prop, Proposition encounterProp, PatientDimension patient, VisitDimension visit, ProviderDimension provider, Connection cn) throws InvalidFactException {
         if (concept != null) {
-            ObservationFact obx = createObservationFact(prop,
+            ObservationFact obx = populateObxFact(prop,
                     encounterProp, patient, visit, provider, concept,
                     1);
             try {
@@ -147,31 +147,4 @@ public final class PropositionFactHandler extends FactHandler {
         return ToStringBuilder.reflectionToString(this);
     }
 
-    private ObservationFact createObservationFact(Proposition prop,
-                                                  Proposition encounterProp, PatientDimension patient,
-                                                  VisitDimension visit, ProviderDimension provider, 
-                                                  Concept concept, int instanceNum)
-            throws InvalidFactException {
-        Date start = handleStartDate(prop, encounterProp, null);
-        Date finish = handleFinishDate(prop, encounterProp, null);
-        Value value = handleValue(prop);
-        ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
-        String units = handleUnits(prop);
-        Date updateDate = prop.getUpdateDate();
-        if (updateDate == null) {
-            updateDate = prop.getCreateDate();
-        }
-        ObservationFact derivedObx = new ObservationFact(
-                start, finish, patient,
-                visit, provider, concept,
-                value, valueFlagCode,
-                concept.getDisplayName(),
-                units,
-                prop.getSourceSystem().getStringRepresentation(),
-                start == null,
-                prop.getDownloadDate(),
-                updateDate, instanceNum);
-        concept.setInUse(true);
-        return derivedObx;
-    }
 }

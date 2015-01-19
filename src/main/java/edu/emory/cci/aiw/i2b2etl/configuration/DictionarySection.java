@@ -36,7 +36,7 @@ public final class DictionarySection extends ConfigurationSection {
     public String get(String key) {
         return dictionary.get(key);
     }
-
+    
     @Override
     protected void put(NamedNodeMap nnm) throws ConfigurationReadException {
         String key = readAttribute(nnm, "key", true);

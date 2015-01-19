@@ -20,10 +20,8 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import org.arp.javautil.sql.ConnectionSpec;
 
 /**
