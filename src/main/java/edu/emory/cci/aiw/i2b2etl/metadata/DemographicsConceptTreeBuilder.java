@@ -134,6 +134,7 @@ class DemographicsConceptTreeBuilder {
         ConceptId conceptId = ConceptId.getInstance(displayName, metadata);
         Concept concept = this.metadata.newConcept(conceptId, conceptCode, this.qrhId);
         concept.setCVisualAttributes("CAE");
+        concept.setDisplayName(displayName);
         return concept;
     }
     

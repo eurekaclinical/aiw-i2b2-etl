@@ -133,6 +133,7 @@ class DimensionValueSetFolderBuilder {
                     childConcept.setDisplayName(valueSetElement.getDisplayName());
                     childConcept.setColumnName(columnName);
                     childConcept.setDimCode(valueSetElementVal != null ? valueSetElementVal.getFormatted() : "");
+                    childConcept.setOperator(ConceptOperator.EQUAL);
                     concept.add(childConcept);
                 }
             }
