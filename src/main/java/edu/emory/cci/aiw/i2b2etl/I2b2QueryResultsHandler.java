@@ -770,10 +770,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     ps.setString(7, conceptCode);
                     // put labParmXml here
                     //
-                    if (null == concept.getMetadataXml() || concept.getMetadataXml().isEmpty() || concept.getMetadataXml().equals("")) {
+                    if (null == concept.getMetadataXml() || concept.getMetadataXml().isEmpty()) {
                         ps.setObject(8, null);
                     } else {
-                        ps.setClob(8, new StringReader(concept.getMetadataXml()));
+                        try (StringReader stringReader = new StringReader(concept.getMetadataXml())) {
+                            ps.setClob(8, stringReader);
+                        }
                     }
                     ps.setString(9, concept.getFactTableColumn()); //patient_num
                     ps.setString(10, concept.getTableName()); //patient_dimension

@@ -185,13 +185,13 @@ public final class Concept extends DefaultMutableTreeNode {
         return usrObj.getValueTypeCode();
     }
 
-	public void setMetadataXml(String metadataXml) {
-		usrObj.setMetadataXml(metadataXml);
-	}
+    public void setMetadataXml(String metadataXml) {
+        usrObj.setMetadataXml(metadataXml);
+    }
 
-	public String getMetadataXml() {
-		return usrObj.getMetadataXml();
-	}
+    public String getMetadataXml() {
+        return usrObj.getMetadataXml();
+    }
     
     @Override
     public String toString() {

@@ -19,21 +19,25 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
+import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
-import org.protempa.PrimitiveParameterDefinition;
 import org.protempa.PropositionDefinition;
 import org.protempa.ProtempaUtil;
 import org.protempa.proposition.value.ValueType;
 
 final class PropositionConceptTreeBuilder {
 
+    private final SimpleDateFormat valueMetadataCreateDateTimeFormat;
     private final KnowledgeSource knowledgeSource;
     private final PropositionDefinition[] rootPropositionDefinitions;
     private final String conceptCode;
     private final Metadata metadata;
     private final ValueTypeCode valueTypeCode;
+    private final String createDate;
 
     PropositionConceptTreeBuilder(KnowledgeSource knowledgeSource,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
@@ -54,6 +58,8 @@ final class PropositionConceptTreeBuilder {
         this.conceptCode = conceptCode;
         this.metadata = metadata;
         this.valueTypeCode = valueTypeCode;
+        this.valueMetadataCreateDateTimeFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        this.createDate = this.valueMetadataCreateDateTimeFormat.format(new Date());
     }
 
     Concept[] build() throws OntologyBuildException {
@@ -73,7 +79,7 @@ final class PropositionConceptTreeBuilder {
             throw new OntologyBuildException(
                     "Could not build proposition concept tree", ex);
         }
-	}
+    }
 
     private void buildHelper(String[] childPropIds, Concept parent)
             throws UnknownPropositionDefinitionException,
@@ -105,15 +111,16 @@ final class PropositionConceptTreeBuilder {
                 propDef.getSourceId().getStringRepresentation()));
         newChild.setValueTypeCode(this.valueTypeCode);
         newChild.setComment(propDef.getDescription());
-        if (propDef instanceof PrimitiveParameterDefinition && 
-                children.length < 1) {
-            newChild.setMetadataXml("<ValueMetadata><Loinc>" + newChild
-                    .getConceptCode() + "</Loinc></ValueMetadata>");
-        }
-        if (propDef instanceof ParameterDefinition) {
+        if (this.valueTypeCode == ValueTypeCode.LABORATORY_TESTS) {
             ValueType valueType =
                     ((ParameterDefinition) propDef).getValueType();
             newChild.setDataType(DataType.dataTypeFor(valueType));
+            if (children.length < 1) {
+                newChild.setMetadataXml("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>" + this.createDate + 
+                    "</CreationDateTime><TestID>" + newChild.getConceptCode() + 
+                    "</TestID><TestName>" + newChild.getDisplayName() + 
+                    "</TestName><DataType>" + (newChild.getDataType() == DataType.NUMERIC ? "Float" : "String") + "</DataType><Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
+            }
         } else {
             newChild.setDataType(DataType.TEXT);
         }
