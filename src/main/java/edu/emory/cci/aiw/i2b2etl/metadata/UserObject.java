@@ -23,6 +23,7 @@ import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.ArrayList;
+import java.util.Date;
 import javax.swing.tree.TreeNode;
 
 public class UserObject {
@@ -31,6 +32,29 @@ public class UserObject {
     private static final String DEFAULT_TABLE_NAME = "concept_dimension";
     private static final String DEFAULT_COLUMN_NAME = "concept_path";
     private static final DataType DEFAULT_DATA_TYPE = DataType.TEXT;
+    
+    private static interface PathConceptRep {
+        String toString(Concept concept);
+    }
+    
+    private static final PathConceptRep SYMBOL_REP = new PathConceptRep() {
+
+        @Override
+        public String toString(Concept concept) {
+            return concept.getSymbol();
+        }
+        
+    };
+    
+    
+    private static final PathConceptRep DISPLAY_NAME_REP = new PathConceptRep() {
+
+        @Override
+        public String toString(Concept concept) {
+            return concept.getDisplayName();
+        }
+        
+    };
 
     //	
     //	this class should eventually be split up into
@@ -65,7 +89,6 @@ public class UserObject {
     private boolean inUse;
     private String conceptCodePrefix;
     private String dimCode;
-    private boolean copy;
     private ArrayList<String> hierarchyPaths;
     private String appliedPath;
 
@@ -78,7 +101,9 @@ public class UserObject {
     private ConceptOperator operator;
     private String cVisualAttributes;
     private String comment;
-
+    
+    private Date downloaded;
+    
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
         this.id = id;
@@ -114,7 +139,6 @@ public class UserObject {
         this.derived = usrObj.derived;
         this.inUse = usrObj.inUse;
         this.conceptCodePrefix = usrObj.conceptCodePrefix;
-        this.copy = true;
         this.appliedPath = usrObj.appliedPath;
         this.factTableColumn = usrObj.factTableColumn;
         this.tableName = usrObj.tableName;
@@ -255,21 +279,49 @@ public class UserObject {
         this.dimCode = dimCode;
     }
     
-    public String getI2B2Path() {
+    public String getSymbol() {
+        return getConceptCode();
+    }
+    
+    public String getCPath() {
+        StringBuilder buf = new StringBuilder();
+        pathToString(buf, "\\", SYMBOL_REP);
+        buf.append("\\");
+        return buf.toString();
+    }
+    
+    public String getFullName() {
+        StringBuilder buf = new StringBuilder();
+        appendFullname(buf, "\\", SYMBOL_REP);
+        buf.append("\\");
+        return buf.toString();
+    }
+    
+    public String getToolTip() {
+        StringBuilder buf = new StringBuilder();
+        appendFullname(buf, " \\ ", DISPLAY_NAME_REP);
+        return buf.toString();
+    }
+    
+    private void appendFullname(StringBuilder buf, String sep, PathConceptRep rep) {
+        pathToString(buf, sep, rep);
+        buf.append(sep);
+        buf.append(rep.toString(this.concept));
+    }
+    
+    private void pathToString(StringBuilder buf, String sep, PathConceptRep rep) {
         TreeNode[] tna = this.concept.getPath();
-        StringBuilder path = new StringBuilder();
-        for (TreeNode tn : tna) {
-            path.append('\\');
-            path.append(((Concept) tn).getConceptCode());
+        for (int i = 0; i < tna.length - 1; i++) {
+            TreeNode tn = tna[i];
+            buf.append(sep);
+            buf.append(rep.toString((Concept) tn));
         }
-        path.append('\\');
-        return path.toString();
     }
     
     String getDimCode() {
         String result = this.dimCode;
         if (result == null) {
-            result = getI2B2Path();
+            result = getFullName();
         }
         if (result == null) {
             return "";
@@ -353,6 +405,14 @@ public class UserObject {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public Date getDownloaded() {
+        return downloaded;
+    }
+
+    public void setDownloaded(Date downloaded) {
+        this.downloaded = downloaded;
     }
     
 }

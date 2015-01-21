@@ -19,7 +19,6 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.protempa.KnowledgeSource;
@@ -100,6 +99,7 @@ final class PropositionConceptTreeBuilder {
         ConceptId conceptId =
                 ConceptId.getInstance(propDef.getId(), this.metadata);
         Concept newChild = new Concept(conceptId, this.conceptCode, this.metadata);
+        newChild.setDownloaded(propDef.getAccessed());
         String[] children = propDef.getChildren();
         String[] inverseIsAs = propDef.getInverseIsA();
         newChild.setInDataSource(children.length == 0 //is a leaf

@@ -44,7 +44,7 @@ public class ProviderDimensionHandler extends RecordHandler<ProviderDimension> {
     protected void setParameters(PreparedStatement ps, ProviderDimension provider) throws SQLException {
         Concept concept = provider.getConcept();
         ps.setString(1, TableUtil.setStringAttribute(concept.getConceptCode()));
-        ps.setString(2, concept.getI2B2Path());
+        ps.setString(2, concept.getFullName());
         ps.setString(3, concept.getDisplayName());
         ps.setObject(4, null);
         ps.setTimestamp(5, null);

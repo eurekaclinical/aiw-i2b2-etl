@@ -30,14 +30,14 @@ import edu.emory.cci.aiw.i2b2etl.metadata.I2B2QueryResultsHandlerSourceId;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
-import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
 import edu.emory.cci.aiw.i2b2etl.metadata.OntologyBuildException;
-import edu.emory.cci.aiw.i2b2etl.metadata.SynonymCode;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimensionHandler;
-import edu.emory.cci.aiw.i2b2etl.table.ConceptHierarchyLoader;
+import edu.emory.cci.aiw.i2b2etl.table.ConceptDimensionLoader;
 import edu.emory.cci.aiw.i2b2etl.table.EncounterMappingHandler;
 import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
+import edu.emory.cci.aiw.i2b2etl.table.MetaTableConceptLoader;
+import edu.emory.cci.aiw.i2b2etl.table.MetaTableConceptHandler;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimensionFactory;
@@ -68,13 +68,10 @@ import org.protempa.proposition.UniqueId;
 import org.protempa.query.Query;
 
 import java.io.File;
-import java.io.StringReader;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -532,7 +529,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             
             // flush hot concepts out of the tree. persist Concepts.
             logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
-            new ConceptHierarchyLoader(this.conceptDimensionHandler).execute(this.ontologyModel.getRoot());
+            new ConceptDimensionLoader(this.conceptDimensionHandler).execute(this.ontologyModel.getRoot());
             this.conceptDimensionHandler.close();
             this.conceptDimensionHandler = null;
             try (Connection conn = openDataDatabaseConnection()) {
@@ -629,7 +626,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             Concept concept = emu.nextElement();
             Concept conceptFromCache = this.ontologyModel.getFromIdCache(concept.getId());
             if (conceptFromCache != null) {
-                conceptFromCache.setHierarchyPath(concept.getI2B2Path());
+                conceptFromCache.setHierarchyPath(concept.getFullName());
             }
         }
     }
@@ -713,120 +710,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void persistOntologyIntoI2B2Batch(Metadata model) throws SQLException {
-        // CREATE TABLE "I2B2"
-        // (
-        // 1 "C_HLEVEL" NUMBER(22,0) NOT NULL ENABLE,
-        // 2 "C_FULLNAME" VARCHAR2(700) NOT NULL ENABLE,
-        // 3 "C_NAME" VARCHAR2(2000) NOT NULL ENABLE,
-        // 4 "C_SYNONYM_CD" CHAR(1) NOT NULL ENABLE,
-        // 5 "C_VISUALATTRIBUTES" CHAR(3) NOT NULL ENABLE,
-        // 6 "C_TOTALNUM" NUMBER(22,0),
-        // 7 "C_BASECODE" VARCHAR2(50),
-        // 8 "C_METADATAXML" CLOB,
-        // 9 "C_FACTTABLECOLUMN" VARCHAR2(50) NOT NULL ENABLE,
-        // 10 "C_TABLENAME" VARCHAR2(50) NOT NULL ENABLE,
-        // 11 "C_COLUMNNAME" VARCHAR2(50) NOT NULL ENABLE,
-        // 12 "C_COLUMNDATATYPE" VARCHAR2(50) NOT NULL ENABLE,
-        // 13 "C_OPERATOR" VARCHAR2(10) NOT NULL ENABLE,
-        // 14 "C_DIMCODE" VARCHAR2(700) NOT NULL ENABLE,
-        // 15 "C_COMMENT" CLOB,
-        // 16 "C_TOOLTIP" VARCHAR2(900),
-        // 17 "UPDATE_DATE" DATE NOT NULL ENABLE,
-        // 18 "DOWNLOAD_DATE" DATE,
-        // 19 "IMPORT_DATE" DATE,
-        // 20 "SOURCESYSTEM_CD" VARCHAR2(50),
-        // 21 "VALUETYPE_CD" VARCHAR2(50)
-        // )
-        int counter = 0;
-        int batchSize = 1000;
-        int commitCounter = 0;
-        int commitSize = 10000;
         String tableName = this.dictSection.get("metaTableName");
-        int batchNumber = 0;
-        Logger logger = I2b2ETLUtil.logger();
-        try (Connection cn = openMetadataDatabaseConnection()) {
-            logger.log(Level.FINE, "batch inserting on table {0}", tableName);
-            try (PreparedStatement ps = cn.prepareStatement("insert into " + tableName + "(c_hlevel,c_fullname,c_name,c_synonym_cd,c_visualattributes,c_totalnum," +
-                    "c_basecode,c_metadataxml,c_facttablecolumn,c_tablename,c_columnname,c_columndatatype,c_operator,c_dimcode,c_comment,c_tooltip," +
-                    "update_date,download_Date,import_date,sourcesystem_cd,valuetype_cd,m_applied_path,m_exclusion_cd,c_path,c_symbol)" +
-                    " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
-                @SuppressWarnings(value = "unchecked")
-                Enumeration<Concept> emu = model.getRoot().depthFirstEnumeration();
-                /*
-                 * A depth-first enumeration should traverse the hierarchies
-                 * in the order in which they were created.
-                 */
-                Timestamp importTimestamp = new Timestamp(System.currentTimeMillis());
-                while (emu.hasMoreElements()) {
-                    Concept concept = emu.nextElement();
-                    ps.setLong(1, concept.getLevel());
-                    ps.setString(2, concept.getI2B2Path());
-                    assert concept.getDisplayName() != null && concept.getDisplayName().length() > 0 : "concept " + concept.getConceptCode() + " (" + concept.getI2B2Path() + ") " + " has an invalid display name '" + concept.getDisplayName() + "'";
-                    ps.setString(3, concept.getDisplayName());
-                    String conceptCode = concept.getConceptCode();
-                    ps.setString(4, SynonymCode.NOT_SYNONYM.getCode());
-                    ps.setString(5, concept.getCVisualAttributes());
-                    ps.setObject(6, null);
-                    ps.setString(7, conceptCode);
-                    // put labParmXml here
-                    //
-                    if (null == concept.getMetadataXml() || concept.getMetadataXml().isEmpty()) {
-                        ps.setObject(8, null);
-                    } else {
-                        try (StringReader stringReader = new StringReader(concept.getMetadataXml())) {
-                            ps.setClob(8, stringReader);
-                        }
-                    }
-                    ps.setString(9, concept.getFactTableColumn()); //patient_num
-                    ps.setString(10, concept.getTableName()); //patient_dimension
-                    ps.setString(11, concept.getColumnName()); //birth_date
-                    ps.setString(12, concept.getDataType().getCode());
-                    ps.setString(13, concept.getOperator().getSQLOperator());// >, BETWEEN
-                    ps.setString(14, concept.getDimCode()); //sysdate - (365.25*upperboundplusoneyear), sysdate - (365.25*upperboundplusoneyear) and sysdate - (365.25*lowerbound) 
-                    ps.setObject(15, concept.getComment());
-                    ps.setString(16, concept.getDisplayName());
-                    ps.setTimestamp(17, importTimestamp);
-                    ps.setDate(18, null);
-                    ps.setTimestamp(19, importTimestamp);
-                    ps.setString(20, MetadataUtil.toSourceSystemCode(concept.getSourceSystemCode()));
-                    ps.setString(21, concept.getValueTypeCode().getCode());
-                    ps.setString(22, concept.getAppliedPath());
-                    ps.setString(23, null);
-                    ps.setString(24, null);
-                    ps.setString(25, null);
-                    ps.addBatch();
-                    ps.clearParameters();
-                    counter++;
-                    commitCounter++;
-                    if (counter >= batchSize) {
-                        importTimestamp = new Timestamp(System.currentTimeMillis());
-                        batchNumber++;
-                        ps.executeBatch();
-                        ps.clearBatch();
-                        counter = 0;
-                        logBatch(tableName, batchNumber);
-                        if (logger.isLoggable(Level.FINE)) {
-                            logger.log(Level.FINE, "loaded ontology batch {0}", batchNumber);
-                        }
-                    }
-                    if (commitCounter >= commitSize) {
-                        cn.commit();
-                        commitCounter = 0;
-                    }
-                }
-                if (counter > 0) {
-                    batchNumber++;
-                    ps.executeBatch();
-                }
-                if (commitCounter > 0) {
-                    cn.commit();
-                }
-            }
-            logBatch(tableName, batchNumber);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Batch failed on OntologyTable " + tableName + ". I2B2 will not be correct.", e);
-            throw e;
-        }
+        MetaTableConceptHandler metaTableHandler = new MetaTableConceptHandler(this.metadataConnectionSpec, tableName);
+        MetaTableConceptLoader metaTableConceptLoader = new MetaTableConceptLoader(metaTableHandler);
+        metaTableConceptLoader.execute(model.getRoot());
     }
     
     private abstract class DataRemover {

@@ -19,26 +19,24 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * limitations under the License.
  * #L%
  */
+
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 import java.sql.SQLException;
-import java.util.Enumeration;
 
 /**
  *
  * @author Andrew Post
  */
-public abstract class ConceptHierarchyLoader {
+public final class MetaTableConceptLoader extends ConceptHierarchyLoader {
+    private final MetaTableConceptHandler handler;
+
+    public MetaTableConceptLoader(MetaTableConceptHandler handler) {
+        this.handler = handler;
+    }
     
-    protected ConceptHierarchyLoader() {
-        
+    @Override
+    protected void loadConcept(Concept concept) throws SQLException {
+        this.handler.insert(concept);
     }
-
-    public final void execute(Concept root) throws SQLException {
-        Enumeration<Concept> emu = root.breadthFirstEnumeration();
-        while (emu.hasMoreElements()) {
-            loadConcept(emu.nextElement());
-        }
-    }
-
-    protected abstract void loadConcept(Concept concept) throws SQLException;
+    
 }

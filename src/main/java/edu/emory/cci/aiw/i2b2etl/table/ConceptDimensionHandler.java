@@ -26,7 +26,7 @@ import org.arp.javautil.sql.ConnectionSpec;
 
 /**
  *
- * @author arpost
+ * @author Andrew Post
  */
 public class ConceptDimensionHandler extends RecordHandler<ConceptDimension> {
 
@@ -45,7 +45,7 @@ public class ConceptDimensionHandler extends RecordHandler<ConceptDimension> {
         ps.setString(3, record.getDisplayName());
         ps.setObject(4, null);
         ps.setTimestamp(5, null);
-        ps.setTimestamp(6, null);
+        ps.setTimestamp(6, TableUtil.setTimestampAttribute(record.getDownloaded()));
         ps.setTimestamp(7, importTimestamp());
         ps.setString(8, record.getSourceSystemCode());
     }

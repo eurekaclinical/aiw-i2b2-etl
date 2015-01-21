@@ -19,7 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.table;
 
-import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
+import java.util.Date;
 
 /**
  * Represents records in the concept dimension.
@@ -48,6 +48,7 @@ public class ConceptDimension implements Record {
     private String conceptCode;
     private String displayName;
     private String sourceSystemCode;
+    private Date downloaded;
 
     public String getPath() {
         return path;
@@ -79,6 +80,14 @@ public class ConceptDimension implements Record {
 
     public void setSourceSystemCode(String sourceSystemCode) {
         this.sourceSystemCode = sourceSystemCode;
+    }
+
+    public Date getDownloaded() {
+        return downloaded;
+    }
+
+    public void setDownloaded(Date downloaded) {
+        this.downloaded = downloaded;
     }
     
     @Override

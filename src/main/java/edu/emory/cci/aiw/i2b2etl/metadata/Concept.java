@@ -19,10 +19,12 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
+import edu.emory.cci.aiw.i2b2etl.table.Record;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
+import java.util.Date;
 
-public final class Concept extends DefaultMutableTreeNode {
+public final class Concept extends DefaultMutableTreeNode implements Record {
 
     private static final long serialVersionUID = 350127486830611865L;
     private final UserObject usrObj;
@@ -123,9 +125,9 @@ public final class Concept extends DefaultMutableTreeNode {
     public void setSourceSystemCode(String sourceSystemId) {
         usrObj.setSourceSystemId(sourceSystemId);
     }
-
-    public String getI2B2Path() {
-        return usrObj.getI2B2Path();
+    
+    public String getFullName() {
+        return usrObj.getFullName();
     }
     
     public void setDimCode(String dimCode) {
@@ -147,6 +149,18 @@ public final class Concept extends DefaultMutableTreeNode {
         } else {
             return attrs;
         }
+    }
+    
+    public String getSymbol() {
+        return usrObj.getSymbol();
+    }
+    
+    public String getCPath() {
+        return usrObj.getCPath();
+    }
+    
+    public String getToolTip() {
+        return usrObj.getToolTip();
     }
 
     public String getConceptCode() {
@@ -241,5 +255,18 @@ public final class Concept extends DefaultMutableTreeNode {
     public String getComment() {
         return usrObj.getComment();
     }
+    
+    public void setDownloaded(Date downloaded) {
+        usrObj.setDownloaded(downloaded);
+    }
+    
+    public Date getDownloaded() {
+        return usrObj.getDownloaded();
+    }
 
+    @Override
+    public boolean isRejected() {
+        return false;
+    }
+    
 }
