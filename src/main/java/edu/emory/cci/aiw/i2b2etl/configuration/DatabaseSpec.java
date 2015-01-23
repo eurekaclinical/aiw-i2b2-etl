@@ -33,7 +33,7 @@ public class DatabaseSpec {
     private final String passwd;
     private final String connect;
 
-    DatabaseSpec(String key, String user, String passwd, String connect) {
+    public DatabaseSpec(String key, String user, String passwd, String connect) {
         this.key = key;
         this.user = user;
         this.passwd = passwd;

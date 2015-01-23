@@ -52,7 +52,8 @@ public final class ConceptsSection extends ConfigurationSection implements Conce
                 readAttribute(nnm, "property", false),
                 readAttribute(nnm, "conceptCodePrefix", false),
                 valueTypeStr != null ? ValueTypeCode.valueOf(valueTypeStr) : ValueTypeCode.UNSPECIFIED,
-                false
+                false,
+                null
         );
         this.folders.add(folderSpec);
     }

@@ -32,6 +32,7 @@ import edu.emory.cci.aiw.i2b2etl.metadata.ValueTypeCode;
  * @author arpost
  */
 public class FolderSpec {
+    private static final ModifierSpec[] EMPTY_MODIFIER_ARRAY = new ModifierSpec[0];
     private final Integer skipGen;
     private final String displayName;
     private final String[] propositions;
@@ -39,8 +40,9 @@ public class FolderSpec {
     private final String conceptCodePrefix;
     private final ValueTypeCode valueType;
     private final Boolean userDefined;
+    private final ModifierSpec[] modifiers;
 
-    public FolderSpec(int skipGen, String displayName, String[] propositions, String property, String conceptCodePrefix, ValueTypeCode valueType, boolean userDefined) {
+    public FolderSpec(int skipGen, String displayName, String[] propositions, String property, String conceptCodePrefix, ValueTypeCode valueType, boolean userDefined, ModifierSpec[] modifiers) {
         this.skipGen = skipGen;
         this.displayName = displayName;
         this.propositions = propositions.clone();
@@ -48,6 +50,11 @@ public class FolderSpec {
         this.conceptCodePrefix = conceptCodePrefix;
         this.valueType = valueType;
         this.userDefined = userDefined;
+        if (modifiers != null)  {
+            this.modifiers = modifiers.clone();
+        } else {
+            this.modifiers = EMPTY_MODIFIER_ARRAY;
+        }
     }
 
     public int getSkipGen() {
@@ -78,6 +85,8 @@ public class FolderSpec {
         return userDefined;
     }
     
-    
+    public ModifierSpec[] getModifiers() {
+        return this.modifiers.clone();
+    }
     
 }

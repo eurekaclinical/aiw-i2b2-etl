@@ -340,7 +340,8 @@ public final class Metadata {
                     null,
                     null,
                     null,
-                    true
+                    true,
+                    null
             );
             processFolderSpec(folderSpec);
         }
