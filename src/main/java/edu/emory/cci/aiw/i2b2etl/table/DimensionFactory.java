@@ -20,9 +20,8 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
-import edu.emory.cci.aiw.i2b2etl.metadata.MetadataUtil;
+import edu.emory.cci.aiw.i2b2etl.configuration.Data;
+import edu.emory.cci.aiw.i2b2etl.configuration.DataSpec;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -36,32 +35,25 @@ import org.protempa.proposition.value.Value;
  * @author arpost
  */
 public class DimensionFactory {
-    private final DictionarySection dictSection;
-    private final DataSection obxSection;
+    private final Data data;
 
-    public DimensionFactory(DictionarySection dictSection,
-            DataSection obxSection) {
-        this.dictSection = dictSection;
-        this.obxSection = obxSection;
+    public DimensionFactory(Data data) {
+        this.data = data;
     }
 
-    protected DictionarySection getDictSection() {
-        return dictSection;
-    }
-
-    protected DataSection getObxSection() {
-        return obxSection;
+    protected Data getData() {
+        return data;
     }
     
     protected Value getField(String field, Proposition encounterProp, Map<UniqueId, Proposition> references) {
         Value val;
-        String obxSectionStr = dictSection.get(field);
+        String obxSectionStr = field;
         if (obxSectionStr != null) {
-            DataSection.DataSpec obxSpec = obxSection.get(obxSectionStr);
-            assert obxSpec.propertyName != null : "propertyName cannot be null";
+            DataSpec obxSpec = data.get(obxSectionStr);
+            assert obxSpec.getPropertyName() != null : "propertyName cannot be null";
             if (obxSpec != null) {
-                if (obxSpec.referenceName != null) {
-                    List<UniqueId> uids = encounterProp.getReferences(obxSpec.referenceName);
+                if (obxSpec.getReferenceName() != null) {
+                    List<UniqueId> uids = encounterProp.getReferences(obxSpec.getReferenceName());
                     int size = uids.size();
                     if (size > 0) {
                         if (size > 1) {
@@ -71,12 +63,12 @@ public class DimensionFactory {
                                     new Object[]{field, encounterProp});
                         }
                         Proposition prop = references.get(uids.get(0));
-                        val = prop.getProperty(obxSpec.propertyName);
+                        val = prop.getProperty(obxSpec.getPropertyName());
                     } else {
                         val = null;
                     }
                 } else {
-                    val = encounterProp.getProperty(obxSpec.propertyName);
+                    val = encounterProp.getProperty(obxSpec.getPropertyName());
                 }
             } else {
                 throw new AssertionError("Invalid key referred to in " + field + ": " + obxSectionStr);

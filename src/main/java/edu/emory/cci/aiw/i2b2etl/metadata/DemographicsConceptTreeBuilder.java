@@ -19,7 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import org.protempa.KnowledgeSource;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
@@ -43,15 +43,16 @@ class DemographicsConceptTreeBuilder {
         ageGroup(95, 104),
         ageGroup(105, 120)
     };
-    private final DictionarySection dictionarySection;
+    private final Settings settings;
     private final Metadata metadata;
     private final String qrhId;
 
-    DemographicsConceptTreeBuilder(String qrhId, KnowledgeSource knowledgeSource, DictionarySection dictSection, Metadata metadata) {
+    DemographicsConceptTreeBuilder(String qrhId, KnowledgeSource knowledgeSource, Settings settings, Metadata metadata) {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
         assert metadata != null : "metadata cannot be null";
         assert qrhId != null : "qrhId cannot be null";
-        this.dictionarySection = dictSection;
+        assert settings != null : "settings cannot be null";
+        this.settings = settings;
         this.metadata = metadata;
         this.qrhId = qrhId;
     }
@@ -61,12 +62,12 @@ class DemographicsConceptTreeBuilder {
         root.add(buildAge("Age"));
 
         DimensionValueSetFolderBuilder descendantBuilder = this.metadata.newDimensionValueSetFolderBuilder(root, "patient_num", "patient_dimension");
-        descendantBuilder.build("Gender", "patientDimensionGender", "sex_cd");
-        descendantBuilder.build("Language", "patientDimensionLanguage", "language_cd");
-        descendantBuilder.build("Marital Status", "patientDimensionMaritalStatus", "marital_status_cd");
-        descendantBuilder.build("Race", "patientDimensionRace", "race_cd");
-        descendantBuilder.build("Religion", "patientDimensionReligion", "religion_cd");
-        descendantBuilder.build("Vital Status", "patientDimensionVital", "vital_status_cd");
+        descendantBuilder.build("Gender", this.settings.getPatientDimensionGender(), "sex_cd");
+        descendantBuilder.build("Language", this.settings.getPatientDimensionLanguage(), "language_cd");
+        descendantBuilder.build("Marital Status", this.settings.getPatientDimensionMaritalStatus(), "marital_status_cd");
+        descendantBuilder.build("Race", this.settings.getPatientDimensionRace(), "race_cd");
+        descendantBuilder.build("Religion", this.settings.getPatientDimensionReligion(), "religion_cd");
+        descendantBuilder.build("Vital Status", this.settings.getPatientDimensionVital(), "vital_status_cd");
 
         return root;
     }
@@ -74,7 +75,7 @@ class DemographicsConceptTreeBuilder {
     private Concept buildAge(String displayName) throws OntologyBuildException {
         Concept age = newContainerConcept(displayName, MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics|Age");
         String ageConceptCodePrefix =
-                this.dictionarySection.get("ageConceptCodePrefix");
+                this.settings.getAgeConceptCodePrefix();
         for (int i = 0; i < ageCategories.length; i++) {
             int[] ages = ageCategories[i];
             String ageRangeDisplayName = String.valueOf(ages[0]) + '-'

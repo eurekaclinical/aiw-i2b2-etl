@@ -35,6 +35,7 @@ import org.protempa.dest.test.DatabasePopulator;
 
 import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
+import edu.emory.cci.aiw.i2b2etl.configuration.XmlFileConfiguration;
 import org.protempa.dest.Destination;
 
 /**
@@ -66,7 +67,7 @@ public class I2b2ETLTestNoDerivedVariables {
             q.setId("i2b2 ETL Test Query No Derived Variables");
             
             Query query = protempa.buildQuery(q);
-            Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.TRUNCATE);
+            Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML), I2b2Destination.DataInsertMode.TRUNCATE);
             protempa.execute(query, destination);
         } finally {
             protempa.close();

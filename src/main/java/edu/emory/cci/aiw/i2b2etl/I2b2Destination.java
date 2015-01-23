@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.configuration.Configuration;
 import java.io.File;
 import org.protempa.DataSource;
 import org.protempa.KnowledgeSource;
@@ -35,7 +36,7 @@ import org.protempa.query.Query;
  * @author Andrew Post
  */
 public final class I2b2Destination extends AbstractDestination {
-    private File confXML;
+    private Configuration config;
     private boolean inferPropositionIdsNeeded;
     private DataInsertMode dataInsertMode;
 
@@ -52,8 +53,8 @@ public final class I2b2Destination extends AbstractDestination {
      * @param confXML an i2b2 query results handler configuration file. Cannot
      * be <code>null</code>.
      */
-    public I2b2Destination(File confXML, DataInsertMode dataInsertMode) {
-        this(confXML, dataInsertMode, true);
+    public I2b2Destination(Configuration config, DataInsertMode dataInsertMode) {
+        this(config, dataInsertMode, true);
     }
     
     /**
@@ -71,23 +72,23 @@ public final class I2b2Destination extends AbstractDestination {
      * proposition ids returned should be only those specified in the Protempa
      * {@link Query}.
      */
-    public I2b2Destination(File confXML, DataInsertMode dataInsertMode, boolean inferPropositionIdsNeeded) {
-        if (confXML == null) {
-            throw new IllegalArgumentException("confXML cannot be null");
+    public I2b2Destination(Configuration config, DataInsertMode dataInsertMode, boolean inferPropositionIdsNeeded) {
+        if (config == null) {
+            throw new IllegalArgumentException("config cannot be null");
         }
-        this.confXML = confXML;
+        this.config = config;
         this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
         this.dataInsertMode = dataInsertMode;
     }
 
     @Override
     public QueryResultsHandler getQueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
-       return new I2b2QueryResultsHandler(query, dataSource, knowledgeSource, this.confXML, this.inferPropositionIdsNeeded, this.dataInsertMode);
+       return new I2b2QueryResultsHandler(query, dataSource, knowledgeSource, this.config, this.inferPropositionIdsNeeded, this.dataInsertMode);
     }
 
     @Override
     public Statistics getStatistics() throws StatisticsException {
-        return new I2b2StatisticsCollector(this.confXML).collectStatistics();
+        return new I2b2StatisticsCollector(this.config).collectStatistics();
     }
     
 }

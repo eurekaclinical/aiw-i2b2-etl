@@ -27,18 +27,11 @@ import org.w3c.dom.*;
  *
  * @author Andrew Post
  */
-public final class DatabaseSection extends ConfigurationSection {
+public final class DatabaseSection extends ConfigurationSection implements Database {
 
     DatabaseSection() {
     }
 
-    // this is simply a place for database schema connect information.
-    public class DatabaseSpec {
-        public String key;
-        public String user;
-        public String passwd;
-        public String connect;
-    }
     private TreeMap<String, DatabaseSpec> dbs = new TreeMap<>();
     
     public DatabaseSpec get(String schema) {
@@ -47,12 +40,12 @@ public final class DatabaseSection extends ConfigurationSection {
 
     @Override
     protected void put(NamedNodeMap nnm) throws ConfigurationReadException {
-        DatabaseSpec databaseSpec = new DatabaseSpec();
-        databaseSpec.key = readAttribute(nnm, "key", true);
-        databaseSpec.user = readAttribute(nnm, "user", true);
-        databaseSpec.passwd = readAttribute(nnm, "passwd", true);
-        databaseSpec.connect = readAttribute(nnm, "connect", true);
-        this.dbs.put(databaseSpec.key, databaseSpec);
+        DatabaseSpec databaseSpec = new DatabaseSpec(
+                readAttribute(nnm, "key", true), 
+                readAttribute(nnm, "user", true), 
+                readAttribute(nnm, "passwd", true), 
+                readAttribute(nnm, "connect", true));
+        this.dbs.put(databaseSpec.getKey(), databaseSpec);
     }
 
     @Override
@@ -63,6 +56,16 @@ public final class DatabaseSection extends ConfigurationSection {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+
+    @Override
+    public DatabaseSpec getMetadataSpec() {
+        return this.dbs.get("metaschema");
+    }
+
+    @Override
+    public DatabaseSpec getDataSpec() {
+        return this.dbs.get("dataschema");
     }
     
 }

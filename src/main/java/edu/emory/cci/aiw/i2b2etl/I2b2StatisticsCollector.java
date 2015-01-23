@@ -20,10 +20,10 @@ package edu.emory.cci.aiw.i2b2etl;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.configuration.Configuration;
 import edu.emory.cci.aiw.i2b2etl.configuration.ConfigurationReadException;
-import edu.emory.cci.aiw.i2b2etl.configuration.ConfigurationReader;
-import edu.emory.cci.aiw.i2b2etl.configuration.DatabaseSection;
-import java.io.File;
+import edu.emory.cci.aiw.i2b2etl.configuration.Database;
+import edu.emory.cci.aiw.i2b2etl.configuration.DatabaseSpec;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,20 +42,13 @@ import org.protempa.dest.StatisticsException;
 final class I2b2StatisticsCollector {
     private final ConnectionSpec dataConnectionSpec;
 
-    I2b2StatisticsCollector(File confFile) throws StatisticsException {
-        
-        ConfigurationReader configurationReader = new ConfigurationReader(confFile);
+    I2b2StatisticsCollector(Configuration config) throws StatisticsException {
         try {
-            configurationReader.read();
-        } catch (ConfigurationReadException ex) {
-            throw new StatisticsException("Could not initialize statistics gathering", ex);
-        }
-        DatabaseSection databaseSection = configurationReader.getDatabaseSection();
-
-        DatabaseSection.DatabaseSpec dataSchemaSpec = databaseSection.get("dataschema");
-        try {
-            this.dataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(dataSchemaSpec.connect, dataSchemaSpec.user, dataSchemaSpec.passwd);
-        } catch (InvalidConnectionSpecArguments ex) {
+            config.init();
+            Database databaseSection = config.getDatabase();
+            DatabaseSpec dataSchemaSpec = databaseSection.getDataSpec();
+            this.dataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(dataSchemaSpec.getConnect(), dataSchemaSpec.getUser(), dataSchemaSpec.getPasswd());
+        } catch (InvalidConnectionSpecArguments | ConfigurationReadException ex) {
             throw new StatisticsException("Could not initialize statistics gathering", ex);
         }
     }

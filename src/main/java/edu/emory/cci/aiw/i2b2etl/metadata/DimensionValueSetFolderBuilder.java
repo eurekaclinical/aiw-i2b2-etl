@@ -20,8 +20,10 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.configuration.Data;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.configuration.DataSpec;
+import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -43,14 +45,14 @@ class DimensionValueSetFolderBuilder {
     private final PropositionDefinition propDef;
     private final Concept root;
     private final KnowledgeSource knowledgeSource;
-    private final DictionarySection dictSection;
-    private final DataSection dataSection;
+    private final Settings dictSection;
+    private final Data dataSection;
     private final Metadata metadata;
     private final String sourceSystemCode;
     private final String tableName;
     private final String factTableColumn;
 
-    DimensionValueSetFolderBuilder(Concept root, KnowledgeSource knowledgeSource, DictionarySection dictSection, DataSection dataSection, Metadata metadata, String sourceSystemCode, String factTableColumn, String tableName) throws OntologyBuildException {
+    DimensionValueSetFolderBuilder(Concept root, KnowledgeSource knowledgeSource, Settings dictSection, Data dataSection, Metadata metadata, String sourceSystemCode, String factTableColumn, String tableName) throws OntologyBuildException {
         this.root = root;
         this.knowledgeSource = knowledgeSource;
         this.dictSection = dictSection;
@@ -59,7 +61,7 @@ class DimensionValueSetFolderBuilder {
         this.sourceSystemCode = sourceSystemCode;
         this.factTableColumn = factTableColumn;
         this.tableName = tableName;
-        String propId = dictSection.get("visitDimension");
+        String propId = dictSection.getVisitDimension();
         try {
             this.propDef = this.knowledgeSource.readPropositionDefinition(propId);
             if (this.propDef == null) {
@@ -71,17 +73,17 @@ class DimensionValueSetFolderBuilder {
 
     }
 
-    void build(String childName, String childSpec, String columnName) throws OntologyBuildException {
-        DataSection.DataSpec dataSpec = getDataSection(childSpec);
+    void build(String childName, String dictVal, String columnName) throws OntologyBuildException {
+        DataSpec dataSpec = getDataSection(dictVal);
         if (dataSpec != null) {
             //ConceptId conceptId = ConceptId.getInstance(null, dataSpec.propertyName, null, metadata);
             ConceptId conceptId = ConceptId.getInstance(childName, metadata);
-            Concept concept = newQueryableConcept(conceptId, dataSpec.conceptCodePrefix);
+            Concept concept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
             concept.setColumnName(columnName);
             concept.setOperator(ConceptOperator.IN);
             concept.setDisplayName(childName);
             List<String> inClause = new ArrayList<>();
-            if (dataSpec.referenceName != null) {
+            if (dataSpec.getReferenceName() != null) {
                 try {
                     addChildrenFromValueSets(this.propDef, dataSpec, concept, columnName);
                     Enumeration children = concept.children();
@@ -98,8 +100,7 @@ class DimensionValueSetFolderBuilder {
         }
     }
 
-    private DataSection.DataSpec getDataSection(String dictSectionKey) {
-        String dictVal = this.dictSection.get(dictSectionKey);
+    private DataSpec getDataSection(String dictVal) {
         if (dictVal != null) {
             return this.dataSection.get(dictVal);
         } else {
@@ -108,16 +109,16 @@ class DimensionValueSetFolderBuilder {
     }
 
     private void addChildrenFromValueSets(PropositionDefinition propDef,
-            DataSection.DataSpec dataSpec, Concept concept, String columnName) throws OntologyBuildException,
+            DataSpec dataSpec, Concept concept, String columnName) throws OntologyBuildException,
             UnsupportedOperationException, KnowledgeSourceReadException,
             InvalidConceptCodeException {
-        ReferenceDefinition refDef = propDef.referenceDefinition(dataSpec.referenceName);
+        ReferenceDefinition refDef = propDef.referenceDefinition(dataSpec.getReferenceName());
         String[] propIds = refDef.getPropositionIds();
         for (String propId : propIds) {
             PropositionDefinition genderPropositionDef
                     = this.knowledgeSource.readPropositionDefinition(propId);
             assert genderPropositionDef != null : "genderPropositionDef cannot be null";
-            PropertyDefinition genderPropertyDef = genderPropositionDef.propertyDefinition(dataSpec.propertyName);
+            PropertyDefinition genderPropertyDef = genderPropositionDef.propertyDefinition(dataSpec.getPropertyName());
             if (genderPropertyDef != null) {
                 String valueSetId = genderPropertyDef.getValueSetId();
                 if (valueSetId == null) {
@@ -128,8 +129,8 @@ class DimensionValueSetFolderBuilder {
                 ValueSet.ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
                 for (ValueSet.ValueSetElement valueSetElement : valueSetElements) {
                     Value valueSetElementVal = valueSetElement.getValue();
-                    ConceptId conceptId = ConceptId.getInstance(propId, dataSpec.propertyName, valueSetElementVal, metadata);
-                    Concept childConcept = newQueryableConcept(conceptId, dataSpec.conceptCodePrefix);
+                    ConceptId conceptId = ConceptId.getInstance(propId, dataSpec.getPropertyName(), valueSetElementVal, metadata);
+                    Concept childConcept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
                     childConcept.setDisplayName(valueSetElement.getDisplayName());
                     childConcept.setColumnName(columnName);
                     childConcept.setDimCode(valueSetElementVal != null ? valueSetElementVal.getFormatted() : "");

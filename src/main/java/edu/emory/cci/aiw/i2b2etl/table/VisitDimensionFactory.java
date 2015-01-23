@@ -20,8 +20,8 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.configuration.Data;
+import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
@@ -34,17 +34,20 @@ import org.protempa.proposition.value.Value;
 
 /**
  *
- * @author arpost
+ * @author Andrew Post
  */
 public class VisitDimensionFactory extends DimensionFactory {
     private final String qrhId;
     private final VisitDimension visitDimension;
     private final VisitDimensionHandler visitDimensionHandler;
     private final EncounterMappingHandler encounterMappingHandler;
+    private final Settings settings;
 
-    public VisitDimensionFactory(String qrhId, DictionarySection dictSection,
-            DataSection obxSection, ConnectionSpec dataConnectionSpec) throws SQLException {
-        super(dictSection, obxSection);
+    public VisitDimensionFactory(String qrhId,
+            Settings settings,
+            Data data, ConnectionSpec dataConnectionSpec) throws SQLException {
+        super(data);
+        this.settings = settings;
         this.qrhId = qrhId;
         this.visitDimension = new VisitDimension();
         this.visitDimensionHandler = new VisitDimensionHandler(dataConnectionSpec);
@@ -57,7 +60,7 @@ public class VisitDimensionFactory extends DimensionFactory {
             Map<UniqueId, Proposition> references) throws SQLException {
         java.util.Date visitStartDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinStart()) : null;
         java.util.Date visitEndDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinFinish()) : null;
-        Value encryptedId = encounterProp != null ? getField("visitDimensionDecipheredId", encounterProp, references) : null;
+        Value encryptedId = encounterProp != null ? getField(this.settings.getVisitDimensionDecipheredId(), encounterProp, references) : null;
         String encryptedIdStr;
         if (encryptedId != null) {
             encryptedIdStr = encryptedId.getFormatted();

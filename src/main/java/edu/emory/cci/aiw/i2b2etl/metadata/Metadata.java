@@ -19,11 +19,10 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection.FolderSpec;
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.configuration.Data;
+import edu.emory.cci.aiw.i2b2etl.configuration.FolderSpec;
+import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
-import edu.emory.cci.aiw.i2b2etl.table.ProviderDimensionHandler;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -94,8 +93,8 @@ public final class Metadata {
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
     private final Set<String> conceptCodeCache = new HashSet<>();
     private final KnowledgeSource knowledgeSource;
-    private final DataSection dataSection;
-    private final DictionarySection dictSection;
+    private final Data dataSection;
+    private final Settings dictSection;
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
     private String qrhId;
     private final ProviderConceptTreeBuilder providerConceptTreeBuilder;
@@ -104,8 +103,8 @@ public final class Metadata {
             PropositionDefinition[] userDefinedPropositionDefinitions,
             String rootNodeDisplayName,
             FolderSpec[] folderSpecs,
-            DictionarySection dictSection,
-            DataSection dataSection, boolean skipProviderHierarchy) throws OntologyBuildException {
+            Settings dictSection,
+            Data dataSection, boolean skipProviderHierarchy) throws OntologyBuildException {
         if (knowledgeSource == null) {
             throw new IllegalArgumentException("knowledgeSource cannot be null");
         }
@@ -149,7 +148,7 @@ public final class Metadata {
             logger.log(Level.FINE, "STEP: construct tree");
             constructTreePre(folderSpecs);
 
-            boolean skipDemographicsHierarchy = Boolean.parseBoolean(this.dictSection.get("skipDemographicsHierarchy"));
+            boolean skipDemographicsHierarchy = this.dictSection.getSkipDemographicsHierarchy();
             if (!skipDemographicsHierarchy) {
                 buildDemographicsHierarchy();
             }
@@ -327,9 +326,6 @@ public final class Metadata {
             processFolderSpec(folderSpec);
         }
         if (this.userDefinedPropositionDefinitions.length > 0) {
-            FolderSpec folderSpec = new FolderSpec();
-            folderSpec.displayName = "User-defined Derived Variables";
-            folderSpec.userDefined = true;
             String[] propIds
                     = new String[this.userDefinedPropositionDefinitions.length];
             for (int i = 0;
@@ -337,9 +333,15 @@ public final class Metadata {
                     i++) {
                 propIds[i] = this.userDefinedPropositionDefinitions[i].getId();
             }
-            folderSpec.propositions = propIds;
-            folderSpec.valueType = null;
-            folderSpec.skipGen = 0;
+            FolderSpec folderSpec = new FolderSpec(
+                    0,
+                    "User-defined Derived Variables",
+                    propIds,
+                    null,
+                    null,
+                    null,
+                    true
+            );
             processFolderSpec(folderSpec);
         }
     }
@@ -374,36 +376,36 @@ public final class Metadata {
             InvalidPromoteArgumentException,
             UnknownPropositionDefinitionException, OntologyBuildException {
         ConceptId conceptId
-                = ConceptId.getInstance(folderSpec.displayName, this);
+                = ConceptId.getInstance(folderSpec.getDisplayName(), this);
         Concept concept = getFromIdCache(conceptId);
         if (concept == null) {
             concept
-                    = new Concept(conceptId, folderSpec.conceptCodePrefix, this);
+                    = new Concept(conceptId, folderSpec.getConceptCodePrefix(), this);
             concept.setSourceSystemCode(
                     MetadataUtil.toSourceSystemCode(this.qrhId));
-            concept.setDisplayName(folderSpec.displayName);
+            concept.setDisplayName(folderSpec.getDisplayName());
             concept.setDataType(DataType.TEXT);
             addToIdCache(concept);
             this.rootConcept.add(concept);
         }
         Concept[] concepts;
-        if (folderSpec.property == null) {
+        if (folderSpec.getProperty() == null) {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.knowledgeSource,
-                            folderSpec.propositions, folderSpec.conceptCodePrefix,
-                            folderSpec.valueType, this);
+                            folderSpec.getPropositions(), folderSpec.getConceptCodePrefix(),
+                            folderSpec.getValueType(), this);
             concepts = propProxy.build();
 
         } else {
             ValueSetConceptTreeBuilder vsProxy
                     = new ValueSetConceptTreeBuilder(this.knowledgeSource,
-                            folderSpec.propositions, folderSpec.property,
-                            folderSpec.conceptCodePrefix, this);
+                            folderSpec.getPropositions(), folderSpec.getProperty(),
+                            folderSpec.getConceptCodePrefix(), this);
             concepts = vsProxy.build();
         }
         for (Concept c : concepts) {
             concept.add(c);
         }
-        promote(concept, folderSpec.skipGen);
+        promote(concept, folderSpec.getSkipGen());
     }
 }

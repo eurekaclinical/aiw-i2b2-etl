@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.cli;
  * #L%
  */
 import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
+import edu.emory.cci.aiw.i2b2etl.configuration.XmlFileConfiguration;
 import java.io.File;
 import org.protempa.dest.Destination;
 import org.protempa.dest.Statistics;
@@ -42,7 +43,7 @@ public class GatherStatistics {
         }
         int totalKeys = 0;
         for (File confXML : configDir.listFiles()) {
-            Destination destination = new I2b2Destination(confXML, I2b2Destination.DataInsertMode.TRUNCATE);
+            Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML), I2b2Destination.DataInsertMode.TRUNCATE);
             try {
                 Statistics stats = destination.getStatistics();
                 int numberOfKeys = stats.getNumberOfKeys();

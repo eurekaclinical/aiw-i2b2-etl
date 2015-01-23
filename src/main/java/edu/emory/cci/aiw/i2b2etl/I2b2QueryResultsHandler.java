@@ -19,14 +19,16 @@
  */
 package edu.emory.cci.aiw.i2b2etl;
 
-import edu.emory.cci.aiw.i2b2etl.configuration.ConceptsSection;
+import edu.emory.cci.aiw.i2b2etl.configuration.Concepts;
+import edu.emory.cci.aiw.i2b2etl.configuration.Configuration;
 import edu.emory.cci.aiw.i2b2etl.configuration.ConfigurationReadException;
-import edu.emory.cci.aiw.i2b2etl.configuration.ConfigurationReader;
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DatabaseSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.configuration.Data;
+import edu.emory.cci.aiw.i2b2etl.configuration.DataSpec;
+import edu.emory.cci.aiw.i2b2etl.configuration.Database;
+import edu.emory.cci.aiw.i2b2etl.configuration.DatabaseSpec;
+import edu.emory.cci.aiw.i2b2etl.configuration.FolderSpec;
+import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
-import edu.emory.cci.aiw.i2b2etl.metadata.I2B2QueryResultsHandlerSourceId;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
@@ -67,7 +69,6 @@ import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
 import org.protempa.query.Query;
 
-import java.io.File;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -97,22 +98,20 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final Query query;
     private final KnowledgeSource knowledgeSource;
     private final I2b2Destination.DataInsertMode dataInsertMode;
-    private final File confFile;
     private final boolean inferPropositionIdsNeeded;
-    private final ConfigurationReader configurationReader;
-    private final DictionarySection dictSection;
-    private final DataSection obxSection;
-    private final DatabaseSection databaseSection;
+    private final Settings settings;
+    private final Data data;
+    private final Database database;
     private final ConnectionSpec dataConnectionSpec;
-    private final ConceptsSection conceptsSection;
+    private final Concepts conceptsSection;
     private List<FactHandler> factHandlers;
     private ConceptDimensionHandler conceptDimensionHandler;
     private Metadata ontologyModel;
     private HashSet<Object> propIdsFromKnowledgeSource;
-    private final DataSection.DataSpec providerFullNameSpec;
-    private final DataSection.DataSpec providerFirstNameSpec;
-    private final DataSection.DataSpec providerMiddleNameSpec;
-    private final DataSection.DataSpec providerLastNameSpec;
+    private final DataSpec providerFullNameSpec;
+    private final DataSpec providerFirstNameSpec;
+    private final DataSpec providerMiddleNameSpec;
+    private final DataSpec providerLastNameSpec;
     private final ConnectionSpec metadataConnectionSpec;
     private final String visitPropId;
     private boolean skipProviderHierarchy;
@@ -125,6 +124,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private ProviderDimensionFactory providerDimensionFactory;
     private PatientDimensionFactory patientDimensionFactory;
     private VisitDimensionFactory visitDimensionFactory;
+    private final Configuration configuration;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -142,44 +142,42 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      *                                  {@link Query}.
      * @param dataInsertMode            whether to truncate existing data or append to it
      */
-    I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, File confXML,
+    I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, Configuration configuration,
                             boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
             throws QueryResultsHandlerInitException {
         Logger logger = I2b2ETLUtil.logger();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
         this.dataInsertMode = dataInsertMode;
-        this.confFile = confXML;
-        logger.log(Level.FINE, String.format("Using configuration file: %s",
-                this.confFile.getAbsolutePath()));
-        this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
+        this.configuration = configuration;
         try {
-            logger.log(Level.FINER, "STEP: read conf.xml");
-            this.configurationReader = new ConfigurationReader(this.confFile);
-            this.configurationReader.read();
-            this.dictSection = this.configurationReader.getDictionarySection();
-
-            this.obxSection = this.configurationReader.getDataSection();
-            this.conceptsSection = this.configurationReader.getConceptsSection();
-            this.databaseSection = this.configurationReader.getDatabaseSection();
+            this.configuration.init();
         } catch (ConfigurationReadException ex) {
-            throw new QueryResultsHandlerInitException(
-                    "Could not initialize query results handler", ex);
+            throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
         }
-        DatabaseSection.DatabaseSpec dataSchemaSpec = this.databaseSection.get("dataschema");
-        DatabaseSection.DatabaseSpec metadataSchemaSpec = this.databaseSection.get("metaschema");
+        logger.log(Level.FINE, String.format("Using configuration: %s",
+                this.configuration.getName()));
+        this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
+        logger.log(Level.FINER, "STEP: read conf.xml");
+        this.settings = this.configuration.getSettings();
+
+        this.data = this.configuration.getData();
+        this.conceptsSection = this.configuration.getConcepts();
+        this.database = this.configuration.getDatabase();
+        DatabaseSpec dataSchemaSpec = this.database.getDataSpec();
+        DatabaseSpec metadataSchemaSpec = this.database.getMetadataSpec();
         try {
-            this.dataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(dataSchemaSpec.connect, dataSchemaSpec.user, dataSchemaSpec.passwd);
-            this.metadataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(metadataSchemaSpec.connect, metadataSchemaSpec.user, metadataSchemaSpec.passwd);
+            this.dataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(dataSchemaSpec.getConnect(), dataSchemaSpec.getUser(), dataSchemaSpec.getPasswd());
+            this.metadataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(metadataSchemaSpec.getConnect(), metadataSchemaSpec.getUser(), metadataSchemaSpec.getPasswd());
         } catch (InvalidConnectionSpecArguments ex) {
             throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
         }
         
-        this.providerFullNameSpec = this.obxSection.get(this.dictSection.get("providerFullName"));
-        this.providerFirstNameSpec = this.obxSection.get(this.dictSection.get("providerFirstName"));
-        this.providerMiddleNameSpec = this.obxSection.get(this.dictSection.get("providerMiddleName"));
-        this.providerLastNameSpec = this.obxSection.get(this.dictSection.get("providerLastName"));
-        this.visitPropId = this.dictSection.get("visitDimension");
+        this.providerFullNameSpec = this.data.get(this.settings.getProviderFullName());
+        this.providerFirstNameSpec = this.data.get(this.settings.getProviderFirstName());
+        this.providerMiddleNameSpec = this.data.get(this.settings.getProviderMiddleName());
+        this.providerLastNameSpec = this.data.get(this.settings.getProviderLastName());
+        this.visitPropId = this.settings.getVisitDimension();
         if (this.inferPropositionIdsNeeded) {
             try {
                 readPropIdsFromKnowledgeSource();
@@ -188,21 +186,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
-        this.skipProviderHierarchy = Boolean.parseBoolean(this.dictSection.get("skipProviderHierarchy"));
-        
-        String dataRemoveMethodString = this.dictSection.get("dataRemoveMethod");
-        if (dataRemoveMethodString == null) {
-            this.dataRemoveMethod = RemoveMethod.TRUNCATE;
-        } else {
-            this.dataRemoveMethod = RemoveMethod.valueOf(dataRemoveMethodString);
-        }
-        
-        String metaRemoveMethodString = this.dictSection.get("metaRemoveMethod");
-        if (metaRemoveMethodString == null) {
-            this.metaRemoveMethod = RemoveMethod.TRUNCATE;
-        } else {
-            this.metaRemoveMethod = RemoveMethod.valueOf(metaRemoveMethodString);
-        }
+        this.skipProviderHierarchy = this.settings.getSkipProviderHierarchy();
+        this.dataRemoveMethod = this.settings.getDataRemoveMethod();
+        this.metaRemoveMethod = this.settings.getMetaRemoveMethod();
         
         DataSourceBackend[] dsBackends = dataSource.getBackends();
         this.dataSourceBackendIds = new HashSet<>();
@@ -212,12 +198,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 this.dataSourceBackendIds.add(id);
             }
         }
-        String qrhIdFromConfig = this.dictSection.get("sourcesystem_cd");
-        if (qrhIdFromConfig != null) {
-            this.qrhId = qrhIdFromConfig;
-        } else {
-            this.qrhId = I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
-        }
+        this.qrhId = this.settings.getSourceSystemCode();
         this.dataSourceBackendIds.add(this.qrhId);
 
         KnowledgeSourceBackend[] ksBackends = knowledgeSource.getBackends();
@@ -251,8 +232,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         try {
             mostlyBuildOntology();
             this.providerDimensionFactory = new ProviderDimensionFactory(this.qrhId, this.ontologyModel, this.dataConnectionSpec, this.skipProviderHierarchy);
-            this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.dictSection, this.obxSection, this.dataConnectionSpec);
-            this.visitDimensionFactory = new VisitDimensionFactory(this.qrhId, this.dictSection, this.obxSection, this.dataConnectionSpec);
+            this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
+            this.visitDimensionFactory = new VisitDimensionFactory(this.qrhId, this.settings, this.data, this.dataConnectionSpec);
             if (this.dataInsertMode == I2b2Destination.DataInsertMode.TRUNCATE) {
                 DataRemoverFactory f = new DataRemoverFactory();
                 f.getInstance(this.dataRemoveMethod).doRemoveData();
@@ -409,14 +390,14 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     }
                     ProviderDimension providerDimension = this.providerDimensionFactory.getInstance(
                                     prop,
-                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.referenceName : null,
-                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.propertyName : null,
-                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.referenceName : null,
-                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.propertyName : null,
-                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.referenceName : null,
-                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.propertyName : null,
-                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.referenceName : null,
-                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.propertyName : null,
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.getReferenceName() : null,
+                                    this.providerFullNameSpec != null ? this.providerFullNameSpec.getPropertyName() : null,
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.getReferenceName() : null,
+                                    this.providerFirstNameSpec != null ? this.providerFirstNameSpec.getPropertyName() : null,
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.getReferenceName() : null,
+                                    this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.getPropertyName() : null,
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.getReferenceName() : null,
+                                    this.providerLastNameSpec != null ? this.providerLastNameSpec.getPropertyName() : null,
                                     references);
                     VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, references);
                     for (FactHandler factHandler : this.factHandlers) {
@@ -616,7 +597,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void mostlyBuildOntology() throws OntologyBuildException {
-        this.ontologyModel = new Metadata(this.qrhId, knowledgeSource, collectUserPropositionDefinitions(), this.dictSection.get("rootNodeName"), this.conceptsSection.getFolderSpecs(), dictSection, this.obxSection, this.skipProviderHierarchy);
+        this.ontologyModel = new Metadata(this.qrhId, knowledgeSource, collectUserPropositionDefinitions(), this.settings.getRootNodeName(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.skipProviderHierarchy);
         setI2B2PathsToConcepts();
     }
 
@@ -648,17 +629,17 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.propIdsFromKnowledgeSource = new HashSet<>();
         this.propIdsFromKnowledgeSource.add(this.visitPropId);
         PropositionDefinition visitProp = this.knowledgeSource.readPropositionDefinition(this.visitPropId);
-        for (DataSection.DataSpec dataSpec : this.obxSection.getAll()) {
-            if (dataSpec.referenceName != null) {
-                ReferenceDefinition refDef = visitProp.referenceDefinition(dataSpec.referenceName);
+        for (DataSpec dataSpec : this.data.getAll()) {
+            if (dataSpec.getReferenceName() != null) {
+                ReferenceDefinition refDef = visitProp.referenceDefinition(dataSpec.getReferenceName());
                 if (refDef == null) {
-                    throw new KnowledgeSourceReadException("missing reference " + dataSpec.referenceName + " for proposition definition " + visitPropId + " for query " + this.query.getId());
+                    throw new KnowledgeSourceReadException("missing reference " + dataSpec.getReferenceName() + " for proposition definition " + visitPropId + " for query " + this.query.getId());
                 }
                 org.arp.javautil.arrays.Arrays.addAll(this.propIdsFromKnowledgeSource, refDef.getPropositionIds());
             }
         }
-        for (ConceptsSection.FolderSpec folderSpec : this.conceptsSection.getFolderSpecs()) {
-            for (String proposition : folderSpec.propositions) {
+        for (FolderSpec folderSpec : this.conceptsSection.getFolderSpecs()) {
+            for (String proposition : folderSpec.getPropositions()) {
                 this.propIdsFromKnowledgeSource.add(proposition);
             }
         }
@@ -666,35 +647,19 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void addPropositionFactHandlers() throws KnowledgeSourceReadException, SQLException {
         String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived();
-        String[] patientDimensionDictEntries = {
-            "patientDimensionMRN",
-            "patientDimensionGender",
-            "patientDimensionRace",
-            "patientDimensionEthnicity",
-            "patientDimensionMaritalStatus",
-            "patientDimensionLanguage",
-            "patientDimensionReligion",
-            "patientDimensionBirthdate"
-        };
-        Set<String> patDimDataTypes = new HashSet<>();
-        for (String patDimDictEntry : patientDimensionDictEntries) {
-            String get = this.dictSection.get(patDimDictEntry);
-            if (get != null) {
-                patDimDataTypes.add(get);
-            }
-        }
-        for (DataSection.DataSpec obx : this.obxSection.getAll()) {
-            if (!patDimDataTypes.contains(obx.key)) {
+        Set<String> patDimDataTypes = this.settings.getPatientDimensionDataTypes();
+        for (DataSpec obx : this.data.getAll()) {
+            if (!patDimDataTypes.contains(obx.getKey())) {
                 Link[] links;
-                if (obx.referenceName != null) {
-                    links = new Link[]{new Reference(obx.referenceName)};
+                if (obx.getReferenceName() != null) {
+                    links = new Link[]{new Reference(obx.getReferenceName())};
                 } else {
                     links = null;
                 }
 
                 PropositionFactHandler propFactHandler =
-                        new PropositionFactHandler(this.dataConnectionSpec, links, obx.propertyName,
-                                obx.start, obx.finish, obx.units,
+                        new PropositionFactHandler(this.dataConnectionSpec, links, obx.getPropertyName(),
+                                obx.getStart(), obx.getFinish(), obx.getUnits(),
                                 potentialDerivedPropIdsArr, this.ontologyModel);
                 this.factHandlers.add(propFactHandler);
             }
@@ -710,7 +675,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void persistOntologyIntoI2B2Batch(Metadata model) throws SQLException {
-        String tableName = this.dictSection.get("metaTableName");
+        String tableName = this.settings.getMetaTableName();
         MetaTableConceptHandler metaTableHandler = new MetaTableConceptHandler(this.metadataConnectionSpec, tableName);
         MetaTableConceptLoader metaTableConceptLoader = new MetaTableConceptLoader(metaTableHandler);
         metaTableConceptLoader.execute(model.getRoot());
@@ -739,37 +704,29 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         @Override
         void doRemoveData() throws SQLException {
             // Truncate the data tables
-            // This is controlled by 'truncateTables' in conf.xml
-            String truncateTables = dictSection.get("truncateTables");
-            if (truncateTables == null || truncateTables.equalsIgnoreCase("true")) {
-                // To do: table names should be parameterized in conf.xml and related to other data
-                String queryId = query.getId();
-                Logger logger = I2b2ETLUtil.logger();
-                logger.log(Level.INFO, "Truncating data tables for query {0}", queryId);
-                String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING"};
-                try (final Connection conn = openDataDatabaseConnection()) {
-                    for (String tableName : dataschemaTables) {
-                        truncateTable(conn, tableName);
-                    }
-                    logger.log(Level.INFO, "Done truncating data tables for query {0}", queryId);
+            // To do: table names should be parameterized in conf.xml and related to other data
+            String queryId = query.getId();
+            Logger logger = I2b2ETLUtil.logger();
+            logger.log(Level.INFO, "Truncating data tables for query {0}", queryId);
+            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING"};
+            try (final Connection conn = openDataDatabaseConnection()) {
+                for (String tableName : dataschemaTables) {
+                    truncateTable(conn, tableName);
                 }
+                logger.log(Level.INFO, "Done truncating data tables for query {0}", queryId);
             }
         }
         
         @Override
         void doRemoveMetadata() throws SQLException {
             // Truncate the data tables
-            // This is controlled by 'truncateTables' in conf.xml
-            String truncateTables = dictSection.get("truncateTables");
-            if (truncateTables == null || truncateTables.equalsIgnoreCase("true")) {
-                // To do: table names should be parameterized in conf.xml and related to other data
-                String queryId = query.getId();
-                Logger logger = I2b2ETLUtil.logger();
-                logger.log(Level.INFO, "Truncating metadata tables for query {0}", queryId);
-                try (final Connection conn = openMetadataDatabaseConnection()) {
-                    truncateTable(conn, dictSection.get("metaTableName")); // metaTableName in conf.xml
-                    logger.log(Level.INFO, "Done truncating metadata tables for query {0}", queryId);
-                }
+            // To do: table names should be parameterized in conf.xml and related to other data
+            String queryId = query.getId();
+            Logger logger = I2b2ETLUtil.logger();
+            logger.log(Level.INFO, "Truncating metadata tables for query {0}", queryId);
+            try (final Connection conn = openMetadataDatabaseConnection()) {
+                truncateTable(conn, settings.getMetaTableName()); // metaTableName in conf.xml
+                logger.log(Level.INFO, "Done truncating metadata tables for query {0}", queryId);
             }
         }
 
@@ -812,7 +769,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             Logger logger = I2b2ETLUtil.logger();
             logger.log(Level.INFO, "Deleting metadata for query {0}", queryId);
             try (final Connection conn = openMetadataDatabaseConnection()) {
-                deleteTable(conn, dictSection.get("metaTableName"), knowledgeSourceBackendIds); // metaTableName in conf.xml
+                deleteTable(conn, settings.getMetaTableName(), knowledgeSourceBackendIds); // metaTableName in conf.xml
                 logger.log(Level.INFO, "Done deleting metadata for query {0}", queryId);
             }
         }
@@ -874,7 +831,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         logger.log(Level.INFO, "Gathering statistics on observation_fact");
         try (Connection conn = openDataDatabaseConnection();
              CallableStatement stmt = conn.prepareCall("{call dbms_stats.gather_table_stats(?, ?)}")) {
-            stmt.setString(1, this.databaseSection.get("dataschema").user);
+            stmt.setString(1, this.database.getDataSpec().getUser());
             stmt.setString(2, "observation_fact");
             stmt.execute();
             logger.log(Level.INFO, "Finished gathering statistics on observation_fact");

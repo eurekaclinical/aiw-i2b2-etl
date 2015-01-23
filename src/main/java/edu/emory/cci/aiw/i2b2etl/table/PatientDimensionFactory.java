@@ -20,8 +20,10 @@ package edu.emory.cci.aiw.i2b2etl.table;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.configuration.Data;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
-import edu.emory.cci.aiw.i2b2etl.configuration.DictionarySection;
+import edu.emory.cci.aiw.i2b2etl.configuration.DataSpec;
+import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import java.sql.SQLException;
 import java.util.Date;
@@ -47,10 +49,12 @@ public class PatientDimensionFactory extends DimensionFactory {
     private final PatientDimension patientDimension;
     private final PatientDimensionHandler patientDimensionHandler;
     private final PatientMappingHandler patientMappingHandler;
+    private final Settings settings;
 
-    public PatientDimensionFactory(Metadata metadata, DictionarySection dictSection,
-            DataSection obxSection, ConnectionSpec dataConnectionSpec) throws SQLException {
-        super(dictSection, obxSection);
+    public PatientDimensionFactory(Metadata metadata, Settings settings,
+            Data obxSection, ConnectionSpec dataConnectionSpec) throws SQLException {
+        super(obxSection);
+        this.settings = settings;
         this.metadata = metadata;
         this.patientDimension = new PatientDimension();
         this.patientDimensionHandler = new PatientDimensionHandler(dataConnectionSpec);
@@ -59,9 +63,9 @@ public class PatientDimensionFactory extends DimensionFactory {
     
     public PatientDimension getInstance(String keyId, Proposition encounterProp,
             Map<UniqueId, Proposition> references) throws InvalidPatientRecordException, SQLException {
-        String obxSectionStr = getDictSection().get("patientDimensionMRN");
-        DataSection.DataSpec dataSpec = getObxSection().get(obxSectionStr);
-        List<UniqueId> uids = encounterProp.getReferences(dataSpec.referenceName);
+        String obxSectionStr = this.settings.getPatientDimensionMRN();
+        DataSpec dataSpec = getData().get(obxSectionStr);
+        List<UniqueId> uids = encounterProp.getReferences(dataSpec.getReferenceName());
         int size = uids.size();
         Logger logger = TableUtil.logger();
         if (size > 0) {
@@ -73,25 +77,25 @@ public class PatientDimensionFactory extends DimensionFactory {
             Proposition prop = references.get(uids.get(0));
             if (prop == null) {
                 throw new InvalidPatientRecordException("Encounter's "
-                        + dataSpec.referenceName
+                        + dataSpec.getReferenceName()
                         + " reference points to a non-existant proposition");
             }
-            Value val = prop.getProperty(dataSpec.propertyName);
+            Value val = prop.getProperty(dataSpec.getPropertyName());
             if (val != null) {
                 Value zipCode = getField(
-                        "patientDimensionZipCode", encounterProp, references);
+                        this.settings.getPatientDimensionZipCode(), encounterProp, references);
                 Value maritalStatus = getField(
-                        "patientDimensionMaritalStatus", encounterProp, references);
+                        this.settings.getPatientDimensionMaritalStatus(), encounterProp, references);
                 Value race = getField(
-                        "patientDimensionRace", encounterProp, references);
+                        this.settings.getPatientDimensionRace(), encounterProp, references);
                 Value birthdateVal = getField(
-                        "patientDimensionBirthdate", encounterProp, references);
+                        this.settings.getPatientDimensionBirthdate(), encounterProp, references);
                 Value gender = getField(
-                        "patientDimensionGender", encounterProp, references);
+                        this.settings.getPatientDimensionGender(), encounterProp, references);
                 Value language = getField(
-                        "patientDimensionLanguage", encounterProp, references);
+                        this.settings.getPatientDimensionLanguage(), encounterProp, references);
                 Value religion = getField(
-                        "patientDimensionReligion", encounterProp, references);
+                        this.settings.getPatientDimensionReligion(), encounterProp, references);
                 Date birthdate;
                 if (birthdateVal != null) {
                     try {
