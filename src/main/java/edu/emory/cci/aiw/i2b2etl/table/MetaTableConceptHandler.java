@@ -67,7 +67,7 @@ public class MetaTableConceptHandler extends RecordHandler<Concept> {
         ps.setString(14, concept.getDimCode());
         ps.setObject(15, concept.getComment());
         ps.setString(16, concept.getToolTip());
-        ps.setTimestamp(17, null);
+        ps.setTimestamp(17, this.importTimestamp);
         ps.setTimestamp(18, TableUtil.setTimestampAttribute(concept.getDownloaded()));
         ps.setTimestamp(19, this.importTimestamp);
         ps.setString(20, MetadataUtil.toSourceSystemCode(concept.getSourceSystemCode()));
