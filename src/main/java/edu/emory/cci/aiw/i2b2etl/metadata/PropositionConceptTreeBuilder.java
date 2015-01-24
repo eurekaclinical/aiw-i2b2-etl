@@ -148,24 +148,26 @@ final class PropositionConceptTreeBuilder {
             for (ModifierSpec modifier : this.modifiers) {
                 PropertyDefinition propertyDef = propDef.propertyDefinition(modifier.getProperty());
                 if (propertyDef != null) {
-                    String valueSetId = propertyDef.getValueSetId();
-                    if (valueSetId != null) {
-                        ConceptId modId = ConceptId.getInstance(null, propertyDef.getName(), this.metadata);
-                        if (this.metadata.getFromIdCache(conceptId) == null) {
-                            Concept mod = this.metadata.newConcept(modId, modifier.getCodePrefix(), newChild.getSourceSystemCode());
-                            mod.setDisplayName(propertyDef.getName());
-                            mod.setDownloaded(newChild.getDownloaded());
-                            mod.setSourceSystemCode(newChild.getSourceSystemCode());
-                            mod.setValueTypeCode(newChild.getValueTypeCode());
-                            mod.setAppliedPath(newChild.getFullName() + "%");
-                            StringBuilder mXml = new StringBuilder();
-                            mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
-                            mXml.append(this.createDate);
-                            mXml.append("</CreationDateTime><TestID>");
-                            mXml.append(mod.getConceptCode());
-                            mXml.append("</TestID><TestName>");
-                            mXml.append(mod.getDisplayName());
-                            mXml.append("</TestName><DataType>Enum</DataType><EnumValues>");
+                    ConceptId modId = ConceptId.getInstance(null, propertyDef.getName(), this.metadata);
+                    if (this.metadata.getFromIdCache(conceptId) == null) {
+                        Concept mod = this.metadata.newConcept(modId, modifier.getCodePrefix(), newChild.getSourceSystemCode());
+                        mod.setDisplayName(propertyDef.getName());
+                        mod.setDownloaded(newChild.getDownloaded());
+                        mod.setSourceSystemCode(newChild.getSourceSystemCode());
+                        mod.setValueTypeCode(newChild.getValueTypeCode());
+                        mod.setAppliedPath(newChild.getFullName() + "%");
+                        mod.setDataType(DataType.dataTypeFor(propertyDef.getValueType()));
+                        StringBuilder mXml = new StringBuilder();
+                        mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
+                        mXml.append(this.createDate);
+                        mXml.append("</CreationDateTime><TestID>");
+                        mXml.append(mod.getConceptCode());
+                        mXml.append("</TestID><TestName>");
+                        mXml.append(mod.getDisplayName());
+                        mXml.append("</TestName>");
+                        String valueSetId = propertyDef.getValueSetId();
+                        if (valueSetId != null) {
+                            mXml.append("<DataType>Enum</DataType><EnumValues>");
                             ValueSet valueSet = this.knowledgeSource.readValueSet(valueSetId);
                             if (valueSet != null) {
                                 for (ValueSetElement vse : valueSet.getValueSetElements()) {
@@ -176,10 +178,15 @@ final class PropositionConceptTreeBuilder {
                                     mXml.append("</Val>");
                                 }
                             }
-                            mXml.append("</EnumValues><Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
-                            mod.setMetadataXml(mXml.toString());
-                            newChild.add(mod);
+                            mXml.append("</EnumValues>");
+                        } else {
+                            mXml.append("<DataType>");
+                            mXml.append(mod.getDataType() == DataType.NUMERIC ? "Float" : "String");
+                            mXml.append("</DataType>");
                         }
+                        mXml.append("<Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
+                        mod.setMetadataXml(mXml.toString());
+                        newChild.add(mod);
                     }
                 }
             }
