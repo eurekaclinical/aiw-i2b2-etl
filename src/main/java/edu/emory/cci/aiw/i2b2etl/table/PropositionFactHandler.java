@@ -24,7 +24,6 @@ import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
 
 import java.sql.*;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -138,6 +137,17 @@ public final class PropositionFactHandler extends FactHandler {
             } catch (SQLException ex) {
                 String msg = "Observation fact not created";
                 throw new InvalidFactException(msg, ex);
+            }
+            for (String property : prop.getPropertyNames()) {
+                Concept mod = metadata.getFromIdCache(null, property, null);
+                if (mod != null) {
+                    ObservationFact modObx = populateObxFact(prop, encounterProp, patient, visit, provider, mod, 1);
+                    try {
+                        insert(modObx);
+                    } catch (SQLException ex) {
+                        throw new InvalidFactException("Modifier fact not created", ex);
+                    }
+                }
             }
         }
     }

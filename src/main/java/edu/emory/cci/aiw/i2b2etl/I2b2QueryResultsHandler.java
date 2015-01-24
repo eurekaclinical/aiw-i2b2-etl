@@ -40,6 +40,8 @@ import edu.emory.cci.aiw.i2b2etl.table.FactHandler;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidFactException;
 import edu.emory.cci.aiw.i2b2etl.table.MetaTableConceptLoader;
 import edu.emory.cci.aiw.i2b2etl.table.MetaTableConceptHandler;
+import edu.emory.cci.aiw.i2b2etl.table.ModifierDimensionHandler;
+import edu.emory.cci.aiw.i2b2etl.table.ModifierDimensionLoader;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimension;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.table.PatientDimensionFactory;
@@ -106,6 +108,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final Concepts conceptsSection;
     private List<FactHandler> factHandlers;
     private ConceptDimensionHandler conceptDimensionHandler;
+    private ModifierDimensionHandler modifierDimensionHandler;
     private Metadata ontologyModel;
     private HashSet<Object> propIdsFromKnowledgeSource;
     private final DataSpec providerFullNameSpec;
@@ -216,6 +219,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         } catch (SQLException ex) {
             throw new QueryResultsHandlerInitException(ex);
         }
+        
+        try {
+            this.modifierDimensionHandler = new ModifierDimensionHandler(dataConnectionSpec);
+        } catch (SQLException ex) {
+            throw new QueryResultsHandlerInitException(ex);
+        }
     }
 
     /**
@@ -279,6 +288,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private String tempObservationFactTableName() {
         return PropositionFactHandler.TEMP_OBSERVATION_TABLE;
     }
+    
+    private String tempModifierTableName() {
+        return ModifierDimensionHandler.TEMP_MODIFIER_TABLE;
+    }
 
     /**
      * Calls stored procedures in the i2b2 data schema to create temporary
@@ -331,6 +344,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 call.registerOutParameter(2, Types.VARCHAR);
                 call.execute();
             }
+            // create the modifier table
+            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_MODIFIER_TABLE(?, ?) }")) {
+                call.setString(1, tempModifierTableName());
+                call.registerOutParameter(2, Types.VARCHAR);
+                call.execute();
+            }
             // create the observation fact table
             try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }")) {
                 call.setString(1, tempObservationFactTableName());
@@ -366,6 +385,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             call.execute();
 
             call.setString(1, tempConceptTableName());
+            call.execute();
+            
+            call.setString(1, tempModifierTableName());
             call.execute();
 
             call.setString(1, tempObservationFactTableName());
@@ -530,6 +552,27 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
             
+            logger.log(Level.INFO, "Populating modifier dimension for query {0}", this.query.getId());
+            new ModifierDimensionLoader(this.modifierDimensionHandler).execute(this.ontologyModel.getRoot());
+            this.modifierDimensionHandler.close();
+            this.modifierDimensionHandler = null;
+            try (Connection conn = openDataDatabaseConnection()) {
+                try (CallableStatement call = conn.prepareCall("{ call INSERT_MODIFIER_FROMTEMP(?, ?, ?) }")) {
+                    call.setString(1, tempModifierTableName());
+                    call.setInt(2, UPLOAD_ID);
+                    call.registerOutParameter(3, Types.VARCHAR);
+                    call.execute();
+                    logger.log(Level.INFO, "INSERT_MODIFIER_FROMTEMP errmsg: {0}", call.getString(3));
+                    conn.commit();
+                } catch (SQLException ex) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException ignore) {
+                    }
+                    throw ex;
+                }
+            }
+            
             logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
 
             try (Connection conn = openDataDatabaseConnection()) {
@@ -573,6 +616,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (this.conceptDimensionHandler != null) {
             try {
                 this.conceptDimensionHandler.close();
+            } catch (SQLException ignore) {
+            }
+        }
+        if (this.modifierDimensionHandler != null) {
+            try {
+                this.modifierDimensionHandler.close();
             } catch (SQLException ignore) {
             }
         }
@@ -708,7 +757,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             String queryId = query.getId();
             Logger logger = I2b2ETLUtil.logger();
             logger.log(Level.INFO, "Truncating data tables for query {0}", queryId);
-            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING"};
+            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING", "MODIFIER_DIMENSION"};
             try (final Connection conn = openDataDatabaseConnection()) {
                 for (String tableName : dataschemaTables) {
                     truncateTable(conn, tableName);
@@ -754,7 +803,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             String queryId = query.getId();
             Logger logger = I2b2ETLUtil.logger();
             logger.log(Level.INFO, "Deleting data tables for query {0}", queryId);
-            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING"};
+            String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING", "MODIFIER_DIMENSION"};
             try (final Connection conn = openDataDatabaseConnection()) {
                 for (String tableName : dataschemaTables) {
                     deleteTable(conn, tableName, dataSourceBackendIds);

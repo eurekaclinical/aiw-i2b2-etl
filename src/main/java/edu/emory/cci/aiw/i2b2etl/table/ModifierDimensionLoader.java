@@ -31,31 +31,34 @@ import java.util.ArrayList;
 
 /**
  *
- * @author Andrew Post
+ * @author arpost
  */
-public final class ConceptDimensionLoader extends ConceptHierarchyLoader {
-    private final ConceptDimensionHandler handler;
-    private final ConceptDimension conceptDimension;
+public class ModifierDimensionLoader extends ConceptHierarchyLoader {
+    private final ModifierDimensionHandler handler;
+    private final ModifierDimension modifierDimension;
 
-    public ConceptDimensionLoader(ConceptDimensionHandler handler) {
+    public ModifierDimensionLoader(ModifierDimensionHandler handler) {
         this.handler = handler;
-        this.conceptDimension = new ConceptDimension();
+        this.modifierDimension = new ModifierDimension();
     }
     
+    
+
     @Override
     protected void loadConcept(Concept concept) throws SQLException {
-        if (concept.isInUse() && concept.getAppliedPath().equals("@")) {
+        if (concept.isInUse() && !concept.getAppliedPath().equals("@")) {
             ArrayList<String> paths = concept.getHierarchyPaths();
             if (paths != null) {
                 for (String path : paths) {
-                    this.conceptDimension.setPath(path);
-                    this.conceptDimension.setConceptCode(concept.getConceptCode());
-                    this.conceptDimension.setDisplayName(concept.getDisplayName());
-                    this.conceptDimension.setSourceSystemCode(concept.getSourceSystemCode());
-                    this.conceptDimension.setDownloaded(concept.getDownloaded());
-                    this.handler.insert(this.conceptDimension);
+                    this.modifierDimension.setPath(path);
+                    this.modifierDimension.setConceptCode(concept.getConceptCode());
+                    this.modifierDimension.setDisplayName(concept.getDisplayName());
+                    this.modifierDimension.setSourceSystemCode(concept.getSourceSystemCode());
+                    this.modifierDimension.setDownloaded(concept.getDownloaded());
+                    this.handler.insert(this.modifierDimension);
                 }
             }
         }
     }
+    
 }

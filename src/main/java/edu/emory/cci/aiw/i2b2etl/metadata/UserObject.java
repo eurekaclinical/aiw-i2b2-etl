@@ -350,6 +350,14 @@ public class UserObject {
             hierarchyPaths.add(path);
         }
     }
+    
+    public void setAppliedPath(String appliedPath) {
+        if (appliedPath == null) {
+            this.appliedPath = "@";
+        } else {
+            this.appliedPath = appliedPath;
+        }
+    }
 
     public String getAppliedPath() {
         return this.appliedPath;
@@ -414,5 +422,5 @@ public class UserObject {
     public void setDownloaded(Date downloaded) {
         this.downloaded = downloaded;
     }
-    
+
 }

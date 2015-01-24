@@ -98,7 +98,7 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
             throws InvalidFactException {
         Date start = handleStartDate(prop, encounterProp, null);
         Date finish = handleFinishDate(prop, encounterProp, null);
-        Value value = handleValue(prop);
+        Value value = handleValue(prop, concept);
         ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
         String units = handleUnits(prop);
         Date updateDate = prop.getUpdateDate();
@@ -139,7 +139,7 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
         return value;
     }
 
-    protected final Value handleValue(Proposition prop) {
+    protected final Value handleValue(Proposition prop, Concept concept) {
         Value value = null;
         if (prop != null) {
             if (this.propertyName != null) {
@@ -147,6 +147,8 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
                 if (tvalCharVal != null) {
                     value = tvalCharVal;
                 }
+            } else if (!concept.getAppliedPath().equals("@")) {
+                value = prop.getProperty(concept.getId().getPropertyName());
             } else if (prop instanceof Parameter) {
                 value = ((Parameter) prop).getValue();
             } else {

@@ -309,7 +309,7 @@ public final class Metadata {
             addToIdCache(concept);
         } else {
             throw new OntologyBuildException(
-                    "Duplicate demographics concept: " + concept.getConceptCode());
+                    "Duplicate concept: " + concept.getConceptCode());
         }
         return concept;
     }
@@ -394,7 +394,7 @@ public final class Metadata {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.knowledgeSource,
                             folderSpec.getPropositions(), folderSpec.getConceptCodePrefix(),
-                            folderSpec.getValueType(), this);
+                            folderSpec.getValueType(), folderSpec.getModifiers(), this);
             concepts = propProxy.build();
 
         } else {
