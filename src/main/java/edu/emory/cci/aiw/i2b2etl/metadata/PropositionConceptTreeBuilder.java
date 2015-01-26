@@ -157,7 +157,7 @@ final class PropositionConceptTreeBuilder {
                     ConceptId modId = ConceptId.getInstance(null, propertyDef.getName(), this.metadata);
                     Concept mod = new Concept(modId, modifier.getCodePrefix(), this.metadata);
                     pathSupport.setConcept(mod);
-                    mod.setDisplayName(propertyDef.getName());
+                    mod.setDisplayName(modifier.getDisplayName());
                     mod.setDownloaded(propDef.getAccessed());
                     mod.setSourceSystemCode(
                             MetadataUtil.toSourceSystemCode(
