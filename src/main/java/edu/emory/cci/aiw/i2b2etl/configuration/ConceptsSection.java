@@ -43,11 +43,9 @@ public final class ConceptsSection extends ConfigurationSection implements Conce
 
     @Override
     protected void put(NamedNodeMap nnm) throws ConfigurationReadException {
-        String skipGenStr = readAttribute(nnm, "skipGen", false);
         String valueTypeStr = readAttribute(nnm, "valueType", false);
         FolderSpec folderSpec = new FolderSpec(
-                skipGenStr != null ? Integer.parseInt(skipGenStr) : 0,
-                readAttribute(nnm, "displayName", true),
+                null,
                 new String[]{readAttribute(nnm, "proposition", true)},
                 readAttribute(nnm, "property", false),
                 readAttribute(nnm, "conceptCodePrefix", false),

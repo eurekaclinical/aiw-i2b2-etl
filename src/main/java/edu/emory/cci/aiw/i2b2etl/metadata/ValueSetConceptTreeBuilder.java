@@ -19,21 +19,19 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.protempa.KnowledgeSource;
+import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropertyDefinition;
 import org.protempa.PropositionDefinition;
+import org.protempa.ProtempaUtil;
 import org.protempa.ValueSet;
 import org.protempa.ValueSet.ValueSetElement;
 
-import org.protempa.*;
-
 class ValueSetConceptTreeBuilder {
 
-    private KnowledgeSource knowledgeSource;
-    private String propertyName;
-    private String conceptCodePrefix;
+    private final KnowledgeSource knowledgeSource;
+    private final String propertyName;
+    private final String conceptCodePrefix;
     private final PropositionDefinition[] rootPropositionDefinitions;
     private final Metadata metadata;
 
@@ -59,11 +57,11 @@ class ValueSetConceptTreeBuilder {
 
     void build(Concept concept) throws OntologyBuildException {
         try {
-            for (int i = 0; i < this.rootPropositionDefinitions.length; i++) {
-                PropositionDefinition propDefinition = this.rootPropositionDefinitions[i];
+            for (PropositionDefinition propDefinition : this.rootPropositionDefinitions) {
                 Concept root = new Concept(ConceptId.getInstance(propDefinition.getId(), this.propertyName, this.metadata), this.conceptCodePrefix, this.metadata);
                 root.setSourceSystemCode(propDefinition.getSourceId().getStringRepresentation());
                 root.setDataType(DataType.TEXT);
+                root.setDisplayName(this.propertyName);
                 PropertyDefinition propertyDef =
                         propDefinition.propertyDefinition(propertyName);
                 ValueSet valueSet =

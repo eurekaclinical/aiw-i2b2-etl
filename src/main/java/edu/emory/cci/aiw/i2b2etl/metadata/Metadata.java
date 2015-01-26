@@ -314,7 +314,7 @@ public final class Metadata {
         return concept;
     }
     
-    public DimensionValueSetFolderBuilder newDimensionValueSetFolderBuilder(Concept root, String factTableColumn, String tableName) throws OntologyBuildException {
+    DimensionValueSetFolderBuilder newDimensionValueSetFolderBuilder(Concept root, String factTableColumn, String tableName) throws OntologyBuildException {
         return new DimensionValueSetFolderBuilder(root, this.knowledgeSource, this.dictSection, this.dataSection, this, this.qrhId, factTableColumn, tableName);
     }
     
@@ -323,7 +323,7 @@ public final class Metadata {
             UnknownPropositionDefinitionException, InvalidConceptCodeException,
             OntologyBuildException, InvalidPromoteArgumentException {
         for (FolderSpec folderSpec : folderSpecs) {
-            processFolderSpec(folderSpec);
+            processFolderSpec(folderSpec, false);
         }
         if (this.userDefinedPropositionDefinitions.length > 0) {
             String[] propIds
@@ -334,7 +334,6 @@ public final class Metadata {
                 propIds[i] = this.userDefinedPropositionDefinitions[i].getId();
             }
             FolderSpec folderSpec = new FolderSpec(
-                    0,
                     "User-defined Derived Variables",
                     propIds,
                     null,
@@ -343,65 +342,61 @@ public final class Metadata {
                     true,
                     null
             );
-            processFolderSpec(folderSpec);
+            processFolderSpec(folderSpec, true);
         }
     }
 
-    /**
-     * Mechanism to get rid of redundant, root-proximal nodes that are artifacts
-     * of Protege (mostly).
-     *
-     * @param concept the root {@link Concept} of the tree or subtree.
-     * @param ctr the number of levels to remove.
-     */
-    private static void promote(Concept concept, int ctr) throws InvalidPromoteArgumentException {
-        if (ctr > 0) {
-            if (concept.isLeaf()) {
-                throw new InvalidPromoteArgumentException(concept);
-            }
-            Concept c = (Concept) concept.getChildAt(0);
-            if (c == null) {
-                return;
-            }
-            concept.removeAllChildren();
-            while (c.getChildCount() != 0) {
-                concept.add((Concept) c.getChildAt(0));
-            }
-            c.removeAllChildren();
-            promote(concept, ctr - 1);
-        }
-    }
-
-    private void processFolderSpec(FolderSpec folderSpec)
+    private void processFolderSpec(FolderSpec folderSpec, boolean useFolderSpecConcept)
             throws InvalidConceptCodeException, KnowledgeSourceReadException,
             InvalidPromoteArgumentException,
             UnknownPropositionDefinitionException, OntologyBuildException {
-        ConceptId conceptId
-                = ConceptId.getInstance(folderSpec.getDisplayName(), this);
-        Concept concept = getFromIdCache(conceptId);
-        if (concept == null) {
-            concept
-                    = new Concept(conceptId, folderSpec.getConceptCodePrefix(), this);
-            concept.setSourceSystemCode(
-                    MetadataUtil.toSourceSystemCode(this.qrhId));
-            concept.setDisplayName(folderSpec.getDisplayName());
-            concept.setDataType(DataType.TEXT);
-            addToIdCache(concept);
-            this.rootConcept.add(concept);
-        }
         if (folderSpec.getProperty() == null) {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.knowledgeSource,
                             folderSpec.getPropositions(), folderSpec.getConceptCodePrefix(),
                             folderSpec.getValueType(), folderSpec.getModifiers(), this);
-            propProxy.build(concept);
+            if (useFolderSpecConcept) {
+                ConceptId conceptId
+                    = ConceptId.getInstance(folderSpec.getDisplayName(), this);
+                Concept concept = getFromIdCache(conceptId);
+                if (concept == null) {
+                    concept
+                            = new Concept(conceptId, folderSpec.getConceptCodePrefix(), this);
+                    concept.setSourceSystemCode(
+                            MetadataUtil.toSourceSystemCode(this.qrhId));
+                    concept.setDisplayName(folderSpec.getDisplayName());
+                    concept.setDataType(DataType.TEXT);
+                    addToIdCache(concept);
+                    this.rootConcept.add(concept);
+                }
+                propProxy.build(concept);
+            } else {
+                propProxy.build(this.rootConcept);
+            }
         } else {
-            ValueSetConceptTreeBuilder vsProxy
-                    = new ValueSetConceptTreeBuilder(this.knowledgeSource,
-                            folderSpec.getPropositions(), folderSpec.getProperty(),
-                            folderSpec.getConceptCodePrefix(), this);
-            vsProxy.build(concept);
+            for (String propId : folderSpec.getPropositions()) {
+                ConceptId conceptId
+                        = ConceptId.getInstance(propId, null, this);
+                Concept concept = getFromIdCache(conceptId);
+                if (concept == null) {
+                    concept
+                            = new Concept(conceptId, folderSpec.getConceptCodePrefix(), this);
+                    concept.setSourceSystemCode(
+                            MetadataUtil.toSourceSystemCode(this.qrhId));
+                    PropositionDefinition propDef = this.knowledgeSource.readPropositionDefinition(propId);
+                    if (propDef != null) {
+                        concept.setDisplayName(propDef.getDisplayName());
+                    }
+                    concept.setDataType(DataType.TEXT);
+                    addToIdCache(concept);
+                    this.rootConcept.add(concept);
+                }
+                ValueSetConceptTreeBuilder vsProxy
+                        = new ValueSetConceptTreeBuilder(this.knowledgeSource,
+                                folderSpec.getPropositions(), folderSpec.getProperty(),
+                                folderSpec.getConceptCodePrefix(), this);
+                vsProxy.build(concept);
+            }
         }
-        promote(concept, folderSpec.getSkipGen());
     }
 }

@@ -21,9 +21,8 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.configuration.ModifierSpec;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.Enumeration;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
@@ -77,14 +76,33 @@ final class PropositionConceptTreeBuilder {
 
     void build(Concept concept) throws OntologyBuildException {
         try {
-            for (int i = 0; i < this.rootPropositionDefinitions.length; i++) {
-                PropositionDefinition rootPropositionDefinition =
-                        this.rootPropositionDefinitions[i];
+            if (this.rootPropositionDefinitions.length == 1) {
+                PropositionDefinition rootPropositionDefinition = 
+                        this.rootPropositionDefinitions[0];
                 Concept rootConcept =
-                        addNode(rootPropositionDefinition);
-                concept.add(rootConcept);
-                addModifierConcepts(rootPropositionDefinition, rootConcept);
-                buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
+                            addNode(rootPropositionDefinition);
+                if (rootConcept.getConceptCode().equals(concept.getConceptCode())) {
+                    Enumeration children = rootConcept.children();
+                    while (children.hasMoreElements()) {
+                        Concept child = (Concept) children.nextElement();
+                        concept.add(child);
+                    }
+                    addModifierConcepts(rootPropositionDefinition, concept);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), concept);
+                } else {
+                    concept.add(rootConcept);
+                    addModifierConcepts(rootPropositionDefinition, rootConcept);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
+                }
+            } else {
+                for (PropositionDefinition rootPropositionDefinition : 
+                        this.rootPropositionDefinitions) {
+                    Concept rootConcept =
+                            addNode(rootPropositionDefinition);
+                    concept.add(rootConcept);
+                    addModifierConcepts(rootPropositionDefinition, rootConcept);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
+                }
             }
         } catch (UnknownPropositionDefinitionException | InvalidConceptCodeException | KnowledgeSourceReadException ex) {
             throw new OntologyBuildException(
