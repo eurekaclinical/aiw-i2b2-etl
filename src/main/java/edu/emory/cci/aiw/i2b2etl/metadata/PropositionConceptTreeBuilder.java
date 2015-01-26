@@ -154,7 +154,7 @@ final class PropositionConceptTreeBuilder {
             for (ModifierSpec modifier : this.modifiers) {
                 PropertyDefinition propertyDef = propDef.propertyDefinition(modifier.getProperty());
                 if (propertyDef != null) {
-                    ConceptId modId = ConceptId.getInstance(null, propertyDef.getName(), this.metadata);
+                    ConceptId modId = ConceptId.getInstance(propDef.getId(), propertyDef.getName(), this.metadata);
                     Concept mod = new Concept(modId, modifier.getCodePrefix(), this.metadata);
                     pathSupport.setConcept(mod);
                     mod.setDisplayName(modifier.getDisplayName());
