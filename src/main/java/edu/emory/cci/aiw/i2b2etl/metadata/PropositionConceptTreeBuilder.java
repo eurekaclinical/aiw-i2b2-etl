@@ -23,10 +23,7 @@ import edu.emory.cci.aiw.i2b2etl.configuration.ModifierSpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import org.arp.javautil.collections.Collections;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
@@ -78,18 +75,17 @@ final class PropositionConceptTreeBuilder {
         }
     }
 
-    Concept[] build() throws OntologyBuildException {
+    void build(Concept concept) throws OntologyBuildException {
         try {
-            List<Concept> result = new ArrayList<>();
             for (int i = 0; i < this.rootPropositionDefinitions.length; i++) {
                 PropositionDefinition rootPropositionDefinition =
                         this.rootPropositionDefinitions[i];
                 Concept rootConcept =
                         addNode(rootPropositionDefinition);
+                concept.add(rootConcept);
+                addModifierConcepts(rootPropositionDefinition, rootConcept);
                 buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
-                result.add(rootConcept);
             }
-            return result.toArray(new Concept[result.size()]);
         } catch (UnknownPropositionDefinitionException | InvalidConceptCodeException | KnowledgeSourceReadException ex) {
             throw new OntologyBuildException(
                     "Could not build proposition concept tree", ex);
@@ -106,6 +102,7 @@ final class PropositionConceptTreeBuilder {
             if (parent != null) {
                 parent.add(child);
             }
+            addModifierConcepts(childPropDef, child);
             buildHelper(childPropDef.getInverseIsA(), child);
         }
     }
@@ -143,56 +140,75 @@ final class PropositionConceptTreeBuilder {
         if (this.metadata.getFromIdCache(conceptId) == null) {
             this.metadata.addToIdCache(newChild);
         }
-        
+        return newChild;
+    }
+
+    private void addModifierConcepts(PropositionDefinition propDef, Concept appliedConcept) throws KnowledgeSourceReadException, InvalidConceptCodeException {
         if (this.modifiers.length > 0) {
+            ConceptId modParentId = ConceptId.getInstance(propDef.getId(), this.metadata);
+            Concept modParent = new Concept(modParentId, null, this.metadata);
+            if (this.metadata.getFromIdCache(modParentId) == null) {
+                this.metadata.addToIdCache(modParent);
+            }
+            PathSupport pathSupport = new PathSupport();
             for (ModifierSpec modifier : this.modifiers) {
                 PropertyDefinition propertyDef = propDef.propertyDefinition(modifier.getProperty());
                 if (propertyDef != null) {
                     ConceptId modId = ConceptId.getInstance(null, propertyDef.getName(), this.metadata);
-                    if (this.metadata.getFromIdCache(conceptId) == null) {
-                        Concept mod = this.metadata.newConcept(modId, modifier.getCodePrefix(), newChild.getSourceSystemCode());
-                        mod.setDisplayName(propertyDef.getName());
-                        mod.setDownloaded(newChild.getDownloaded());
-                        mod.setSourceSystemCode(newChild.getSourceSystemCode());
-                        mod.setValueTypeCode(newChild.getValueTypeCode());
-                        mod.setAppliedPath(newChild.getFullName() + "%");
-                        mod.setDataType(DataType.dataTypeFor(propertyDef.getValueType()));
-                        StringBuilder mXml = new StringBuilder();
-                        mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
-                        mXml.append(this.createDate);
-                        mXml.append("</CreationDateTime><TestID>");
-                        mXml.append(mod.getConceptCode());
-                        mXml.append("</TestID><TestName>");
-                        mXml.append(mod.getDisplayName());
-                        mXml.append("</TestName>");
-                        String valueSetId = propertyDef.getValueSetId();
-                        if (valueSetId != null) {
-                            mXml.append("<DataType>Enum</DataType><EnumValues>");
-                            ValueSet valueSet = this.knowledgeSource.readValueSet(valueSetId);
-                            if (valueSet != null) {
-                                for (ValueSetElement vse : valueSet.getValueSetElements()) {
-                                    mXml.append("<Val description=\"");
-                                    mXml.append(vse.getDisplayName());
-                                    mXml.append("\">");
-                                    mXml.append(vse.getValue().getFormatted());
-                                    mXml.append("</Val>");
-                                }
+                    Concept mod = new Concept(modId, modifier.getCodePrefix(), this.metadata);
+                    pathSupport.setConcept(mod);
+                    mod.setDisplayName(propertyDef.getName());
+                    mod.setDownloaded(propDef.getAccessed());
+                    mod.setSourceSystemCode(
+                            MetadataUtil.toSourceSystemCode(
+                                    propDef.getSourceId().getStringRepresentation()));
+                    mod.setValueTypeCode(this.valueTypeCode);
+                    mod.setAppliedPath(appliedConcept.getFullName() + "%");
+                    mod.setDataType(DataType.dataTypeFor(propertyDef.getValueType()));
+                    mod.setFactTableColumn("MODIFIER_CD");
+                    mod.setTableName("MODIFIER_DIMENSION");
+                    mod.setColumnName("MODIFIER_PATH");
+                    StringBuilder mXml = new StringBuilder();
+                    mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
+                    mXml.append(this.createDate);
+                    mXml.append("</CreationDateTime><TestID>");
+                    mXml.append(mod.getConceptCode());
+                    mXml.append("</TestID><TestName>");
+                    mXml.append(mod.getDisplayName());
+                    mXml.append("</TestName>");
+                    String valueSetId = propertyDef.getValueSetId();
+                    if (valueSetId != null) {
+                        mXml.append("<DataType>Enum</DataType><EnumValues>");
+                        ValueSet valueSet = this.knowledgeSource.readValueSet(valueSetId);
+                        if (valueSet != null) {
+                            for (ValueSetElement vse : valueSet.getValueSetElements()) {
+                                mXml.append("<Val description=\"");
+                                mXml.append(vse.getDisplayName());
+                                mXml.append("\">");
+                                mXml.append(vse.getValue().getFormatted());
+                                mXml.append("</Val>");
                             }
-                            mXml.append("</EnumValues>");
-                        } else {
-                            mXml.append("<DataType>");
-                            mXml.append(mod.getDataType() == DataType.NUMERIC ? "Float" : "String");
-                            mXml.append("</DataType>");
                         }
-                        mXml.append("<Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
-                        mod.setMetadataXml(mXml.toString());
-                        newChild.add(mod);
+                        mXml.append("</EnumValues>");
+                    } else {
+                        mXml.append("<DataType>");
+                        mXml.append(mod.getDataType() == DataType.NUMERIC ? "Float" : "String");
+                        mXml.append("</DataType>");
                     }
+                    mXml.append("<Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
+                    mod.setMetadataXml(mXml.toString());
+                    if (this.metadata.getFromIdCache(modId) == null) {
+                        this.metadata.addToIdCache(mod);
+                    }
+                    modParent.add(mod);
+                    mod.setFullName(pathSupport.getFullName());
+                    mod.setCPath(pathSupport.getCPath());
+                    mod.setToolTip(pathSupport.getToolTip());
+                    mod.setLevel(pathSupport.getLevel());
+                    appliedConcept.add(mod);
                 }
             }
         }
-        
-        return newChild;
     }
 
     private PropositionDefinition readPropositionDefinition(String propId)

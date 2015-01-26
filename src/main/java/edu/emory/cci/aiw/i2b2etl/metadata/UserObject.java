@@ -32,29 +32,6 @@ public class UserObject {
     private static final String DEFAULT_TABLE_NAME = "concept_dimension";
     private static final String DEFAULT_COLUMN_NAME = "concept_path";
     private static final DataType DEFAULT_DATA_TYPE = DataType.TEXT;
-    
-    private static interface PathConceptRep {
-        String toString(Concept concept);
-    }
-    
-    private static final PathConceptRep SYMBOL_REP = new PathConceptRep() {
-
-        @Override
-        public String toString(Concept concept) {
-            return concept.getSymbol();
-        }
-        
-    };
-    
-    
-    private static final PathConceptRep DISPLAY_NAME_REP = new PathConceptRep() {
-
-        @Override
-        public String toString(Concept concept) {
-            return concept.getDisplayName();
-        }
-        
-    };
 
     //	
     //	this class should eventually be split up into
@@ -103,6 +80,12 @@ public class UserObject {
     private String comment;
     
     private Date downloaded;
+    private PathSupport pathSupport;
+    private String fullName;
+    private String cPath;
+    private String toolTip;
+    private String symbol;
+    private int level = -1;
     
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
@@ -125,6 +108,8 @@ public class UserObject {
         this.tableName = DEFAULT_TABLE_NAME;
         this.columnName = DEFAULT_COLUMN_NAME;
         this.operator = defaultOperator();
+        this.pathSupport = new PathSupport();
+        this.pathSupport.setConcept(this.concept);
     }
     
     UserObject(UserObject usrObj, Concept concept) {
@@ -144,6 +129,15 @@ public class UserObject {
         this.tableName = usrObj.tableName;
         this.columnName = usrObj.columnName;
         this.operator = usrObj.operator;
+        this.downloaded = usrObj.downloaded;
+        this.comment = usrObj.comment;
+        this.cVisualAttributes = usrObj.cVisualAttributes;
+        this.pathSupport = new PathSupport();
+        this.pathSupport.setConcept(this.concept);
+        this.fullName = usrObj.fullName;
+        this.cPath = usrObj.cPath;
+        this.symbol = usrObj.symbol;
+        this.toolTip = usrObj.toolTip;
     }
     
     public String getConceptCodePrefix() {
@@ -280,41 +274,34 @@ public class UserObject {
     }
     
     public String getSymbol() {
-        return getConceptCode();
+        if (this.symbol != null) {
+            return this.symbol;
+        } else {
+            return getConceptCode();
+        }
     }
     
     public String getCPath() {
-        StringBuilder buf = new StringBuilder();
-        pathToString(buf, "\\", SYMBOL_REP);
-        buf.append("\\");
-        return buf.toString();
+        if (this.cPath != null) {
+            return this.cPath;
+        } else {
+            return this.pathSupport.getCPath();
+        }
     }
     
     public String getFullName() {
-        StringBuilder buf = new StringBuilder();
-        appendFullname(buf, "\\", SYMBOL_REP);
-        buf.append("\\");
-        return buf.toString();
+        if (this.fullName != null) {
+            return this.fullName;
+        } else {
+            return this.pathSupport.getFullName();
+        }
     }
     
     public String getToolTip() {
-        StringBuilder buf = new StringBuilder();
-        appendFullname(buf, " \\ ", DISPLAY_NAME_REP);
-        return buf.toString();
-    }
-    
-    private void appendFullname(StringBuilder buf, String sep, PathConceptRep rep) {
-        pathToString(buf, sep, rep);
-        buf.append(sep);
-        buf.append(rep.toString(this.concept));
-    }
-    
-    private void pathToString(StringBuilder buf, String sep, PathConceptRep rep) {
-        TreeNode[] tna = this.concept.getPath();
-        for (int i = 0; i < tna.length - 1; i++) {
-            TreeNode tn = tna[i];
-            buf.append(sep);
-            buf.append(rep.toString((Concept) tn));
+        if (this.toolTip != null) {
+            return this.toolTip;
+        } else {
+            return this.pathSupport.getToolTip();
         }
     }
     
@@ -423,4 +410,24 @@ public class UserObject {
         this.downloaded = downloaded;
     }
 
+    void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    void setCPath(String cPath) {
+        this.cPath = cPath;
+    }
+
+    void setToolTip(String toolTip) {
+        this.toolTip = toolTip;
+    }
+
+    void setHLevel(int level) {
+        this.level = level;
+    }
+
+    int getHLevel() {
+        return this.level;
+    }
+    
 }

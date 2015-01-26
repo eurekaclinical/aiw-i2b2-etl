@@ -46,7 +46,7 @@ public class ModifierDimensionLoader extends ConceptHierarchyLoader {
 
     @Override
     protected void loadConcept(Concept concept) throws SQLException {
-        if (concept.isInUse() && !concept.getAppliedPath().equals("@")) {
+        if (concept.isInUse() && concept.isModifier()) {
             ArrayList<String> paths = concept.getHierarchyPaths();
             if (paths != null) {
                 for (String path : paths) {

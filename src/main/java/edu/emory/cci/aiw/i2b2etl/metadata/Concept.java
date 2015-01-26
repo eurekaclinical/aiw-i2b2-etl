@@ -145,7 +145,7 @@ public final class Concept extends DefaultMutableTreeNode implements Record {
     public String getCVisualAttributes() {
         String attrs = usrObj.getCVisualAttributes();
         if (attrs == null) {
-            if (!getAppliedPath().equals("@")) {
+            if (!isModifier()) {
                 return isLeaf() ? "LAE" : "FAE";
             } else {
                 return isLeaf() ? "RAE" : "DAE";
@@ -277,4 +277,34 @@ public final class Concept extends DefaultMutableTreeNode implements Record {
         return false;
     }
     
+    public boolean isModifier() {
+        return !getAppliedPath().equals("@");
+    }
+
+    void setFullName(String fullName) {
+        usrObj.setFullName(fullName);
+    }
+
+    void setCPath(String cPath) {
+        usrObj.setCPath(cPath);
+    }
+
+    void setToolTip(String toolTip) {
+        usrObj.setToolTip(toolTip);
+    }
+
+    void setLevel(int level) {
+        usrObj.setHLevel(level);
+    }
+    
+    @Override
+    public int getLevel() {
+        int level = usrObj.getHLevel();
+        if (level < 0) {
+            return super.getLevel();
+        } else {
+            return level;
+        }
+    }
+
 }

@@ -147,7 +147,7 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
                 if (tvalCharVal != null) {
                     value = tvalCharVal;
                 }
-            } else if (!concept.getAppliedPath().equals("@")) {
+            } else if (concept.isModifier()) {
                 value = prop.getProperty(concept.getId().getPropertyName());
             } else if (prop instanceof Parameter) {
                 value = ((Parameter) prop).getValue();

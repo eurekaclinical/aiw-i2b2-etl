@@ -389,23 +389,18 @@ public final class Metadata {
             addToIdCache(concept);
             this.rootConcept.add(concept);
         }
-        Concept[] concepts;
         if (folderSpec.getProperty() == null) {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.knowledgeSource,
                             folderSpec.getPropositions(), folderSpec.getConceptCodePrefix(),
                             folderSpec.getValueType(), folderSpec.getModifiers(), this);
-            concepts = propProxy.build();
-
+            propProxy.build(concept);
         } else {
             ValueSetConceptTreeBuilder vsProxy
                     = new ValueSetConceptTreeBuilder(this.knowledgeSource,
                             folderSpec.getPropositions(), folderSpec.getProperty(),
                             folderSpec.getConceptCodePrefix(), this);
-            concepts = vsProxy.build();
-        }
-        for (Concept c : concepts) {
-            concept.add(c);
+            vsProxy.build(concept);
         }
         promote(concept, folderSpec.getSkipGen());
     }

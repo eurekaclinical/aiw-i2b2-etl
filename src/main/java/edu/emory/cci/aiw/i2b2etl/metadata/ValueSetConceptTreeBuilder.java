@@ -57,10 +57,8 @@ class ValueSetConceptTreeBuilder {
         this.metadata = metadata;
     }
 
-    Concept[] build() throws OntologyBuildException {
+    void build(Concept concept) throws OntologyBuildException {
         try {
-            Concept[] result =
-                    new Concept[this.rootPropositionDefinitions.length];
             for (int i = 0; i < this.rootPropositionDefinitions.length; i++) {
                 PropositionDefinition propDefinition = this.rootPropositionDefinitions[i];
                 Concept root = new Concept(ConceptId.getInstance(propDefinition.getId(), this.propertyName, this.metadata), this.conceptCodePrefix, this.metadata);
@@ -72,20 +70,19 @@ class ValueSetConceptTreeBuilder {
                         knowledgeSource.readValueSet(propertyDef.getValueSetId());
                 ValueSetElement[] vse = valueSet.getValueSetElements();
                 for (ValueSetElement e : vse) {
-                    Concept concept = new Concept(ConceptId.getInstance(
+                    Concept vsEltConcept = new Concept(ConceptId.getInstance(
                             propDefinition.getId(), this.propertyName, e.getValue(), this.metadata), this.conceptCodePrefix, this.metadata);
-                    concept.setSourceSystemCode(valueSet.getSourceId().getStringRepresentation());
-                    concept.setInDataSource(true);
-                    concept.setDisplayName(e.getDisplayName());
-                    concept.setDataType(DataType.TEXT);
-                    this.metadata.addToIdCache(concept);
-                    root.add(concept);
+                    vsEltConcept.setSourceSystemCode(valueSet.getSourceId().getStringRepresentation());
+                    vsEltConcept.setInDataSource(true);
+                    vsEltConcept.setDisplayName(e.getDisplayName());
+                    vsEltConcept.setDataType(DataType.TEXT);
+                    this.metadata.addToIdCache(vsEltConcept);
+                    root.add(vsEltConcept);
                 }
-                result[i] = root;
+                concept.add(root);
             }
-            return result;
         } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throw new OntologyBuildException("Could not build value set concept tree", ex);
         }
-	}
+    }
 }

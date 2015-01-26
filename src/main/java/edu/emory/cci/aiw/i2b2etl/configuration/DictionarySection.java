@@ -115,12 +115,7 @@ public final class DictionarySection extends ConfigurationSection implements Set
 
     @Override
     public String getSourceSystemCode() {
-        String qrhIdFromConfig = this.dictionary.get("sourcesystem_cd");
-        if (qrhIdFromConfig != null) {
-            return qrhIdFromConfig;
-        } else {
-            return I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
-        }
+        return this.dictionary.get("sourcesystem_cd");
     }
 
     @Override

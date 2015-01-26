@@ -29,6 +29,7 @@ import edu.emory.cci.aiw.i2b2etl.configuration.DatabaseSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
+import edu.emory.cci.aiw.i2b2etl.metadata.I2B2QueryResultsHandlerSourceId;
 import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
@@ -201,7 +202,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 this.dataSourceBackendIds.add(id);
             }
         }
-        this.qrhId = this.settings.getSourceSystemCode();
+        String sourceSystemCd = this.settings.getSourceSystemCode();
+        if (sourceSystemCd != null) {
+            this.qrhId = sourceSystemCd;
+        } else {
+            this.qrhId = I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
+        }
         this.dataSourceBackendIds.add(this.qrhId);
 
         KnowledgeSourceBackend[] ksBackends = knowledgeSource.getBackends();
