@@ -190,7 +190,7 @@ public class ObservationFact implements Record {
     public long getInstanceNum() {
         return this.instanceNum;
     }
-
+    
     public String getModifierCd() {
         return this.modifierCd;
     }

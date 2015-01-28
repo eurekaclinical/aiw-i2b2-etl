@@ -429,7 +429,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                                     references);
                     VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, references);
                     for (FactHandler factHandler : this.factHandlers) {
-                        factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions, this.dataSchemaConnection);
+                        factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions);
                     }
                 }
             }

@@ -277,7 +277,7 @@ public final class Metadata {
     boolean isInConceptCodeCache(String conceptCode) {
         return this.conceptCodeCache.contains(conceptCode);
     }
-
+    
     public String[] extractDerived()
             throws KnowledgeSourceReadException {
         Set<String> potentialDerivedConceptCodes = new HashSet<>();

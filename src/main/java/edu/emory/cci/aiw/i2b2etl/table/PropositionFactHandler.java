@@ -33,6 +33,8 @@ import org.arp.javautil.sql.ConnectionSpec;
 import org.drools.util.StringUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
+import org.protempa.PropertyDefinition;
+import org.protempa.PropositionDefinition;
 import org.protempa.proposition.*;
 import org.protempa.proposition.value.*;
 import org.protempa.dest.table.Derivation;
@@ -88,7 +90,7 @@ public final class PropositionFactHandler extends FactHandler {
                              Map<Proposition, List<Proposition>> backwardDerivations,
                              Map<UniqueId, Proposition> references,
                              KnowledgeSource knowledgeSource,
-                             Set<Proposition> derivedPropositions, Connection cn)
+                             Set<Proposition> derivedPropositions)
             throws InvalidFactException {
         assert patient != null : "patient cannot be null";
         assert visit != null : "visit cannot be null";
@@ -98,36 +100,35 @@ public final class PropositionFactHandler extends FactHandler {
             props = this.linkTraverser.traverseLinks(this.links, encounterProp,
                     forwardDerivations,
                     backwardDerivations, references, knowledgeSource);
+            for (Proposition prop : props) {
+                String propertyName = getPropertyName();
+                Value propertyVal = propertyName != null
+                        ? prop.getProperty(propertyName) : null;
+                Concept concept =
+                        metadata.getFromIdCache(prop.getId(),
+                                propertyName, propertyVal);
+                doInsert(knowledgeSource, concept, prop, encounterProp, patient, visit, provider);
+                List<Proposition> derivedProps;
+                try {
+                    derivedProps = this.linkTraverser.traverseLinks(
+                            this.derivationLinks, prop, forwardDerivations,
+                            backwardDerivations, references,
+                            knowledgeSource);
+                } catch (KnowledgeSourceReadException ex) {
+                    throw new InvalidFactException(ex);
+                }
+                for (Proposition derivedProp : derivedProps) {
+                    Concept derivedConcept =
+                        metadata.getFromIdCache(derivedProp.getId(), null, null);
+                    doInsert(knowledgeSource, derivedConcept, derivedProp, encounterProp, patient, visit, provider);
+                }
+            }
         } catch (KnowledgeSourceReadException ex) {
             throw new InvalidFactException(ex);
         }
-
-        for (Proposition prop : props) {
-            String propertyName = getPropertyName();
-            Value propertyVal = propertyName != null
-                    ? prop.getProperty(propertyName) : null;
-            Concept concept =
-                    metadata.getFromIdCache(prop.getId(),
-                            propertyName, propertyVal);
-            doInsert(concept, prop, encounterProp, patient, visit, provider, cn);
-            List<Proposition> derivedProps;
-            try {
-                derivedProps = this.linkTraverser.traverseLinks(
-                        this.derivationLinks, prop, forwardDerivations,
-                        backwardDerivations, references,
-                        knowledgeSource);
-            } catch (KnowledgeSourceReadException ex) {
-                throw new InvalidFactException(ex);
-            }
-            for (Proposition derivedProp : derivedProps) {
-                Concept derivedConcept =
-                    metadata.getFromIdCache(derivedProp.getId(), null, null);
-                doInsert(derivedConcept, derivedProp, encounterProp, patient, visit, provider, cn);
-            }
-        }
     }
 
-    private void doInsert(Concept concept, Proposition prop, Proposition encounterProp, PatientDimension patient, VisitDimension visit, ProviderDimension provider, Connection cn) throws InvalidFactException {
+    private void doInsert(KnowledgeSource ks, Concept concept, Proposition prop, Proposition encounterProp, PatientDimension patient, VisitDimension visit, ProviderDimension provider) throws InvalidFactException, KnowledgeSourceReadException {
         if (concept != null) {
             ObservationFact obx = populateObxFact(prop,
                     encounterProp, patient, visit, provider, concept,
@@ -138,14 +139,18 @@ public final class PropositionFactHandler extends FactHandler {
                 String msg = "Observation fact not created";
                 throw new InvalidFactException(msg, ex);
             }
-            for (String property : prop.getPropertyNames()) {
-                Concept mod = metadata.getFromIdCache(null, property, null);
-                if (mod != null) {
-                    ObservationFact modObx = populateObxFact(prop, encounterProp, patient, visit, provider, mod, 1);
-                    try {
-                        insert(modObx);
-                    } catch (SQLException ex) {
-                        throw new InvalidFactException("Modifier fact not created", ex);
+            PropositionDefinition propDef = ks.readPropositionDefinition(prop.getId());
+            for (String propertyName : prop.getPropertyNames()) {
+                PropertyDefinition propertyDefinition = propDef.propertyDefinition(propertyName);
+                if (propertyDefinition != null) {
+                    Concept mod = metadata.getFromIdCache(propertyDefinition.getDeclaringPropId(), propertyName, null);
+                    if (mod != null) {
+                        ObservationFact modObx = populateObxFact(prop, encounterProp, patient, visit, provider, mod, 1);
+                        try {
+                            insert(modObx);
+                        } catch (SQLException ex) {
+                            throw new InvalidFactException("Modifier fact not created", ex);
+                        }
                     }
                 }
             }
