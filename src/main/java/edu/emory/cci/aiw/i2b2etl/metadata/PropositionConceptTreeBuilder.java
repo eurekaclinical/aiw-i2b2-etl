@@ -21,11 +21,11 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.configuration.ModifierSpec;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.protempa.KnowledgeSource;
@@ -50,13 +50,16 @@ final class PropositionConceptTreeBuilder {
     private final String createDate;
     private final ModifierSpec[] modifiers;
     private final String[] propIds;
+    private final Map<String, PropositionDefinition> cache;
 
-    PropositionConceptTreeBuilder(KnowledgeSource knowledgeSource,
+    PropositionConceptTreeBuilder(Collection<PropositionDefinition> cache, 
+            KnowledgeSource knowledgeSource,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
             ModifierSpec[] modifiers, Metadata metadata)
             throws KnowledgeSourceReadException,
             UnknownPropositionDefinitionException {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
+        assert cache != null : "cache cannot be null";
         ProtempaUtil.checkArray(propIds, "propIds");
         assert metadata != null : "metadata cannot be null";
         if (propIds != null) {
@@ -75,18 +78,17 @@ final class PropositionConceptTreeBuilder {
         } else {
             this.modifiers = EMPTY_MODIFIER_SPEC_ARRAY;
         }
+        this.cache = new HashMap<>();
+        for (PropositionDefinition propDef : cache) {
+            this.cache.put(propDef.getId(), propDef);
+        }
     }
 
     void build(Concept concept) throws OntologyBuildException {
         try {
             if (this.propIds.length == 1) {
                 String rootPropId = this.propIds[0];
-                Set<PropositionDefinition> collectSubtreePropositionDefinitions = this.knowledgeSource.collectPropDefDescendantsUsingInverseIsA(rootPropId);
-                Map<String, PropositionDefinition> cache = new HashMap<>();
-                for (PropositionDefinition pd : collectSubtreePropositionDefinitions) {
-                    cache.put(pd.getId(), pd);
-                }
-                PropositionDefinition rootPropositionDefinition = cache.get(rootPropId);
+                PropositionDefinition rootPropositionDefinition = this.cache.get(rootPropId);
                 Concept rootConcept =
                             addNode(rootPropositionDefinition);
                 if (rootConcept.getConceptCode().equals(concept.getConceptCode())) {
@@ -96,25 +98,20 @@ final class PropositionConceptTreeBuilder {
                         concept.add(child);
                     }
                     addModifierConcepts(rootPropositionDefinition, concept);
-                    buildHelper(rootPropositionDefinition.getInverseIsA(), concept, cache);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), concept);
                 } else {
                     concept.add(rootConcept);
                     addModifierConcepts(rootPropositionDefinition, rootConcept);
-                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept, cache);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
                 }
             } else {
                 for (String propId : this.propIds) {
-                    Set<PropositionDefinition> collectSubtreePropositionDefinitions = this.knowledgeSource.collectPropDefDescendantsUsingInverseIsA(propId);
-                    Map<String, PropositionDefinition> cache = new HashMap<>();
-                    for (PropositionDefinition pd : collectSubtreePropositionDefinitions) {
-                        cache.put(pd.getId(), pd);
-                    }
-                    PropositionDefinition rootPropositionDefinition = cache.get(propId);
+                    PropositionDefinition rootPropositionDefinition = this.cache.get(propId);
                     Concept rootConcept =
                             addNode(rootPropositionDefinition);
                     concept.add(rootConcept);
                     addModifierConcepts(rootPropositionDefinition, rootConcept);
-                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept, cache);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
                 }
             }
         } catch (UnknownPropositionDefinitionException | InvalidConceptCodeException | KnowledgeSourceReadException ex) {
@@ -123,18 +120,18 @@ final class PropositionConceptTreeBuilder {
         }
     }
 
-    private void buildHelper(String[] childPropIds, Concept parent, Map<String, PropositionDefinition> cache)
+    private void buildHelper(String[] childPropIds, Concept parent)
             throws UnknownPropositionDefinitionException,
             KnowledgeSourceReadException, InvalidConceptCodeException, OntologyBuildException {
         for (String childPropId : childPropIds) {
             PropositionDefinition childPropDef =
-                    readPropositionDefinition(childPropId, cache);
+                    readPropositionDefinition(childPropId);
             Concept child = addNode(childPropDef);
             if (parent != null) {
                 parent.add(child);
             }
             addModifierConcepts(childPropDef, child);
-            buildHelper(childPropDef.getInverseIsA(), child, cache);
+            buildHelper(childPropDef.getInverseIsA(), child);
         }
     }
 
@@ -248,7 +245,7 @@ final class PropositionConceptTreeBuilder {
         }
     }
 
-    private PropositionDefinition readPropositionDefinition(String propId, Map<String, PropositionDefinition> cache)
+    private PropositionDefinition readPropositionDefinition(String propId)
             throws UnknownPropositionDefinitionException,
             KnowledgeSourceReadException {
         PropositionDefinition result = cache.get(propId);

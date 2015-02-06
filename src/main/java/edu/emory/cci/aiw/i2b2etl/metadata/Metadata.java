@@ -26,6 +26,7 @@ import edu.emory.cci.aiw.i2b2etl.table.ProviderDimension;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,8 +89,7 @@ public final class Metadata {
             = new PropositionDefinition[0];
     
     private final Concept rootConcept;
-    private final Map<ConceptId, Concept> CACHE
-            = new HashMap<>();
+    private final Map<ConceptId, Concept> CACHE = new HashMap<>();
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
     private final Set<String> conceptCodeCache = new HashSet<>();
     private final KnowledgeSource knowledgeSource;
@@ -98,8 +98,9 @@ public final class Metadata {
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
     private String qrhId;
     private final ProviderConceptTreeBuilder providerConceptTreeBuilder;
+    private final Collection<PropositionDefinition> cache;
 
-    public Metadata(String qrhId, KnowledgeSource knowledgeSource,
+    public Metadata(String qrhId, Collection<PropositionDefinition> cache, KnowledgeSource knowledgeSource,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             String rootNodeDisplayName,
             FolderSpec[] folderSpecs,
@@ -117,6 +118,9 @@ public final class Metadata {
         if (qrhId == null) {
             throw new IllegalArgumentException("qrhId cannot be null");
         }
+        if (cache == null) {
+            throw new IllegalArgumentException("cache cannot be null");
+        }
         this.qrhId = qrhId;
         if (userDefinedPropositionDefinitions == null) {
             this.userDefinedPropositionDefinitions
@@ -126,6 +130,7 @@ public final class Metadata {
                     = userDefinedPropositionDefinitions.clone();
         }
         this.knowledgeSource = knowledgeSource;
+        this.cache = cache;
         try {
             this.rootConcept = new Concept(
                     ConceptId.getInstance(rootNodeDisplayName, this), null, this);
@@ -352,7 +357,7 @@ public final class Metadata {
             UnknownPropositionDefinitionException, OntologyBuildException {
         if (folderSpec.getProperty() == null) {
             PropositionConceptTreeBuilder propProxy
-                    = new PropositionConceptTreeBuilder(this.knowledgeSource,
+                    = new PropositionConceptTreeBuilder(this.cache, this.knowledgeSource,
                             folderSpec.getPropositions(), folderSpec.getConceptCodePrefix(),
                             folderSpec.getValueType(), folderSpec.getModifiers(), this);
             if (useFolderSpecConcept) {

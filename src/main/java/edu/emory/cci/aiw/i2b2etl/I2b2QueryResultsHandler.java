@@ -78,6 +78,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
@@ -246,10 +247,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * @throws QueryResultsHandlerProcessingException
      */
     @Override
-    public void start() throws QueryResultsHandlerProcessingException {
+    public void start(Collection<PropositionDefinition> cache) throws QueryResultsHandlerProcessingException {
         Logger logger = I2b2ETLUtil.logger();
         try {
-            mostlyBuildOntology();
+            mostlyBuildOntology(cache);
             this.providerDimensionFactory = new ProviderDimensionFactory(this.qrhId, this.ontologyModel, this.dataConnectionSpec, this.skipProviderHierarchy);
             this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
             this.visitDimensionFactory = new VisitDimensionFactory(this.qrhId, this.settings, this.data, this.dataConnectionSpec);
@@ -655,8 +656,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
     }
 
-    private void mostlyBuildOntology() throws OntologyBuildException {
-        this.ontologyModel = new Metadata(this.qrhId, knowledgeSource, collectUserPropositionDefinitions(), this.settings.getRootNodeName(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.skipProviderHierarchy);
+    private void mostlyBuildOntology(Collection<PropositionDefinition> cache) throws OntologyBuildException {
+        this.ontologyModel = new Metadata(this.qrhId, cache, knowledgeSource, collectUserPropositionDefinitions(), this.settings.getRootNodeName(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.skipProviderHierarchy);
         setI2B2PathsToConcepts();
     }
 
