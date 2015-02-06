@@ -23,27 +23,22 @@ import java.io.File;
 import java.io.IOException;
 import org.arp.javautil.io.IOUtil;
 import org.protempa.Protempa;
-import org.protempa.ProtempaStartupException;
+import org.protempa.ProtempaException;
 import org.protempa.SourceFactory;
-import org.protempa.backend.BackendProviderSpecLoaderException;
 import org.protempa.backend.Configurations;
-import org.protempa.backend.ConfigurationsLoadException;
-import org.protempa.backend.ConfigurationsNotFoundException;
-import org.protempa.backend.InvalidConfigurationException;
-import org.protempa.bconfigs.commons.INICommonsConfigurations;
+import org.protempa.bconfigs.ini4j.INIConfigurations;
 
 /**
  *
  * @author Andrew Post
  */
 public class ProtempaFactory {
-    public Protempa newInstance()
-			throws IOException, BackendProviderSpecLoaderException, ConfigurationsLoadException, InvalidConfigurationException, ProtempaStartupException, ConfigurationsNotFoundException {
+    public Protempa newInstance() throws IOException, ProtempaException {
         File config = IOUtil.resourceToFile(
                 "/protempa-config/protege-h2-test-config", 
                 "protege-h2-test-config", null);
         Configurations configurations = 
-                new INICommonsConfigurations(config.getParentFile());
+                new INIConfigurations(config.getParentFile());
         SourceFactory sourceFactory = 
                 new SourceFactory(configurations, config.getName());
         

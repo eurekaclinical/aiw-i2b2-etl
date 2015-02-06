@@ -59,8 +59,7 @@ public class I2b2ETLTestNoDerivedVariables {
     @BeforeClass
     public static void setUp() throws Exception {
         new DatabasePopulator().doPopulate();
-        Protempa protempa = new ProtempaFactory().newInstance();
-        try {
+        try (Protempa protempa = new ProtempaFactory().newInstance()) {
             File confXML = new I2b2ETLConfAsFile().getFile();
             
             DefaultQueryBuilder q = new DefaultQueryBuilder();
@@ -69,8 +68,6 @@ public class I2b2ETLTestNoDerivedVariables {
             Query query = protempa.buildQuery(q);
             Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML), I2b2Destination.DataInsertMode.TRUNCATE);
             protempa.execute(query, destination);
-        } finally {
-            protempa.close();
         }
 
     }

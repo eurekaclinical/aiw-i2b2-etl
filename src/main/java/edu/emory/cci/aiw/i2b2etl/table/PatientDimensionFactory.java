@@ -21,7 +21,6 @@ package edu.emory.cci.aiw.i2b2etl.table;
  */
 
 import edu.emory.cci.aiw.i2b2etl.configuration.Data;
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;

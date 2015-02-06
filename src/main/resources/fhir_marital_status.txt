@@ -1,0 +1,9 @@
+A	Annulled	Marriage contract has been declared null and to not have existed
+D	Divorced	Marriage contract has been declared dissolved and inactive
+I	Interlocutory	Subject to an Interlocutory Decree.
+L	Legally Separated	
+M	Married	A current marriage contract is active
+P	Polygamous	More than 1 current spouse
+S	Never Married	No marriage contract has ever been entered
+T	Domestic partner	Person declares that a domestic partner relationship exists.
+W	Widowed	The spouse has died

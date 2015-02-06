@@ -50,7 +50,7 @@ public class MetaTableConceptHandler extends RecordHandler<Concept> {
         assert concept.getDisplayName() != null && concept.getDisplayName().length() > 0 : "concept " + concept.getConceptCode() + " (" + concept.getFullName() + ") " + " has an invalid display name '" + concept.getDisplayName() + "'";
         ps.setString(3, concept.getDisplayName());
         String conceptCode = concept.getConceptCode();
-        ps.setString(4, SynonymCode.NOT_SYNONYM.getCode());
+        ps.setString(4, concept.getSynonymCode().getCode());
         ps.setString(5, concept.getCVisualAttributes());
         ps.setObject(6, null);
         ps.setString(7, conceptCode);

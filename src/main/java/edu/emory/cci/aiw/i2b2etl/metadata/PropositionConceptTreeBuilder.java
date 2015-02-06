@@ -23,6 +23,11 @@ import edu.emory.cci.aiw.i2b2etl.configuration.ModifierSpec;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
@@ -39,12 +44,12 @@ final class PropositionConceptTreeBuilder {
 
     private final SimpleDateFormat valueMetadataCreateDateTimeFormat;
     private final KnowledgeSource knowledgeSource;
-    private final PropositionDefinition[] rootPropositionDefinitions;
     private final String conceptCode;
     private final Metadata metadata;
     private final ValueTypeCode valueTypeCode;
     private final String createDate;
     private final ModifierSpec[] modifiers;
+    private final String[] propIds;
 
     PropositionConceptTreeBuilder(KnowledgeSource knowledgeSource,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
@@ -54,14 +59,12 @@ final class PropositionConceptTreeBuilder {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
         ProtempaUtil.checkArray(propIds, "propIds");
         assert metadata != null : "metadata cannot be null";
-
-        this.knowledgeSource = knowledgeSource;
-        this.rootPropositionDefinitions =
-                new PropositionDefinition[propIds.length];
-        for (int i = 0; i < propIds.length; i++) {
-            this.rootPropositionDefinitions[i] =
-                    readPropositionDefinition(propIds[i]);
+        if (propIds != null) {
+            this.propIds = propIds.clone();
+        } else {
+            this.propIds = ArrayUtils.EMPTY_STRING_ARRAY;
         }
+        this.knowledgeSource = knowledgeSource;
         this.conceptCode = conceptCode;
         this.metadata = metadata;
         this.valueTypeCode = valueTypeCode;
@@ -76,9 +79,14 @@ final class PropositionConceptTreeBuilder {
 
     void build(Concept concept) throws OntologyBuildException {
         try {
-            if (this.rootPropositionDefinitions.length == 1) {
-                PropositionDefinition rootPropositionDefinition = 
-                        this.rootPropositionDefinitions[0];
+            if (this.propIds.length == 1) {
+                String rootPropId = this.propIds[0];
+                Set<PropositionDefinition> collectSubtreePropositionDefinitions = this.knowledgeSource.collectPropDefDescendantsUsingInverseIsA(rootPropId);
+                Map<String, PropositionDefinition> cache = new HashMap<>();
+                for (PropositionDefinition pd : collectSubtreePropositionDefinitions) {
+                    cache.put(pd.getId(), pd);
+                }
+                PropositionDefinition rootPropositionDefinition = cache.get(rootPropId);
                 Concept rootConcept =
                             addNode(rootPropositionDefinition);
                 if (rootConcept.getConceptCode().equals(concept.getConceptCode())) {
@@ -88,20 +96,25 @@ final class PropositionConceptTreeBuilder {
                         concept.add(child);
                     }
                     addModifierConcepts(rootPropositionDefinition, concept);
-                    buildHelper(rootPropositionDefinition.getInverseIsA(), concept);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), concept, cache);
                 } else {
                     concept.add(rootConcept);
                     addModifierConcepts(rootPropositionDefinition, rootConcept);
-                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept, cache);
                 }
             } else {
-                for (PropositionDefinition rootPropositionDefinition : 
-                        this.rootPropositionDefinitions) {
+                for (String propId : this.propIds) {
+                    Set<PropositionDefinition> collectSubtreePropositionDefinitions = this.knowledgeSource.collectPropDefDescendantsUsingInverseIsA(propId);
+                    Map<String, PropositionDefinition> cache = new HashMap<>();
+                    for (PropositionDefinition pd : collectSubtreePropositionDefinitions) {
+                        cache.put(pd.getId(), pd);
+                    }
+                    PropositionDefinition rootPropositionDefinition = cache.get(propId);
                     Concept rootConcept =
                             addNode(rootPropositionDefinition);
                     concept.add(rootConcept);
                     addModifierConcepts(rootPropositionDefinition, rootConcept);
-                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept);
+                    buildHelper(rootPropositionDefinition.getInverseIsA(), rootConcept, cache);
                 }
             }
         } catch (UnknownPropositionDefinitionException | InvalidConceptCodeException | KnowledgeSourceReadException ex) {
@@ -110,18 +123,18 @@ final class PropositionConceptTreeBuilder {
         }
     }
 
-    private void buildHelper(String[] childPropIds, Concept parent)
+    private void buildHelper(String[] childPropIds, Concept parent, Map<String, PropositionDefinition> cache)
             throws UnknownPropositionDefinitionException,
             KnowledgeSourceReadException, InvalidConceptCodeException, OntologyBuildException {
         for (String childPropId : childPropIds) {
             PropositionDefinition childPropDef =
-                    readPropositionDefinition(childPropId);
+                    readPropositionDefinition(childPropId, cache);
             Concept child = addNode(childPropDef);
             if (parent != null) {
                 parent.add(child);
             }
             addModifierConcepts(childPropDef, child);
-            buildHelper(childPropDef.getInverseIsA(), child);
+            buildHelper(childPropDef.getInverseIsA(), child, cache);
         }
     }
 
@@ -148,8 +161,8 @@ final class PropositionConceptTreeBuilder {
             newChild.setDataType(DataType.dataTypeFor(valueType));
             if (children.length < 1) {
                 newChild.setMetadataXml("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>" + this.createDate + 
-                    "</CreationDateTime><TestID>" + newChild.getConceptCode() + 
-                    "</TestID><TestName>" + newChild.getDisplayName() + 
+                    "</CreationDateTime><TestID>" + StringEscapeUtils.escapeXml(newChild.getConceptCode()) + 
+                    "</TestID><TestName>" + StringEscapeUtils.escapeXml(newChild.getDisplayName()) + 
                     "</TestName><DataType>" + (newChild.getDataType() == DataType.NUMERIC ? "Float" : "String") + "</DataType><Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
             }
         } else {
@@ -157,6 +170,8 @@ final class PropositionConceptTreeBuilder {
         }
         if (this.metadata.getFromIdCache(conceptId) == null) {
             this.metadata.addToIdCache(newChild);
+        } else {
+            newChild.setSynonymCode(SynonymCode.SYNONYM);
         }
         return newChild;
     }
@@ -167,6 +182,8 @@ final class PropositionConceptTreeBuilder {
             Concept modParent = new Concept(modParentId, null, this.metadata);
             if (this.metadata.getFromIdCache(modParentId) == null) {
                 this.metadata.addToIdCache(modParent);
+            } else {
+                modParent.setSynonymCode(SynonymCode.SYNONYM);
             }
             PathSupport pathSupport = new PathSupport();
             for (ModifierSpec modifier : this.modifiers) {
@@ -190,9 +207,9 @@ final class PropositionConceptTreeBuilder {
                     mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
                     mXml.append(this.createDate);
                     mXml.append("</CreationDateTime><TestID>");
-                    mXml.append(mod.getConceptCode());
+                    mXml.append(StringEscapeUtils.escapeXml(mod.getConceptCode()));
                     mXml.append("</TestID><TestName>");
-                    mXml.append(mod.getDisplayName());
+                    mXml.append(StringEscapeUtils.escapeXml(mod.getDisplayName()));
                     mXml.append("</TestName>");
                     String valueSetId = propertyDef.getValueSetId();
                     if (valueSetId != null) {
@@ -201,9 +218,9 @@ final class PropositionConceptTreeBuilder {
                         if (valueSet != null) {
                             for (ValueSetElement vse : valueSet.getValueSetElements()) {
                                 mXml.append("<Val description=\"");
-                                mXml.append(vse.getDisplayName());
+                                mXml.append(StringEscapeUtils.escapeXml(vse.getDisplayName()));
                                 mXml.append("\">");
-                                mXml.append(vse.getValue().getFormatted());
+                                mXml.append(StringEscapeUtils.escapeXml(vse.getValue().getFormatted()));
                                 mXml.append("</Val>");
                             }
                         }
@@ -217,6 +234,8 @@ final class PropositionConceptTreeBuilder {
                     mod.setMetadataXml(mXml.toString());
                     if (this.metadata.getFromIdCache(modId) == null) {
                         this.metadata.addToIdCache(mod);
+                    } else {
+                        mod.setSynonymCode(SynonymCode.SYNONYM);
                     }
                     modParent.add(mod);
                     mod.setFullName(pathSupport.getFullName());
@@ -229,11 +248,10 @@ final class PropositionConceptTreeBuilder {
         }
     }
 
-    private PropositionDefinition readPropositionDefinition(String propId)
+    private PropositionDefinition readPropositionDefinition(String propId, Map<String, PropositionDefinition> cache)
             throws UnknownPropositionDefinitionException,
             KnowledgeSourceReadException {
-        PropositionDefinition result =
-                this.knowledgeSource.readPropositionDefinition(propId);
+        PropositionDefinition result = cache.get(propId);
         if (result != null) {
             return result;
         } else {

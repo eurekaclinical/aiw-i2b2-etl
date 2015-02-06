@@ -306,5 +306,13 @@ public final class Concept extends DefaultMutableTreeNode implements Record {
             return level;
         }
     }
+    
+    public void setSynonymCode(SynonymCode synonymCode) {
+        usrObj.setSynonymCode(synonymCode);
+    }
+    
+    public SynonymCode getSynonymCode() {
+        return usrObj.getSynonymCode();
+    }
 
 }

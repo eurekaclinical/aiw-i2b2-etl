@@ -214,12 +214,6 @@
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
-            <artifactId>protempa-bconfigs-commons-ini</artifactId>
-            <version>2.4-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.protempa</groupId>
             <artifactId>protempa-ksb-protege</artifactId>
             <version>2.4-SNAPSHOT</version>
             <scope>test</scope>
@@ -241,6 +235,24 @@
             <artifactId>ojdbc6</artifactId>
             <version>11.2.0.3</version>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.protempa</groupId>
+            <artifactId>protempa-bconfigs-ini4j-ini</artifactId>
+            <scope>test</scope>
+            <version>2.4-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-dbcp2</artifactId>
+            <version>2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
+            <version>8.0.5</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -320,8 +332,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.16</version>
                 <configuration>
-                    <!--  Tests are handled by testing profiles below -->
-                    <skipTests>true</skipTests>
+                    <systemProperties>
+                        <java.awt.headless>true</java.awt.headless>
+                    </systemProperties>
                 </configuration>
             </plugin>
             <plugin>
@@ -456,73 +469,4 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>test-tier1</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <includes>
-                                <include>**/*Test.java</include>
-                            </includes>
-                            <skipTests>true</skipTests>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test-tier2</id>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>src/test/resources</directory>
-                        <filtering>true</filtering>
-                        <includes>
-                            <include>conf.xml</include>
-                            <include>logging.properties</include>
-                        </includes>
-                    </testResource>
-                    <testResource>
-                        <directory>src/test/resources</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>get-proposition-ids-needed-test-file</include>
-                            <include>sample-one.xlsx</include>
-                            <include>sample-new.xlsx</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <includes>
-                                <include>**/*Test.java</include>
-                            </includes>
-                            <skipTests>false</skipTests>
-                            <argLine>-enableassertions -Xmx4G -Djava.security.egd=file:///dev/urandom</argLine>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>2.2.1</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

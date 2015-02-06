@@ -43,6 +43,7 @@ import org.protempa.dest.QueryResultsHandlerInitException;
 import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
 import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
 import edu.emory.cci.aiw.i2b2etl.configuration.XmlFileConfiguration;
+import org.apache.commons.io.IOUtils;
 import org.protempa.dest.QueryResultsHandler;
 import org.protempa.dest.QueryResultsHandlerCloseException;
 import org.protempa.dest.QueryResultsHandlerProcessingException;
@@ -89,19 +90,11 @@ public class GetPropositionIdsNeededTest {
 
     private static Set<String> expectedPropIds() throws IOException {
         final Set<String> result = new HashSet<>();
-        InputStream is
+        try (InputStream is
                 = GetPropositionIdsNeededTest.class.getResourceAsStream(
-                        "/get-proposition-ids-needed-test-file");
-        new WithBufferedReaderByLine(is) {
-
-            @Override
-            public void readLine(String line) {
-                line = line.trim();
-                if (line.length() != 0) {
-                    result.add(line);
-                }
-            }
-        }.execute();
+                        "/get-proposition-ids-needed-test-file")) {
+            result.addAll(IOUtils.readLines(is));
+        }
 
         return result;
     }

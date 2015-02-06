@@ -172,7 +172,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         DatabaseSpec metadataSchemaSpec = this.database.getMetadataSpec();
         try {
             this.dataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(dataSchemaSpec.getConnect(), dataSchemaSpec.getUser(), dataSchemaSpec.getPasswd());
-            this.metadataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(metadataSchemaSpec.getConnect(), metadataSchemaSpec.getUser(), metadataSchemaSpec.getPasswd());
+            if (metadataSchemaSpec != null && metadataSchemaSpec.getConnect() != null) {
+                this.metadataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(metadataSchemaSpec.getConnect(), metadataSchemaSpec.getUser(), metadataSchemaSpec.getPasswd());
+            } else {
+                this.metadataConnectionSpec = null;
+            }
         } catch (InvalidConnectionSpecArguments ex) {
             throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
         }
@@ -315,7 +319,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             // specifying the table name, and the second is an OUT paremeter
             // that contains an error message
             // create the patient table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PATIENT_TABLE(?, ?) }")) {
+            try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_CREATE_TEMP_PATIENT_TABLE(?, ?) }")) {
                 call.setString(1, tempPatientTableName());
                 call.registerOutParameter(2, Types.VARCHAR);
                 call.execute();
@@ -730,10 +734,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void persistOntologyIntoI2B2Batch(Metadata model) throws SQLException {
-        String tableName = this.settings.getMetaTableName();
-        MetaTableConceptHandler metaTableHandler = new MetaTableConceptHandler(this.metadataConnectionSpec, tableName);
-        MetaTableConceptLoader metaTableConceptLoader = new MetaTableConceptLoader(metaTableHandler);
-        metaTableConceptLoader.execute(model.getRoot());
+        if (this.metadataConnectionSpec != null) {
+            String tableName = this.settings.getMetaTableName();
+            MetaTableConceptHandler metaTableHandler = new MetaTableConceptHandler(this.metadataConnectionSpec, tableName);
+            MetaTableConceptLoader metaTableConceptLoader = new MetaTableConceptLoader(metaTableHandler);
+            metaTableConceptLoader.execute(model.getRoot());
+        }
     }
     
     private abstract class DataRemover {
@@ -776,12 +782,14 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         void doRemoveMetadata() throws SQLException {
             // Truncate the data tables
             // To do: table names should be parameterized in conf.xml and related to other data
-            String queryId = query.getId();
-            Logger logger = I2b2ETLUtil.logger();
-            logger.log(Level.INFO, "Truncating metadata tables for query {0}", queryId);
-            try (final Connection conn = openMetadataDatabaseConnection()) {
-                truncateTable(conn, settings.getMetaTableName()); // metaTableName in conf.xml
-                logger.log(Level.INFO, "Done truncating metadata tables for query {0}", queryId);
+            if (metadataConnectionSpec != null) {
+                String queryId = query.getId();
+                Logger logger = I2b2ETLUtil.logger();
+                logger.log(Level.INFO, "Truncating metadata tables for query {0}", queryId);
+                try (final Connection conn = openMetadataDatabaseConnection()) {
+                    truncateTable(conn, settings.getMetaTableName()); // metaTableName in conf.xml
+                    logger.log(Level.INFO, "Done truncating metadata tables for query {0}", queryId);
+                }
             }
         }
 
@@ -820,12 +828,14 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         
         @Override
         void doRemoveMetadata() throws SQLException {
-            String queryId = query.getId();
-            Logger logger = I2b2ETLUtil.logger();
-            logger.log(Level.INFO, "Deleting metadata for query {0}", queryId);
-            try (final Connection conn = openMetadataDatabaseConnection()) {
-                deleteTable(conn, settings.getMetaTableName(), knowledgeSourceBackendIds); // metaTableName in conf.xml
-                logger.log(Level.INFO, "Done deleting metadata for query {0}", queryId);
+            if (metadataConnectionSpec != null) {
+                String queryId = query.getId();
+                Logger logger = I2b2ETLUtil.logger();
+                logger.log(Level.INFO, "Deleting metadata for query {0}", queryId);
+                try (final Connection conn = openMetadataDatabaseConnection()) {
+                    deleteTable(conn, settings.getMetaTableName(), knowledgeSourceBackendIds); // metaTableName in conf.xml
+                    logger.log(Level.INFO, "Done deleting metadata for query {0}", queryId);
+                }
             }
         }
 

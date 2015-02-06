@@ -1,0 +1,5 @@
+[org.protempa.backend.asb.java.JavaAlgorithmBackend]
+
+[edu.emory.cci.aiw.i2b2etl.ksb.I2b2KnowledgeSourceBackend]
+databaseAPI = DATASOURCE
+databaseId = java:/comp/env/jdbc/I2b2DS

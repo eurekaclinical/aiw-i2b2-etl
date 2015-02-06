@@ -21,8 +21,6 @@ package edu.emory.cci.aiw.i2b2etl.cli;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -79,9 +77,7 @@ public class I2b2ETLTest {
     @BeforeClass
     public static void setUp() throws Exception {
         new DatabasePopulator(I2b2ETLTest.class.getResourceAsStream("/sample-one.xlsx")).doPopulate();
-//        new DatabasePopulator().doPopulate();
-        Protempa protempa = new ProtempaFactory().newInstance();
-        try {
+        try (Protempa protempa = new ProtempaFactory().newInstance()) {
             File confXML = new I2b2ETLConfAsFile().getFile();
             DefaultQueryBuilder q = new DefaultQueryBuilder();
             
@@ -190,8 +186,6 @@ public class I2b2ETLTest {
             Query query = protempa.buildQuery(q);
             Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML), I2b2Destination.DataInsertMode.APPEND);
             protempa.execute(query, destination);
-        } finally {
-            protempa.close();
         }
 
     }

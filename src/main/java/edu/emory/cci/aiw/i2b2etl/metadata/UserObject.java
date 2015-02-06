@@ -86,6 +86,7 @@ public class UserObject {
     private String toolTip;
     private String symbol;
     private int level = -1;
+    private SynonymCode synonymCode;
     
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
@@ -110,6 +111,7 @@ public class UserObject {
         this.operator = defaultOperator();
         this.pathSupport = new PathSupport();
         this.pathSupport.setConcept(this.concept);
+        this.synonymCode = SynonymCode.NOT_SYNONYM;
     }
     
     UserObject(UserObject usrObj, Concept concept) {
@@ -138,6 +140,7 @@ public class UserObject {
         this.cPath = usrObj.cPath;
         this.symbol = usrObj.symbol;
         this.toolTip = usrObj.toolTip;
+        this.synonymCode = usrObj.synonymCode;
     }
     
     public String getConceptCodePrefix() {
@@ -428,6 +431,18 @@ public class UserObject {
 
     int getHLevel() {
         return this.level;
+    }
+
+    void setSynonymCode(SynonymCode synonymCode) {
+        if (synonymCode == null) {
+            this.synonymCode = SynonymCode.NOT_SYNONYM;
+        } else {
+            this.synonymCode = synonymCode;
+        }
+    }
+
+    SynonymCode getSynonymCode() {
+        return this.synonymCode;
     }
     
 }
