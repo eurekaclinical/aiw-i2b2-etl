@@ -20,7 +20,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * #L%
  */
 import au.com.bytecode.opencsv.CSVReader;
-import edu.emory.cci.aiw.i2b2etl.metadata.ValueTypeCode;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -1286,7 +1285,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.inoutPropertyName, ValueType.NOMINALVALUE, this.inoutPropertyValueSet.getId(), this.visitPropositionId));
         for (ConceptProperty cp : this.conceptProperties) {
             if (visitDim.getId().equals(cp.getPropositionId())) {
-                this.valueSets.put(cp.getPropertyBaseCode(), this.conceptPropertyReader.readFromDatabase(cp.getPropertyBaseCode()));
                 PropertyDefinition pd = new PropertyDefinition(this.visitPropositionId, cp.getPropertyBaseCode(), ValueType.NOMINALVALUE, cp.getPropertyBaseCode(), this.visitPropositionId);
                 visitDimPropertyDefs.add(pd);
             }
@@ -1373,10 +1371,57 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public String[] readSubContextOfs(String propId) throws KnowledgeSourceReadException {
         return ArrayUtils.EMPTY_STRING_ARRAY;
     }
+    
+    private static final QueryConstructor READ_ONE_PROP_DEF_QUERY_CONSTRUCTOR = new QueryConstructor() {
+
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT C_METADATAXML FROM ");
+            sql.append(table);
+            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N' AND M_APPLIED_PATH<>'@'");
+        }
+    };
 
     @Override
-    public ValueSet readValueSet(String id) throws KnowledgeSourceReadException {
-        return this.valueSets.get(id);
+    public ValueSet readValueSet(final String id) throws KnowledgeSourceReadException {
+        ValueSet result = this.valueSets.get(id);
+        if (result != null) {
+            return result;
+        }
+        for (ConceptProperty cp : this.conceptProperties) {
+            if (cp.getPropositionId().equals(id)) {
+                return this.conceptPropertyReader.readFromDatabase(cp.getPropertyBaseCode());
+            }
+        }
+        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_ONE_PROP_DEF_QUERY_CONSTRUCTOR)) {
+            return queryExecutor.execute(
+                    id,
+                    new ResultSetReader<ValueSet>() {
+
+                        @Override
+                        public ValueSet read(ResultSet rs) throws KnowledgeSourceReadException {
+                            try {
+                                if (rs.next()) {
+                                    CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
+                                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
+                                    valueMetadataParser.setConceptBaseCode(id);
+                                    valueMetadataSupport.parseAndFreeClob(xmlReader, rs.getClob(1));
+                                    SAXParseException exception = valueMetadataParser.getException();
+                                    if (exception != null) {
+                                        throw exception;
+                                    }
+                                    return valueMetadataParser.getValueSet();
+                                } else {
+                                    return null;
+                                }
+                            } catch (SQLException | SAXParseException ex) {
+                                throw new KnowledgeSourceReadException(ex);
+                            }
+                        }
+
+                    }
+            );
+        }
     }
     
     private static final ResultSetReader<Collection<String>> IN_DS_RESULT_SET_READER = new ResultSetReader<Collection<String>>() {
@@ -1738,17 +1783,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         
     };
     
-    private static final QueryConstructor READ_PROPERTY_CONSTRUCTOR = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_SYNONYM_CD='N' AND C_SYMBOL=?");
-        }
-
-    };
-    
     private static final QueryConstructor READ_FACT_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -1813,7 +1847,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     AbstractPropositionDefinition abd = (AbstractPropositionDefinition) r.get(0);
                     Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
                     abd.setInverseIsA(children.toArray(new String[children.size()]));
-                    List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(2));
+                    List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2));
                     abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
                 }
                 return r.isEmpty() ? null : r.get(0);
@@ -1840,11 +1874,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(table);
             sql.append(" A2 WHERE (CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END)=A2.C_FULLNAME) FROM ");
             sql.append(table);
-            sql.append(" A1 WHERE ? LIKE M_APPLIED_PATH");
+            sql.append(" A1 WHERE ? LIKE A1.M_APPLIED_PATH");
         }
     };
     
-    private List<PropertyDefinition> readPropertyDefinitions(String fullName) throws KnowledgeSourceReadException {
+    private List<PropertyDefinition> readPropertyDefinitions(final String symbol, String fullName) throws KnowledgeSourceReadException {
         try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PROP_DEF_QUERY_CONSTRUCTOR)) {
             return queryExecutor.execute(
                 fullName,
@@ -1854,10 +1888,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     public List<PropertyDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
                         try {
                             List<PropertyDefinition> result = new ArrayList<>();
-                            if (!rs.isBeforeFirst()) {
+                            if (rs.isBeforeFirst()) {
                                 CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
                                 XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
                                 while (rs.next()) {
+                                    valueMetadataParser.setConceptBaseCode(rs.getString(1));
                                     valueMetadataSupport.parseAndFreeClob(xmlReader, rs.getClob(3));
                                     SAXParseException exception = valueMetadataParser.getException();
                                     if (exception != null) {
@@ -1865,7 +1900,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                     }
                                     ValueType valueType = valueMetadataParser.getValueType();
                                     ValueSet valueSet = valueMetadataParser.getValueSet();
-                                    result.add(new PropertyDefinition(rs.getString(1), rs.getString(2), valueType, valueSet != null ? valueSet.getId() : null, rs.getString(4)));
+                                    result.add(new PropertyDefinition(symbol, rs.getString(2), valueType, valueSet != null ? valueSet.getId() : null, rs.getString(4)));
                                 }
                             }
                             return result;
