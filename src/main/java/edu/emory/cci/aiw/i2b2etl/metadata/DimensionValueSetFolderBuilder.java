@@ -21,12 +21,12 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
  */
 
 import edu.emory.cci.aiw.i2b2etl.configuration.Data;
-import edu.emory.cci.aiw.i2b2etl.configuration.DataSection;
 import edu.emory.cci.aiw.i2b2etl.configuration.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.configuration.Settings;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
@@ -45,17 +45,18 @@ class DimensionValueSetFolderBuilder {
     private final PropositionDefinition propDef;
     private final Concept root;
     private final KnowledgeSource knowledgeSource;
-    private final Settings dictSection;
     private final Data dataSection;
     private final Metadata metadata;
     private final String sourceSystemCode;
     private final String tableName;
     private final String factTableColumn;
+    private final Map<String, PropositionDefinition> cache;
 
-    DimensionValueSetFolderBuilder(Concept root, KnowledgeSource knowledgeSource, Settings dictSection, Data dataSection, Metadata metadata, String sourceSystemCode, String factTableColumn, String tableName) throws OntologyBuildException {
+    DimensionValueSetFolderBuilder(Concept root, KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, Settings dictSection, Data dataSection, Metadata metadata, String sourceSystemCode, String factTableColumn, String tableName) throws OntologyBuildException {
+        assert cache != null : "cache cannot be null";
+        this.cache = cache;
         this.root = root;
         this.knowledgeSource = knowledgeSource;
-        this.dictSection = dictSection;
         this.dataSection = dataSection;
         this.metadata = metadata;
         this.sourceSystemCode = sourceSystemCode;
@@ -63,11 +64,11 @@ class DimensionValueSetFolderBuilder {
         this.tableName = tableName;
         String propId = dictSection.getVisitDimension();
         try {
-            this.propDef = this.knowledgeSource.readPropositionDefinition(propId);
+            this.propDef = cache.get(propId);
             if (this.propDef == null) {
                 throw new UnknownPropositionDefinitionException(propId);
             }
-        } catch (KnowledgeSourceReadException | UnknownPropositionDefinitionException ex) {
+        } catch (UnknownPropositionDefinitionException ex) {
             throw new OntologyBuildException("Could not build descendants", ex);
         }
 
@@ -91,7 +92,7 @@ class DimensionValueSetFolderBuilder {
                         Concept child = (Concept) children.nextElement();
                         inClause.add(child.getDimCode());
                     }
-                } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
+                } catch (UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
                     throw new OntologyBuildException("Could not build descendants", ex);
                 }
             }
@@ -111,13 +112,14 @@ class DimensionValueSetFolderBuilder {
     private void addChildrenFromValueSets(PropositionDefinition propDef,
             DataSpec dataSpec, Concept concept, String columnName) throws OntologyBuildException,
             UnsupportedOperationException, KnowledgeSourceReadException,
-            InvalidConceptCodeException {
+            InvalidConceptCodeException, UnknownPropositionDefinitionException {
         ReferenceDefinition refDef = propDef.referenceDefinition(dataSpec.getReferenceName());
         String[] propIds = refDef.getPropositionIds();
         for (String propId : propIds) {
-            PropositionDefinition genderPropositionDef
-                    = this.knowledgeSource.readPropositionDefinition(propId);
-            assert genderPropositionDef != null : "genderPropositionDef cannot be null";
+            PropositionDefinition genderPropositionDef = this.cache.get(propId);
+            if (genderPropositionDef == null) {
+                throw new UnknownPropositionDefinitionException(propId);
+            }
             PropertyDefinition genderPropertyDef = genderPropositionDef.propertyDefinition(dataSpec.getPropertyName());
             if (genderPropertyDef != null) {
                 String valueSetId = genderPropertyDef.getValueSetId();

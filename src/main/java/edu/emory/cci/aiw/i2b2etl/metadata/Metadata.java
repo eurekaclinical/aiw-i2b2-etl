@@ -98,9 +98,9 @@ public final class Metadata {
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
     private String qrhId;
     private final ProviderConceptTreeBuilder providerConceptTreeBuilder;
-    private final Collection<PropositionDefinition> cache;
+    private final Map<String, PropositionDefinition> cache;
 
-    public Metadata(String qrhId, Collection<PropositionDefinition> cache, KnowledgeSource knowledgeSource,
+    public Metadata(String qrhId, Map<String, PropositionDefinition> cache, KnowledgeSource knowledgeSource,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             String rootNodeDisplayName,
             FolderSpec[] folderSpecs,
@@ -320,7 +320,7 @@ public final class Metadata {
     }
     
     DimensionValueSetFolderBuilder newDimensionValueSetFolderBuilder(Concept root, String factTableColumn, String tableName) throws OntologyBuildException {
-        return new DimensionValueSetFolderBuilder(root, this.knowledgeSource, this.dictSection, this.dataSection, this, this.qrhId, factTableColumn, tableName);
+        return new DimensionValueSetFolderBuilder(root, this.knowledgeSource, this.cache, this.dictSection, this.dataSection, this, this.qrhId, factTableColumn, tableName);
     }
     
     private void constructTreePre(FolderSpec[] folderSpecs)
@@ -388,9 +388,11 @@ public final class Metadata {
                             = new Concept(conceptId, folderSpec.getConceptCodePrefix(), this);
                     concept.setSourceSystemCode(
                             MetadataUtil.toSourceSystemCode(this.qrhId));
-                    PropositionDefinition propDef = this.knowledgeSource.readPropositionDefinition(propId);
+                    PropositionDefinition propDef = this.cache.get(propId);
                     if (propDef != null) {
                         concept.setDisplayName(propDef.getDisplayName());
+                    } else {
+                        throw new UnknownPropositionDefinitionException(propId);
                     }
                     concept.setDataType(DataType.TEXT);
                     addToIdCache(concept);
@@ -398,6 +400,7 @@ public final class Metadata {
                 }
                 ValueSetConceptTreeBuilder vsProxy
                         = new ValueSetConceptTreeBuilder(this.knowledgeSource,
+                                this.cache,
                                 folderSpec.getPropositions(), folderSpec.getProperty(),
                                 folderSpec.getConceptCodePrefix(), this);
                 vsProxy.build(concept);

@@ -21,10 +21,8 @@ package edu.emory.cci.aiw.i2b2etl.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.configuration.ModifierSpec;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -52,7 +50,7 @@ final class PropositionConceptTreeBuilder {
     private final String[] propIds;
     private final Map<String, PropositionDefinition> cache;
 
-    PropositionConceptTreeBuilder(Collection<PropositionDefinition> cache, 
+    PropositionConceptTreeBuilder(Map<String, PropositionDefinition> cache, 
             KnowledgeSource knowledgeSource,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
             ModifierSpec[] modifiers, Metadata metadata)
@@ -78,10 +76,7 @@ final class PropositionConceptTreeBuilder {
         } else {
             this.modifiers = EMPTY_MODIFIER_SPEC_ARRAY;
         }
-        this.cache = new HashMap<>();
-        for (PropositionDefinition propDef : cache) {
-            this.cache.put(propDef.getId(), propDef);
-        }
+        this.cache = cache;
     }
 
     void build(Concept concept) throws OntologyBuildException {

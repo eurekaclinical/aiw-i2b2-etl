@@ -19,6 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.metadata;
 
+import java.util.Map;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropertyDefinition;
@@ -35,7 +36,7 @@ class ValueSetConceptTreeBuilder {
     private final PropositionDefinition[] rootPropositionDefinitions;
     private final Metadata metadata;
 
-    ValueSetConceptTreeBuilder(KnowledgeSource knowledgeSource, String[] propIds, String property,
+    ValueSetConceptTreeBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, String[] propIds, String property,
             String conceptCodePrefix, Metadata metadata) throws KnowledgeSourceReadException, UnknownPropositionDefinitionException {
         assert knowledgeSource != null : "knowledgeSource cannot be null";
         ProtempaUtil.checkArray(propIds, "propIds");
@@ -47,7 +48,7 @@ class ValueSetConceptTreeBuilder {
                 new PropositionDefinition[propIds.length];
         for (int i = 0; i < propIds.length; i++) {
             this.rootPropositionDefinitions[i] =
-                    knowledgeSource.readPropositionDefinition(propIds[i]);
+                    cache.get(propIds[i]);
             if (this.rootPropositionDefinitions[i] == null) {
                 throw new UnknownPropositionDefinitionException(propIds[i]);
             }

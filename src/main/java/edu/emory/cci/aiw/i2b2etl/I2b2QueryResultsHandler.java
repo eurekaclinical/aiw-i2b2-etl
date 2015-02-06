@@ -34,6 +34,7 @@ import edu.emory.cci.aiw.i2b2etl.metadata.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.table.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.OntologyBuildException;
+import edu.emory.cci.aiw.i2b2etl.metadata.UnknownPropositionDefinitionException;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.table.ConceptDimensionLoader;
 import edu.emory.cci.aiw.i2b2etl.table.EncounterMappingHandler;
@@ -80,6 +81,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +132,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private PatientDimensionFactory patientDimensionFactory;
     private VisitDimensionFactory visitDimensionFactory;
     private final Configuration configuration;
+    private HashMap<String, PropositionDefinition> cache;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -150,6 +153,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, Configuration configuration,
                             boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
             throws QueryResultsHandlerInitException {
+        if (dataSource == null) {
+            throw new IllegalArgumentException("dataSource cannot be null");
+        }
+        if (knowledgeSource == null) {
+            throw new IllegalArgumentException("knowledgeSource cannot be null");
+        }
         Logger logger = I2b2ETLUtil.logger();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
@@ -250,7 +259,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     public void start(Collection<PropositionDefinition> cache) throws QueryResultsHandlerProcessingException {
         Logger logger = I2b2ETLUtil.logger();
         try {
-            mostlyBuildOntology(cache);
+            this.cache = new HashMap<>();
+            for (PropositionDefinition pd : cache) {
+                this.cache.put(pd.getId(), pd);
+            }
+            mostlyBuildOntology();
             this.providerDimensionFactory = new ProviderDimensionFactory(this.qrhId, this.ontologyModel, this.dataConnectionSpec, this.skipProviderHierarchy);
             this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
             this.visitDimensionFactory = new VisitDimensionFactory(this.qrhId, this.settings, this.data, this.dataConnectionSpec);
@@ -434,7 +447,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                                     references);
                     VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, references);
                     for (FactHandler factHandler : this.factHandlers) {
-                        factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, this.knowledgeSource, derivedPropositions);
+                        factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, derivedPropositions);
                     }
                 }
             }
@@ -656,7 +669,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
     }
 
-    private void mostlyBuildOntology(Collection<PropositionDefinition> cache) throws OntologyBuildException {
+    private void mostlyBuildOntology() throws OntologyBuildException {
+        assert cache != null : "cache has not been set yet";
         this.ontologyModel = new Metadata(this.qrhId, cache, knowledgeSource, collectUserPropositionDefinitions(), this.settings.getRootNodeName(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.skipProviderHierarchy);
         setI2B2PathsToConcepts();
     }
@@ -689,6 +703,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.propIdsFromKnowledgeSource = new HashSet<>();
         this.propIdsFromKnowledgeSource.add(this.visitPropId);
         PropositionDefinition visitProp = this.knowledgeSource.readPropositionDefinition(this.visitPropId);
+        if (visitProp == null) {
+            throw new KnowledgeSourceReadException("Invalid visit proposition id: " + this.visitPropId);
+        }
         for (DataSpec dataSpec : this.data.getAll()) {
             if (dataSpec.getReferenceName() != null) {
                 ReferenceDefinition refDef = visitProp.referenceDefinition(dataSpec.getReferenceName());
@@ -720,7 +737,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 PropositionFactHandler propFactHandler =
                         new PropositionFactHandler(this.dataConnectionSpec, links, obx.getPropertyName(),
                                 obx.getStart(), obx.getFinish(), obx.getUnits(),
-                                potentialDerivedPropIdsArr, this.ontologyModel);
+                                potentialDerivedPropIdsArr, this.ontologyModel, this.knowledgeSource,
+                                this.cache);
                 this.factHandlers.add(propFactHandler);
             }
         }

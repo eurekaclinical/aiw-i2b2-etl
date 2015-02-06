@@ -21,6 +21,7 @@ package edu.emory.cci.aiw.i2b2etl.table;
 
 import edu.emory.cci.aiw.i2b2etl.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.metadata.Concept;
+import edu.emory.cci.aiw.i2b2etl.metadata.UnknownPropositionDefinitionException;
 
 import java.sql.*;
 import java.util.Comparator;
@@ -51,14 +52,24 @@ public final class PropositionFactHandler extends FactHandler {
     private final Link[] links;
     private Metadata metadata;
     private final Link[] derivationLinks;
+    private final KnowledgeSource knowledgeSource;
+    private Map<String, PropositionDefinition> cache;
 
     public PropositionFactHandler(ConnectionSpec connSpec,
             Link[] links, String propertyName, 
             String start, String finish, String unitsPropertyName,
-            String[] potentialDerivedPropIds, Metadata metadata) throws SQLException {
+            String[] potentialDerivedPropIds, Metadata metadata,
+            KnowledgeSource knowledgeSource,
+            Map<String, PropositionDefinition> cache) throws SQLException {
         super(connSpec, propertyName, start, finish, unitsPropertyName);
         if (metadata == null) {
             throw new IllegalArgumentException("metadata cannot be null");
+        }
+        if (knowledgeSource == null) {
+            throw new IllegalArgumentException("knowledgeSource cannot be null");
+        }
+        if (cache == null) {
+            throw new IllegalArgumentException("cache cannot be null");
         }
 
         this.metadata = metadata;
@@ -71,6 +82,8 @@ public final class PropositionFactHandler extends FactHandler {
             new Derivation(potentialDerivedPropIds,
             Derivation.Behavior.MULT_FORWARD)
         };
+        this.knowledgeSource = knowledgeSource;
+        this.cache = cache;
     }
     
     private abstract class PropositionWrapper implements Comparable<PropositionWrapper> {
@@ -89,7 +102,6 @@ public final class PropositionFactHandler extends FactHandler {
                              Map<Proposition, List<Proposition>> forwardDerivations,
                              Map<Proposition, List<Proposition>> backwardDerivations,
                              Map<UniqueId, Proposition> references,
-                             KnowledgeSource knowledgeSource,
                              Set<Proposition> derivedPropositions)
             throws InvalidFactException {
         assert patient != null : "patient cannot be null";
@@ -107,7 +119,7 @@ public final class PropositionFactHandler extends FactHandler {
                 Concept concept =
                         metadata.getFromIdCache(prop.getId(),
                                 propertyName, propertyVal);
-                doInsert(knowledgeSource, concept, prop, encounterProp, patient, visit, provider);
+                doInsert(concept, prop, encounterProp, patient, visit, provider);
                 List<Proposition> derivedProps;
                 try {
                     derivedProps = this.linkTraverser.traverseLinks(
@@ -120,15 +132,15 @@ public final class PropositionFactHandler extends FactHandler {
                 for (Proposition derivedProp : derivedProps) {
                     Concept derivedConcept =
                         metadata.getFromIdCache(derivedProp.getId(), null, null);
-                    doInsert(knowledgeSource, derivedConcept, derivedProp, encounterProp, patient, visit, provider);
+                    doInsert(derivedConcept, derivedProp, encounterProp, patient, visit, provider);
                 }
             }
-        } catch (KnowledgeSourceReadException ex) {
+        } catch (KnowledgeSourceReadException | UnknownPropositionDefinitionException ex) {
             throw new InvalidFactException(ex);
         }
     }
 
-    private void doInsert(KnowledgeSource ks, Concept concept, Proposition prop, Proposition encounterProp, PatientDimension patient, VisitDimension visit, ProviderDimension provider) throws InvalidFactException, KnowledgeSourceReadException {
+    private void doInsert(Concept concept, Proposition prop, Proposition encounterProp, PatientDimension patient, VisitDimension visit, ProviderDimension provider) throws InvalidFactException, UnknownPropositionDefinitionException {
         if (concept != null) {
             ObservationFact obx = populateObxFact(prop,
                     encounterProp, patient, visit, provider, concept,
@@ -139,7 +151,10 @@ public final class PropositionFactHandler extends FactHandler {
                 String msg = "Observation fact not created";
                 throw new InvalidFactException(msg, ex);
             }
-            PropositionDefinition propDef = ks.readPropositionDefinition(prop.getId());
+            PropositionDefinition propDef = this.cache.get(prop.getId());
+            if (propDef == null) {
+                throw new UnknownPropositionDefinitionException(prop.getId());
+            }
             for (String propertyName : prop.getPropertyNames()) {
                 PropertyDefinition propertyDefinition = propDef.propertyDefinition(propertyName);
                 if (propertyDefinition != null) {

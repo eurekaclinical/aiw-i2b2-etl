@@ -89,7 +89,7 @@ public abstract class FactHandler extends RecordHandler<ObservationFact> {
         return propertyName;
     }
 
-    public abstract void handleRecord(PatientDimension patient, VisitDimension visit, ProviderDimension provider, Proposition encounterProp, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references, KnowledgeSource knowledgeSource, Set<Proposition> derivedPropositions) throws InvalidFactException;
+    public abstract void handleRecord(PatientDimension patient, VisitDimension visit, ProviderDimension provider, Proposition encounterProp, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references, Set<Proposition> derivedPropositions) throws InvalidFactException;
 
     protected ObservationFact populateObxFact(Proposition prop,
                                                   Proposition encounterProp, PatientDimension patient,
