@@ -23,9 +23,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
@@ -55,14 +56,16 @@ class QueryExecutor implements AutoCloseable {
     private PreparedStatement preparedStatement;
     private List<String> ontTables;
     private final QueryConstructor queryConstructor;
+    private final String excludeTableName;
 
-    QueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor) {
+    QueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor, String excludeTableName) {
         this.databaseApi = databaseApi;
         this.databaseId = databaseId;
         this.username = username;
         this.password = password;
         this.connectionSpecInstance = connectionSpecInstance;
         this.queryConstructor = queryConstructor;
+        this.excludeTableName = excludeTableName;
     }
 
     <E extends Object> E execute(ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
@@ -145,8 +148,9 @@ class QueryExecutor implements AutoCloseable {
                 if (this.ontTables.size() > 1) {
                     sql.append('(');
                 }
-                for (String table : this.ontTables) {
-                    if (sql.length() > 0) {
+                for (int i = 0, n = this.ontTables.size(); i < n; i++) {
+                    String table = this.ontTables.get(i);
+                    if (i > 0) {
                         sql.append(") UNION ALL (");
                     }
                     this.queryConstructor.appendStatement(sql, table);
@@ -165,11 +169,22 @@ class QueryExecutor implements AutoCloseable {
 
     private void readOntologyTables() throws KnowledgeSourceReadException {
         if (this.ontTables == null) {
-            try (Statement stmt = this.connection.createStatement()) {
-                try (ResultSet rs = stmt.executeQuery("SELECT C_TABLE_NAME FROM TABLE_ACCESS")) {
+            StringBuilder query = new StringBuilder();
+            query.append("SELECT C_TABLE_NAME FROM TABLE_ACCESS");
+            if (this.excludeTableName != null) {
+                query.append(" WHERE C_TABLE_NAME <> ?");
+            }
+            try (PreparedStatement stmt = this.connection.prepareStatement(query.toString())) {
+                if (this.excludeTableName != null) {
+                    stmt.setString(1, this.excludeTableName);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
                     List<String> tables = new ArrayList<>();
                     while (rs.next()) {
                         tables.add(rs.getString(1));
+                    }
+                    if (tables.isEmpty()) {
+                        throw new KnowledgeSourceReadException("No metadata tables found!");
                     }
                     this.ontTables = tables;
                 }

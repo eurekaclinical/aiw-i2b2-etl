@@ -33,6 +33,7 @@ class QuerySupport {
     private String username;
     private String password;
     private ConnectionSpec connectionSpecInstance;
+    private String excludeTableName;
 
     QuerySupport() {
          this.databaseApi = DatabaseAPI.DRIVERMANAGER;
@@ -73,9 +74,17 @@ class QuerySupport {
         this.password = password;
         this.connectionSpecInstance = null;
     }
+
+    public String getExcludeTableName() {
+        return excludeTableName;
+    }
+
+    public void setExcludeTableName(String excludeTableName) {
+        this.excludeTableName = excludeTableName;
+    }
     
     QueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) {
-        return new QueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor);
+        return new QueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, this.excludeTableName);
     }
     
 }

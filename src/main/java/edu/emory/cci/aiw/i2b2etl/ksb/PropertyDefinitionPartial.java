@@ -33,9 +33,11 @@ class PropertyDefinitionPartial {
     private final String valueSetId;
     private final String declaringPropId;
     private final String fullName;
+    private final String symbol;
 
-    PropertyDefinitionPartial(String fullName, String name, ValueType valueType, String valueSetId, String declaringPropId) {
+    PropertyDefinitionPartial(String fullName, String symbol, String name, ValueType valueType, String valueSetId, String declaringPropId) {
         this.fullName = fullName;
+        this.symbol = symbol;
         this.name = name;
         this.valueType = valueType;
         this.valueSetId = valueSetId;
@@ -47,6 +49,6 @@ class PropertyDefinitionPartial {
     }
     
     PropertyDefinition getPropertyDefinition(String propId) {
-        return new PropertyDefinition(propId, this.name, this.valueType, this.valueSetId, this.declaringPropId);
+        return new PropertyDefinition(propId, this.symbol, this.name, this.valueType, this.valueSetId, this.declaringPropId);
     }
 }

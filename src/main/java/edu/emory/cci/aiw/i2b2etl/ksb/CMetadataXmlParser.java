@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -38,6 +37,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Andrew Post
  */
 class CMetadataXmlParser extends DefaultHandler {
+
     private static final Logger LOGGER = Logger.getLogger(CMetadataXmlParser.class.getName());
     private String conceptBaseCode;
     private String tag;
@@ -52,15 +52,13 @@ class CMetadataXmlParser extends DefaultHandler {
     public CMetadataXmlParser() {
         this.valueSetElements = new ArrayList<>();
     }
-    
-    
-
-    String getConceptBaseCode() {
-        return conceptBaseCode;
-    }
 
     void setConceptBaseCode(String conceptBaseCode) {
         this.conceptBaseCode = conceptBaseCode;
+    }
+
+    String getConceptBaseCode() {
+        return conceptBaseCode;
     }
 
     ValueType getValueType() {
@@ -74,11 +72,11 @@ class CMetadataXmlParser extends DefaultHandler {
     String getUnitsOfMeasure() {
         return unitsOfMeasure;
     }
-    
+
     SAXParseException getException() {
         return this.exception;
     }
-    
+
     @Override
     public void startDocument() throws SAXException {
         this.valueType = ValueType.VALUE;
@@ -90,7 +88,7 @@ class CMetadataXmlParser extends DefaultHandler {
             String qName,
             Attributes atts)
             throws SAXException {
-        
+
         switch (localName) {
             case "DataType":
             case "Val":
@@ -100,7 +98,9 @@ class CMetadataXmlParser extends DefaultHandler {
 
         switch (localName) {
             case "Val":
-                this.valueSetElementDescription = atts.getValue("description");
+                if (this.conceptBaseCode != null) {
+                    this.valueSetElementDescription = atts.getValue("description");
+                }
         }
     }
 
@@ -110,7 +110,7 @@ class CMetadataXmlParser extends DefaultHandler {
             charBuffer.append(ch);
         }
     }
-    
+
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         switch (localName) {
@@ -131,8 +131,10 @@ class CMetadataXmlParser extends DefaultHandler {
                 }
                 break;
             case "Val":
-                this.valueSetElements.add(new ValueSetElement(NominalValue.getInstance(this.charBuffer.toString()), this.valueSetElementDescription, null));
-                this.valueSetElementDescription = null;
+                if (this.conceptBaseCode != null) {
+                    this.valueSetElements.add(new ValueSetElement(NominalValue.getInstance(this.charBuffer.toString()), this.valueSetElementDescription, null));
+                    this.valueSetElementDescription = null;
+                }
                 break;
 //            case "NormalUnits":
 //                this.unitsOfMeasure = this.charBuffer.toString();
@@ -143,19 +145,18 @@ class CMetadataXmlParser extends DefaultHandler {
         }
         this.tag = null;
     }
-    
+
     @Override
     public void endDocument() throws SAXException {
         if (!this.valueSetElements.isEmpty()) {
             this.valueSet = new ValueSet(
-                    this.conceptBaseCode, 
+                    this.conceptBaseCode,
                     this.valueSetElements.toArray(new ValueSetElement[this.valueSetElements.size()]),
                     null
             );
+            this.valueSetElements.clear();
         }
     }
-    
-    
 
     @Override
     public void fatalError(SAXParseException e) throws SAXException {
@@ -171,6 +172,5 @@ class CMetadataXmlParser extends DefaultHandler {
     public void warning(SAXParseException e) throws SAXException {
         LOGGER.log(Level.WARNING, "Warning while parsing c_metadataxml", e);
     }
-    
-    
+
 }

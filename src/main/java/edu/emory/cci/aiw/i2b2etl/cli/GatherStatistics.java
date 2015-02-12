@@ -19,8 +19,8 @@ package edu.emory.cci.aiw.i2b2etl.cli;
  * limitations under the License.
  * #L%
  */
-import edu.emory.cci.aiw.i2b2etl.I2b2Destination;
-import edu.emory.cci.aiw.i2b2etl.configuration.XmlFileConfiguration;
+import edu.emory.cci.aiw.i2b2etl.dest.I2b2Destination;
+import edu.emory.cci.aiw.i2b2etl.dest.config.xml.XmlFileConfiguration;
 import java.io.File;
 import org.protempa.dest.Destination;
 import org.protempa.dest.Statistics;

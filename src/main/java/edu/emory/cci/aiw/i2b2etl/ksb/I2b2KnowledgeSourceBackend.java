@@ -2,9 +2,9 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
 
 /*
  * #%L
- * Protempa BioPortal Knowledge Source Backend
+ * AIW i2b2 ETL
  * %%
- * Copyright (C) 2012 - 2014 Emory University
+ * Copyright (C) 2012 - 2015 Emory University
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
+
 import au.com.bytecode.opencsv.CSVReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,10 +40,12 @@ import org.protempa.backend.annotations.BackendProperty;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -62,17 +65,15 @@ import org.protempa.ValueSet;
 import org.protempa.ValueSet.ValueSetElement;
 import org.protempa.backend.BackendInitializationException;
 import org.protempa.backend.BackendInstanceSpec;
+import org.protempa.backend.BackendSourceIdFactory;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.ValueType;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 
 /**
- * Implements a knowledge source backend based on a database export of BioPortal
- * ontologies. Since BioPortal only has standard ontologies (eg, ICD-9, CPT,
- * LOINC), all of the KnowledgeSourceBackend methods that look for higher level
- * abstractions return null or empty arrays. All terms in BioPortal ontologies
- * are assumed to be {@link org.protempa.EventDefinition} objects in Protempa.
+ * Implements using an <a href="http://www.i2b2.org">i2b2</a> metadata schema to
+ * store proposition definitions.
  */
 @BackendInfo(displayName = "I2b2 Knowledge Source Backend")
 public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBackend {
@@ -92,7 +93,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private static final ValueSet defaultRacePropertyValueSet;
     private static final ValueSet defaultInoutPropertyValueSet;
     private static final String defaultVisitPropositionId;
-    
+    private static final Date DIMENSION_PROP_DEFS_CREATED_DATE;
+
+    static {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(2015, Calendar.FEBRUARY, 8, 22, 13, 0);
+        DIMENSION_PROP_DEFS_CREATED_DATE = cal.getTime();
+    }
+
     static {
         try {
             visitPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/visitProposition.properties");
@@ -103,7 +112,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
         defaultPatientDetailsPropositionId = patientDetailsPropositionProperties.getProperty("propositionId");
         defaultLanguagePropertyValueSet = parseValueSetResource(
-                defaultPatientDetailsPropositionId, 
+                patientDetailsPropositionProperties.getProperty("language.valueSet.id"),
                 patientDetailsPropositionProperties.getProperty("language.valueSet.resource.name"),
                 patientDetailsPropositionProperties.getProperty("language.valueSet.resource.hasHeader"),
                 patientDetailsPropositionProperties.getProperty("language.valueSet.resource.delimiter"),
@@ -111,7 +120,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 patientDetailsPropositionProperties.getProperty("language.valueSet.resource.column.displayName"),
                 patientDetailsPropositionProperties.getProperty("language.valueSet.resource.column.description"));
         defaultMaritalStatusPropertyValueSet = parseValueSetResource(
-                defaultPatientDetailsPropositionId, 
+                patientDetailsPropositionProperties.getProperty("maritalStatus.valueSet.id"),
                 patientDetailsPropositionProperties.getProperty("maritalStatus.valueSet.resource.name"),
                 patientDetailsPropositionProperties.getProperty("maritalStatus.valueSet.resource.hasHeader"),
                 patientDetailsPropositionProperties.getProperty("maritalStatus.valueSet.resource.delimiter"),
@@ -119,19 +128,19 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 patientDetailsPropositionProperties.getProperty("maritalStatus.valueSet.resource.column.displayName"),
                 patientDetailsPropositionProperties.getProperty("maritalStatus.valueSet.resource.column.description"));
         defaultReligionPropertyValueSet = parseValueSetResource(
-                defaultPatientDetailsPropositionId, 
+                patientDetailsPropositionProperties.getProperty("religion.valueSet.id"),
                 patientDetailsPropositionProperties.getProperty("religion.valueSet.resource.name"),
                 patientDetailsPropositionProperties.getProperty("religion.valueSet.resource.hasHeader"),
                 patientDetailsPropositionProperties.getProperty("religion.valueSet.resource.delimiter"),
                 patientDetailsPropositionProperties.getProperty("religion.valueSet.resource.column.id"),
                 patientDetailsPropositionProperties.getProperty("religion.valueSet.resource.column.displayName"),
                 patientDetailsPropositionProperties.getProperty("religion.valueSet.resource.column.description"));
-        defaultGenderPropertyValueSet = parseValueSet(defaultPatientDetailsPropositionId, patientDetailsPropositionProperties.getProperty("gender.valueSet.values"));
-        defaultRacePropertyValueSet = parseValueSet(defaultPatientDetailsPropositionId, patientDetailsPropositionProperties.getProperty("race.valueSet.values"));
-        
+        defaultGenderPropertyValueSet = parseValueSet(patientDetailsPropositionProperties.getProperty("gender.valueSet.id"), patientDetailsPropositionProperties.getProperty("gender.valueSet.values"));
+        defaultRacePropertyValueSet = parseValueSet(patientDetailsPropositionProperties.getProperty("race.valueSet.id"), patientDetailsPropositionProperties.getProperty("race.valueSet.values"));
+
         defaultVisitPropositionId = visitPropositionProperties.getProperty("propositionId");
-        defaultInoutPropertyValueSet = parseValueSet(defaultVisitPropositionId, visitPropositionProperties.getProperty("inout.valueSet.values"));
-        
+        defaultInoutPropertyValueSet = parseValueSet(visitPropositionProperties.getProperty("inout.valueSet.id"), visitPropositionProperties.getProperty("inout.valueSet.values"));
+
     }
 
     private ValueMetadataSupport valueMetadataSupport;
@@ -141,7 +150,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private String patientDetailsPropositionId;
     private String visitPropositionId;
     private String providerPropositionId;
-    
+
     private String providerNamePropertyName;
     private String inoutPropertyName;
     private String inoutPropertySource;
@@ -206,91 +215,93 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private String visitDisplayName;
     private String providerDisplayName;
     private ConceptProperty[] conceptProperties;
-    private Map<String, ValueSet> valueSets;
-    
+    private final Map<String, ValueSet> valueSets;
+    private final BackendSourceIdFactory sourceIdFactory;
+
     public I2b2KnowledgeSourceBackend() {
         this.querySupport = new QuerySupport();
         this.levelReader = new LevelReader(this.querySupport);
         this.conceptPropertyReader = new ConceptPropertyReader(this.querySupport);
         this.conceptProperties = DEFAULT_CONCEPT_PROPERTIES_ARR;
         this.valueSets = new HashMap<>();
-        
+
         /**
          * Patient
          */
         this.patientDetailsPropositionId = defaultPatientDetailsPropositionId;
         this.patientDetailsDisplayName = patientDetailsPropositionProperties.getProperty("displayName");
-        
+
         this.genderPropertyName = patientDetailsPropositionProperties.getProperty("gender.propertyName");
         this.genderPropertyValueSet = defaultGenderPropertyValueSet;
         if (this.genderPropertyValueSet != null) {
             this.valueSets.put(this.genderPropertyValueSet.getId(), this.genderPropertyValueSet);
         }
         this.genderPropertySource = patientDetailsPropositionProperties.getProperty("gender.valueSet.source");
-        
+
         this.racePropertyName = patientDetailsPropositionProperties.getProperty("race.propertyName");
         this.racePropertyValueSet = defaultRacePropertyValueSet;
         if (this.racePropertyValueSet != null) {
             this.valueSets.put(this.racePropertyValueSet.getId(), this.racePropertyValueSet);
         }
         this.racePropertySource = patientDetailsPropositionProperties.getProperty("race.valueSet.source");
-        
+
         this.languagePropertyName = patientDetailsPropositionProperties.getProperty("language.propertyName");
         this.languagePropertyValueSet = defaultLanguagePropertyValueSet;
         if (this.languagePropertyValueSet != null) {
             this.valueSets.put(this.languagePropertyValueSet.getId(), this.languagePropertyValueSet);
         }
         this.languagePropertySource = patientDetailsPropositionProperties.getProperty("language.valueSet.source");
-        
+
         this.maritalStatusPropertyName = patientDetailsPropositionProperties.getProperty("maritalStatus.propertyName");
         this.maritalStatusPropertyValueSet = defaultMaritalStatusPropertyValueSet;
         if (this.maritalStatusPropertyValueSet != null) {
             this.valueSets.put(this.maritalStatusPropertyValueSet.getId(), this.maritalStatusPropertyValueSet);
         }
         this.maritalStatusPropertySource = patientDetailsPropositionProperties.getProperty("maritalStatus.valueSet.source");
-        
+
         this.religionPropertyName = patientDetailsPropositionProperties.getProperty("religion.propertyName");
         this.religionPropertyValueSet = defaultReligionPropertyValueSet;
         if (this.religionPropertyValueSet != null) {
             this.valueSets.put(this.religionPropertyValueSet.getId(), this.religionPropertyValueSet);
         }
         this.religionPropertySource = patientDetailsPropositionProperties.getProperty("religion.valueSet.source");
-        
+
         this.dateOfBirthPropertyName = patientDetailsPropositionProperties.getProperty("dateOfBirth.propertyName");
-        
+
         this.ageInYearsPropertyName = patientDetailsPropositionProperties.getProperty("ageInYears.propertyName");
-        
+
         this.dateOfDeathPropertyName = patientDetailsPropositionProperties.getProperty("dateOfDeath.propertyName");
-        
+
         this.vitalStatusPropertyName = patientDetailsPropositionProperties.getProperty("vitalStatus.propertyName");
-        
+
         /**
          * Visit
          */
         this.visitPropositionId = defaultVisitPropositionId;
         this.visitDisplayName = visitPropositionProperties.getProperty("displayName");
-        
+
         this.inoutPropertyName = visitPropositionProperties.getProperty("inout.propertyName");
         this.inoutPropertyValueSet = defaultInoutPropertyValueSet;
         if (this.inoutPropertyValueSet != null) {
             this.valueSets.put(this.inoutPropertyValueSet.getId(), this.inoutPropertyValueSet);
         }
         this.inoutPropertySource = visitPropositionProperties.getProperty("inout.valueSet.source");
-        
+
         this.visitAgePropertyName = visitPropositionProperties.getProperty("age.propertyName");
-        
+
         /**
          * Provider
          */
         this.providerPropositionId = providerPropositionProperties.getProperty("propositionId");
         this.providerDisplayName = visitPropositionProperties.getProperty("displayName");
         this.providerNamePropertyName = providerPropositionProperties.getProperty("name.propertyName");
-        
+
         this.genderPropertyValueSetDelimiter = DEFAULT_DELIMITER;
         this.racePropertyValueSetDelimiter = DEFAULT_DELIMITER;
         this.languagePropertyValueSetDelimiter = DEFAULT_DELIMITER;
         this.maritalStatusPropertyValueSetDelimiter = DEFAULT_DELIMITER;
         this.religionPropertyValueSetDelimiter = DEFAULT_DELIMITER;
+        this.sourceIdFactory = new BackendSourceIdFactory(this);
     }
 
     /**
@@ -313,6 +324,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
      */
     public void setDatabaseApi(DatabaseAPI databaseApi) {
         this.querySupport.setDatabaseApi(databaseApi);
+    }
+
+    public String getTargetTable() {
+        return this.querySupport.getExcludeTableName();
+    }
+
+    @BackendProperty
+    public void setTargetTable(String tableName) {
+        this.querySupport.setExcludeTableName(tableName);
     }
 
     /**
@@ -366,7 +386,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             this.patientDetailsPropositionId = defaultPatientDetailsPropositionId;
         }
     }
-    
+
     public String getPatientDetailsDisplayName() {
         return patientDetailsDisplayName;
     }
@@ -375,7 +395,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setPatientDetailsDisplayName(String patientDetailsDisplayName) {
         this.patientDetailsDisplayName = patientDetailsDisplayName;
     }
-    
+
     public String getVisitPropositionId() {
         return visitPropositionId;
     }
@@ -397,7 +417,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setVisitDisplayName(String visitDisplayName) {
         this.visitDisplayName = visitDisplayName;
     }
-    
+
     public String getProviderPropositionId() {
         return providerPropositionId;
     }
@@ -419,7 +439,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setProviderDisplayName(String providerDisplayName) {
         this.providerDisplayName = providerDisplayName;
     }
-    
+
     public String getProviderNamePropertyName() {
         return providerNamePropertyName;
     }
@@ -450,11 +470,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public ValueSet getInoutPropertyValueSet() {
         return inoutPropertyValueSet;
     }
-    
+
     public void setInoutPropertyValueSet(ValueSet inoutPropertyValueSet) {
         this.inoutPropertyValueSet = inoutPropertyValueSet;
     }
-    
+
     @BackendProperty(propertyName = "inoutPropertyValueSet")
     public void parseInoutPropertyValueSet(String valueSetStr) {
         this.inoutPropertyValueSet = parseValueSet(this.visitPropositionId, valueSetStr);
@@ -532,7 +552,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setInoutPropertyValueSetDescriptionColumn(Integer inoutPropertyValueSetDescriptionColumn) {
         this.inoutPropertyValueSetDescriptionColumn = inoutPropertyValueSetDescriptionColumn;
     }
-    
+
     public String getVisitAgePropertyName() {
         return visitAgePropertyName;
     }
@@ -563,7 +583,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void parseGenderPropertyValueSet(String valueSetStr) {
         this.genderPropertyValueSet = parseValueSet(this.patientDetailsPropositionId, valueSetStr);
     }
-    
+
     public String getGenderPropertySource() {
         return genderPropertySource;
     }
@@ -645,7 +665,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setGenderPropertyValueSetDescriptionColumn(Integer genderPropertyValueSetDescriptionColumn) {
         this.genderPropertyValueSetDescriptionColumn = genderPropertyValueSetDescriptionColumn;
     }
-    
+
     public String getRacePropertyName() {
         return racePropertyName;
     }
@@ -740,7 +760,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setRacePropertyValueSetDescriptionColumn(Integer racePropertyValueSetDescriptionColumn) {
         this.racePropertyValueSetDescriptionColumn = racePropertyValueSetDescriptionColumn;
     }
-    
+
     public String getRacePropertySource() {
         return racePropertySource;
     }
@@ -844,7 +864,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setLanguagePropertyValueSetDescriptionColumn(Integer languagePropertyValueSetDescriptionColumn) {
         this.languagePropertyValueSetDescriptionColumn = languagePropertyValueSetDescriptionColumn;
     }
-    
+
     public String getLanguagePropertySource() {
         return languagePropertySource;
     }
@@ -861,7 +881,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setMaritalStatusPropertyValueSet(ValueSet maritalStatusPropertyValueSet) {
         this.maritalStatusPropertyValueSet = maritalStatusPropertyValueSet;
     }
-    
+
     @BackendProperty(propertyName = "maritalStatusPropertyValueSet")
     public void parseMaritalStatusPropertyValueSet(String valueSetStr) {
         this.maritalStatusPropertyValueSet = parseValueSet(this.patientDetailsPropositionId, valueSetStr);
@@ -939,7 +959,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setMaritalStatusPropertyValueSetDescriptionColumn(Integer maritalStatusPropertyValueSetDescriptionColumn) {
         this.maritalStatusPropertyValueSetDescriptionColumn = maritalStatusPropertyValueSetDescriptionColumn;
     }
-    
+
     public String getMaritalStatusPropertySource() {
         return maritalStatusPropertySource;
     }
@@ -974,7 +994,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setReligionPropertyValueSet(ValueSet religionPropertyValueSet) {
         this.religionPropertyValueSet = religionPropertyValueSet;
     }
-    
+
     @BackendProperty(propertyName = "religionPropertyValueSet")
     public void parseReligionPropertyValueSet(String valueSetStr) {
         this.religionPropertyValueSet = parseValueSet(this.patientDetailsPropositionId, valueSetStr);
@@ -1052,11 +1072,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setReligionPropertyValueSetDescriptionColumn(Integer religionPropertyValueSetDescriptionColumn) {
         this.religionPropertyValueSetDescriptionColumn = religionPropertyValueSetDescriptionColumn;
     }
-    
+
     public String getReligionPropertySource() {
         return religionPropertySource;
     }
-    
+
     @BackendProperty
     public void setReligionPropertySource(String religionPropertySource) {
         this.religionPropertySource = religionPropertySource;
@@ -1109,7 +1129,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             this.conceptProperties = conceptProperties.clone();
         }
     }
-    
+
     @BackendProperty(propertyName = "conceptProperties")
     public void parseConceptProperties(String conceptProperties) {
         if (conceptProperties != null) {
@@ -1133,13 +1153,13 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
         }
     }
-    
+
     @Override
     public PropositionDefinition readPropositionDefinition(String id) throws KnowledgeSourceReadException {
         if (logger.isLoggable(Level.FINEST)) {
             logger.log(Level.FINEST, "Looking for proposition {0}", id);
         }
-        
+
         if (id != null) {
             PropositionDefinition result;
             if (id.equals(this.patientDetailsPropositionId)) {
@@ -1167,7 +1187,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         Set<String> parents = this.levelReader.readParentsFromDatabase(propId);
         return parents.toArray(new String[parents.size()]);
     }
-    
+
     private static final QueryConstructor SEARCH_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -1178,7 +1198,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         }
     };
-    
+
     private static final ResultSetReader<Set<String>> SEARCH_RESULT_SET_READER = new ResultSetReader<Set<String>>() {
 
         @Override
@@ -1200,8 +1220,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public Set<String> getKnowledgeSourceSearchResults(String searchKey) throws KnowledgeSourceReadException {
         try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(SEARCH_QUERY_CONSTRUCTOR)) {
             return queryExecutor.execute(
-                "%" + I2B2Util.escapeLike(searchKey) + "%",
-                SEARCH_RESULT_SET_READER
+                    "%" + I2B2Util.escapeLike(searchKey) + "%",
+                    SEARCH_RESULT_SET_READER
             );
         }
     }
@@ -1217,13 +1237,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         ConstantDefinition providerDim = new ConstantDefinition(this.providerPropositionId);
         providerDim.setDisplayName(this.providerPropositionId);
         providerDim.setAccessed(now);
-        providerDim.setCreated(now);
+        providerDim.setCreated(DIMENSION_PROP_DEFS_CREATED_DATE);
+        providerDim.setSourceId(this.sourceIdFactory.getInstance());
         providerDim.setInDataSource(true);
         providerDim.setPropertyDefinitions(
-                new PropertyDefinition(this.providerPropositionId, this.providerNamePropertyName, ValueType.NOMINALVALUE, null, this.providerPropositionId));
+                new PropertyDefinition(this.providerPropositionId, this.providerNamePropertyName, null, ValueType.NOMINALVALUE, null, this.providerPropositionId));
         return providerDim;
     }
-    
+
     private static class Root {
 
         private final String fullName;
@@ -1243,7 +1264,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     }
-    
+
     private static final QueryConstructor ROOT_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -1270,7 +1291,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 throw new KnowledgeSourceReadException(ex);
             }
         }
-        
+
     };
 
     private EventDefinition newVisitPropositionDefinition() throws KnowledgeSourceReadException {
@@ -1278,14 +1299,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         EventDefinition visitDim = new EventDefinition(this.visitPropositionId);
         visitDim.setDisplayName(this.visitPropositionId);
         visitDim.setAccessed(now);
-        visitDim.setCreated(now);
+        visitDim.setCreated(DIMENSION_PROP_DEFS_CREATED_DATE);
+        visitDim.setSourceId(this.sourceIdFactory.getInstance());
         visitDim.setInDataSource(true);
         List<PropertyDefinition> visitDimPropertyDefs = new ArrayList<>();
-        visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.visitAgePropertyName, ValueType.NUMERICALVALUE, null, this.visitPropositionId));
-        visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.inoutPropertyName, ValueType.NOMINALVALUE, this.inoutPropertyValueSet.getId(), this.visitPropositionId));
+        visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.visitAgePropertyName, null, ValueType.NUMERICALVALUE, null, this.visitPropositionId));
+        visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.inoutPropertyName, null, ValueType.NOMINALVALUE, this.inoutPropertyValueSet.getId(), this.visitPropositionId));
         for (ConceptProperty cp : this.conceptProperties) {
             if (visitDim.getId().equals(cp.getPropositionId())) {
-                PropertyDefinition pd = new PropertyDefinition(this.visitPropositionId, cp.getPropertyBaseCode(), ValueType.NOMINALVALUE, cp.getPropertyBaseCode(), this.visitPropositionId);
+                PropertyDefinition pd = new PropertyDefinition(this.visitPropositionId, cp.getPropertyBaseCode(), null,  ValueType.NOMINALVALUE, cp.getPropertyBaseCode(), this.visitPropositionId);
                 visitDimPropertyDefs.add(pd);
             }
         }
@@ -1306,18 +1328,19 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         Date now = new Date();
         ConstantDefinition patientDim = new ConstantDefinition(this.patientDetailsPropositionId);
         patientDim.setAccessed(now);
-        patientDim.setCreated(now);
+        patientDim.setSourceId(this.sourceIdFactory.getInstance());
+        patientDim.setCreated(DIMENSION_PROP_DEFS_CREATED_DATE);
         patientDim.setDisplayName(this.patientDetailsPropositionId);
         patientDim.setInDataSource(true);
         patientDim.setPropertyDefinitions(
-                new PropertyDefinition(this.patientDetailsPropositionId, this.ageInYearsPropertyName, ValueType.NUMERICALVALUE, null, this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfBirthPropertyName, ValueType.DATEVALUE, null, this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfDeathPropertyName, ValueType.DATEVALUE, null, this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.genderPropertyName, ValueType.NOMINALVALUE, this.genderPropertyValueSet.getId(), this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.languagePropertyName, ValueType.NOMINALVALUE, this.languagePropertyValueSet.getId(), this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.maritalStatusPropertyName, ValueType.NOMINALVALUE, this.maritalStatusPropertyValueSet.getId(), this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.racePropertyName, ValueType.NOMINALVALUE, this.racePropertyValueSet.getId(), this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.vitalStatusPropertyName, ValueType.BOOLEANVALUE, null, this.patientDetailsPropositionId));
+                new PropertyDefinition(this.patientDetailsPropositionId, this.ageInYearsPropertyName, null, ValueType.NUMERICALVALUE, null, this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfBirthPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfDeathPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.genderPropertyName, null, ValueType.NOMINALVALUE, this.genderPropertyValueSet.getId(), this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.languagePropertyName, null, ValueType.NOMINALVALUE, this.languagePropertyValueSet.getId(), this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.maritalStatusPropertyName, null, ValueType.NOMINALVALUE, this.maritalStatusPropertyValueSet.getId(), this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.racePropertyName, null, ValueType.NOMINALVALUE, this.racePropertyValueSet.getId(), this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.vitalStatusPropertyName, null, ValueType.BOOLEANVALUE, null, this.patientDetailsPropositionId));
         patientDim.setReferenceDefinitions(
                 new ReferenceDefinition("encounters", this.visitPropositionId)
         );
@@ -1339,7 +1362,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         if (logger.isLoggable(Level.FINEST)) {
             logger.log(Level.FINEST, "Looking for proposition {0}", id);
         }
-        
+
         if (id != null) {
             TemporalPropositionDefinition result;
             if (id.equals(this.visitPropositionId)) {
@@ -1371,7 +1394,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public String[] readSubContextOfs(String propId) throws KnowledgeSourceReadException {
         return ArrayUtils.EMPTY_STRING_ARRAY;
     }
-    
+
     private static final QueryConstructor READ_ONE_PROP_DEF_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -1403,8 +1426,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                             try {
                                 if (rs.next()) {
                                     CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
                                     valueMetadataParser.setConceptBaseCode(id);
+                                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
                                     valueMetadataSupport.parseAndFreeClob(xmlReader, rs.getClob(1));
                                     SAXParseException exception = valueMetadataParser.getException();
                                     if (exception != null) {
@@ -1423,7 +1446,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             );
         }
     }
-    
+
     private static final ResultSetReader<Collection<String>> IN_DS_RESULT_SET_READER = new ResultSetReader<Collection<String>>() {
 
         @Override
@@ -1439,7 +1462,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
         }
     };
-    
+
     private final static QueryConstructor IDS_PROPID_QC = new QueryConstructor() {
 
         @Override
@@ -1452,7 +1475,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private final static QueryConstructor N_PROPID_QC = new QueryConstructor() {
 
         @Override
@@ -1465,38 +1488,59 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     @Override
     public Collection<String> collectPropIdDescendantsUsingAllNarrower(boolean inDataSourceOnly, final String[] propIds) throws KnowledgeSourceReadException {
-        if (propIds != null) {
-            ProtempaUtil.checkArrayForNullElement(propIds, racePropertyName);
-        }
-        final List<String> result = new ArrayList<>();
+        final Set<String> result = new HashSet<>();
         if (propIds != null && propIds.length > 0) {
-        final List<String> partial = new ArrayList<>(propIds.length);
-        for (String propId : propIds) {
-            if (patientDetailsPropositionId.equals(propId)) {
-                result.add(propId);
-            } else if (visitPropositionId.equals(propId)) {
-                result.add(propId);
-            } else if (providerPropositionId.equals(propId)) {
-                result.add(propId);
-            } else {
-                partial.add(propId);
-            }
-        }
-        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(inDataSourceOnly ? IDS_PROPID_QC : N_PROPID_QC)) {
-            queryExecutor.prepare();
-            for (String partialPropId : partial) {
-                result.addAll(queryExecutor.execute(
-                        partialPropId, 
-                        IN_DS_RESULT_SET_READER));
+            try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(inDataSourceOnly ? IDS_PROPID_QC : N_PROPID_QC)) {
+                queryExecutor.prepare();
+                for (String propId : filterPropId(propIds, result)) {
+                    result.addAll(queryExecutor.execute(
+                            propId,
+                            IN_DS_RESULT_SET_READER));
                 }
             }
         }
         return result;
     }
-    
+
+    private Set<String> filterPropId(String[] propIds, final Collection<String> result) {
+        Set<String> propIdsAsSet = Arrays.asSet(propIds);
+        for (Iterator<String> itr = propIdsAsSet.iterator(); itr.hasNext();) {
+            String propId = itr.next();
+            if (patientDetailsPropositionId.equals(propId)) {
+                result.add(propId);
+                itr.remove();
+            } else if (visitPropositionId.equals(propId)) {
+                result.add(propId);
+                itr.remove();
+            } else if (providerPropositionId.equals(propId)) {
+                result.add(propId);
+                itr.remove();
+            }
+        }
+        return propIdsAsSet;
+    }
+
+    private Set<String> filterPropDef(String[] propIds, final List<PropositionDefinition> result) throws KnowledgeSourceReadException {
+        Set<String> propIdsAsSet = Arrays.asSet(propIds);
+        for (Iterator<String> itr = propIdsAsSet.iterator(); itr.hasNext();) {
+            String propId = itr.next();
+            if (patientDetailsPropositionId.equals(propId)) {
+                result.add(newPatientPropositionDefinition());
+                itr.remove();
+            } else if (visitPropositionId.equals(propId)) {
+                result.add(newVisitPropositionDefinition());
+                itr.remove();
+            } else if (providerPropositionId.equals(propId)) {
+                result.add(newProviderPropositionDefinition());
+                itr.remove();
+            }
+        }
+        return propIdsAsSet;
+    }
+
     private final static QueryConstructor COLLECT_SUBTREE_PROPID_QC = new QueryConstructor() {
 
         @Override
@@ -1509,43 +1553,28 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     @Override
     public Collection<String> collectPropIdDescendantsUsingInverseIsA(final String[] propIds) throws KnowledgeSourceReadException {
-        if (propIds != null) {
-            ProtempaUtil.checkArrayForNullElement(propIds, racePropertyName);
-        }
-        final List<String> result = new ArrayList<>();
+        final Set<String> result = new HashSet<>();
         if (propIds != null && propIds.length > 0) {
-            final List<String> partial = new ArrayList<>(propIds.length);
-            for (String propId : propIds) {
-                if (patientDetailsPropositionId.equals(propId)) {
-                    result.add(propId);
-                } else if (visitPropositionId.equals(propId)) {
-                    result.add(propId);
-                } else if (providerPropositionId.equals(propId)) {
-                    result.add(propId);
-                } else {
-                    partial.add(propId);
-                }
-            }
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(COLLECT_SUBTREE_PROPID_QC)) {
                 queryExecutor.prepare();
-                for (String partialPropId : partial) {
+                for (String propId : filterPropId(propIds, result)) {
                     result.addAll(queryExecutor.execute(
-                        partialPropId, 
-                        IN_DS_RESULT_SET_READER));
+                            propId,
+                            IN_DS_RESULT_SET_READER));
                 }
             }
         }
         return result;
     }
-    
+
     private final static QueryConstructor IDS_PROPDEF_QC = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL FROM ");
+            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
             sql.append(table);
             sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
             sql.append(table);
@@ -1553,12 +1582,12 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private final static QueryConstructor N_PROPDEF_QC = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL FROM ");
+            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
             sql.append(table);
             sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
             sql.append(table);
@@ -1569,48 +1598,36 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public Collection<PropositionDefinition> collectPropDefDescendantsUsingAllNarrower(boolean inDataSourceOnly, final String[] propIds) throws KnowledgeSourceReadException {
-        if (propIds != null) {
-            ProtempaUtil.checkArrayForNullElement(propIds, "propIds");
-        }
         final List<PropositionDefinition> result = new ArrayList<>();
-        final List<String> partial = new ArrayList<>();
+
         if (propIds != null && propIds.length > 0) {
-            for (String propId : propIds) {
-                if (patientDetailsPropositionId.equals(propId)) {
-                    result.add(newPatientPropositionDefinition());
-                } else if (visitPropositionId.equals(propId)) {
-                    result.add(newVisitPropositionDefinition());
-                } else if (providerPropositionId.equals(propId)) {
-                    result.add(newProviderPropositionDefinition());
-                } else {
-                    partial.add(propId);
-                }
-            }
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(inDataSourceOnly ? IDS_PROPDEF_QC : N_PROPDEF_QC)) {
                 queryExecutor.prepare();
-                for (String partialPropId : partial) {
+                ListResultSetReader reader = new ListResultSetReader();
+                for (String propId : filterPropDef(propIds, result)) {
                     result.addAll(queryExecutor.execute(
-                    partialPropId, 
-                    listResultSetReader));
+                            propId,
+                            reader));
                 }
             }
-            
+
             final Map<String, PropositionDefinition> resultMap = new HashMap<>();
             for (PropositionDefinition propDef : result) {
                 resultMap.put(propDef.getId(), propDef);
             }
-            Map<String, List<String>> children = this.levelReader.readChildrenFromDatabase(resultMap.keySet());
-            for (Map.Entry<String, List<String>> me : children.entrySet()) {
+
+            Map<String, Set<String>> children = this.levelReader.readChildrenFromDatabase(resultMap.keySet());
+            for (Map.Entry<String, Set<String>> me : children.entrySet()) {
                 PropositionDefinition pd = resultMap.get(me.getKey());
-                List<String> value = me.getValue();
+                Set<String> value = me.getValue();
                 ((AbstractPropositionDefinition) pd).setInverseIsA(value.toArray(new String[value.size()]));
             }
-            
+
             List<PropertyDefinitionPartial> properties;
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_ALL_PROPERTIES_CONSTRUCTOR)) {
                 properties = queryExecutor.execute(ALL_PROPS_RSR);
             }
-            
+
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_APPLICABLE_CONCEPTS_CONSTRUCTOR)) {
                 queryExecutor.prepare();
                 for (final PropertyDefinitionPartial property : properties) {
@@ -1643,12 +1660,12 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
         return result;
     }
-    
+
     private final static QueryConstructor COLLECT_SUBTREE_PROPDEF_QC = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL FROM ");
+            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
             sql.append(table);
             sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
             sql.append(table);
@@ -1656,51 +1673,36 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     @Override
     public Collection<PropositionDefinition> collectPropDefDescendantsUsingInverseIsA(final String[] propIds) throws KnowledgeSourceReadException {
-        if (propIds != null) {
-            ProtempaUtil.checkArrayForNullElement(propIds, "propIds");
-        }
         final List<PropositionDefinition> result = new ArrayList<>();
-        final List<String> partial = new ArrayList<>();
+
         if (propIds != null && propIds.length > 0) {
-            for (String propId : propIds) {
-                if (patientDetailsPropositionId.equals(propId)) {
-                    result.add(newPatientPropositionDefinition());
-                } else if (visitPropositionId.equals(propId)) {
-                    result.add(newVisitPropositionDefinition());
-                } else if (providerPropositionId.equals(propId)) {
-                    result.add(newProviderPropositionDefinition());
-                } else {
-                    partial.add(propId);
-                }
-            }
-            
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(COLLECT_SUBTREE_PROPDEF_QC)) {
                 queryExecutor.prepare();
-                for (String partialPropId : partial) {
+                ListResultSetReader reader = new ListResultSetReader();
+                for (String propId : filterPropDef(propIds, result)) {
                     result.addAll(queryExecutor.execute(
-                    partialPropId, 
-                    listResultSetReader));
+                            propId,
+                            reader));
                 }
             }
             final Map<String, PropositionDefinition> resultMap = new HashMap<>();
             for (PropositionDefinition propDef : result) {
                 resultMap.put(propDef.getId(), propDef);
             }
-            Map<String, List<String>> children = this.levelReader.readChildrenFromDatabase(resultMap.keySet());
-            for (Map.Entry<String, List<String>> me : children.entrySet()) {
-                PropositionDefinition pd = resultMap.get(me.getKey());
-                List<String> value = me.getValue();
+            Map<String, Set<String>> children = this.levelReader.readChildrenFromDatabase(resultMap.keySet());
+            for (PropositionDefinition pd : result) {
+                Set<String> value = children.get(pd.getId());
                 ((AbstractPropositionDefinition) pd).setInverseIsA(value.toArray(new String[value.size()]));
             }
-            
+
             List<PropertyDefinitionPartial> properties;
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_ALL_PROPERTIES_CONSTRUCTOR)) {
                 properties = queryExecutor.execute(ALL_PROPS_RSR);
             }
-            
+
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_APPLICABLE_CONCEPTS_CONSTRUCTOR)) {
                 queryExecutor.prepare();
                 for (final PropertyDefinitionPartial property : properties) {
@@ -1730,24 +1732,23 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     });
                 }
             }
-            result.addAll(resultMap.values());
         }
         return result;
     }
-    
+
     private static final QueryConstructor READ_ALL_PROPERTIES_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.C_METADATAXML, (SELECT C_SYMBOL FROM ");
             sql.append(table);
-            sql.append(" A2 WHERE A2.C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND A2.C_SYNONYM_CD='N' and A2.M_APPLIED_PATH='@'), A1.C_FULLNAME FROM ");
+            sql.append(" A2 WHERE A2.C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND A2.C_SYNONYM_CD='N' and A2.M_APPLIED_PATH='@'), A1.C_FULLNAME, A1.C_SYMBOL FROM ");
             sql.append(table);
             sql.append(" A1 WHERE A1.C_SYNONYM_CD ='N' AND A1.M_APPLIED_PATH<>'@'");
         }
 
     };
-    
+
     private static final QueryConstructor READ_APPLICABLE_CONCEPTS_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -1760,7 +1761,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private final ResultSetReader<List<PropertyDefinitionPartial>> ALL_PROPS_RSR = new ResultSetReader<List<PropertyDefinitionPartial>>() {
 
         @Override
@@ -1770,31 +1771,32 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
                 XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
                 while (rs.next()) {
+                    valueMetadataParser.setConceptBaseCode(rs.getString(1));
                     valueMetadataSupport.parseAndFreeClob(xmlReader, rs.getClob(3));
                     ValueType valueType = valueMetadataParser.getValueType();
                     ValueSet valueSet = valueMetadataParser.getValueSet();
-                    props.add(new PropertyDefinitionPartial(rs.getString(5), rs.getString(1), valueType, valueSet != null ? valueSet.getId() : null, rs.getString(4)));
+                    props.add(new PropertyDefinitionPartial(rs.getString(5), rs.getString(6), rs.getString(1), valueType, valueSet != null ? valueSet.getId() : null, rs.getString(4)));
                 }
             } catch (SQLException ex) {
                 throw new KnowledgeSourceReadException(ex);
             }
             return props;
         }
-        
+
     };
-    
+
     private static final QueryConstructor READ_FACT_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL FROM ");
+            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
             sql.append(table);
             sql.append(" WHERE C_SYNONYM_CD='N' AND C_SYMBOL=?");
         }
 
     };
-    
-    private void newTemporalPropositionDefinition(ResultSet rs, List<TemporalPropositionDefinition> r) throws SAXParseException, KnowledgeSourceReadException, SQLException {
+
+    private void newTemporalPropositionDefinition(ResultSet rs, List<TemporalPropositionDefinition> r, Date accessed) throws SAXParseException, KnowledgeSourceReadException, SQLException {
         if (Arrays.contains(VALUE_TYPE_CDS, rs.getString(3))) {
             CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
             XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
@@ -1809,24 +1811,42 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             result.setDescription(rs.getString(4));
             result.setInDataSource(rs.getBoolean(6));
             result.setValueType(valueType);
+            result.setAccessed(accessed);
+            result.setCreated(rs.getTimestamp(8));
+            result.setUpdated(rs.getTimestamp(9));
+            result.setDownloaded(rs.getTimestamp(10));
+            result.setSourceId(this.sourceIdFactory.getInstance());
             r.add(result);
         } else {
             EventDefinition result = new EventDefinition(rs.getString(7));
             result.setDisplayName(rs.getString(1));
             result.setDescription(rs.getString(4));
             result.setInDataSource(rs.getBoolean(6));
+            result.setAccessed(accessed);
+            result.setCreated(rs.getTimestamp(8));
+            result.setUpdated(rs.getTimestamp(9));
+            result.setDownloaded(rs.getTimestamp(10));
+            result.setSourceId(this.sourceIdFactory.getInstance());
             r.add(result);
         }
     }
-    
-    private final ResultSetReader<List<TemporalPropositionDefinition>> listResultSetReader = new ResultSetReader<List<TemporalPropositionDefinition>>() {
 
+    private class ListResultSetReader implements ResultSetReader<List<TemporalPropositionDefinition>> {
+        private Set<String> propIds;
+
+        ListResultSetReader() {
+            this.propIds = new HashSet<>();
+        }
+        
         @Override
         public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
                 List<TemporalPropositionDefinition> r = new ArrayList<>();
+                Date now = new Date();
                 while (rs.next()) {
-                    newTemporalPropositionDefinition(rs, r);
+                    if (this.propIds.add(rs.getString(7))) {
+                        newTemporalPropositionDefinition(rs, r, now);
+                    }
                 }
                 return r;
             } catch (SQLException | SAXParseException ex) {
@@ -1834,8 +1854,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
         }
 
-    };
-    
+    }
+
     private final ResultSetReader<TemporalPropositionDefinition> resultSetReader = new ResultSetReader<TemporalPropositionDefinition>() {
 
         @Override
@@ -1843,7 +1863,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             try {
                 List<TemporalPropositionDefinition> r = new ArrayList<>();
                 if (rs.next()) {
-                    newTemporalPropositionDefinition(rs, r);
+                    newTemporalPropositionDefinition(rs, r, new Date());
                     AbstractPropositionDefinition abd = (AbstractPropositionDefinition) r.get(0);
                     Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
                     abd.setInverseIsA(children.toArray(new String[children.size()]));
@@ -1857,15 +1877,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private TemporalPropositionDefinition readFact(final String id) throws KnowledgeSourceReadException {
         try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FACT_QUERY_CONSTRUCTOR)) {
             return queryExecutor.execute(
-                id, 
-                resultSetReader);
+                    id,
+                    resultSetReader);
         }
     }
-    
+
     private static final QueryConstructor READ_PROP_DEF_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -1877,45 +1897,45 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(" A1 WHERE ? LIKE A1.M_APPLIED_PATH");
         }
     };
-    
+
     private List<PropertyDefinition> readPropertyDefinitions(final String symbol, String fullName) throws KnowledgeSourceReadException {
         try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PROP_DEF_QUERY_CONSTRUCTOR)) {
             return queryExecutor.execute(
-                fullName,
-                new ResultSetReader<List<PropertyDefinition>>() {
+                    fullName,
+                    new ResultSetReader<List<PropertyDefinition>>() {
 
-                    @Override
-                    public List<PropertyDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
-                        try {
-                            List<PropertyDefinition> result = new ArrayList<>();
-                            if (rs.isBeforeFirst()) {
-                                CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                                XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                                while (rs.next()) {
-                                    valueMetadataParser.setConceptBaseCode(rs.getString(1));
-                                    valueMetadataSupport.parseAndFreeClob(xmlReader, rs.getClob(3));
-                                    SAXParseException exception = valueMetadataParser.getException();
-                                    if (exception != null) {
-                                        throw exception;
+                        @Override
+                        public List<PropertyDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
+                            try {
+                                List<PropertyDefinition> result = new ArrayList<>();
+                                if (rs.isBeforeFirst()) {
+                                    CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
+                                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
+                                    while (rs.next()) {
+                                        valueMetadataParser.setConceptBaseCode(rs.getString(1));
+                                        valueMetadataSupport.parseAndFreeClob(xmlReader, rs.getClob(3));
+                                        SAXParseException exception = valueMetadataParser.getException();
+                                        if (exception != null) {
+                                            throw exception;
+                                        }
+                                        ValueType valueType = valueMetadataParser.getValueType();
+                                        ValueSet valueSet = valueMetadataParser.getValueSet();
+                                        result.add(new PropertyDefinition(symbol, rs.getString(1), rs.getString(2), valueType, valueSet != null ? valueSet.getId() : null, rs.getString(4)));
                                     }
-                                    ValueType valueType = valueMetadataParser.getValueType();
-                                    ValueSet valueSet = valueMetadataParser.getValueSet();
-                                    result.add(new PropertyDefinition(symbol, rs.getString(2), valueType, valueSet != null ? valueSet.getId() : null, rs.getString(4)));
                                 }
+                                return result;
+                            } catch (SQLException | SAXParseException ex) {
+                                throw new KnowledgeSourceReadException(ex);
                             }
-                            return result;
-                        } catch (SQLException | SAXParseException ex) {
-                            throw new KnowledgeSourceReadException(ex);
                         }
-                    }
 
-                });
+                    });
         }
     }
 
-    private static ValueSet parseValueSet(String propId, String vses) {
+    private static ValueSet parseValueSet(String valueSetId, String vses) {
         try (Reader reader = new StringReader(vses);
-                CSVReader r = new CSVReader(reader, '\t')) {
+                CSVReader r = new CSVReader(reader, ',')) {
             String[] readNext = r.readNext();
             ValueSetElement[] vsesArr = new ValueSetElement[readNext.length];
             for (int i = 0; i < readNext.length; i++) {
@@ -1925,13 +1945,13 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     vsesArr[i] = new ValueSetElement(NominalValue.getInstance(segments[0]), segments[1], null);
                 }
             }
-            return new ValueSet(propId, vsesArr, null);
+            return new ValueSet(valueSetId, vsesArr, null);
         } catch (IOException ignore) {
             throw new AssertionError("Should never happen");
         }
     }
 
-    private static ValueSet parseValueSetResource(String propositionId, String name, String hasHeader, String delimiter, String idCol, String displayNameCol, String descriptionCol) {
+    private static ValueSet parseValueSetResource(String valueSetId, String name, String hasHeader, String delimiter, String idCol, String displayNameCol, String descriptionCol) {
         boolean header = Boolean.parseBoolean(hasHeader);
         int id = Integer.parseInt(idCol) - 1;
         int displayName;
@@ -1952,7 +1972,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 CSVReader r = new CSVReader(reader, delimiter.charAt(0))) {
             String[] cols;
             List<ValueSetElement> vsel = new ArrayList<>();
-            boolean first = true;
+            boolean first = header;
             while ((cols = r.readNext()) != null) {
                 if (first) {
                     first = false;
@@ -1960,10 +1980,10 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     vsel.add(new ValueSetElement(NominalValue.getInstance(cols[id]), displayName > -1 ? cols[displayName] : null, null));
                 }
             }
-            return new ValueSet(propositionId, vsel.toArray(new ValueSetElement[vsel.size()]), null);
+            return new ValueSet(valueSetId, vsel.toArray(new ValueSetElement[vsel.size()]), null);
         } catch (IOException ex) {
             throw new AssertionError("Should never happen");
         }
     }
-    
+
 }
