@@ -72,6 +72,8 @@ public class PatientDimension extends AbstractRecord {
     private Date birthDate;
     private Date deathDate;
     private String sourceSystem;
+    private Timestamp downloaded;
+    private Timestamp updated;
     
     public PatientDimension() {
         
@@ -184,10 +186,27 @@ public class PatientDimension extends AbstractRecord {
     public String getSourceSystem() {
         return sourceSystem;
     }
+
+    public Timestamp getDownloaded() {
+        return downloaded;
+    }
+
+    public void setDownloaded(Timestamp downloaded) {
+        this.downloaded = downloaded;
+    }
+    
+    public Timestamp getUpdated() {
+        return this.updated;
+    }
+    
+    public void setUpdated(Timestamp setTimestampAttribute) {
+        this.updated = updated;
+    }
     
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
+
 
 }

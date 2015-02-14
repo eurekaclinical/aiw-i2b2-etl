@@ -67,15 +67,6 @@ public class VisitDimensionFactory extends DimensionFactory {
         } else {
             encryptedIdStr = '@' + encryptedPatientId;
         }
-        Date updateDate;
-        if (encounterProp != null) {
-            updateDate = encounterProp.getUpdateDate();
-            if (updateDate == null) {
-                updateDate = encounterProp.getCreateDate();
-            }
-        } else {
-            updateDate = null;
-        }
 
         visitDimension.setEncryptedPatientId(TableUtil.setStringAttribute(encryptedPatientId));
         visitDimension.setStartDate(TableUtil.setDateAttribute(visitStartDate));
@@ -85,8 +76,12 @@ public class VisitDimensionFactory extends DimensionFactory {
         visitDimension.setVisitSourceSystem(this.qrhId);
         visitDimension.setEncryptedPatientIdSourceSystem(encryptedPatientIdSourceSystem);
         visitDimension.setActiveStatus(ActiveStatusCode.getInstance(true, visitStartDate, visitEndDate));
-        visitDimension.setDownloadDate(TableUtil.setTimestampAttribute(encounterProp != null ? encounterProp.getDownloadDate() : null));
-        visitDimension.setUpdateDate(TableUtil.setTimestampAttribute(updateDate));
+        Date updated = encounterProp != null ? encounterProp.getUpdateDate() : null;
+        if (updated == null && encounterProp != null) {
+            updated = encounterProp.getCreateDate();
+        }
+        visitDimension.setUpdated(TableUtil.setTimestampAttribute(updated));
+        visitDimension.setDownloaded(TableUtil.setTimestampAttribute(encounterProp != null ? encounterProp.getDownloadDate() : null));
         this.visitDimensionHandler.insert(visitDimension);
         this.encounterMappingHandler.insert(visitDimension);
         return visitDimension;

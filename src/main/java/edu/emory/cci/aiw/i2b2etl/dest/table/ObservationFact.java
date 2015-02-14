@@ -20,7 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
-import java.util.Date;
+import java.sql.Timestamp;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.protempa.proposition.value.*;
 
@@ -28,8 +28,8 @@ public class ObservationFact extends AbstractRecord {
 
     private String displayName;
     private Value value;
-    private java.util.Date startDate;
-    private java.util.Date endDate;
+    private Timestamp startDate;
+    private Timestamp endDate;
     private PatientDimension patient;
     private VisitDimension visit;
     private ProviderDimension provider;
@@ -39,8 +39,8 @@ public class ObservationFact extends AbstractRecord {
     private ValueFlagCode valueFlagCode;
     private long instanceNum;
     private String modifierCd;
-    private Date updateDate;
-    private Date downloadDate;
+    private Timestamp updateDate;
+    private Timestamp downloadDate;
 
     public ObservationFact() {
         this.modifierCd = "@";  //using the default value since we do not use this i2b2 feature currently
@@ -73,11 +73,11 @@ public class ObservationFact extends AbstractRecord {
         this.value = value;
     }
 
-    public void setStartDate(Date startDate) {
+    public void setStartDate(Timestamp startDate) {
         this.startDate = startDate;
     }
 
-    public void setEndDate(Date endDate) {
+    public void setEndDate(Timestamp endDate) {
         this.endDate = endDate;
     }
 
@@ -117,11 +117,11 @@ public class ObservationFact extends AbstractRecord {
         this.modifierCd = modifierCd;
     }
 
-    public void setUpdateDate(Date updateDate) {
+    public void setUpdateDate(Timestamp updateDate) {
         this.updateDate = updateDate;
     }
 
-    public void setDownloadDate(Date downloadDate) {
+    public void setDownloadDate(Timestamp downloadDate) {
         this.downloadDate = downloadDate;
     }
     
@@ -129,11 +129,11 @@ public class ObservationFact extends AbstractRecord {
         return concept;
     }
 
-    public Date getStartDate() {
+    public Timestamp getStartDate() {
         return startDate;
     }
 
-    public Date getEndDate() {
+    public Timestamp getEndDate() {
         return endDate;
     }
 
@@ -177,11 +177,11 @@ public class ObservationFact extends AbstractRecord {
         return this.modifierCd;
     }
     
-    public Date getDownloadDate() {
+    public Timestamp getDownloadDate() {
         return this.downloadDate;
     }
 
-    public Date getUpdateDate() {
+    public Timestamp getUpdateDate() {
         return updateDate;
     }
 

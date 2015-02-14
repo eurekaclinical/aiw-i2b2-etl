@@ -63,7 +63,7 @@ public abstract class AbstractFactHandler extends RecordHandler<ObservationFact>
         ps.setString(4, obx.getPatient().getEncryptedPatientId());
         ps.setString(5, obx.getPatient().getEncryptedPatientIdSourceSystem());
         ps.setString(6, TableUtil.setStringAttribute(obx.getProvider().getConcept().getConceptCode()));
-        ps.setDate(7, TableUtil.setDateAttribute(obx.getStartDate()));
+        ps.setTimestamp(7, obx.getStartDate());
         ps.setString(8, obx.getModifierCd());
         ps.setLong(9, obx.getInstanceNum());
 
@@ -100,10 +100,10 @@ public abstract class AbstractFactHandler extends RecordHandler<ObservationFact>
         ps.setObject(15, null);
         ps.setObject(16, null);
         ps.setString(17, obx.getUnits());
-        ps.setDate(18, TableUtil.setDateAttribute(obx.getEndDate()));
+        ps.setTimestamp(18, obx.getEndDate());
         ps.setString(19, null);
-        ps.setDate(20, null);
-        ps.setDate(21, null);
+        ps.setTimestamp(20, null);
+        ps.setTimestamp(21, obx.getDownloadDate());
         if (this.importTimestamp == null) {
             this.importTimestamp = new Timestamp(System.currentTimeMillis());
         }

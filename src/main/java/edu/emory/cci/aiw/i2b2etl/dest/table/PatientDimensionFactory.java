@@ -122,6 +122,9 @@ public class PatientDimensionFactory extends DimensionFactory {
                 patientDimension.setRace(race != null ? race.getFormatted() : null);
                 patientDimension.setSourceSystem(prop.getSourceSystem().getStringRepresentation());
                 patientDimension.setVital(VitalStatusCode.getInstance(null));
+                Date updateDate = prop.getUpdateDate();
+                patientDimension.setUpdated(TableUtil.setTimestampAttribute(updateDate != null ? updateDate : prop.getCreateDate()));
+                patientDimension.setDownloaded(TableUtil.setTimestampAttribute(prop.getDownloadDate()));
                 this.patientDimensionHandler.insert(patientDimension);
                 this.patientMappingHandler.insert(patientDimension);
                 return patientDimension;

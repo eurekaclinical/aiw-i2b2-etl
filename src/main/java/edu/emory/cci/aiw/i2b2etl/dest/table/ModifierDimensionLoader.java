@@ -46,7 +46,8 @@ public class ModifierDimensionLoader extends ConceptHierarchyLoader {
                 this.modifierDimension.setConceptCode(concept.getConceptCode());
                 this.modifierDimension.setDisplayName(concept.getDisplayName());
                 this.modifierDimension.setSourceSystemCode(concept.getSourceSystemCode());
-                this.modifierDimension.setDownloaded(concept.getDownloaded());
+                this.modifierDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
+                this.modifierDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
                 this.handler.insert(this.modifierDimension);
             }
         }

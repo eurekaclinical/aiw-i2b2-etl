@@ -44,8 +44,8 @@ public class ModifierDimensionHandler extends RecordHandler<ModifierDimension> {
         ps.setString(2, record.getPath());
         ps.setString(3, record.getDisplayName());
         ps.setObject(4, null);
-        ps.setTimestamp(5, null);
-        ps.setTimestamp(6, TableUtil.setTimestampAttribute(record.getDownloaded()));
+        ps.setTimestamp(5, record.getUpdated());
+        ps.setTimestamp(6, record.getDownloaded());
         ps.setTimestamp(7, importTimestamp());
         ps.setString(8, record.getSourceSystemCode());
     }

@@ -115,6 +115,8 @@ class PropositionConceptTreeBuilder implements OntologyBuilder {
                 PropDefConceptId.getInstance(propDef.getId(), null, null, this.metadata);
         Concept newChild = new Concept(conceptId, this.conceptCode, this.metadata);
         newChild.setDownloaded(propDef.getDownloaded());
+        Date updated = propDef.getUpdated();
+        newChild.setUpdated(updated != null ? propDef.getUpdated() : propDef.getCreated());
         String[] children = propDef.getChildren();
         String[] inverseIsAs = propDef.getInverseIsA();
         newChild.setInDataSource(children.length == 0 //is a leaf
@@ -165,6 +167,8 @@ class PropositionConceptTreeBuilder implements OntologyBuilder {
                     ConceptId modId = ModifierConceptId.getInstance(propDef.getId(), propertyDef.getId(), this.metadata);
                     Concept mod = new Concept(modId, modifier.getCodePrefix(), this.metadata);
                     mod.setDisplayName(modifier.getDisplayName());
+                    Date updated = propDef.getUpdated();
+                    mod.setUpdated(updated != null ? propDef.getUpdated() : propDef.getCreated());
                     mod.setDownloaded(propDef.getDownloaded());
                     mod.setSourceSystemCode(
                             MetadataUtil.toSourceSystemCode(

@@ -233,6 +233,14 @@ public final class Concept extends DefaultMutableTreeNode implements Record {
     public Date getDownloaded() {
         return usrObj.getDownloaded();
     }
+    
+    public void setUpdated(Date updated) {
+        usrObj.setUpdated(updated);
+    }
+    
+    public Date getUpdated() {
+        return usrObj.getUpdated();
+    }
 
     public boolean isModifier() {
         return !getAppliedPath().equals("@");
@@ -301,5 +309,5 @@ public final class Concept extends DefaultMutableTreeNode implements Record {
     public void addRejectionReason(String rejectedReason) {
         usrObj.addRejectionReason(rejectedReason);
     }
-    
+
 }

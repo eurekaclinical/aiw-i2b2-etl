@@ -56,8 +56,8 @@ public class PatientDimensionHandler extends RecordHandler<PatientDimension> {
         ps.setString(12, patient.getZip());
         ps.setString(13, null);
         ps.setObject(14, null);
-        ps.setTimestamp(15, null);
-        ps.setTimestamp(16, null);
+        ps.setTimestamp(15, patient.getUpdated());
+        ps.setTimestamp(16, patient.getDownloaded());
         ps.setTimestamp(17, importTimestamp());
         ps.setString(18, MetadataUtil.toSourceSystemCode(patient.getSourceSystem()));
     }

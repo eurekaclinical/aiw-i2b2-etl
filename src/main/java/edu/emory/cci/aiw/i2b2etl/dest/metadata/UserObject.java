@@ -66,6 +66,7 @@ public class UserObject {
     private boolean alreadyLoaded;private boolean rejected;
     private List<String> rejectionReasons;
     private String symbol;
+    private Date updated;
     
     UserObject(ConceptId id, String conceptCodePrefix, Concept concept, Metadata metadata) throws InvalidConceptCodeException {
         assert id != null : "id cannot be null";
@@ -421,6 +422,14 @@ public class UserObject {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+
+    void setUpdated(Date updated) {
+        this.updated = updated;
+    }
+
+    Date getUpdated() {
+        return this.updated;
     }
     
 }

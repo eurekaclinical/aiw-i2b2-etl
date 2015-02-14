@@ -49,7 +49,8 @@ public final class ConceptDimensionLoader extends ConceptHierarchyLoader {
                 this.conceptDimension.setConceptCode(concept.getConceptCode());
                 this.conceptDimension.setDisplayName(concept.getDisplayName());
                 this.conceptDimension.setSourceSystemCode(concept.getSourceSystemCode());
-                this.conceptDimension.setDownloaded(concept.getDownloaded());
+                this.conceptDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
+                this.conceptDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
                 this.handler.insert(this.conceptDimension);
             }
         }

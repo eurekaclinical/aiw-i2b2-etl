@@ -20,7 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 /**
  *
@@ -32,7 +32,8 @@ public class ModifierDimension extends AbstractRecord {
     private String conceptCode;
     private String displayName;
     private String sourceSystemCode;
-    private Date downloaded;
+    private Timestamp downloaded;
+    private Timestamp updated;
 
     public String getPath() {
         return path;
@@ -66,12 +67,20 @@ public class ModifierDimension extends AbstractRecord {
         this.sourceSystemCode = sourceSystemCode;
     }
 
-    public Date getDownloaded() {
+    public Timestamp getDownloaded() {
         return downloaded;
     }
 
-    public void setDownloaded(Date downloaded) {
+    public void setDownloaded(Timestamp downloaded) {
         this.downloaded = downloaded;
+    }
+
+    public Timestamp getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Timestamp updated) {
+        this.updated = updated;
     }
 
 }

@@ -126,18 +126,14 @@ public abstract class FactHandler extends AbstractFactHandler {
         Value value = modConcept != null ? handleValue(prop, modConcept, modConceptId) : handleValue(prop, concept, conceptId);
         ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
         String units = handleUnits(prop);
-        Date updateDate = prop.getUpdateDate();
-        if (updateDate == null) {
-            updateDate = prop.getCreateDate();
-        }
         ObservationFact obx = getObx();
         obx.reset();
-        obx.setStartDate(start);
+        obx.setStartDate(TableUtil.setTimestampAttribute(start));
         if (start == null) {
             obx.setRejected(true);
             obx.addRejectionReason("Null start date");
         }
-        obx.setEndDate(finish);
+        obx.setEndDate(TableUtil.setTimestampAttribute(finish));
         obx.setPatient(patient);
         obx.setVisit(visit);
         obx.setProvider(provider);
@@ -146,8 +142,12 @@ public abstract class FactHandler extends AbstractFactHandler {
         obx.setValueFlagCode(valueFlagCode);
         obx.setUnits(units);
         obx.setSourceSystem(prop.getSourceSystem().getStringRepresentation());
-        obx.setDownloadDate(prop.getDownloadDate());
-        obx.setUpdateDate(updateDate);
+        obx.setDownloadDate(TableUtil.setTimestampAttribute(prop.getDownloadDate()));
+        Date updateDate = prop.getUpdateDate();
+        if (updateDate == null) {
+            updateDate = prop.getCreateDate();
+        }
+        obx.setUpdateDate(TableUtil.setTimestampAttribute(updateDate));
         obx.setInstanceNum(instanceNum);
         if (concept != null) {
             obx.setDisplayName(concept.getDisplayName());

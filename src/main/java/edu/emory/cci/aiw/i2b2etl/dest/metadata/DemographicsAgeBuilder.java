@@ -20,6 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
+import java.util.Date;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
 

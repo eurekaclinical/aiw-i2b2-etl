@@ -33,8 +33,8 @@ public class VisitDimension extends AbstractRecord {
     private String encryptedPatientIdSourceSystem;
     private ActiveStatusCode activeStatus;
     private String encryptedPatientId;
-    private Timestamp updateDate;
-    private Timestamp downloadDate;
+    private Timestamp downloaded;
+    private Timestamp updated;
 
     private String encryptedVisitIdSourceSystem;
 
@@ -69,12 +69,8 @@ public class VisitDimension extends AbstractRecord {
         this.encryptedPatientId = encryptedPatientId;
     }
 
-    public void setUpdateDate(Timestamp updateDate) {
-        this.updateDate = updateDate;
-    }
-
-    public void setDownloadDate(Timestamp downloadDate) {
-        this.downloadDate = downloadDate;
+    public void setDownloaded(Timestamp downloaded) {
+        this.downloaded = downloaded;
     }
 
     public void setEncryptedVisitIdSourceSystem(String encryptedVisitIdSourceSystem) {
@@ -113,12 +109,16 @@ public class VisitDimension extends AbstractRecord {
         return encryptedPatientId;
     }
 
-    public Timestamp getUpdateDate() {
-        return updateDate;
+    public Timestamp getDownloaded() {
+        return downloaded;
     }
 
-    public Timestamp getDownloadDate() {
-        return downloadDate;
+    public Timestamp getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Timestamp updated) {
+        this.updated = updated;
     }
     
     @Override
