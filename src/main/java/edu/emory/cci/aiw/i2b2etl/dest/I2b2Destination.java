@@ -21,7 +21,6 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  */
 
 import edu.emory.cci.aiw.i2b2etl.dest.config.Configuration;
-import java.io.File;
 import org.protempa.DataSource;
 import org.protempa.KnowledgeSource;
 import org.protempa.dest.AbstractDestination;
@@ -38,11 +37,7 @@ import org.protempa.query.Query;
 public final class I2b2Destination extends AbstractDestination {
     private Configuration config;
     private boolean inferPropositionIdsNeeded;
-    private DataInsertMode dataInsertMode;
 
-    public enum DataInsertMode {
-        APPEND, TRUNCATE
-    }
     
     /**
      * Creates a new query results handler that will use the provided
@@ -53,8 +48,8 @@ public final class I2b2Destination extends AbstractDestination {
      * @param confXML an i2b2 query results handler configuration file. Cannot
      * be <code>null</code>.
      */
-    public I2b2Destination(Configuration config, DataInsertMode dataInsertMode) {
-        this(config, dataInsertMode, true);
+    public I2b2Destination(Configuration config) {
+        this(config, true);
     }
     
     /**
@@ -72,18 +67,17 @@ public final class I2b2Destination extends AbstractDestination {
      * proposition ids returned should be only those specified in the Protempa
      * {@link Query}.
      */
-    public I2b2Destination(Configuration config, DataInsertMode dataInsertMode, boolean inferPropositionIdsNeeded) {
+    public I2b2Destination(Configuration config, boolean inferPropositionIdsNeeded) {
         if (config == null) {
             throw new IllegalArgumentException("config cannot be null");
         }
         this.config = config;
         this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
-        this.dataInsertMode = dataInsertMode;
     }
 
     @Override
     public QueryResultsHandler getQueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
-       return new I2b2QueryResultsHandler(query, dataSource, knowledgeSource, this.config, this.inferPropositionIdsNeeded, this.dataInsertMode);
+       return new I2b2QueryResultsHandler(query, dataSource, knowledgeSource, this.config, this.inferPropositionIdsNeeded);
     }
 
     @Override

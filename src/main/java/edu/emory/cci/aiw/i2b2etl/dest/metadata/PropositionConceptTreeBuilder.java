@@ -21,12 +21,9 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.dest.config.ModifierSpec;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;

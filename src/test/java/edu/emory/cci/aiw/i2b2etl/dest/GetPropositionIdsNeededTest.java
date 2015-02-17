@@ -19,6 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
+import org.protempa.query.QueryMode;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,7 +72,7 @@ public class GetPropositionIdsNeededTest {
         KnowledgeSource knowledgeSource = protempa.getKnowledgeSource();
         QueryBuilder queryBuilder = new DefaultQueryBuilder();
         Query query = protempa.buildQuery(queryBuilder);
-        I2b2Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML), I2b2Destination.DataInsertMode.TRUNCATE);
+        I2b2Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML));
         try (QueryResultsHandler qrh = 
                 destination.getQueryResultsHandler(query, protempa.getDataSource(), knowledgeSource)) {
             String[] actualPropIds = qrh.getPropositionIdsNeeded();

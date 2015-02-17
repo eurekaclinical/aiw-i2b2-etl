@@ -19,6 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
+import org.protempa.query.QueryMode;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Concepts;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Configuration;
 import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
@@ -103,7 +104,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private final Query query;
     private final KnowledgeSource knowledgeSource;
-    private final I2b2Destination.DataInsertMode dataInsertMode;
     private final boolean inferPropositionIdsNeeded;
     private final Settings settings;
     private final Data data;
@@ -151,7 +151,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * @param dataInsertMode whether to truncate existing data or append to it
      */
     I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, Configuration configuration,
-            boolean inferPropositionIdsNeeded, I2b2Destination.DataInsertMode dataInsertMode)
+            boolean inferPropositionIdsNeeded)
             throws QueryResultsHandlerInitException {
         if (dataSource == null) {
             throw new IllegalArgumentException("dataSource cannot be null");
@@ -162,7 +162,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         this.query = query;
         this.knowledgeSource = knowledgeSource;
-        this.dataInsertMode = dataInsertMode;
         this.configuration = configuration;
         try {
             this.configuration.init();
@@ -258,7 +257,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.providerDimensionFactory = new ProviderDimensionFactory(this.qrhId, this.ontologyModel, this.dataConnectionSpec, this.skipProviderHierarchy);
             this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
             this.visitDimensionFactory = new VisitDimensionFactory(this.qrhId, this.settings, this.data, this.dataConnectionSpec);
-            if (this.dataInsertMode == I2b2Destination.DataInsertMode.TRUNCATE) {
+            if (this.query.getQueryMode() == QueryMode.REPLACE) {
                 DataRemoverFactory f = new DataRemoverFactory();
                 f.getInstance(this.dataRemoveMethod).doRemoveData();
                 f.getInstance(this.metaRemoveMethod).doRemoveMetadata();

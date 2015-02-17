@@ -59,7 +59,6 @@ import org.protempa.AbstractPropositionDefinition;
 import org.protempa.ConstantDefinition;
 import org.protempa.PrimitiveParameterDefinition;
 import org.protempa.PropertyDefinition;
-import org.protempa.ProtempaUtil;
 import org.protempa.ReferenceDefinition;
 import org.protempa.ValueSet;
 import org.protempa.ValueSet.ValueSetElement;
@@ -82,9 +81,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private static final char DEFAULT_DELIMITER = '\t';
     private static final ConceptProperty[] DEFAULT_CONCEPT_PROPERTIES_ARR = new ConceptProperty[0];
     private static final Properties visitPropositionProperties;
+    private static final Properties patientPropositionProperties;
     private static final Properties patientDetailsPropositionProperties;
     private static final Properties providerPropositionProperties;
     private final static String[] VALUE_TYPE_CDS = {"LAB", "DOC"};
+    private static final String defaultPatientPropositionId;
     private static final String defaultPatientDetailsPropositionId;
     private static final ValueSet defaultLanguagePropertyValueSet;
     private static final ValueSet defaultMaritalStatusPropertyValueSet;
@@ -104,12 +105,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     static {
         try {
+            patientPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientProposition.properties");
             visitPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/visitProposition.properties");
             patientDetailsPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientDetailsProposition.properties");
             providerPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/providerProposition.properties");
         } catch (IOException ex) {
             throw new AssertionError("Can't find dimension proposition properties file: " + ex.getMessage());
         }
+        defaultPatientPropositionId = patientPropositionProperties.getProperty("propositionId");
         defaultPatientDetailsPropositionId = patientDetailsPropositionProperties.getProperty("propositionId");
         defaultLanguagePropertyValueSet = parseValueSetResource(
                 patientDetailsPropositionProperties.getProperty("language.valueSet.id"),
@@ -147,6 +150,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private final QuerySupport querySupport;
     private final LevelReader levelReader;
     private final ConceptPropertyReader conceptPropertyReader;
+    private String patientPropositionId;
     private String patientDetailsPropositionId;
     private String visitPropositionId;
     private String providerPropositionId;
@@ -211,12 +215,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private String ageInYearsPropertyName;
     private String dateOfDeathPropertyName;
     private String vitalStatusPropertyName;
+    private String patientDisplayName;
     private String patientDetailsDisplayName;
     private String visitDisplayName;
     private String providerDisplayName;
     private ConceptProperty[] conceptProperties;
     private final Map<String, ValueSet> valueSets;
     private final BackendSourceIdFactory sourceIdFactory;
+    private String patientPatientIdPropertyName;
+    private String patientDetailsPatientIdPropertyName;
 
     public I2b2KnowledgeSourceBackend() {
         this.querySupport = new QuerySupport();
@@ -228,8 +235,16 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         /**
          * Patient
          */
+        this.patientPropositionId = defaultPatientPropositionId;
+        
+        this.patientDisplayName = patientPropositionProperties.getProperty("displayName");
+        
+        this.patientPatientIdPropertyName = patientPropositionProperties.getProperty("patientId.propertyName");
+        
         this.patientDetailsPropositionId = defaultPatientDetailsPropositionId;
         this.patientDetailsDisplayName = patientDetailsPropositionProperties.getProperty("displayName");
+        
+        this.patientDetailsPatientIdPropertyName = patientDetailsPropositionProperties.getProperty("patientId.propertyName");
 
         this.genderPropertyName = patientDetailsPropositionProperties.getProperty("gender.propertyName");
         this.genderPropertyValueSet = defaultGenderPropertyValueSet;
@@ -374,14 +389,45 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         this.querySupport.setPassword(password);
     }
 
+    public String getPatientPatientIdPropertyName() {
+        return patientPatientIdPropertyName;
+    }
+
+    @BackendProperty
+    public void setPatientPatientIdPropertyName(String patientPatientIdPropertyName) {
+        this.patientPatientIdPropertyName = patientPatientIdPropertyName;
+    }
+
+    public String getPatientDetailsPatientIdPropertyName() {
+        return patientDetailsPatientIdPropertyName;
+    }
+
+    @BackendProperty
+    public void setPatientDetailsPatientIdPropertyName(String patientDetailsPatientIdPropertyName) {
+        this.patientDetailsPatientIdPropertyName = patientDetailsPatientIdPropertyName;
+    }
+    
+    public String getPatientPropositionId() {
+        return patientPropositionId;
+    }
+
+    @BackendProperty
+    public void setPatientPropositionId(String patientPropositionId) {
+        if (patientPropositionId != null) {
+            this.patientPropositionId = patientPropositionId;
+        } else {
+            this.patientPropositionId = defaultPatientPropositionId;
+        }
+    }
+
     public String getPatientDetailsPropositionId() {
         return patientDetailsPropositionId;
     }
 
     @BackendProperty
-    public void setPatientDetailsPropositionId(String patientDimensionConfigFile) {
-        if (patientDimensionConfigFile != null) {
-            this.patientDetailsPropositionId = patientDimensionConfigFile;
+    public void setPatientDetailsPropositionId(String patientDetailsPropositionId) {
+        if (patientDetailsPropositionId != null) {
+            this.patientDetailsPropositionId = patientDetailsPropositionId;
         } else {
             this.patientDetailsPropositionId = defaultPatientDetailsPropositionId;
         }
@@ -1163,6 +1209,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         if (id != null) {
             PropositionDefinition result;
             if (id.equals(this.patientDetailsPropositionId)) {
+                result = newPatientDetailsPropositionDefinition();
+            } else if (id.equals(this.patientPropositionId)) {
                 result = newPatientPropositionDefinition();
             } else if (id.equals(this.visitPropositionId)) {
                 result = newVisitPropositionDefinition();
@@ -1323,14 +1371,31 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         visitDim.setReferenceDefinitions(refDefs.toArray(new ReferenceDefinition[refDefs.size()]));
         return visitDim;
     }
-
+    
     private ConstantDefinition newPatientPropositionDefinition() {
+        Date now = new Date();
+        ConstantDefinition patientDim = new ConstantDefinition(this.patientPropositionId);
+        patientDim.setAccessed(now);
+        patientDim.setSourceId(this.sourceIdFactory.getInstance());
+        patientDim.setCreated(DIMENSION_PROP_DEFS_CREATED_DATE);
+        patientDim.setDisplayName(this.patientDisplayName);
+        patientDim.setInDataSource(true);
+        patientDim.setPropertyDefinitions(
+                new PropertyDefinition(this.patientPropositionId, this.patientPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientPropositionId)
+        );
+        patientDim.setReferenceDefinitions(
+                new ReferenceDefinition("patientDetails", this.patientDetailsPropositionId)
+        );
+        return patientDim;
+    }
+    
+    private ConstantDefinition newPatientDetailsPropositionDefinition() {
         Date now = new Date();
         ConstantDefinition patientDim = new ConstantDefinition(this.patientDetailsPropositionId);
         patientDim.setAccessed(now);
         patientDim.setSourceId(this.sourceIdFactory.getInstance());
         patientDim.setCreated(DIMENSION_PROP_DEFS_CREATED_DATE);
-        patientDim.setDisplayName(this.patientDetailsPropositionId);
+        patientDim.setDisplayName(this.patientDetailsDisplayName);
         patientDim.setInDataSource(true);
         patientDim.setPropertyDefinitions(
                 new PropertyDefinition(this.patientDetailsPropositionId, this.ageInYearsPropertyName, null, ValueType.NUMERICALVALUE, null, this.patientDetailsPropositionId),
@@ -1340,7 +1405,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 new PropertyDefinition(this.patientDetailsPropositionId, this.languagePropertyName, null, ValueType.NOMINALVALUE, this.languagePropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.maritalStatusPropertyName, null, ValueType.NOMINALVALUE, this.maritalStatusPropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.racePropertyName, null, ValueType.NOMINALVALUE, this.racePropertyValueSet.getId(), this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.vitalStatusPropertyName, null, ValueType.BOOLEANVALUE, null, this.patientDetailsPropositionId));
+                new PropertyDefinition(this.patientDetailsPropositionId, this.vitalStatusPropertyName, null, ValueType.BOOLEANVALUE, null, this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.patientDetailsPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientDetailsPropositionId)
+        );
         patientDim.setReferenceDefinitions(
                 new ReferenceDefinition("encounters", this.visitPropositionId)
         );
@@ -1509,7 +1576,10 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         Set<String> propIdsAsSet = Arrays.asSet(propIds);
         for (Iterator<String> itr = propIdsAsSet.iterator(); itr.hasNext();) {
             String propId = itr.next();
-            if (patientDetailsPropositionId.equals(propId)) {
+            if (patientPropositionId.equals(propId)) {
+                result.add(propId);
+                itr.remove();
+            } else if (patientDetailsPropositionId.equals(propId)) {
                 result.add(propId);
                 itr.remove();
             } else if (visitPropositionId.equals(propId)) {
@@ -1528,6 +1598,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         for (Iterator<String> itr = propIdsAsSet.iterator(); itr.hasNext();) {
             String propId = itr.next();
             if (patientDetailsPropositionId.equals(propId)) {
+                result.add(newPatientDetailsPropositionDefinition());
+                itr.remove();
+            } else if (patientPropositionId.equals(propId)) {
                 result.add(newPatientPropositionDefinition());
                 itr.remove();
             } else if (visitPropositionId.equals(propId)) {

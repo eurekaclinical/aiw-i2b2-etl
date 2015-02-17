@@ -19,6 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
+import org.protempa.query.QueryMode;
 import java.io.File;
 import java.io.IOException;
 
@@ -183,7 +184,7 @@ public class I2b2LoadTest {
             q.setId("i2b2 ETL Test Query");
             
             Query query = protempa.buildQuery(q);
-            Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML), I2b2Destination.DataInsertMode.APPEND);
+            Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML));
             protempa.execute(query, destination);
         }
 

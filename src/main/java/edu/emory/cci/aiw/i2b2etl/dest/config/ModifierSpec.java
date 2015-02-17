@@ -1,6 +1,6 @@
 package edu.emory.cci.aiw.i2b2etl.dest.config;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /*
  * #%L
