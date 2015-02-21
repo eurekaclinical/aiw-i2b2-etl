@@ -37,6 +37,7 @@ import org.protempa.KnowledgeSourceReadException;
  * @author Andrew Post
  */
 class QueryExecutor implements AutoCloseable {
+    private static final Logger LOGGER = Logger.getLogger(QueryExecutor.class.getName());
 
     private static final ParameterSetter EMPTY_PARAM_SETTER = new ParameterSetter() {
 
@@ -159,6 +160,7 @@ class QueryExecutor implements AutoCloseable {
                     sql.append(')');
                 }
                 this.sql = sql.toString();
+                LOGGER.log(Level.FINE, "Preparing query {0}", this.sql);
                 this.preparedStatement = this.connection.prepareStatement(this.sql);
                 this.preparedStatement.setFetchSize(1000);
             } catch (SQLException | InvalidConnectionSpecArguments ex) {

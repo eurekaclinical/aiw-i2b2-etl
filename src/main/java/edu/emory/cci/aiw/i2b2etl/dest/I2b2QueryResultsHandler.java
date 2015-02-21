@@ -468,6 +468,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         final int UPLOAD_ID = 0;
 
         Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.FINE, "Beginning finish for query {0}", this.query.getId());
         String queryId = this.query.getId();
 
         SQLException exception = null;

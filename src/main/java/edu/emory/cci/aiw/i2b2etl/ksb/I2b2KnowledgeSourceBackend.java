@@ -19,12 +19,12 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-
 import au.com.bytecode.opencsv.CSVReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.PreparedStatement;
 import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.protempa.AbstractionDefinition;
@@ -52,6 +52,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.collections4.ListUtils;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.collections.Collections;
 import org.arp.javautil.io.IOUtil;
@@ -236,14 +237,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
          * Patient
          */
         this.patientPropositionId = defaultPatientPropositionId;
-        
+
         this.patientDisplayName = patientPropositionProperties.getProperty("displayName");
-        
+
         this.patientPatientIdPropertyName = patientPropositionProperties.getProperty("patientId.propertyName");
-        
+
         this.patientDetailsPropositionId = defaultPatientDetailsPropositionId;
         this.patientDetailsDisplayName = patientDetailsPropositionProperties.getProperty("displayName");
-        
+
         this.patientDetailsPatientIdPropertyName = patientDetailsPropositionProperties.getProperty("patientId.propertyName");
 
         this.genderPropertyName = patientDetailsPropositionProperties.getProperty("gender.propertyName");
@@ -406,7 +407,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public void setPatientDetailsPatientIdPropertyName(String patientDetailsPatientIdPropertyName) {
         this.patientDetailsPatientIdPropertyName = patientDetailsPatientIdPropertyName;
     }
-    
+
     public String getPatientPropositionId() {
         return patientPropositionId;
     }
@@ -1217,7 +1218,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             } else if (id.equals(this.providerPropositionId)) {
                 result = newProviderPropositionDefinition();
             } else {
-                result = readFact(id);
+                result = readPropDef(id);
             }
 
             if (result != null) {
@@ -1228,6 +1229,34 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             logger.log(Level.FINER, "Failed to find proposition id: {0}", id);
         }
         return null;
+    }
+
+    @Override
+    public List<PropositionDefinition> readPropositionDefinitions(String[] ids) throws KnowledgeSourceReadException {
+        List<PropositionDefinition> results = new ArrayList<>();
+        if (ids != null) {
+            List<String> propIdsToFind = readHardCodedPropDefs(ids, results);
+            results.addAll(readPropDefs(propIdsToFind));
+        }
+        return results;
+    }
+
+    private List<String> readHardCodedPropDefs(String[] ids, List<PropositionDefinition> results) throws KnowledgeSourceReadException {
+        List<String> propIdsToFind = new ArrayList<>();
+        for (String id : ids) {
+            if (id.equals(this.patientDetailsPropositionId)) {
+                results.add(newPatientDetailsPropositionDefinition());
+            } else if (id.equals(this.patientPropositionId)) {
+                results.add(newPatientPropositionDefinition());
+            } else if (id.equals(this.visitPropositionId)) {
+                results.add(newVisitPropositionDefinition());
+            } else if (id.equals(this.providerPropositionId)) {
+                results.add(newProviderPropositionDefinition());
+            } else {
+                propIdsToFind.add(id);
+            }
+        }
+        return propIdsToFind;
     }
 
     @Override
@@ -1295,16 +1324,25 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     private static class Root {
 
-        private final String fullName;
+        private final String tableCode;
         private final String symbol;
+        private final String displayName;
 
-        Root(String fullName, String symbol) {
-            this.fullName = fullName;
+        Root(String tableCode, String displayName, String symbol) {
+            assert tableCode != null : "fullName cannot be null";
+            assert displayName != null : "displayName cannot be null";
+            assert symbol != null : "symbol cannot be null";
+            this.tableCode = tableCode;
+            this.displayName = displayName;
             this.symbol = symbol;
         }
 
-        public String getFullName() {
-            return fullName;
+        public String getTableCode() {
+            return tableCode;
+        }
+
+        public String getDisplayName() {
+            return displayName;
         }
 
         public String getSymbol() {
@@ -1317,11 +1355,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_FULLNAME, C_SYMBOL FROM ");
+            sql.append("SELECT A2.C_TABLE_CD, A1.C_NAME, A1.C_SYMBOL FROM ");
             sql.append(table);
-            sql.append(" WHERE C_FULLNAME = (SELECT C_FULLNAME FROM TABLE_ACCESS WHERE C_TABLE_NAME = '");
+            sql.append(" A1 JOIN TABLE_ACCESS A2 ON (A1.C_FULLNAME=A2.C_FULLNAME) WHERE A2.C_TABLE_NAME='");
             sql.append(table);
-            sql.append("')");
+            sql.append("'");
         }
     };
 
@@ -1332,7 +1370,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             List<Root> result = new ArrayList<>();
             try {
                 while (rs.next()) {
-                    result.add(new Root(rs.getString(1), rs.getString(2)));
+                    result.add(new Root(rs.getString(1), rs.getString(2), rs.getString(3)));
                 }
                 return result;
             } catch (SQLException ex) {
@@ -1355,23 +1393,23 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.inoutPropertyName, null, ValueType.NOMINALVALUE, this.inoutPropertyValueSet.getId(), this.visitPropositionId));
         for (ConceptProperty cp : this.conceptProperties) {
             if (visitDim.getId().equals(cp.getPropositionId())) {
-                PropertyDefinition pd = new PropertyDefinition(this.visitPropositionId, cp.getPropertyBaseCode(), null,  ValueType.NOMINALVALUE, cp.getPropertyBaseCode(), this.visitPropositionId);
+                PropertyDefinition pd = new PropertyDefinition(this.visitPropositionId, cp.getPropertyBaseCode(), null, ValueType.NOMINALVALUE, cp.getPropertyBaseCode(), this.visitPropositionId);
                 visitDimPropertyDefs.add(pd);
             }
         }
         visitDim.setPropertyDefinitions(visitDimPropertyDefs.toArray(new PropertyDefinition[visitDimPropertyDefs.size()]));
         List<ReferenceDefinition> refDefs = new ArrayList<>();
-        refDefs.add(new ReferenceDefinition("provider", this.providerPropositionId));
-        refDefs.add(new ReferenceDefinition("patientDetails", this.patientDetailsPropositionId));
+        refDefs.add(new ReferenceDefinition("provider", "Provider", new String[]{this.providerPropositionId}));
+        refDefs.add(new ReferenceDefinition("patientDetails", "Patient Details", new String[]{this.patientDetailsPropositionId}));
         try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(ROOT_QUERY_CONSTRUCTOR)) {
             for (Root root : queryExecutor.execute(ROOT_RESULT_SET_READER)) {
-                refDefs.add(new ReferenceDefinition(root.getFullName(), root.getSymbol()));
+                refDefs.add(new ReferenceDefinition(root.getTableCode(), root.getDisplayName(), new String[]{root.getSymbol()}));
             }
         }
         visitDim.setReferenceDefinitions(refDefs.toArray(new ReferenceDefinition[refDefs.size()]));
         return visitDim;
     }
-    
+
     private ConstantDefinition newPatientPropositionDefinition() {
         Date now = new Date();
         ConstantDefinition patientDim = new ConstantDefinition(this.patientPropositionId);
@@ -1384,11 +1422,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 new PropertyDefinition(this.patientPropositionId, this.patientPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientPropositionId)
         );
         patientDim.setReferenceDefinitions(
-                new ReferenceDefinition("patientDetails", this.patientDetailsPropositionId)
+                new ReferenceDefinition("patientDetails", "Patient Details", new String[]{this.patientDetailsPropositionId})
         );
         return patientDim;
     }
-    
+
     private ConstantDefinition newPatientDetailsPropositionDefinition() {
         Date now = new Date();
         ConstantDefinition patientDim = new ConstantDefinition(this.patientDetailsPropositionId);
@@ -1409,7 +1447,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 new PropertyDefinition(this.patientDetailsPropositionId, this.patientDetailsPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientDetailsPropositionId)
         );
         patientDim.setReferenceDefinitions(
-                new ReferenceDefinition("encounters", this.visitPropositionId)
+                new ReferenceDefinition("encounters", "Encounters", new String[]{this.visitPropositionId})
         );
         return patientDim;
     }
@@ -1420,10 +1458,20 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     }
 
     @Override
+    public List<AbstractionDefinition> readAbstractionDefinitions(String[] ids) throws KnowledgeSourceReadException {
+        return java.util.Collections.emptyList();
+    }
+    
+    @Override
     public ContextDefinition readContextDefinition(String id) throws KnowledgeSourceReadException {
         return null;
     }
 
+    @Override
+    public List<ContextDefinition> readContextDefinitions(String[] toArray) throws KnowledgeSourceReadException {
+        return java.util.Collections.emptyList();
+    }
+    
     @Override
     public TemporalPropositionDefinition readTemporalPropositionDefinition(String id) throws KnowledgeSourceReadException {
         if (logger.isLoggable(Level.FINEST)) {
@@ -1435,7 +1483,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             if (id.equals(this.visitPropositionId)) {
                 result = newVisitPropositionDefinition();
             } else {
-                result = readFact(id);
+                result = readPropDef(id);
             }
 
             if (result != null) {
@@ -1447,6 +1495,28 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         return null;
     }
 
+    @Override
+    public List<TemporalPropositionDefinition> readTemporalPropositionDefinitions(String[] ids) throws KnowledgeSourceReadException {
+        List<TemporalPropositionDefinition> results = new ArrayList<>();
+        if (ids != null) {
+            List<String> propIdsToFind = readHardCodedTempPropDefs(ids, results);
+            results.addAll(readPropDefs(propIdsToFind));
+        }
+        return results;
+    }
+    
+    private List<String> readHardCodedTempPropDefs(String[] ids, List<TemporalPropositionDefinition> results) throws KnowledgeSourceReadException {
+        List<String> propIdsToFind = new ArrayList<>();
+        for (String id : ids) {
+            if (id.equals(this.visitPropositionId)) {
+                results.add(newVisitPropositionDefinition());
+            } else {
+                propIdsToFind.add(id);
+            }
+        }
+        return propIdsToFind;
+    }
+    
     @Override
     public String[] readAbstractedInto(String propId) throws KnowledgeSourceReadException {
         return ArrayUtils.EMPTY_STRING_ARRAY;
@@ -1536,9 +1606,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT DISTINCT C_SYMBOL FROM ");
             sql.append(table);
-            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' S FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N' AND C_BASECODE IS NOT NULL) || '%'");
+            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N' AND C_BASECODE IS NOT NULL)");
         }
 
     };
@@ -1549,9 +1619,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT DISTINCT C_SYMBOL FROM ");
             sql.append(table);
-            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N') || '%'");
+            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N')");
         }
 
     };
@@ -1620,9 +1690,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT DISTINCT C_SYMBOL FROM ");
             sql.append(table);
-            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N') || '%'");
+            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N')");
         }
 
     };
@@ -1649,9 +1719,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
             sql.append(table);
-            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N' AND C_BASECODE IS NOT NULL) || '%'");
+            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N' AND C_BASECODE IS NOT NULL)");
         }
 
     };
@@ -1662,9 +1732,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
             sql.append(table);
-            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N') || '%'");
+            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N')");
         }
 
     };
@@ -1740,9 +1810,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
             sql.append(table);
-            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME FROM ");
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N') || '%'");
+            sql.append(" WHERE C_SYMBOL=? AND C_SYNONYM_CD='N')");
         }
 
     };
@@ -1858,17 +1928,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     };
 
-    private static final QueryConstructor READ_FACT_QUERY_CONSTRUCTOR = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_SYNONYM_CD='N' AND C_SYMBOL=?");
-        }
-
-    };
-
     private void newTemporalPropositionDefinition(ResultSet rs, List<TemporalPropositionDefinition> r, Date accessed) throws SAXParseException, KnowledgeSourceReadException, SQLException {
         if (Arrays.contains(VALUE_TYPE_CDS, rs.getString(3))) {
             CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
@@ -1905,12 +1964,13 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     }
 
     private class ListResultSetReader implements ResultSetReader<List<TemporalPropositionDefinition>> {
+
         private Set<String> propIds;
 
         ListResultSetReader() {
             this.propIds = new HashSet<>();
         }
-        
+
         @Override
         public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
@@ -1951,12 +2011,86 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     };
 
-    private TemporalPropositionDefinition readFact(final String id) throws KnowledgeSourceReadException {
+    private static final QueryConstructor READ_FACT_QUERY_CONSTRUCTOR = new QueryConstructor() {
+
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
+            sql.append(table);
+            sql.append(" WHERE C_SYNONYM_CD='N' AND C_SYMBOL=?");
+        }
+
+    };
+
+    private TemporalPropositionDefinition readPropDef(final String id) throws KnowledgeSourceReadException {
         try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FACT_QUERY_CONSTRUCTOR)) {
             return queryExecutor.execute(
                     id,
                     resultSetReader);
         }
+    }
+
+    private final ResultSetReader<List<TemporalPropositionDefinition>> resultSetReaderAll = new ResultSetReader<List<TemporalPropositionDefinition>>() {
+
+        @Override
+        public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
+            try {
+                List<TemporalPropositionDefinition> r = new ArrayList<>();
+                while (rs.next()) {
+                    newTemporalPropositionDefinition(rs, r, new Date());
+                    AbstractPropositionDefinition abd = (AbstractPropositionDefinition) r.get(0);
+                    Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
+                    abd.setInverseIsA(children.toArray(new String[children.size()]));
+                    List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2));
+                    abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
+                }
+                return r;
+            } catch (SQLException | SAXParseException ex) {
+                throw new KnowledgeSourceReadException(ex);
+            }
+        }
+
+    };
+
+    private List<TemporalPropositionDefinition> readPropDefs(final List<String> ids) throws KnowledgeSourceReadException {
+        List<TemporalPropositionDefinition> result = new ArrayList<>();
+        List<List<String>> partitions = ListUtils.partition(ids, 4000);
+        for (final List<String> partition : partitions) {
+            try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(new QueryConstructor() {
+
+                @Override
+                public void appendStatement(StringBuilder sql, String table) {
+                    sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, C_SYMBOL, IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
+                    sql.append(table);
+                    sql.append(" WHERE C_SYNONYM_CD='N' AND C_SYMBOL IN (");
+                    for (int i = 0, n = partition.size(); i < n; i++) {
+                        sql.append('?');
+                        if (i + 1 < n) {
+                            if ((i + 1) % 1000 == 0) {
+                                sql.append(") OR C_SYMBOL IN (");
+                            } else {
+                                sql.append(',');
+                            }
+                        }
+                    }
+                    sql.append(")");
+                }
+            })) {
+                result.addAll(queryExecutor.execute(
+                        new ParameterSetter() {
+
+                            @Override
+                            public int set(PreparedStatement stmt, int j) throws SQLException {
+                                for (String fullName : partition) {
+                                    stmt.setString(j++, fullName);
+                                }
+                                return j;
+                            }
+                        },
+                        resultSetReaderAll));
+            }
+        }
+        return result;
     }
 
     private static final QueryConstructor READ_PROP_DEF_QUERY_CONSTRUCTOR = new QueryConstructor() {
