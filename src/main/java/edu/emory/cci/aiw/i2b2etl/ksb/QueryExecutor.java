@@ -172,7 +172,7 @@ class QueryExecutor implements AutoCloseable {
     private void readOntologyTables() throws KnowledgeSourceReadException {
         if (this.ontTables == null) {
             StringBuilder query = new StringBuilder();
-            query.append("SELECT C_TABLE_NAME FROM TABLE_ACCESS");
+            query.append("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS");
             if (this.excludeTableName != null) {
                 query.append(" WHERE C_TABLE_NAME <> ?");
             }
