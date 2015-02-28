@@ -26,23 +26,24 @@ import java.sql.Timestamp;
 
 public class VisitDimension extends AbstractRecord {
 
-    private String encryptedVisitId;
+    private String visitId;
     private Date startDate;
     private Date endDate;
     private String visitSourceSystem;
     private String encryptedPatientIdSourceSystem;
-    private ActiveStatusCode activeStatus;
+    private String activeStatus;
     private String encryptedPatientId;
     private Timestamp downloaded;
     private Timestamp updated;
+    private String inOut;
 
-    private String encryptedVisitIdSourceSystem;
+    private String visitIdSourceSystem;
 
     public VisitDimension() {
     }
 
-    public void setEncryptedVisitId(String encryptedVisitId) {
-        this.encryptedVisitId = encryptedVisitId;
+    public void setVisitId(String visitId) {
+        this.visitId = visitId;
     }
 
     public void setStartDate(Date startDate) {
@@ -61,7 +62,7 @@ public class VisitDimension extends AbstractRecord {
         this.encryptedPatientIdSourceSystem = encryptedPatientIdSourceSystem;
     }
 
-    public void setActiveStatus(ActiveStatusCode activeStatus) {
+    public void setActiveStatus(String activeStatus) {
         this.activeStatus = activeStatus;
     }
 
@@ -73,16 +74,16 @@ public class VisitDimension extends AbstractRecord {
         this.downloaded = downloaded;
     }
 
-    public void setEncryptedVisitIdSourceSystem(String encryptedVisitIdSourceSystem) {
-        this.encryptedVisitIdSourceSystem = encryptedVisitIdSourceSystem;
+    public void setVisitIdSourceSystem(String visitIdSourceSystem) {
+        this.visitIdSourceSystem = visitIdSourceSystem;
     }
     
-    public String getEncryptedVisitId() {
-        return this.encryptedVisitId;
+    public String getVisitId() {
+        return this.visitId;
     }
 
-    public String getEncryptedVisitIdSourceSystem() {
-        return this.encryptedVisitIdSourceSystem;
+    public String getVisitIdSourceSystem() {
+        return this.visitIdSourceSystem;
     }
 
     public Date getStartDate() {
@@ -101,7 +102,7 @@ public class VisitDimension extends AbstractRecord {
         return encryptedPatientIdSourceSystem;
     }
 
-    public ActiveStatusCode getActiveStatus() {
+    public String getActiveStatus() {
         return activeStatus;
     }
 
@@ -119,6 +120,14 @@ public class VisitDimension extends AbstractRecord {
 
     public void setUpdated(Timestamp updated) {
         this.updated = updated;
+    }
+
+    public String getInOut() {
+        return inOut;
+    }
+
+    public void setInOut(String inOut) {
+        this.inOut = inOut;
     }
     
     @Override

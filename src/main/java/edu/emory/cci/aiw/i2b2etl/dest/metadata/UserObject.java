@@ -25,7 +25,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.drools.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 public class UserObject {
     
@@ -264,7 +265,7 @@ public class UserObject {
 
     public String[] getHierarchyPaths() {
         if (this.hierarchyPaths == null) {
-            return StringUtils.EMPTY_STRING_ARRAY;
+            return ArrayUtils.EMPTY_STRING_ARRAY;
         } else {
             return this.hierarchyPaths.toArray(new String[this.hierarchyPaths.size()]);
         }
@@ -372,7 +373,11 @@ public class UserObject {
     }
 
     int getHLevel() {
-        return this.level;
+        if (this.level >= 0) {
+            return this.level;
+        } else {
+            return StringUtils.countMatches(getFullName(), "\\") - 1;
+        }
     }
 
     void setSynonymCode(SynonymCode synonymCode) {
@@ -408,7 +413,7 @@ public class UserObject {
             return rejectionReasons.toArray(
                     new String[this.rejectionReasons.size()]);
         } else {
-            return StringUtils.EMPTY_STRING_ARRAY;
+            return ArrayUtils.EMPTY_STRING_ARRAY;
         }
     }
 

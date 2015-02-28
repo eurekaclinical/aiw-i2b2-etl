@@ -19,7 +19,9 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.BufferedInputStream;
 import org.junit.Test;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
@@ -27,16 +29,24 @@ import org.protempa.SourceFactory;
 import org.protempa.bconfigs.ini4j.INIConfigurations;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.lang.ArrayUtils;
+import org.arp.javautil.arrays.Arrays;
+import org.arp.javautil.sql.BasicDataSourceFactory;
+import org.arp.javautil.sql.DataSourceInitialContextBinder;
+import org.arp.javautil.test.ExpectedSetOfStringsReader;
 import org.junit.AfterClass;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -46,6 +56,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.protempa.KnowledgeSource;
+import org.protempa.PropertyDefinition;
+import org.protempa.PropertyDefinitionBuilder;
 import org.protempa.ProtempaException;
 import org.protempa.SourceCloseException;
 import org.protempa.backend.ksb.KnowledgeSourceBackend;
@@ -58,75 +70,90 @@ public class I2b2KnowledgeSourceBackendTest {
     private static final String ICD9_250_ID = "ICD9:250";
     private static KnowledgeSource ks;
     private static KnowledgeSourceBackend ksb;
+    private static BasicDataSource bds;
     /*
      * Binding for the BioPortal H2 database connection pool
      */
-    private static InitialContext initialContext;
-    
+    private static DataSourceInitialContextBinder initialContextBinder;
+
+    private static ExpectedSetOfStringsReader expectedReader;
+
     @BeforeClass
     public static void setUpCls() throws IOException, SQLException, NamingException, ProtempaException {
         // Create the bioportal ksb database
-        File ksbBioportalDb = File.createTempFile("i2b2-dsb", ".db");
-        try (Connection connection = DriverManager.getConnection("jdbc:h2:" + ksbBioportalDb.getAbsolutePath() +  ";INIT=RUNSCRIPT FROM 'src/test/resources/i2b2.sql'")) {
-            
+        File ksbDb = File.createTempFile("i2b2-dsb", ".db");
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:" + ksbDb.getAbsolutePath() + ";INIT=RUNSCRIPT FROM 'src/test/resources/i2b2.sql'")) {
+
         }
-        
+
         // set up a data source/connection pool for accessing the BioPortal H2 database
-        BasicDataSource bds = new BasicDataSource();
+        bds = BasicDataSourceFactory.getInstance();
         bds.setDriverClassName("org.h2.Driver");
-        bds.setUrl("jdbc:h2:" + ksbBioportalDb.getAbsolutePath());
+        bds.setUrl("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql'");
         bds.setMinIdle(1);
         bds.setMaxIdle(5);
         bds.setMaxTotal(5);
-        System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.naming.java.javaURLContextFactory");
-        System.setProperty(Context.URL_PKG_PREFIXES, "org.apache.naming");
-        initialContext = new InitialContext();
-        initialContext.createSubcontext("java:");
-        initialContext.createSubcontext("java:/comp");
-        initialContext.createSubcontext("java:/comp/env");
-        initialContext.createSubcontext("java:/comp/env/jdbc");
-        initialContext.bind("java:/comp/env/jdbc/I2b2DS", bds);
+        initialContextBinder = new DataSourceInitialContextBinder();
+        initialContextBinder.bind("I2b2DS", bds);
         SourceFactory sf = new SourceFactory(new INIConfigurations(new File("src/test/resources")),
                 "i2b2-test-config");
         ks = sf.newKnowledgeSourceInstance();
         ksb = ks.getBackends()[0];
+        expectedReader = new ExpectedSetOfStringsReader();
     }
-    
+
     @AfterClass
     public static void tearDown() throws NamingException, SourceCloseException {
-        ks.close();
-        // Tear down the context binding to the BioPortal h2 connection pool
-        initialContext.unbind("java:/comp/env/jdbc/I2b2DS");
-        initialContext.destroySubcontext("java:/comp/env/jdbc");
-        initialContext.destroySubcontext("java:/comp/env");
-        initialContext.destroySubcontext("java:/comp");
-        initialContext.destroySubcontext("java:");
-        initialContext.close();
+        try {
+            ks.close();
+            initialContextBinder.unbind(bds);
+            initialContextBinder = null;
+        } finally {
+            if (initialContextBinder != null) {
+                try {
+                    initialContextBinder.unbind(bds);
+                } catch (NamingException ignore) {
+                }
+            }
+        }
     }
 
     @Test
-    public void testReadPropositionDefinition() throws KnowledgeSourceReadException {
+    public void testReadPropositionDefinitionNotNull() throws KnowledgeSourceReadException {
         PropositionDefinition propDef = ksb.readPropositionDefinition(ICD9_250_ID);
         assertNotNull(propDef);
+    }
+
+    @Test
+    public void testReadPropositionDefinitionId() throws KnowledgeSourceReadException {
+        PropositionDefinition propDef = ksb.readPropositionDefinition(ICD9_250_ID);
         assertEquals("ICD9:250", propDef.getId());
+    }
+
+    @Test
+    public void testReadPropositionDefinitionDisplayName() throws KnowledgeSourceReadException {
+        PropositionDefinition propDef = ksb.readPropositionDefinition(ICD9_250_ID);
         assertEquals("Diabetes mellitus due to insulin receptor antibodies", propDef.getDisplayName());
+    }
+
+    @Test
+    public void testReadPropositionDefinitionAbbrevDisplayName() throws KnowledgeSourceReadException {
+        PropositionDefinition propDef = ksb.readPropositionDefinition(ICD9_250_ID);
         assertEquals("", propDef.getAbbreviatedDisplayName());
+    }
+
+    @Test
+    public void testReadPropositionDefinitionInDataSource() throws KnowledgeSourceReadException {
+        PropositionDefinition propDef = ksb.readPropositionDefinition(ICD9_250_ID);
         assertTrue(propDef.getInDataSource());
     }
 
     @Test
-    public void testReadPropositionDefinitionInverseIsA() throws KnowledgeSourceReadException {
+    public void testReadPropositionDefinitionInverseIsA() throws KnowledgeSourceReadException, IOException {
         PropositionDefinition propDef = ksb.readPropositionDefinition(ICD9_250_ID);
-        assertEquals(10, propDef.getChildren().length);
-        Set<String> expectedChildren = new HashSet<>();
-        for (int i = 0; i < 10; i++) {
-            expectedChildren.add(ICD9_250_ID + "." + i);
-        }
-        Set<String> actualChildren = new HashSet<>();
-        for (String child : propDef.getChildren()) {
-            actualChildren.add(child);
-        }
-        assertEquals(expectedChildren, actualChildren);
+        Set<String> actual = Arrays.asSet(propDef.getChildren());
+        Set<String> expected = expectedReader.readAsSet("/truth/testReadPropositionDefinitionInverseIsA", getClass());
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -136,18 +163,116 @@ public class I2b2KnowledgeSourceBackendTest {
     }
 
     @Test
-    public void testGetKnowledgeSourceSearchResults() throws KnowledgeSourceReadException {
-        Set<String> results = ksb.getKnowledgeSourceSearchResults("diabetes");
-        assertEquals(61, results.size());
-        assertTrue(results.contains(ICD9_250_ID));
-
-        // uppercase "Diabetes"
-        assertTrue(results.contains("ICD9:250.93"));
-
-        // lowercase "diabetes"
-        assertTrue(results.contains("ICD9:250.00"));
+    public void testGetKnowledgeSourceSearchResults() throws KnowledgeSourceReadException, IOException {
+        Set<String> actual = ksb.getKnowledgeSourceSearchResults("diabetes");
+        Set<String> expected = expectedReader.readAsSet("/truth/testGetKnowledgeSourceSearchResults", getClass());
+        assertEquals(expected, actual);
     }
-
+    
+    @Test
+    public void testCollectPropIdDescendantsUsingAllNarrower() throws KnowledgeSourceReadException, IOException {
+        Set<String> actual = new HashSet<>(ksb.collectPropIdDescendantsUsingAllNarrower(false, new String[]{"ICD9:Procedures"}));
+        Set<String> expected = expectedReader.readAsSet("/truth/testCollectPropIdDescendantsUsingAllNarrower", getClass());
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testCollectPropPropDefDescendantsUsingAllNarrower() throws KnowledgeSourceReadException, IOException {
+        Set<PropositionDefinition> actualPropDef = new HashSet<>(ksb.collectPropDefDescendantsUsingAllNarrower(false, new String[]{"ICD9:Procedures"}));
+        Set<String> actual = toPropId(actualPropDef);
+        Set<String> expected = expectedReader.readAsSet("/truth/testCollectPropDefDescendantsUsingAllNarrower", getClass());
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testCollectPropDefDescendantsUsingAllNarrowerInDataSource() throws KnowledgeSourceReadException, IOException {
+        Set<PropositionDefinition> actualPropDef = new HashSet<>(ksb.collectPropDefDescendantsUsingAllNarrower(true, new String[]{"ICD9:Procedures"}));
+        Set<String> actual = toPropId(actualPropDef);
+        Set<String> expected = expectedReader.readAsSet("/truth/testCollectPropDefDescendantsUsingAllNarrowerInDataSource", getClass());
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testCollectPropIdDescendantsUsingInverseIsA() throws KnowledgeSourceReadException, IOException {
+        Set<String> actual = new HashSet<>(ksb.collectPropIdDescendantsUsingInverseIsA(new String[]{"LAB:LabTest"}));
+        Set<String> expected = expectedReader.readAsSet("/truth/testCollectPropIdDescendantsUsingInverseIsA", getClass());
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testCollectPropDefDescendantsUsingInverseIsA() throws KnowledgeSourceReadException, IOException {
+        Set<PropositionDefinition> actualPropDef = new HashSet<>(ksb.collectPropDefDescendantsUsingInverseIsA(new String[]{"LAB:LabTest"}));
+        Set<String> actual = toPropId(actualPropDef);
+        Set<String> expected = expectedReader.readAsSet("/truth/testCollectPropDefDescendantsUsingInverseIsA", getClass());
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testCollectPropDefDescendantsUsingUsingAllNarrowerProperties() throws KnowledgeSourceReadException, IOException {
+        Collection<PropositionDefinition> collectPropDefDescendantsUsingInverseIsA = ksb.collectPropDefDescendantsUsingAllNarrower(false, new String[]{"ICD9:Diagnoses"});
+        Set<PropertyDefinitionBuilder> actual = new HashSet<>();
+        for (PropositionDefinition propDef : collectPropDefDescendantsUsingInverseIsA) {
+            for (PropertyDefinition pd : propDef.getPropertyDefinitions()) {
+                actual.add(new PropertyDefinitionBuilder(pd));
+            }
+        }
+        
+        Set<PropertyDefinitionBuilder> expected = new HashSet<>();
+        try (XMLDecoder d = new XMLDecoder(
+                          new BufferedInputStream(
+                              getClass().getResourceAsStream("/truth/testCollectPropDefDescendantsUsingAllNarrowerProperties.xml")))) {
+            Integer size = (Integer) d.readObject();
+            for (int i = 0; i < size; i++) {
+                expected.add((PropertyDefinitionBuilder) d.readObject());
+            }
+        }
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testCollectPropDefDescendantsUsingUsingAllNarrowerInDataSourceProperties() throws KnowledgeSourceReadException, IOException {
+        Collection<PropositionDefinition> collectPropDefDescendantsUsingInverseIsA = ksb.collectPropDefDescendantsUsingAllNarrower(true, new String[]{"ICD9:Diagnoses"});
+        Set<PropertyDefinitionBuilder> actual = new HashSet<>();
+        for (PropositionDefinition propDef : collectPropDefDescendantsUsingInverseIsA) {
+            for (PropertyDefinition pd : propDef.getPropertyDefinitions()) {
+                actual.add(new PropertyDefinitionBuilder(pd));
+            }
+        }
+        
+        Set<PropertyDefinitionBuilder> expected = new HashSet<>();
+        try (XMLDecoder d = new XMLDecoder(
+                          new BufferedInputStream(
+                              getClass().getResourceAsStream("/truth/testCollectPropDefDescendantsUsingAllNarrowerInDataSourceProperties.xml")))) {
+            Integer size = (Integer) d.readObject();
+            for (int i = 0; i < size; i++) {
+                expected.add((PropertyDefinitionBuilder) d.readObject());
+            }
+        }
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void testCollectPropDefDescendantsUsingInverseIsAProperties() throws KnowledgeSourceReadException, IOException {
+        Collection<PropositionDefinition> collectPropDefDescendantsUsingInverseIsA = ksb.collectPropDefDescendantsUsingInverseIsA(new String[]{"ICD9:Diagnoses"});
+        Set<PropertyDefinitionBuilder> actual = new HashSet<>();
+        for (PropositionDefinition propDef : collectPropDefDescendantsUsingInverseIsA) {
+            for (PropertyDefinition pd : propDef.getPropertyDefinitions()) {
+                actual.add(new PropertyDefinitionBuilder(pd));
+            }
+        }
+        
+        Set<PropertyDefinitionBuilder> expected = new HashSet<>();
+        try (XMLDecoder d = new XMLDecoder(
+                          new BufferedInputStream(
+                              getClass().getResourceAsStream("/truth/testCollectPropDefDescendantsUsingInverseIsAProperties.xml")))) {
+            Integer size = (Integer) d.readObject();
+            for (int i = 0; i < size; i++) {
+                expected.add((PropertyDefinitionBuilder) d.readObject());
+            }
+        }
+        assertEquals(expected, actual);
+    }
+    
     @Test
     public void testReadAbstractionDefinition() throws KnowledgeSourceReadException {
         assertNull(ksb.readAbstractionDefinition(ICD9_250_ID));
@@ -165,16 +290,24 @@ public class I2b2KnowledgeSourceBackendTest {
 
     @Test
     public void testReadAbstractedInto() throws KnowledgeSourceReadException {
-        assertArrayEquals(new String[0], ksb.readAbstractedInto(ICD9_250_ID));
+        assertArrayEquals(ArrayUtils.EMPTY_STRING_ARRAY, ksb.readAbstractedInto(ICD9_250_ID));
     }
 
     @Test
     public void testReadInduces() throws KnowledgeSourceReadException {
-        assertArrayEquals(new String[0], ksb.readInduces(ICD9_250_ID));
+        assertArrayEquals(ArrayUtils.EMPTY_STRING_ARRAY, ksb.readInduces(ICD9_250_ID));
     }
 
     @Test
     public void testReadSubContextsOf() throws KnowledgeSourceReadException {
-        assertArrayEquals(new String[0], ksb.readSubContextOfs(ICD9_250_ID));
+        assertArrayEquals(ArrayUtils.EMPTY_STRING_ARRAY, ksb.readSubContextOfs(ICD9_250_ID));
+    }
+    
+    private Set<String> toPropId(Set<PropositionDefinition> actualPropDef) {
+        Set<String> actual = new HashSet<>();
+        for (PropositionDefinition propDef : actualPropDef) {
+            actual.add(propDef.getId());
+        }
+        return actual;
     }
 }

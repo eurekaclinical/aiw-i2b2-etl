@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -29,8 +30,8 @@ import org.arp.javautil.sql.ConnectionSpec;
  *
  * @author arpost
  */
-public class EncounterMappingHandler extends RecordHandler<VisitDimension> {
-    public static final String TEMP_ENC_MAPPING_TABLE = "temp_encounter_mapping";
+public class EncounterMappingHandler extends ConnectionSpecRecordHandler<VisitDimension> {
+    public static final String TEMP_ENC_MAPPING_TABLE = "ek_temp_encounter_mapping";
     
     public EncounterMappingHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
@@ -41,10 +42,10 @@ public class EncounterMappingHandler extends RecordHandler<VisitDimension> {
 
     @Override
     protected void setParameters(PreparedStatement ps2, VisitDimension visit) throws SQLException {
-        ps2.setString(1, visit.getEncryptedVisitId());
-        ps2.setString(2, MetadataUtil.toSourceSystemCode(visit.getEncryptedVisitIdSourceSystem()));
-        ps2.setString(3, visit.getEncryptedVisitId());
-        ps2.setString(4, MetadataUtil.toSourceSystemCode(visit.getEncryptedVisitIdSourceSystem()));
+        ps2.setString(1, visit.getVisitId());
+        ps2.setString(2, MetadataUtil.toSourceSystemCode(visit.getVisitIdSourceSystem()));
+        ps2.setString(3, visit.getVisitId());
+        ps2.setString(4, MetadataUtil.toSourceSystemCode(visit.getVisitIdSourceSystem()));
         ps2.setString(5, EncounterIdeStatusCode.ACTIVE.getCode());
         ps2.setString(6, visit.getEncryptedPatientId());
         ps2.setString(7, MetadataUtil.toSourceSystemCode(visit.getEncryptedPatientIdSourceSystem()));

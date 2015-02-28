@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * #L%
  */
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.protempa.PropertyDefinition;
 import org.protempa.proposition.value.ValueType;
 
@@ -27,7 +28,7 @@ import org.protempa.proposition.value.ValueType;
  *
  * @author Andrew Post
  */
-class PropertyDefinitionPartial {
+final class PropertyDefinitionPartial {
     private final String name;
     private final ValueType valueType;
     private final String valueSetId;
@@ -44,11 +45,18 @@ class PropertyDefinitionPartial {
         this.declaringPropId = declaringPropId;
     }
 
-    public String getFullName() {
+    String getFullName() {
         return fullName;
     }
     
     PropertyDefinition getPropertyDefinition(String propId) {
         return new PropertyDefinition(propId, this.symbol, this.name, this.valueType, this.valueSetId, this.declaringPropId);
     }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
+    }
+    
+    
 }

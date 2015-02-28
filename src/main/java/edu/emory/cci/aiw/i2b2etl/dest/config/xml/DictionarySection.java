@@ -167,10 +167,15 @@ final class DictionarySection extends ConfigurationSection implements Settings {
     }
     
     @Override
-    public String getVisitDimensionDecipheredId() {
+    public String getVisitDimensionId() {
         return this.dictionary.get("visitDimensionDecipheredId");
     }
 
+    @Override
+    public String getVisitDimensionInOut() {
+        return this.dictionary.get("visitDimensionInOut");
+    }
+    
     @Override
     public String getAgeConceptCodePrefix() {
         return this.dictionary.get("ageConceptCodePrefix");

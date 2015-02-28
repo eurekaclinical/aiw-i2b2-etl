@@ -44,18 +44,18 @@ class ValueSetConceptTreeBuilder implements OntologyBuilder {
         this.knowledgeSource = knowledgeSource;
         this.propertyName = property;
         this.conceptCodePrefix = conceptCodePrefix;
-        this.rootPropositionDefinitions =
-                new PropositionDefinition[propIds.length];
+        this.rootPropositionDefinitions
+                = new PropositionDefinition[propIds.length];
         for (int i = 0; i < propIds.length; i++) {
-            this.rootPropositionDefinitions[i] =
-                    cache.get(propIds[i]);
+            this.rootPropositionDefinitions[i]
+                    = cache.get(propIds[i]);
             if (this.rootPropositionDefinitions[i] == null) {
                 throw new UnknownPropositionDefinitionException(propIds[i]);
             }
         }
         this.metadata = metadata;
     }
-
+    
     @Override
     public void build(Concept concept) throws OntologyBuildException {
         try {
@@ -65,12 +65,14 @@ class ValueSetConceptTreeBuilder implements OntologyBuilder {
                 root.setSourceSystemCode(propDefinition.getSourceId().getStringRepresentation());
                 root.setDataType(DataType.TEXT);
                 root.setDisplayName(this.propertyName);
-                root.setAlreadyLoaded(concept.isAlreadyLoaded());
+                if (concept != null) {
+                    root.setAlreadyLoaded(concept.isAlreadyLoaded());
+                }
                 this.metadata.addToIdCache(root);
-                PropertyDefinition propertyDef =
-                        propDefinition.propertyDefinition(propertyName);
-                ValueSet valueSet =
-                        knowledgeSource.readValueSet(propertyDef.getValueSetId());
+                PropertyDefinition propertyDef
+                        = propDefinition.propertyDefinition(propertyName);
+                ValueSet valueSet
+                        = knowledgeSource.readValueSet(propertyDef.getValueSetId());
                 ValueSetElement[] vse = valueSet.getValueSetElements();
                 for (ValueSetElement e : vse) {
                     Concept vsEltConcept = new Concept(PropDefConceptId.getInstance(
@@ -83,7 +85,9 @@ class ValueSetConceptTreeBuilder implements OntologyBuilder {
                     vsEltConcept.setAlreadyLoaded(root.isAlreadyLoaded());
                     root.add(vsEltConcept);
                 }
-                concept.add(root);
+                if (concept != null) {
+                    concept.add(root);
+                }
             }
         } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throw new OntologyBuildException("Could not build value set concept tree", ex);

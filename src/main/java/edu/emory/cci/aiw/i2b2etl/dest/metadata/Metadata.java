@@ -38,10 +38,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.lang3.StringUtils;
+import org.arp.javautil.arrays.Arrays;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
-import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.Value;
 
 /**
@@ -88,7 +88,7 @@ public final class Metadata {
     private static final PropositionDefinition[] EMPTY_PROPOSITION_DEFINITION_ARRAY
             = new PropositionDefinition[0];
 
-    private final Concept conceptRoot;
+    private Concept conceptRoot;
     private final Map<ConceptId, Concept> conceptCache = new HashMap<>();
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
     private final KnowledgeSource knowledgeSource;
@@ -100,9 +100,10 @@ public final class Metadata {
     private final Map<String, PropositionDefinition> cache;
     private final FolderSpec[] folderSpecs;
     private final List<Concept> modifierRoots;
+    private final List<Concept> allRoots;
 
     /**
-     * 
+     *
      * @param sourceSystemCode source system code {@link String} to use for
      * concepts created by this query results handler. It is truncated, if
      * necessary, to 50 characters to fit into the i2b2 database tables. Cannot
@@ -113,7 +114,7 @@ public final class Metadata {
      * @param folderSpecs
      * @param settings
      * @param dataSection
-     * @throws OntologyBuildException 
+     * @throws OntologyBuildException
      */
     public Metadata(String sourceSystemCode, Map<String, PropositionDefinition> cache, KnowledgeSource knowledgeSource,
             PropositionDefinition[] userDefinedPropositionDefinitions,
@@ -147,36 +148,50 @@ public final class Metadata {
         this.knowledgeSource = knowledgeSource;
         this.cache = cache;
         String rootNodeDisplayName = settings.getRootNodeName();
-        try {
-            this.conceptRoot = new Concept(
-                    SimpleConceptId.getInstance(rootNodeDisplayName, this), null, this);
-        } catch (InvalidConceptCodeException ex) {
-            throw new OntologyBuildException("Could not build ontology", ex);
+        if (rootNodeDisplayName != null) {
+            try {
+                this.conceptRoot = new Concept(
+                        SimpleConceptId.getInstance(rootNodeDisplayName, this), null, this);
+            } catch (InvalidConceptCodeException ex) {
+                throw new OntologyBuildException("Could not build ontology", ex);
+            }
+            this.conceptRoot.setDisplayName(rootNodeDisplayName);
+            this.conceptRoot.setDataType(DataType.TEXT);
+            this.conceptRoot.setSourceSystemCode(this.sourceSystemCode);
         }
-        this.conceptRoot.setDisplayName(rootNodeDisplayName);
-        this.conceptRoot.setDataType(DataType.TEXT);
-        this.conceptRoot.setSourceSystemCode(this.sourceSystemCode);
         this.settings = settings;
         this.dataSection = dataSection;
         this.folderSpecs = folderSpecs.clone();
-
+        this.allRoots = new ArrayList<>();
+        if (rootNodeDisplayName != null) {
+            this.allRoots.add(this.conceptRoot);
+        }
         Logger logger = MetadataUtil.logger();
-
+        this.providerConceptTreeBuilder = new ProviderConceptTreeBuilder(this);
         try {
             logger.log(Level.FINE, "STEP: construct tree");
             constructTreePre();
-            new PhenotypesBuilder(this.cache, this.knowledgeSource, this).build(this.conceptRoot);
-            new DemographicsBuilder(this.knowledgeSource, this.cache, this).build(this.conceptRoot);
+
+            SubtreeBuilder[] builders = {
+                new PhenotypesBuilder(this.cache, this.knowledgeSource, this),
+                new DemographicsBuilder(this.knowledgeSource, this.cache, this),
+                this.providerConceptTreeBuilder
+            };
+            for (SubtreeBuilder builder : builders) {
+                builder.build(this.conceptRoot);
+                if (this.conceptRoot == null) {
+                    Concept[] builderRoot = builder.getRoots();
+                    Arrays.addAll(this.allRoots, builderRoot);
+                }
+            }
         } catch (InvalidPromoteArgumentException | SQLException | IOException | UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throwOntologyBuildException(ex);
         }
 
-        this.providerConceptTreeBuilder = new ProviderConceptTreeBuilder(this);
-        this.providerConceptTreeBuilder.build(this.conceptRoot);
-        
         setI2B2PathsToConcepts();
+        assert !this.allRoots.contains(null) : "Null root concepts! " + this.allRoots;
     }
-    
+
     private void setI2B2PathsToConcepts() {
         for (Concept c : getAllRoots()) {
             Enumeration<Concept> emu = c.breadthFirstEnumeration();
@@ -205,22 +220,20 @@ public final class Metadata {
     public Concept getConceptRoot() {
         return this.conceptRoot;
     }
-    
+
     public void addModifierRoot(Concept concept) {
-        this.modifierRoots.add(concept);
+        if (concept != null) {
+            this.modifierRoots.add(concept);
+            this.allRoots.add(concept);
+        }
     }
-    
+
     public Concept[] getModifierRoots() {
         return this.modifierRoots.toArray(new Concept[this.modifierRoots.size()]);
     }
-    
+
     public Concept[] getAllRoots() {
-        Concept[] concepts = new Concept[this.modifierRoots.size() + 1];
-        concepts[0] = this.conceptRoot;
-        for (int i = 1; i < concepts.length; i++) {
-            concepts[i] = this.modifierRoots.get(i - 1);
-        }
-        return concepts;
+        return this.allRoots.toArray(new Concept[this.allRoots.size()]);
     }
 
     public PropositionDefinition[] getPhenotypeDefinitions() {
@@ -228,9 +241,10 @@ public final class Metadata {
     }
 
     /**
-     * Returns the source system code used for concepts created by this
-     * query results handler. 
-     * @return a {@link String}, maximum 50 characters. Guaranteed not 
+     * Returns the source system code used for concepts created by this query
+     * results handler.
+     *
+     * @return a {@link String}, maximum 50 characters. Guaranteed not
      * <code>null</code>.
      */
     public String getSourceSystemCode() {
@@ -243,12 +257,10 @@ public final class Metadata {
 
     public ProviderDimension addProvider(
             ProviderDimension providerDimension) throws InvalidConceptCodeException, SQLException {
-        if (this.providerConceptTreeBuilder != null) {
-            this.providerConceptTreeBuilder.add(providerDimension);
-        }
+        this.providerConceptTreeBuilder.add(providerDimension);
         return providerDimension;
     }
-    
+
     Concept newContainerConcept(String displayName, String conceptCode) throws OntologyBuildException {
         ConceptId conceptId = SimpleConceptId.getInstance(displayName, this);
         Concept concept = newConcept(conceptId, conceptCode, getSourceSystemCode());
@@ -275,14 +287,6 @@ public final class Metadata {
         root.setDataType(DataType.TEXT);
         addToIdCache(root);
         return root;
-    }
-
-    public void markAge(Long ageInYears) {
-        Concept ageConcept = getFromIdCache(null, null,
-                NumberValue.getInstance(ageInYears));
-        if (ageConcept != null) {
-            ageConcept.setInUse(true);
-        }
     }
 
     public Concept getFromIdCache(ConceptId conceptId) {
@@ -318,13 +322,13 @@ public final class Metadata {
             throws KnowledgeSourceReadException {
         Set<String> potentialDerivedConceptCodes = new HashSet<>();
 
-        @SuppressWarnings("unchecked")
-        Enumeration<Concept> emu = getConceptRoot().depthFirstEnumeration();
-
-        while (emu.hasMoreElements()) {
-            Concept concept = emu.nextElement();
-            if (concept.isDerived()) {
-                potentialDerivedConceptCodes.add(concept.getId().getId());
+        for (Concept r : getAllRoots()) {
+            Enumeration<Concept> emu = r.depthFirstEnumeration();
+            while (emu.hasMoreElements()) {
+                Concept concept = emu.nextElement();
+                if (concept.isDerived()) {
+                    potentialDerivedConceptCodes.add(concept.getId().getId());
+                }
             }
         }
 
@@ -355,11 +359,11 @@ public final class Metadata {
             UnknownPropositionDefinitionException, InvalidConceptCodeException,
             OntologyBuildException, InvalidPromoteArgumentException {
         for (FolderSpec folderSpec : this.folderSpecs) {
-            processFolderSpec(folderSpec, false);
+            processFolderSpec(folderSpec);
         }
     }
 
-    private void processFolderSpec(FolderSpec folderSpec, boolean useFolderSpecConcept)
+    private void processFolderSpec(FolderSpec folderSpec)
             throws InvalidConceptCodeException, KnowledgeSourceReadException,
             InvalidPromoteArgumentException,
             UnknownPropositionDefinitionException, OntologyBuildException {
@@ -367,25 +371,11 @@ public final class Metadata {
             PropositionConceptTreeBuilder propProxy
                     = new PropositionConceptTreeBuilder(this.cache, this.knowledgeSource,
                             folderSpec.getPropositions(), folderSpec.getConceptCodePrefix(),
-                            folderSpec.getValueType(), folderSpec.getModifiers(), 
+                            folderSpec.getValueType(), folderSpec.getModifiers(),
                             folderSpec.isAlreadyLoaded(), this);
-            if (useFolderSpecConcept) {
-                ConceptId conceptId
-                        = SimpleConceptId.getInstance(folderSpec.getDisplayName(), this);
-                Concept concept = getFromIdCache(conceptId);
-                if (concept == null) {
-                    concept
-                            = new Concept(conceptId, folderSpec.getConceptCodePrefix(), this);
-                    concept.setSourceSystemCode(this.sourceSystemCode);
-                    concept.setDisplayName(folderSpec.getDisplayName());
-                    concept.setDataType(DataType.TEXT);
-                    concept.setAlreadyLoaded(folderSpec.isAlreadyLoaded());
-                    addToIdCache(concept);
-                    this.conceptRoot.add(concept);
-                }
-                propProxy.build(concept);
-            } else {
-                propProxy.build(this.conceptRoot);
+            propProxy.build(this.conceptRoot);
+            if (this.conceptRoot == null) {
+                Arrays.addAll(this.allRoots, propProxy.getRoots());
             }
         } else {
             for (String propId : folderSpec.getPropositions()) {
@@ -405,7 +395,11 @@ public final class Metadata {
                     concept.setDataType(DataType.TEXT);
                     concept.setAlreadyLoaded(folderSpec.isAlreadyLoaded());
                     addToIdCache(concept);
-                    this.conceptRoot.add(concept);
+                    if (this.conceptRoot != null) {
+                        this.conceptRoot.add(concept);
+                    } else {
+                        this.allRoots.add(concept);
+                    }
                 }
                 ValueSetConceptTreeBuilder vsProxy
                         = new ValueSetConceptTreeBuilder(this.knowledgeSource,

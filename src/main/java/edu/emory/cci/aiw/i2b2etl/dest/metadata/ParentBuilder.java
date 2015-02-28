@@ -49,7 +49,9 @@ abstract class ParentBuilder implements OntologyBuilder {
     public void build(Concept parent) throws OntologyBuildException {
         Concept root = metadata.newContainerConcept(this.displayName, this.conceptCode);
         root.setAlreadyLoaded(this.alreadyLoaded);
-        parent.add(root);
+        if (parent != null) {
+            parent.add(root);
+        }
         for (OntologyBuilder child : this.children) {
             child.build(root);
         }

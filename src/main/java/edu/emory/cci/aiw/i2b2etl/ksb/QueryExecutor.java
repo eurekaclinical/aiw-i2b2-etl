@@ -1,10 +1,15 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package edu.emory.cci.aiw.i2b2etl.ksb;
 
 /*
  * #%L
- * Eureka! i2b2 Knowledge Source Backend
+ * AIW i2b2 ETL
  * %%
- * Copyright (C) 2015 Emory University
+ * Copyright (C) 2012 - 2015 Emory University
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +24,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,18 +33,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.arp.javautil.sql.ConnectionSpec;
-import org.arp.javautil.sql.DatabaseAPI;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSourceReadException;
 
 /**
  *
- * @author Andrew Post
+ * @author arpost
  */
 class QueryExecutor implements AutoCloseable {
-    private static final Logger LOGGER = Logger.getLogger(QueryExecutor.class.getName());
 
+    private static final Logger LOGGER = Logger.getLogger(QueryExecutor.class.getName());
     private static final ParameterSetter EMPTY_PARAM_SETTER = new ParameterSetter() {
 
         @Override
@@ -47,11 +51,6 @@ class QueryExecutor implements AutoCloseable {
         }
     };
 
-    private final DatabaseAPI databaseApi;
-    private final String databaseId;
-    private final String username;
-    private final String password;
-    private ConnectionSpec connectionSpecInstance;
     private Connection connection;
     private String sql;
     private PreparedStatement preparedStatement;
@@ -59,12 +58,8 @@ class QueryExecutor implements AutoCloseable {
     private final QueryConstructor queryConstructor;
     private final String excludeTableName;
 
-    QueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor, String excludeTableName) {
-        this.databaseApi = databaseApi;
-        this.databaseId = databaseId;
-        this.username = username;
-        this.password = password;
-        this.connectionSpecInstance = connectionSpecInstance;
+    QueryExecutor(Connection connection, QueryConstructor queryConstructor, String excludeTableName) {
+        this.connection = connection;
         this.queryConstructor = queryConstructor;
         this.excludeTableName = excludeTableName;
     }
@@ -107,37 +102,20 @@ class QueryExecutor implements AutoCloseable {
         }
     }
 
-    @Override
-    public void close() throws KnowledgeSourceReadException {
-        try {
-            if (this.preparedStatement != null) {
-                this.preparedStatement.close();
-                this.preparedStatement = null;
-            }
-            if (this.connection != null) {
-                this.connection.close();
-                this.connection = null;
-            }
-        } catch (SQLException ex) {
-            throw new KnowledgeSourceReadException(ex);
-        } finally {
-            if (this.connection != null) {
-                try {
-                    this.connection.close();
-                } catch (SQLException ignore) {
-                }
-            }
-        }
+    Connection getConnection() {
+        return connection;
     }
 
-    private Connection openConnection() throws InvalidConnectionSpecArguments, SQLException {
-        if (this.connectionSpecInstance == null) {
-            this.connectionSpecInstance = this.databaseApi.newConnectionSpecInstance(this.databaseId, this.username, this.password);
+    @Override
+    public void close() throws KnowledgeSourceReadException {
+        if (this.preparedStatement != null) {
+            try {
+                this.preparedStatement.close();
+            } catch (SQLException ex) {
+                throw new KnowledgeSourceReadException(ex);
+            }
+            this.preparedStatement = null;
         }
-        if (this.connection == null) {
-            this.connection = connectionSpecInstance.getOrCreate();
-        }
-        return this.connection;
     }
 
     void prepare() throws KnowledgeSourceReadException {
@@ -169,6 +147,10 @@ class QueryExecutor implements AutoCloseable {
         }
     }
 
+    private Connection openConnection() throws InvalidConnectionSpecArguments, SQLException {
+        return this.connection;
+    }
+
     private void readOntologyTables() throws KnowledgeSourceReadException {
         if (this.ontTables == null) {
             StringBuilder query = new StringBuilder();
@@ -195,5 +177,4 @@ class QueryExecutor implements AutoCloseable {
             }
         }
     }
-
 }

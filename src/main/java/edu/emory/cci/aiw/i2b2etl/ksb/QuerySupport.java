@@ -20,23 +20,39 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * #L%
  */
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
+import org.arp.javautil.sql.InvalidConnectionSpecArguments;
+import org.protempa.KnowledgeSourceReadException;
 
 /**
  *
  * @author Andrew Post
  */
 class QuerySupport {
+    private static final String DEFAULT_EUREKA_ID_COLUMN = "C_SYMBOL";
+    
     private DatabaseAPI databaseApi;
     private String databaseId;
     private String username;
     private String password;
     private ConnectionSpec connectionSpecInstance;
     private String excludeTableName;
+    private String eurekaIdColumn;
 
     QuerySupport() {
          this.databaseApi = DatabaseAPI.DRIVERMANAGER;
+         this.eurekaIdColumn = DEFAULT_EUREKA_ID_COLUMN;
+    }
+
+    String getEurekaIdColumn() {
+        return eurekaIdColumn;
+    }
+
+    void setEurekaIdColumn(String eurekaIdColumn) {
+        this.eurekaIdColumn = eurekaIdColumn;
     }
 
     DatabaseAPI getDatabaseApi() {
@@ -75,16 +91,28 @@ class QuerySupport {
         this.connectionSpecInstance = null;
     }
 
-    public String getExcludeTableName() {
+    String getExcludeTableName() {
         return excludeTableName;
     }
 
-    public void setExcludeTableName(String excludeTableName) {
+    void setExcludeTableName(String excludeTableName) {
         this.excludeTableName = excludeTableName;
     }
     
-    QueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) {
-        return new QueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, this.excludeTableName);
+    Connection getConnection() throws InvalidConnectionSpecArguments, SQLException {
+        return this.databaseApi.newConnectionSpecInstance(databaseId, username, password).getOrCreate();
+    }
+    
+    ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
+        try {
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, this.excludeTableName);
+        } catch (InvalidConnectionSpecArguments | SQLException ex) {
+            throw new KnowledgeSourceReadException(ex);
+        }
+    }
+    
+    QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor) {
+        return new QueryExecutor(connection, queryConstructor, this.excludeTableName);
     }
     
 }

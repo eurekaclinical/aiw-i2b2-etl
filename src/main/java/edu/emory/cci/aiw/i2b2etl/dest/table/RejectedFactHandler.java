@@ -31,7 +31,7 @@ import org.arp.javautil.sql.ConnectionSpec;
  */
 public class RejectedFactHandler extends AbstractFactHandler {
     
-    public static final String REJECTED_FACT_TABLE = "REJECTED_OBSERVATION_FACT";
+    public static final String REJECTED_FACT_TABLE = "EK_REJECTED_OBSERVATION_FACT";
 
     public RejectedFactHandler(ConnectionSpec connSpec, String table) throws SQLException {
         super(connSpec, "insert into " + table + "(encounter_id, encounter_id_source, concept_cd, " +

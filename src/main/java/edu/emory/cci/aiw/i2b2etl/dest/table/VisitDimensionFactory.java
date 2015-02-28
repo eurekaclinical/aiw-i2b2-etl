@@ -22,6 +22,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
+import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
+import org.protempa.proposition.interval.Interval;
 import org.protempa.proposition.value.AbsoluteTimeGranularityUtil;
 import org.protempa.proposition.value.Value;
 
@@ -58,24 +60,27 @@ public class VisitDimensionFactory extends DimensionFactory {
             String encryptedPatientIdSourceSystem,
             TemporalProposition encounterProp, 
             Map<UniqueId, Proposition> references) throws SQLException {
-        java.util.Date visitStartDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinStart()) : null;
-        java.util.Date visitEndDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(encounterProp.getInterval().getMinFinish()) : null;
-        Value encryptedId = encounterProp != null ? getField(this.settings.getVisitDimensionDecipheredId(), encounterProp, references) : null;
-        String encryptedIdStr;
-        if (encryptedId != null) {
-            encryptedIdStr = encryptedId.getFormatted();
+        Interval interval = encounterProp.getInterval();
+        java.util.Date visitStartDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(interval.getMinStart()) : null;
+        java.util.Date visitEndDate = encounterProp != null ? AbsoluteTimeGranularityUtil.asDate(interval.getMinFinish()) : null;
+        Value visitId = encounterProp != null ? getField(this.settings.getVisitDimensionId(), encounterProp, references) : null;
+        String visitIdStr;
+        if (visitId != null) {
+            visitIdStr = visitId.getFormatted();
         } else {
-            encryptedIdStr = '@' + encryptedPatientId;
+            visitIdStr = '@' + encryptedPatientId;
         }
+        Value inout = encounterProp != null ? getField(this.settings.getVisitDimensionInOut(), encounterProp, references) : null;
 
         visitDimension.setEncryptedPatientId(TableUtil.setStringAttribute(encryptedPatientId));
         visitDimension.setStartDate(TableUtil.setDateAttribute(visitStartDate));
         visitDimension.setEndDate(TableUtil.setDateAttribute(visitEndDate));
-        visitDimension.setEncryptedVisitId(TableUtil.setStringAttribute(encryptedIdStr));
-        visitDimension.setEncryptedVisitIdSourceSystem(encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : this.qrhId);
+        visitDimension.setVisitId(TableUtil.setStringAttribute(visitIdStr));
+        visitDimension.setVisitIdSourceSystem(encounterProp != null ? encounterProp.getSourceSystem().getStringRepresentation() : this.qrhId);
         visitDimension.setVisitSourceSystem(this.qrhId);
         visitDimension.setEncryptedPatientIdSourceSystem(encryptedPatientIdSourceSystem);
-        visitDimension.setActiveStatus(ActiveStatusCode.getInstance(true, visitStartDate, visitEndDate));
+        visitDimension.setActiveStatus(ActiveStatusCode.getInstance(visitStartDate, interval.getStartGranularity(), visitEndDate, interval.getFinishGranularity()));
+        visitDimension.setInOut(CodeUtil.toString(inout));
         Date updated = encounterProp != null ? encounterProp.getUpdateDate() : null;
         if (updated == null && encounterProp != null) {
             updated = encounterProp.getCreateDate();

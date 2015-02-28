@@ -195,7 +195,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.providerMiddleNameSpec = this.data.get(this.settings.getProviderMiddleName());
         this.providerLastNameSpec = this.data.get(this.settings.getProviderLastName());
         this.visitPropId = this.settings.getVisitDimension();
-        
+
         if (this.inferPropositionIdsNeeded) {
             try {
                 readPropIdsFromKnowledgeSource();
@@ -205,8 +205,18 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
 
         this.skipProviderHierarchy = this.settings.getSkipProviderHierarchy();
-        this.dataRemoveMethod = this.settings.getDataRemoveMethod();
-        this.metaRemoveMethod = this.settings.getMetaRemoveMethod();
+        RemoveMethod removeMethod = this.settings.getDataRemoveMethod();
+        if (removeMethod != null) {
+            this.dataRemoveMethod = removeMethod;
+        } else {
+            this.dataRemoveMethod = RemoveMethod.TRUNCATE;
+        }
+        RemoveMethod metaRemoveMethod2 = this.settings.getMetaRemoveMethod();
+        if (metaRemoveMethod2 != null) {
+            this.metaRemoveMethod = metaRemoveMethod2;
+        } else {
+            this.metaRemoveMethod = RemoveMethod.TRUNCATE;
+        }
 
         DataSourceBackend[] dsBackends = dataSource.getBackends();
         this.dataSourceBackendIds = new HashSet<>();
@@ -267,9 +277,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             // disable indexes on observation_fact to speed up inserts
             disableObservationFactIndexes();
             // create i2b2 temporary tables using stored procedures
-            dropTempTables();
-            createTempTables();
-            createRejectedRecordTables();
+            truncateTempTables();
             this.dataSchemaConnection = openDataDatabaseConnection();
             logger.log(Level.INFO, "Populating observation facts table for query {0}", this.query.getId());
         } catch (KnowledgeSourceReadException | SQLException | OntologyBuildException ex) {
@@ -279,19 +287,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private String rejectedObservationFactTable() {
         return RejectedFactHandler.REJECTED_FACT_TABLE;
-    }
-
-    private void createRejectedRecordTables() throws SQLException {
-        Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, "Creating rejected record tables");
-        try (Connection conn = openDataDatabaseConnection();
-                CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_CREATE_REJECTED_OBX_TBL(?,?,?) }")) {
-            mappingCall.setString(1, rejectedObservationFactTable());
-            mappingCall.setInt(2, 0);
-            mappingCall.registerOutParameter(3, Types.VARCHAR);
-            mappingCall.execute();
-            logger.log(Level.INFO, "EUREKA.EK_CREATE_REJECTED_OBX_TBL errmsg: {0}", mappingCall.getString(3));
-        }
     }
 
     private String tempPatientTableName() {
@@ -327,106 +322,17 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     /**
-     * Calls stored procedures in the i2b2 data schema to create temporary
-     * tables for patient, visit, provider, and concept dimension, and for
-     * observation fact tables. These are the tables that will be populated by
-     * the query results handler. At that point, more i2b2 stored procedures
-     * will be called to "upsert" the temporary data into the permanent tables.
-     *
-     * @throws SQLException if an error occurs while interacting with the
-     * database
-     */
-    private void createTempTables() throws SQLException {
-        I2b2ETLUtil.logger().log(Level.INFO, "Creating temporary tables");
-        try (final Connection conn = openDataDatabaseConnection()) {
-            // for all of the procedures, the first parameter is an IN parameter
-            // specifying the table name, and the second is an OUT paremeter
-            // that contains an error message
-            // create the patient table
-            try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_CREATE_TEMP_PATIENT_TABLE(?, ?) }")) {
-                call.setString(1, tempPatientTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-            // create the patient mapping table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PID_TABLE(?, ?) }")) {
-                call.setString(1, tempPatientMappingTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-            // create the visit table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_VISIT_TABLE(?, ?) }")) {
-                call.setString(1, tempVisitTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-            // create the encounter mapping table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_EID_TABLE(?, ?) }")) {
-                call.setString(1, tempEncounterMappingTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-            // create the provider table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_PROVIDER_TABLE(?, ?) }")) {
-                call.setString(1, tempProviderTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-            // create the concept table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_CONCEPT_TABLE(?, ?) }")) {
-                call.setString(1, tempConceptTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-            // create the modifier table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_MODIFIER_TABLE(?, ?) }")) {
-                call.setString(1, tempModifierTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-            // create the observation fact table
-            try (CallableStatement call = conn.prepareCall("{ call CREATE_TEMP_TABLE(?, ?) }")) {
-                call.setString(1, tempObservationFactTableName());
-                call.registerOutParameter(2, Types.VARCHAR);
-                call.execute();
-            }
-
-            I2b2ETLUtil.logger().log(Level.INFO, "Created temporary tables");
-        }
-    }
-
-    /**
      * Calls stored procedures to drop all of the temp tables created.
      *
      * @throws SQLException if an error occurs while interacting with the
      * database
      */
-    private void dropTempTables() throws SQLException {
-        try (final Connection conn = openDataDatabaseConnection();
-                CallableStatement call = conn.prepareCall("{ call REMOVE_TEMP_TABLE(?) }")) {
-            call.setString(1, tempPatientTableName());
-            call.execute();
-
-            call.setString(1, tempPatientMappingTableName());
-            call.execute();
-
-            call.setString(1, tempVisitTableName());
-            call.execute();
-
-            call.setString(1, tempEncounterMappingTableName());
-            call.execute();
-
-            call.setString(1, tempProviderTableName());
-            call.execute();
-
-            call.setString(1, tempConceptTableName());
-            call.execute();
-
-            call.setString(1, tempModifierTableName());
-            call.execute();
-
-            call.setString(1, tempObservationFactTableName());
-            call.execute();
+    private void truncateTempTables() throws SQLException {
+        try (final Connection conn = openDataDatabaseConnection()) {
+            String[] dataschemaTables = {tempPatientTableName(), tempPatientMappingTableName(), tempVisitTableName(), tempEncounterMappingTableName(), tempProviderTableName(), tempConceptTableName(), tempModifierTableName(), tempObservationFactTableName()};
+            for (String tableName : dataschemaTables) {
+                truncateTable(conn, tableName);
+            }
         }
     }
 
@@ -593,7 +499,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
-        if (!this.skipProviderHierarchy && exception == null) {
+        if (exception == null) {
             try {
                 logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
                 try (Connection conn = openDataDatabaseConnection()) {
@@ -621,7 +527,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try {
                 // flush hot concepts out of the tree. persist Concepts.
                 logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
-                new ConceptDimensionLoader(this.conceptDimensionHandler).execute(this.ontologyModel.getConceptRoot());
+                new ConceptDimensionLoader(this.conceptDimensionHandler).execute(this.ontologyModel.getAllRoots());
             } catch (SQLException ex) {
                 exception = ex;
             }
@@ -746,7 +652,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     String tableName = this.settings.getMetaTableName();
                     try (MetaTableConceptHandler metaTableHandler = new MetaTableConceptHandler(this.metadataConnectionSpec, tableName)) {
                         MetaTableConceptLoader metaTableConceptLoader = new MetaTableConceptLoader(metaTableHandler);
-                        metaTableConceptLoader.execute(this.ontologyModel.getConceptRoot());
+                        metaTableConceptLoader.execute(this.ontologyModel.getAllRoots());
                         logger.log(Level.INFO, "Done populating metadata tables for query {0}", queryId);
                     }
                 } else {
@@ -923,20 +829,21 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
-        private void truncateTable(Connection conn, String tableName) throws SQLException {
-            Logger logger = I2b2ETLUtil.logger();
-            String queryId = query.getId();
-            String sql = "TRUNCATE TABLE " + tableName;
-            if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, "Executing the following SQL for query {0}: {1}", new Object[]{queryId, sql});
-            }
-            try (final Statement st = conn.createStatement()) {
-                st.execute(sql);
-                logger.log(Level.FINE, "Done executing SQL for query {0}", queryId);
-            } catch (SQLException ex) {
-                logger.log(Level.SEVERE, "An error occurred truncating the tables for query " + queryId, ex);
-                throw ex;
-            }
+    }
+
+    private void truncateTable(Connection conn, String tableName) throws SQLException {
+        Logger logger = I2b2ETLUtil.logger();
+        String queryId = query.getId();
+        String sql = "TRUNCATE TABLE " + tableName;
+        if (logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE, "Executing the following SQL for query {0}: {1}", new Object[]{queryId, sql});
+        }
+        try (final Statement st = conn.createStatement()) {
+            st.execute(sql);
+            logger.log(Level.FINE, "Done executing SQL for query {0}", queryId);
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "An error occurred truncating the tables for query " + queryId, ex);
+            throw ex;
         }
     }
 

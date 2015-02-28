@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
 import java.sql.PreparedStatement;
@@ -30,9 +31,9 @@ import org.arp.javautil.sql.ConnectionSpec;
  *
  * @author arpost
  */
-public class ProviderDimensionHandler extends RecordHandler<ProviderDimension> {
+public class ProviderDimensionHandler extends ConnectionSpecRecordHandler<ProviderDimension> {
 
-    public static final String TEMP_PROVIDER_TABLE = "temp_provider";
+    public static final String TEMP_PROVIDER_TABLE = "ek_temp_provider";
 
     public ProviderDimensionHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,

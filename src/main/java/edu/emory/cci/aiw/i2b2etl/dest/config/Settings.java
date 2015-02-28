@@ -53,7 +53,8 @@ public interface Settings {
     String getPatientDimensionReligion();
     String getPatientDimensionVital();
     String getRootNodeName();
-    String getVisitDimensionDecipheredId();
+    String getVisitDimensionId();
+    String getVisitDimensionInOut();
     String getAgeConceptCodePrefix();
     String getMetaTableName();
     Set<String> getDimensionDataTypes();

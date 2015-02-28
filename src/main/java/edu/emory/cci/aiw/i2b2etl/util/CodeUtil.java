@@ -19,12 +19,18 @@
  */
 package edu.emory.cci.aiw.i2b2etl.util;
 
+import org.protempa.proposition.value.Value;
+
 /**
  *
  * @author Andrew Post
  */
 public class CodeUtil {
     public static final int CODE_LENGTH = 50;
+    
+    public static String toString(Value codeValue) {
+        return codeValue != null ? truncateCodeStringIfNeeded(codeValue.getFormatted()) : null;
+    }
     
     public static String truncateCodeStringIfNeeded(String codeString) {
         if (codeString != null && codeString.length() > CODE_LENGTH) {

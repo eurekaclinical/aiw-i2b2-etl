@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -35,7 +36,7 @@ import org.protempa.proposition.value.Value;
  *
  * @author Andrew Post
  */
-public abstract class AbstractFactHandler extends RecordHandler<ObservationFact> {
+public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<ObservationFact> {
     private Timestamp importTimestamp;
     private final ObservationFact obx;
 
@@ -56,8 +57,8 @@ public abstract class AbstractFactHandler extends RecordHandler<ObservationFact>
     protected void setParameters(PreparedStatement ps, ObservationFact record) throws SQLException {
         assert obx != null : "obx cannot be null";
         assert obx.getVisit() != null : "obx.getVisit() cannot be null";
-        ps.setString(1, obx.getVisit().getEncryptedVisitId());
-        ps.setString(2, obx.getVisit().getEncryptedVisitIdSourceSystem());
+        ps.setString(1, obx.getVisit().getVisitId());
+        ps.setString(2, obx.getVisit().getVisitIdSourceSystem());
         Concept concept = obx.getConcept();
         ps.setString(3, concept != null ? concept.getConceptCode() : null);
         ps.setString(4, obx.getPatient().getEncryptedPatientId());

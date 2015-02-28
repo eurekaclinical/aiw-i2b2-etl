@@ -60,19 +60,19 @@ class ConceptPropertyReader {
 
     };
 
-    private static final QueryConstructor READ_FROM_DB_QUERY_CONSTRUCTOR = new QueryConstructor() {
+    private final QueryConstructor READ_FROM_DB_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
             sql.append("SELECT C_HLEVEL, C_FULLNAME FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND M_APPLIED_PATH='@'");
+            sql.append(" WHERE ").append(querySupport.getEurekaIdColumn()).append(" = ? AND M_APPLIED_PATH='@'");
         }
 
     };
 
     ValueSet readFromDatabase(String id) throws KnowledgeSourceReadException {
-        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FROM_DB_QUERY_CONSTRUCTOR)) {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FROM_DB_QUERY_CONSTRUCTOR)) {
             return new ValueSet(
                     id,
                     queryExecutor.execute(
@@ -83,11 +83,11 @@ class ConceptPropertyReader {
     }
 
     ValueSetElement[] readLevelFromDatabaseHelper(final int c_hlevel, final String fullName, final int offset) throws KnowledgeSourceReadException {
-        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(new QueryConstructor() {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(new QueryConstructor() {
 
             @Override
             public void appendStatement(StringBuilder sql, String table) {
-                sql.append("SELECT C_SYMBOL, C_NAME FROM ");
+                sql.append("SELECT ").append(querySupport.getEurekaIdColumn()).append(", C_NAME FROM ");
                 sql.append(table);
                 sql.append(" WHERE C_HLEVEL=? AND M_APPLIED_PATH='@' AND C_FULLNAME LIKE ? ESCAPE '\\'");
             }

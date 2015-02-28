@@ -20,6 +20,10 @@
 package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.Map;
+import org.protempa.proposition.value.AbsoluteTimeGranularity;
+import org.protempa.proposition.value.Granularity;
 
 /**
  * Represents the possible values of the <code>ACTIVE_STATUS_CD</code> 
@@ -27,13 +31,7 @@ import java.util.Date;
  * 
  * @author Andrew Post
  */
-public enum ActiveStatusCode {
-    FINAL("F"),
-    PRELIMINARY("P"),
-    ACTIVE("A"),
-    NO_DATES(null);
-    
-    private final String code;
+public class ActiveStatusCode {
     
     /**
      * Infer the correct active status code given what dates are available and
@@ -46,29 +44,51 @@ public enum ActiveStatusCode {
      * @param endDate the end date of the visit. May be <code>null</code>.
      * @return the appropriate active status code.
      */
-    public static ActiveStatusCode getInstance(boolean bFinal, 
-            Date startDate, Date endDate) {
-        if (startDate == null && endDate == null) {
-            return NO_DATES;
-        } else if (startDate != null && endDate == null) {
-            return ACTIVE;
-        } else if (bFinal) {
-            return FINAL;
+    public static String getInstance(
+            Date startDate, Granularity startGran, 
+            Date endDate, Granularity endGran) {
+        ActiveStatusCodeStartDate codeStartDate;
+        if (startDate == null) {
+            codeStartDate = ActiveStatusCodeStartDate.UNKNOWN;
+        } else if (startGran == AbsoluteTimeGranularity.YEAR) {
+            codeStartDate = ActiveStatusCodeStartDate.YEAR;
+        } else if (startGran == AbsoluteTimeGranularity.MONTH) {
+            codeStartDate = ActiveStatusCodeStartDate.MONTH;
+        } else if (startGran == AbsoluteTimeGranularity.DAY) {
+            codeStartDate = ActiveStatusCodeStartDate.DAY;
+        } else if (startGran == AbsoluteTimeGranularity.HOUR) {
+            codeStartDate = ActiveStatusCodeStartDate.HOUR;
+        } else if (startGran == AbsoluteTimeGranularity.MINUTE) {
+            codeStartDate = ActiveStatusCodeStartDate.MINUTE;
+        } else if (startGran == AbsoluteTimeGranularity.SECOND) {
+            codeStartDate = ActiveStatusCodeStartDate.SECOND;
         } else {
-            return PRELIMINARY;
+            codeStartDate = ActiveStatusCodeStartDate.NULL;
         }
+        
+        ActiveStatusCodeEndDate codeEndDate;
+        if (startDate == null) {
+            codeEndDate = ActiveStatusCodeEndDate.UNKNOWN;
+        } else if (startGran == AbsoluteTimeGranularity.YEAR) {
+            codeEndDate = ActiveStatusCodeEndDate.YEAR;
+        } else if (startGran == AbsoluteTimeGranularity.MONTH) {
+            codeEndDate = ActiveStatusCodeEndDate.MONTH;
+        } else if (startGran == AbsoluteTimeGranularity.DAY) {
+            codeEndDate = ActiveStatusCodeEndDate.DAY;
+        } else if (startGran == AbsoluteTimeGranularity.HOUR) {
+            codeEndDate = ActiveStatusCodeEndDate.HOUR;
+        } else if (startGran == AbsoluteTimeGranularity.MINUTE) {
+            codeEndDate = ActiveStatusCodeEndDate.MINUTE;
+        } else if (startGran == AbsoluteTimeGranularity.SECOND) {
+            codeEndDate = ActiveStatusCodeEndDate.SECOND;
+        } else {
+            codeEndDate = ActiveStatusCodeEndDate.NULL;
+        }
+        
+        return codeEndDate.getCode() + codeStartDate.getCode();
     }
     
-    private ActiveStatusCode(String code) {
-        this.code = code;
+    private ActiveStatusCode() {
     }
     
-    /**
-     * Gets the code to put into the <code>ACTIVE_STATUS_CD</code> attribute.
-     * 
-     * @return a code {@link String}.
-     */
-    public String getCode() {
-        return this.code;
-    }
 }

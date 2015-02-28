@@ -28,7 +28,8 @@ import org.protempa.PropositionDefinition;
  *
  * @author Andrew Post
  */
-public class DemographicsBuilder extends ParentBuilder {
+public class DemographicsBuilder extends ParentBuilder implements SubtreeBuilder {
+    private Concept root;
 
     public DemographicsBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, Metadata metadata) throws OntologyBuildException {
         super(metadata, "Demographics", 
@@ -42,7 +43,20 @@ public class DemographicsBuilder extends ParentBuilder {
                 new DemographicsReligionBuilder(knowledgeSource, cache, metadata),
                 new DemographicsVitalStatusBuilder(knowledgeSource, cache, metadata));
     }
+
+    @Override
+    public void build(Concept parent) throws OntologyBuildException {
+        super.build(parent);
+        this.root = parent;
+    }
     
-    
+    @Override
+    public Concept[] getRoots() {
+        if (this.root != null) {
+            return new Concept[]{this.root};
+        } else {
+            return EMPTY_CONCEPT_ARRAY;
+        }
+    }
     
 }

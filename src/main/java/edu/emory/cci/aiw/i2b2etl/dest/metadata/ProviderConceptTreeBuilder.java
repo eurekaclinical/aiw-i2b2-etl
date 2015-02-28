@@ -26,7 +26,7 @@ import java.util.TreeMap;
  *
  * @author Andrew Post
  */
-class ProviderConceptTreeBuilder implements OntologyBuilder {
+class ProviderConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
 
     private final Metadata metadata;
     private Concept root;
@@ -37,7 +37,6 @@ class ProviderConceptTreeBuilder implements OntologyBuilder {
         assert metadata != null : "metadata cannot be null";
         this.metadata = metadata;
         this.skipProviderHierarchy = this.metadata.getSettings().getSkipProviderHierarchy();
-;
     }
 
     /**
@@ -56,8 +55,10 @@ class ProviderConceptTreeBuilder implements OntologyBuilder {
                 root.setFactTableColumn("provider_id");
                 root.setTableName("provider_dimension");
                 root.setColumnName("provider_path");
-                root.setAlreadyLoaded(parent.isAlreadyLoaded());
-                parent.add(root);
+                if (parent != null) {
+                    root.setAlreadyLoaded(parent.isAlreadyLoaded());
+                    parent.add(root);
+                }
                 alpha = createAlphaCategoryConcepts();
             } catch (InvalidConceptCodeException ex) {
                 throw new OntologyBuildException("Could not build provider concept tree", ex);
@@ -82,6 +83,15 @@ class ProviderConceptTreeBuilder implements OntologyBuilder {
             parent.add(child);
 
             this.metadata.addToIdCache(child);
+        }
+    }
+    
+    @Override
+    public Concept[] getRoots() {
+        if (this.root != null) {
+            return new Concept[]{this.root};
+        } else {
+            return EMPTY_CONCEPT_ARRAY;
         }
     }
 

@@ -21,7 +21,9 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.dest.config.ModifierSpec;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.protempa.KnowledgeSource;
@@ -33,8 +35,8 @@ import org.protempa.ValueSet;
 import org.protempa.ValueSet.ValueSetElement;
 import org.protempa.proposition.value.ValueType;
 
-class PropositionConceptTreeBuilder implements OntologyBuilder {
-    
+class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
+
     private static final ModifierSpec[] EMPTY_MODIFIER_SPEC_ARRAY = new ModifierSpec[0];
 
     private final SimpleDateFormat valueMetadataCreateDateTimeFormat;
@@ -47,8 +49,9 @@ class PropositionConceptTreeBuilder implements OntologyBuilder {
     private final String[] propIds;
     private final Map<String, PropositionDefinition> cache;
     private final boolean alreadyLoaded;
+    private List<Concept> roots;
 
-    PropositionConceptTreeBuilder(Map<String, PropositionDefinition> cache, 
+    PropositionConceptTreeBuilder(Map<String, PropositionDefinition> cache,
             KnowledgeSource knowledgeSource,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
             ModifierSpec[] modifiers, boolean alreadyLoaded, Metadata metadata)
@@ -71,20 +74,24 @@ class PropositionConceptTreeBuilder implements OntologyBuilder {
         }
         this.cache = cache;
         this.alreadyLoaded = alreadyLoaded;
+        this.roots = new ArrayList<>();
     }
 
     Metadata getMetadata() {
         return metadata;
     }
-    
+
     @Override
     public void build(Concept concept) throws OntologyBuildException {
         try {
             for (String childPropId : this.propIds) {
-                PropositionDefinition childPropDef =
-                        readPropositionDefinition(childPropId);
+                PropositionDefinition childPropDef
+                        = readPropositionDefinition(childPropId);
                 Concept child = addNode(childPropDef);
-                concept.add(child);
+                if (concept != null) {
+                    concept.add(child);
+                }
+                this.roots.add(child);
                 addModifierConcepts(childPropDef, child);
                 buildHelper(childPropDef.getInverseIsA(), child);
             }
@@ -93,13 +100,18 @@ class PropositionConceptTreeBuilder implements OntologyBuilder {
                     "Could not build proposition concept tree", ex);
         }
     }
+    
+    @Override
+    public Concept[] getRoots() {
+        return this.roots.toArray(new Concept[this.roots.size()]);
+    }
 
     private void buildHelper(String[] childPropIds, Concept parent)
             throws UnknownPropositionDefinitionException,
             KnowledgeSourceReadException, InvalidConceptCodeException, OntologyBuildException {
         for (String childPropId : childPropIds) {
-            PropositionDefinition childPropDef =
-                    readPropositionDefinition(childPropId);
+            PropositionDefinition childPropDef
+                    = readPropositionDefinition(childPropId);
             Concept child = addNode(childPropDef);
             parent.add(child);
             buildHelper(childPropDef.getInverseIsA(), child);
@@ -108,8 +120,8 @@ class PropositionConceptTreeBuilder implements OntologyBuilder {
 
     private Concept addNode(PropositionDefinition propDef)
             throws InvalidConceptCodeException, KnowledgeSourceReadException, OntologyBuildException {
-        ConceptId conceptId =
-                PropDefConceptId.getInstance(propDef.getId(), null, null, this.metadata);
+        ConceptId conceptId
+                = PropDefConceptId.getInstance(propDef.getId(), null, null, this.metadata);
         Concept newChild = new Concept(conceptId, this.conceptCode, this.metadata);
         newChild.setDownloaded(propDef.getDownloaded());
         Date updated = propDef.getUpdated();
@@ -122,19 +134,19 @@ class PropositionConceptTreeBuilder implements OntologyBuilder {
         newChild.setDisplayName(propDef.getDisplayName());
         newChild.setSourceSystemCode(
                 MetadataUtil.toSourceSystemCode(
-                propDef.getSourceId().getStringRepresentation()));
+                        propDef.getSourceId().getStringRepresentation()));
         newChild.setValueTypeCode(this.valueTypeCode);
         newChild.setComment(propDef.getDescription());
         newChild.setAlreadyLoaded(this.alreadyLoaded);
         if (this.valueTypeCode == ValueTypeCode.LABORATORY_TESTS) {
-            ValueType valueType =
-                    ((ParameterDefinition) propDef).getValueType();
+            ValueType valueType
+                    = ((ParameterDefinition) propDef).getValueType();
             newChild.setDataType(DataType.dataTypeFor(valueType));
             if (children.length < 1) {
-                newChild.setMetadataXml("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>" + this.createDate + 
-                    "</CreationDateTime><TestID>" + StringEscapeUtils.escapeXml(newChild.getConceptCode()) + 
-                    "</TestID><TestName>" + StringEscapeUtils.escapeXml(newChild.getDisplayName()) + 
-                    "</TestName><DataType>" + (newChild.getDataType() == DataType.NUMERIC ? "Float" : "String") + "</DataType><Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
+                newChild.setMetadataXml("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>" + this.createDate
+                        + "</CreationDateTime><TestID>" + StringEscapeUtils.escapeXml(newChild.getConceptCode())
+                        + "</TestID><TestName>" + StringEscapeUtils.escapeXml(newChild.getDisplayName())
+                        + "</TestName><DataType>" + (newChild.getDataType() == DataType.NUMERIC ? "Float" : "String") + "</DataType><Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
             }
         } else {
             newChild.setDataType(DataType.TEXT);

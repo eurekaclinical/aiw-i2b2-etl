@@ -53,7 +53,7 @@ public final class PropositionFactHandler extends FactHandler {
 
     private static final Comparator<Proposition> PROP_COMP
             = new AllPropositionIntervalComparator();
-    
+
     private final LinkTraverser linkTraverser;
     private final Link[] links;
     private final Link[] derivationLinks;
@@ -145,39 +145,44 @@ public final class PropositionFactHandler extends FactHandler {
     }
 
     private void doInsert(PropertyConceptId conceptId, Proposition prop, Proposition encounterProp, PatientDimension patient, VisitDimension visit, ProviderDimension provider) throws InvalidFactException, UnknownPropositionDefinitionException {
-        if (conceptId != null) {
-            if (getMetadata().getFromIdCache(conceptId) == null) {
-                if (this.missingConcepts.add(conceptId)) {
-                    TableUtil.logger().log(Level.WARNING, "No metadata for concept {0}; this data will not be loaded", conceptId);
-                }
-            } else {
-                ObservationFact obx = populateObxFact(prop,
-                        encounterProp, patient, visit, provider, conceptId, null, 1);
-                PropositionDefinition propDef = this.cache.get(prop.getId());
-                if (propDef == null) {
-                    throw new UnknownPropositionDefinitionException(prop);
-                }
-                try {
-                    insert(obx);
-                } catch (SQLException ex) {
-                    String msg = "Observation fact not created";
-                    throw new InvalidFactException(msg, ex);
-                }
-                for (String propertyName : prop.getPropertyNames()) {
-                    PropertyDefinition propertyDefinition = propDef.propertyDefinition(propertyName);
-                    if (propertyDefinition != null) {
-                        ModifierConceptId modConceptId = ModifierConceptId.getInstance(propertyDefinition.getDeclaringPropId(), propertyName, getMetadata());
-                        if (getMetadata().getFromIdCache(modConceptId) == null) {
-                            if (this.missingConcepts.add(modConceptId)) {
-                                TableUtil.logger().log(Level.WARNING, "No metadata for modifier concept {0}; this modifier data will not be loaded", modConceptId);
-                            }
-                        } else {
-                            ObservationFact modObx = populateObxFact(prop, encounterProp, patient, visit, provider, conceptId, modConceptId, 1);
-                            try {
-                                insert(modObx);
-                            } catch (SQLException ex) {
-                                throw new InvalidFactException("Modifier fact not created", ex);
-                            }
+        assert conceptId != null : "conceptId cannot be null";
+        assert prop != null : "prop cannot be null";
+        assert encounterProp != null : "encounterProp cannot be null";
+        assert patient != null : "patient cannot be null";
+        assert visit != null : "visit cannot be null";
+        assert provider != null : "provider cannot be null";
+        if (getMetadata().getFromIdCache(conceptId) == null) {
+            // Just log the problem on its first occurrence.
+            if (this.missingConcepts.add(conceptId)) {
+                TableUtil.logger().log(Level.WARNING, "No metadata for concept {0}; this data will not be loaded", conceptId);
+            }
+        } else {
+            ObservationFact obx = populateObxFact(prop,
+                    encounterProp, patient, visit, provider, conceptId, null, 1);
+            PropositionDefinition propDef = this.cache.get(prop.getId());
+            if (propDef == null) {
+                throw new UnknownPropositionDefinitionException(prop);
+            }
+            try {
+                insert(obx);
+            } catch (SQLException ex) {
+                String msg = "Observation fact not created";
+                throw new InvalidFactException(msg, ex);
+            }
+            for (String propertyName : prop.getPropertyNames()) {
+                PropertyDefinition propertyDefinition = propDef.propertyDefinition(propertyName);
+                if (propertyDefinition != null) {
+                    ModifierConceptId modConceptId = ModifierConceptId.getInstance(propertyDefinition.getDeclaringPropId(), propertyName, getMetadata());
+                    if (getMetadata().getFromIdCache(modConceptId) == null) {
+                        if (this.missingConcepts.add(modConceptId)) {
+                            TableUtil.logger().log(Level.WARNING, "No metadata for modifier concept {0}; this modifier data will not be loaded", modConceptId);
+                        }
+                    } else {
+                        ObservationFact modObx = populateObxFact(prop, encounterProp, patient, visit, provider, conceptId, modConceptId, 1);
+                        try {
+                            insert(modObx);
+                        } catch (SQLException ex) {
+                            throw new InvalidFactException("Modifier fact not created", ex);
                         }
                     }
                 }
@@ -190,7 +195,7 @@ public final class PropositionFactHandler extends FactHandler {
         this.missingConcepts.clear();
         super.close();
     }
-    
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);

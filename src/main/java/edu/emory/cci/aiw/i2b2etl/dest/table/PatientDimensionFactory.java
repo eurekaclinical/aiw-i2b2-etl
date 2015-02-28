@@ -151,7 +151,6 @@ public class PatientDimensionFactory extends DimensionFactory {
                     AbsoluteTimeGranularityUtil.asPosition(new Date()),
                     AbsoluteTimeGranularity.YEAR,
                     AbsoluteTimeUnit.YEAR);
-            this.metadata.markAge(ageInYears);
         } else {
             ageInYears = null;
         }

@@ -50,7 +50,7 @@ public class SettingsSupport {
         result.add(this.settings.getPatientDimensionLanguage());
         result.add(this.settings.getPatientDimensionReligion());
         result.add(this.settings.getPatientDimensionBirthdate());
-        result.add(this.settings.getVisitDimensionDecipheredId());
+        result.add(this.settings.getVisitDimensionId());
         result.add(this.settings.getProviderFullName());
         result.add(this.settings.getProviderMiddleName());
         result.add(this.settings.getProviderLastName());

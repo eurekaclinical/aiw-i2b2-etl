@@ -19,21 +19,19 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-import java.sql.PreparedStatement;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.collections4.ListUtils;
 import org.protempa.KnowledgeSourceReadException;
 
 import static org.arp.javautil.collections.Collections.putSet;
 import static org.arp.javautil.collections.Collections.putSetAll;
+import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 
 /**
  *
@@ -48,7 +46,7 @@ class LevelReader {
     }
 
     Set<String> readChildrenFromDatabase(String fullName) throws KnowledgeSourceReadException {
-        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR)) {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR)) {
             return queryExecutor.execute(
                     fullName,
                     RESULT_SET_READER
@@ -58,51 +56,47 @@ class LevelReader {
 
     Map<String, Set<String>> readChildrenFromDatabase(final Collection<String> symbols) throws KnowledgeSourceReadException {
         Map<String, Set<String>> result = new HashMap<>();
-        List<List<String>> partitions = ListUtils.partition(new ArrayList<>(symbols), 4000);
-        for (final List<String> partition : partitions) {
-            try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(new QueryConstructor() {
-
-                @Override
-                public void appendStatement(StringBuilder sql, String table) {
-                    sql.append("SELECT A2.C_SYMBOL, A1.C_SYMBOL FROM ");
-                    sql.append(table);
-                    sql.append(" A1 JOIN ");
-                    sql.append(table);
-                    sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N' AND (A2.C_SYMBOL IN (");
-                    for (int i = 0, n = partition.size(); i < n; i++) {
-                        sql.append('?');
-                        if (i + 1 < n) {
-                            if ((i + 1) % 1000 == 0) {
-                                sql.append(") OR A2.C_SYMBOL IN (");
-                            } else {
-                                sql.append(',');
-                            }
-                        }
+        try (Connection connection = this.querySupport.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
+                    for (String child : symbols) {
+                        childTempTableHandler.insert(child);
                     }
-                    sql.append("))");
                 }
-            })) {
-                    putSetAll(result, 
-                            queryExecutor.execute(
-                                new ParameterSetter() {
+                
+                try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, new QueryConstructor() {
 
-                                    @Override
-                                    public int set(PreparedStatement stmt, int j) throws SQLException {
-                                        for (String fullName : partition) {
-                                            stmt.setString(j++, fullName);
-                                        }
-                                        return j;
-                                    }
-                                },
-                                MULT_RESULT_SET_READER
-                    ));
+                    @Override
+                    public void appendStatement(StringBuilder sql, String table) {
+                        String ekIdCol = querySupport.getEurekaIdColumn();
+                        sql.append("SELECT A2.").append(ekIdCol).append(", A1.").append(ekIdCol).append(" FROM ");
+                        sql.append(table);
+                        sql.append(" A1 JOIN ");
+                        sql.append(table);
+                        sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
+                    }
+                })) {
+                    putSetAll(result,
+                            queryExecutor.execute(MULT_RESULT_SET_READER));
+                }
+                connection.commit();
+            } catch (SQLException ex) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ignore) {}
+                throw ex;
             }
+
+        } catch (InvalidConnectionSpecArguments | SQLException ex) {
+            throw new KnowledgeSourceReadException(ex);
         }
+
         return result;
     }
 
     Set<String> readParentsFromDatabase(String propId) throws KnowledgeSourceReadException {
-        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PARENTS_FROM_DB_QUERY_CONSTRUCTOR)) {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PARENTS_FROM_DB_QUERY_CONSTRUCTOR)) {
             return queryExecutor.execute(
                     propId,
                     RESULT_SET_READER
@@ -110,14 +104,14 @@ class LevelReader {
         }
     }
 
-    private static final QueryConstructor READ_PARENTS_FROM_DB_QUERY_CONSTRUCTOR = new QueryConstructor() {
+    private final QueryConstructor READ_PARENTS_FROM_DB_QUERY_CONSTRUCTOR = new QueryConstructor() {
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_SYMBOL FROM ");
+            sql.append("SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
             sql.append(table);
             sql.append(" WHERE M_APPLIED_PATH='@' AND C_SYNONYM_CD='N' AND C_FULLNAME IN (SELECT C_PATH FROM ");
             sql.append(table);
-            sql.append(" WHERE C_SYMBOL=? AND M_APPLIED_PATH='@')");
+            sql.append(" WHERE ").append(querySupport.getEurekaIdColumn()).append(" = ? AND M_APPLIED_PATH='@')");
         }
 
     };
@@ -156,11 +150,11 @@ class LevelReader {
 
     };
 
-    private static final QueryConstructor READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR = new QueryConstructor() {
+    private final QueryConstructor READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_SYMBOL FROM ");
+            sql.append("SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
             sql.append(table);
             sql.append(" WHERE M_APPLIED_PATH='@' AND C_PATH=?");
         }

@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * limitations under the License.
  * #L%
  */
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -31,9 +30,10 @@ import org.protempa.PropositionDefinition;
  *
  * @author Andrew Post
  */
-class PhenotypesBuilder extends PropositionConceptTreeBuilder {
+class PhenotypesBuilder extends PropositionConceptTreeBuilder implements SubtreeBuilder {
 
     private final String sourceSystemCode;
+    private Concept concept;
 
     PhenotypesBuilder(Map<String, PropositionDefinition> cache, KnowledgeSource knowledgeSource, Metadata metadata) throws KnowledgeSourceReadException, UnknownPropositionDefinitionException {
         super(cache, knowledgeSource, phenotypePropIds(metadata), null, null, null, false, metadata);
@@ -46,7 +46,7 @@ class PhenotypesBuilder extends PropositionConceptTreeBuilder {
             Metadata metadata = getMetadata();
             ConceptId conceptId
                     = SimpleConceptId.getInstance("Phenotypes", metadata);
-            Concept concept = metadata.getFromIdCache(conceptId);
+            concept = metadata.getFromIdCache(conceptId);
             if (concept == null) {
                 try {
                     concept
@@ -59,12 +59,23 @@ class PhenotypesBuilder extends PropositionConceptTreeBuilder {
                 concept.setDataType(DataType.TEXT);
                 concept.setAlreadyLoaded(false);
                 metadata.addToIdCache(concept);
-                parent.add(concept);
+                if (parent != null) {
+                    parent.add(concept);
+                }
             }
             super.build(concept);
         }
     }
-    
+
+    @Override
+    public Concept[] getRoots() {
+       if (this.concept != null) {
+            return new Concept[]{this.concept};
+        } else {
+            return EMPTY_CONCEPT_ARRAY;
+        }
+    }
+
     private static String[] phenotypePropIds(Metadata metadata) {
         Set<String> inPropIds = new HashSet<>();
         for (PropositionDefinition phenotypeDef : metadata.getPhenotypeDefinitions()) {
