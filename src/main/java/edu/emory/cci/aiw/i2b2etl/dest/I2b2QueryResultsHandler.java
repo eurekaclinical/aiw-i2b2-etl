@@ -30,7 +30,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.DatabaseSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.I2B2QueryResultsHandlerSourceId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.table.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.OntologyBuildException;

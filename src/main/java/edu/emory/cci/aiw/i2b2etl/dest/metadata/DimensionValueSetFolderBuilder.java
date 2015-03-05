@@ -20,6 +20,10 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.SimpleConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
@@ -33,8 +37,9 @@ import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropertyDefinition;
 import org.protempa.PropositionDefinition;
 import org.protempa.ReferenceDefinition;
-import org.protempa.ValueSet;
+import org.protempa.valueset.ValueSet;
 import org.protempa.proposition.value.Value;
+import org.protempa.valueset.ValueSetElement;
 
 /**
  *
@@ -143,8 +148,8 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
                 }
                 ValueSet valueSet
                         = this.knowledgeSource.readValueSet(valueSetId);
-                ValueSet.ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
-                for (ValueSet.ValueSetElement valueSetElement : valueSetElements) {
+                ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
+                for (ValueSetElement valueSetElement : valueSetElements) {
                     Value valueSetElementVal = valueSetElement.getValue();
                     PropDefConceptId conceptId = PropDefConceptId.getInstance(propId, dataSpec.getPropertyName(), valueSetElementVal, metadata);
                     Concept childConcept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());

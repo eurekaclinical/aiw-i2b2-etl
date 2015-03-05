@@ -19,14 +19,17 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
 import java.util.Map;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropertyDefinition;
 import org.protempa.PropositionDefinition;
 import org.protempa.ProtempaUtil;
-import org.protempa.ValueSet;
-import org.protempa.ValueSet.ValueSetElement;
+import org.protempa.valueset.ValueSet;
+import org.protempa.valueset.ValueSetElement;
 
 class ValueSetConceptTreeBuilder implements OntologyBuilder {
 

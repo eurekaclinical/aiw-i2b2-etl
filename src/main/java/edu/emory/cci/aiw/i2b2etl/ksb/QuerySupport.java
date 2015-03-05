@@ -111,8 +111,12 @@ class QuerySupport {
         }
     }
     
-    QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor) {
-        return new QueryExecutor(connection, queryConstructor, this.excludeTableName);
+    QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
+        if (connection != null) {
+            return new QueryExecutor(connection, queryConstructor, this.excludeTableName);
+        } else {
+            return getQueryExecutorInstance(queryConstructor);
+        }
     }
     
 }

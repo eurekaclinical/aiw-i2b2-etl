@@ -21,14 +21,14 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  */
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.ConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.PropDefConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.ConceptOperator;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.DataType;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.SimpleConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.SimpleConceptId;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;

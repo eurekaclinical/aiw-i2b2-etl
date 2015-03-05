@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.7.0_67" class="java.beans.XMLDecoder">
+ <int>2</int>
+ <object class="org.protempa.PropertyDefinitionBuilder">
+  <void property="declaringPropId">
+   <string>ICD9:Diagnoses</string>
+  </void>
+  <void property="displayName">
+   <string>Diagnosis Source</string>
+  </void>
+  <void property="id">
+   <string>DXSOURCE</string>
+  </void>
+  <void property="propId">
+   <string>ICD9:285.22</string>
+  </void>
+  <void property="valueSetId">
+   <string>DXSOURCE</string>
+  </void>
+  <void property="valueType">
+   <object class="java.lang.Enum" id="ValueType$20" method="valueOf">
+    <class>org.protempa.proposition.value.ValueType</class>
+    <string>NOMINALVALUE</string>
+   </object>
+  </void>
+ </object>
+ <object class="org.protempa.PropertyDefinitionBuilder">
+  <void property="declaringPropId">
+   <string>ICD9:Diagnoses</string>
+  </void>
+  <void property="displayName">
+   <string>Diagnosis Priority</string>
+  </void>
+  <void property="id">
+   <string>DXPRIORITY</string>
+  </void>
+  <void property="propId">
+   <string>ICD9:285.22</string>
+  </void>
+  <void property="valueSetId">
+   <string>DXPRIORITY</string>
+  </void>
+  <void property="valueType">
+   <object idref="ValueType$20"/>
+  </void>
+ </object>
+</java>

@@ -46,6 +46,7 @@ public class ObservationFact extends AbstractRecord {
         this.modifierCd = "@";  //using the default value since we do not use this i2b2 feature currently
     }
     
+    @Override
     public void reset() {
         super.reset();
         this.displayName = null;

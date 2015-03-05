@@ -19,6 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.table.ProviderDimension;
 import java.util.TreeMap;
 

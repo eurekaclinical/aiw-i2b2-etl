@@ -31,26 +31,42 @@ import org.protempa.proposition.value.ValueType;
 final class PropertyDefinitionPartial {
     private final String name;
     private final ValueType valueType;
-    private final String valueSetId;
     private final String declaringPropId;
     private final String fullName;
     private final String symbol;
+    private final boolean hasClob;
 
-    PropertyDefinitionPartial(String fullName, String symbol, String name, ValueType valueType, String valueSetId, String declaringPropId) {
+    PropertyDefinitionPartial(String fullName, String symbol, String name, ValueType valueType, String declaringPropId, boolean hasClob) {
         this.fullName = fullName;
         this.symbol = symbol;
         this.name = name;
         this.valueType = valueType;
-        this.valueSetId = valueSetId;
         this.declaringPropId = declaringPropId;
+        this.hasClob = hasClob;
     }
 
+    public boolean getHasClob() {
+        return hasClob;
+    }
+    
     String getFullName() {
         return fullName;
     }
+
+    public String getDeclaringPropId() {
+        return declaringPropId;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
     
     PropertyDefinition getPropertyDefinition(String propId) {
-        return new PropertyDefinition(propId, this.symbol, this.name, this.valueType, this.valueSetId, this.declaringPropId);
+        return getPropertyDefinition(propId, null, null);
+    }
+    
+    PropertyDefinition getPropertyDefinition(String propId, String propertySym, String propertyName) {
+            return new PropertyDefinition(propId, propertySym != null ? propertySym : this.symbol, propertyName != null ? propertyName : this.name, this.valueType, propertySym != null ? propertySym : this.symbol, this.declaringPropId);
     }
 
     @Override

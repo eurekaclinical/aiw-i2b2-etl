@@ -19,6 +19,10 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.SimpleConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
@@ -306,7 +310,7 @@ public final class Metadata {
         }
     }
 
-    void putInConceptIdCache(List<Object> key, ConceptId conceptId) {
+    public void putInConceptIdCache(List<Object> key, ConceptId conceptId) {
         if (!this.conceptIdCache.containsKey(key)) {
             this.conceptIdCache.put(key, conceptId);
         } else {
@@ -314,7 +318,7 @@ public final class Metadata {
         }
     }
 
-    ConceptId getFromConceptIdCache(List<Object> key) {
+    public ConceptId getFromConceptIdCache(List<Object> key) {
         return this.conceptIdCache.get(key);
     }
 

@@ -30,11 +30,13 @@ public class ModifierSpec {
     private final String displayName;
     private final String codePrefix;
     private final String property;
+    private final String value;
 
-    public ModifierSpec(String displayName, String codePrefix, String property) {
+    public ModifierSpec(String displayName, String codePrefix, String property, String value) {
         this.displayName = displayName;
         this.codePrefix = codePrefix;
         this.property = property;
+        this.value = value;
     }
 
     public String getDisplayName() {
@@ -47,6 +49,10 @@ public class ModifierSpec {
 
     public String getProperty() {
         return property;
+    }
+
+    public String getValue() {
+        return value;
     }
 
     @Override

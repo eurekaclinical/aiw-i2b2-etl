@@ -38,15 +38,9 @@ import org.protempa.proposition.value.Value;
  */
 public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<ObservationFact> {
     private Timestamp importTimestamp;
-    private final ObservationFact obx;
 
     AbstractFactHandler(ConnectionSpec connSpec, String statement) throws SQLException {
         super(connSpec, statement);
-        this.obx = new ObservationFact();
-    }
-
-    ObservationFact getObx() {
-        return obx;
     }
 
     Timestamp getImportTimestamp() {
@@ -55,20 +49,25 @@ public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<Ob
     
     @Override
     protected void setParameters(PreparedStatement ps, ObservationFact record) throws SQLException {
-        assert obx != null : "obx cannot be null";
-        assert obx.getVisit() != null : "obx.getVisit() cannot be null";
-        ps.setString(1, obx.getVisit().getVisitId());
-        ps.setString(2, obx.getVisit().getVisitIdSourceSystem());
-        Concept concept = obx.getConcept();
+        assert record != null : "record cannot be null";
+        VisitDimension visit = record.getVisit();
+        if (visit != null) {
+            ps.setString(1, visit.getVisitId());
+            ps.setString(2, visit.getVisitIdSourceSystem());
+        } else {
+            ps.setString(1, null);
+            ps.setString(2, null);
+        }
+        Concept concept = record.getConcept();
         ps.setString(3, concept != null ? concept.getConceptCode() : null);
-        ps.setString(4, obx.getPatient().getEncryptedPatientId());
-        ps.setString(5, obx.getPatient().getEncryptedPatientIdSourceSystem());
-        ps.setString(6, TableUtil.setStringAttribute(obx.getProvider().getConcept().getConceptCode()));
-        ps.setTimestamp(7, obx.getStartDate());
-        ps.setString(8, obx.getModifierCd());
-        ps.setLong(9, obx.getInstanceNum());
+        ps.setString(4, record.getPatient().getEncryptedPatientId());
+        ps.setString(5, record.getPatient().getEncryptedPatientIdSourceSystem());
+        ps.setString(6, TableUtil.setStringAttribute(record.getProvider().getConcept().getConceptCode()));
+        ps.setTimestamp(7, record.getStartDate());
+        ps.setString(8, record.getModifierCd());
+        ps.setLong(9, record.getInstanceNum());
 
-        Value value = obx.getValue();
+        Value value = record.getValue();
         if (value == null) {
             ps.setString(10, ValTypeCode.NO_VALUE.getCode());
             ps.setString(11, null);
@@ -96,20 +95,20 @@ public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<Ob
             ps.setString(12, null);
         }
 
-        ps.setString(13, obx.getValueFlagCode().getCode());
+        ps.setString(13, record.getValueFlagCode().getCode());
         ps.setObject(14, null);
         ps.setObject(15, null);
         ps.setObject(16, null);
-        ps.setString(17, obx.getUnits());
-        ps.setTimestamp(18, obx.getEndDate());
+        ps.setString(17, record.getUnits());
+        ps.setTimestamp(18, record.getEndDate());
         ps.setString(19, null);
         ps.setTimestamp(20, null);
-        ps.setTimestamp(21, obx.getDownloadDate());
+        ps.setTimestamp(21, record.getDownloadDate());
         if (this.importTimestamp == null) {
             this.importTimestamp = new Timestamp(System.currentTimeMillis());
         }
         ps.setTimestamp(22, this.importTimestamp);
-        ps.setString(23, obx.getSourceSystem());
+        ps.setString(23, record.getSourceSystem());
         ps.setInt(24, 0);
     }
     

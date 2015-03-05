@@ -19,20 +19,28 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ModifierParentConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ModifierConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.config.ModifierSpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
 import org.protempa.PropertyDefinition;
 import org.protempa.PropositionDefinition;
-import org.protempa.ValueSet;
-import org.protempa.ValueSet.ValueSetElement;
+import org.protempa.proposition.value.Value;
+import org.protempa.valueset.ValueSet;
+import org.protempa.valueset.ValueSetElement;
 import org.protempa.proposition.value.ValueType;
 
 class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
@@ -114,6 +122,7 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                     = readPropositionDefinition(childPropId);
             Concept child = addNode(childPropDef);
             parent.add(child);
+            addModifierConcepts(childPropDef, child);
             buildHelper(childPropDef.getInverseIsA(), child);
         }
     }
@@ -173,7 +182,14 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
             for (ModifierSpec modifier : this.modifiers) {
                 PropertyDefinition propertyDef = propDef.propertyDefinition(modifier.getProperty());
                 if (propertyDef != null && !propertyDef.isInherited()) {
-                    ConceptId modId = ModifierConceptId.getInstance(propDef.getId(), propertyDef.getId(), this.metadata);
+                    String valStr = modifier.getValue();
+                    Value val = valStr != null ? propertyDef.getValueType().parse(valStr) : null;
+                    ConceptId modId = ModifierConceptId.getInstance(
+                            propDef.getId(), 
+                            propertyDef.getId(), 
+                            val,
+                            this.metadata);
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Adding modifier concept {0}", modId);
                     Concept mod = new Concept(modId, modifier.getCodePrefix(), this.metadata);
                     mod.setDisplayName(modifier.getDisplayName());
                     Date updated = propDef.getUpdated();
@@ -189,35 +205,37 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                     mod.setTableName("MODIFIER_DIMENSION");
                     mod.setColumnName("MODIFIER_PATH");
                     mod.setAlreadyLoaded(this.alreadyLoaded);
-                    StringBuilder mXml = new StringBuilder();
-                    mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
-                    mXml.append(this.createDate);
-                    mXml.append("</CreationDateTime><TestID>");
-                    mXml.append(StringEscapeUtils.escapeXml(mod.getConceptCode()));
-                    mXml.append("</TestID><TestName>");
-                    mXml.append(StringEscapeUtils.escapeXml(mod.getDisplayName()));
-                    mXml.append("</TestName>");
-                    String valueSetId = propertyDef.getValueSetId();
-                    if (valueSetId != null) {
-                        mXml.append("<DataType>Enum</DataType><EnumValues>");
-                        ValueSet valueSet = this.knowledgeSource.readValueSet(valueSetId);
-                        if (valueSet != null) {
-                            for (ValueSetElement vse : valueSet.getValueSetElements()) {
-                                mXml.append("<Val description=\"");
-                                mXml.append(StringEscapeUtils.escapeXml(vse.getDisplayName()));
-                                mXml.append("\">");
-                                mXml.append(StringEscapeUtils.escapeXml(vse.getValue().getFormatted()));
-                                mXml.append("</Val>");
+                    if (propertyDef.getValueType() != ValueType.BOOLEANVALUE) {
+                        StringBuilder mXml = new StringBuilder();
+                        mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
+                        mXml.append(this.createDate);
+                        mXml.append("</CreationDateTime><TestID>");
+                        mXml.append(StringEscapeUtils.escapeXml(mod.getConceptCode()));
+                        mXml.append("</TestID><TestName>");
+                        mXml.append(StringEscapeUtils.escapeXml(mod.getDisplayName()));
+                        mXml.append("</TestName>");
+                        String valueSetId = propertyDef.getValueSetId();
+                        if (valueSetId != null) {
+                            mXml.append("<DataType>Enum</DataType><EnumValues>");
+                            ValueSet valueSet = this.knowledgeSource.readValueSet(valueSetId);
+                            if (valueSet != null) {
+                                for (ValueSetElement vse : valueSet.getValueSetElements()) {
+                                    mXml.append("<Val description=\"");
+                                    mXml.append(StringEscapeUtils.escapeXml(vse.getDisplayName()));
+                                    mXml.append("\">");
+                                    mXml.append(StringEscapeUtils.escapeXml(vse.getValue().getFormatted()));
+                                    mXml.append("</Val>");
+                                }
                             }
+                            mXml.append("</EnumValues>");
+                        } else {
+                            mXml.append("<DataType>");
+                            mXml.append(mod.getDataType() == DataType.NUMERIC ? "Float" : "String");
+                            mXml.append("</DataType>");
                         }
-                        mXml.append("</EnumValues>");
-                    } else {
-                        mXml.append("<DataType>");
-                        mXml.append(mod.getDataType() == DataType.NUMERIC ? "Float" : "String");
-                        mXml.append("</DataType>");
+                        mXml.append("<Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
+                        mod.setMetadataXml(mXml.toString());
                     }
-                    mXml.append("<Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
-                    mod.setMetadataXml(mXml.toString());
                     if (this.metadata.getFromIdCache(modId) == null) {
                         this.metadata.addToIdCache(mod);
                     } else {

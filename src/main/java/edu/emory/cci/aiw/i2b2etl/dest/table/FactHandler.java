@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 /*
@@ -25,8 +21,8 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  */
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.ModifierConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.PropertyConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ModifierConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropertyConceptId;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -55,6 +51,7 @@ public abstract class FactHandler extends AbstractFactHandler {
     private final String propertyName;
     private final Metadata metadata;
     private final RejectedFactHandler rejectedFactHandler;
+    private final ObservationFact obx;
 
     public FactHandler(ConnectionSpec connSpec, String propertyName, String startConfig, String finishConfig, String unitsPropertyName, Metadata metadata, RejectedFactHandlerFactory rejectedFactHandlerFactory) throws SQLException {
         super(connSpec,
@@ -75,6 +72,7 @@ public abstract class FactHandler extends AbstractFactHandler {
         } else {
             this.rejectedFactHandler = null;
         }
+        this.obx = new ObservationFact();
     }
 
     Metadata getMetadata() {
@@ -126,7 +124,6 @@ public abstract class FactHandler extends AbstractFactHandler {
         Value value = modConcept != null ? handleValue(prop, modConcept, modConceptId) : handleValue(prop, concept, conceptId);
         ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
         String units = handleUnits(prop);
-        ObservationFact obx = getObx();
         obx.reset();
         obx.setStartDate(TableUtil.setTimestampAttribute(start));
         if (start == null) {

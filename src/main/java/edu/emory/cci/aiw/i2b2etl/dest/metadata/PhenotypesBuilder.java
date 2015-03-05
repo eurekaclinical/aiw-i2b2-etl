@@ -19,6 +19,9 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * limitations under the License.
  * #L%
  */
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.SimpleConceptId;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;

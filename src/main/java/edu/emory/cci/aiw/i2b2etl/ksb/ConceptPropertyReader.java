@@ -25,8 +25,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import org.protempa.KnowledgeSourceReadException;
-import org.protempa.ValueSet;
-import org.protempa.ValueSet.ValueSetElement;
+import org.protempa.valueset.ValueSet;
+import org.protempa.valueset.ValueSetElement;
 import org.protempa.proposition.value.NominalValue;
 
 /**
@@ -92,8 +92,7 @@ class ConceptPropertyReader {
                 sql.append(" WHERE C_HLEVEL=? AND M_APPLIED_PATH='@' AND C_FULLNAME LIKE ? ESCAPE '\\'");
             }
         })) {
-            return queryExecutor.execute(
-                    new ParameterSetter() {
+            return queryExecutor.execute(new ParameterSetter() {
                         private static final String ONT_PATH_SEP = "\\";
                         private String newFullName = newFullName(fullName, offset);
 

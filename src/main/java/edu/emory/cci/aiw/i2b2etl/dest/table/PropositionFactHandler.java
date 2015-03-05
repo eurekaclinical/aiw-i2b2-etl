@@ -21,10 +21,10 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.ConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.ModifierConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.PropDefConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.PropertyConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ModifierConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropertyConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.UnknownPropositionDefinitionException;
 
 import java.sql.*;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import org.apache.commons.lang3.ArrayUtils;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.arp.javautil.sql.ConnectionSpec;
@@ -152,7 +153,7 @@ public final class PropositionFactHandler extends FactHandler {
         assert visit != null : "visit cannot be null";
         assert provider != null : "provider cannot be null";
         if (getMetadata().getFromIdCache(conceptId) == null) {
-            // Just log the problem on its first occurrence.
+            // Only log the problem on its first occurrence.
             if (this.missingConcepts.add(conceptId)) {
                 TableUtil.logger().log(Level.WARNING, "No metadata for concept {0}; this data will not be loaded", conceptId);
             }
@@ -172,8 +173,14 @@ public final class PropositionFactHandler extends FactHandler {
             for (String propertyName : prop.getPropertyNames()) {
                 PropertyDefinition propertyDefinition = propDef.propertyDefinition(propertyName);
                 if (propertyDefinition != null) {
-                    ModifierConceptId modConceptId = ModifierConceptId.getInstance(propertyDefinition.getDeclaringPropId(), propertyName, getMetadata());
-                    if (getMetadata().getFromIdCache(modConceptId) == null) {
+                    ModifierConceptId modConceptId = ModifierConceptId.getInstance(propertyDefinition.getDeclaringPropId(), propertyName, prop.getProperty(propertyName), getMetadata());
+                    //Check with property value, then without, to cover both kinds of modifier concepts.
+                    boolean found = getMetadata().getFromIdCache(modConceptId) != null;
+                    if (!found) {
+                        modConceptId = ModifierConceptId.getInstance(propertyDefinition.getDeclaringPropId(), propertyName, null, getMetadata());
+                        found = getMetadata().getFromIdCache(modConceptId) != null;
+                    }
+                    if (!found) {
                         if (this.missingConcepts.add(modConceptId)) {
                             TableUtil.logger().log(Level.WARNING, "No metadata for modifier concept {0}; this modifier data will not be loaded", modConceptId);
                         }
