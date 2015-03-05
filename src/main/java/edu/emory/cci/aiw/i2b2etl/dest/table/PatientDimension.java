@@ -19,11 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.table;
 
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
 import java.sql.*;
-import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -199,7 +195,7 @@ public class PatientDimension extends AbstractRecord {
         return this.updated;
     }
     
-    public void setUpdated(Timestamp setTimestampAttribute) {
+    public void setUpdated(Timestamp updated) {
         this.updated = updated;
     }
     
