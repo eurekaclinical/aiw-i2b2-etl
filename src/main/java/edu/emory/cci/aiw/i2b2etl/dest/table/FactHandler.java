@@ -97,8 +97,12 @@ public abstract class FactHandler extends AbstractFactHandler {
 
     @Override
     public void close() throws SQLException {
-        if (this.rejectedFactHandler != null) {
-            this.rejectedFactHandler.close();
+        try {
+            super.close();
+        } finally {
+            if (this.rejectedFactHandler != null) {
+                this.rejectedFactHandler.close();
+            }
         }
     }
     
