@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
@@ -51,17 +52,15 @@ public class ProviderDimensionFactory {
     private static final String NOT_RECORDED_PROVIDER_ID = PROVIDER_ID_PREFIX + "NotRecorded";
     
     private final Metadata metadata;
-    private final String qrhId;
     private final ProviderDimension providerDimension;
     private final ProviderDimensionHandler providerDimensionHandler;
     private final boolean skipProviderHierarchy;
 
-    public ProviderDimensionFactory(String qrhId, Metadata metadata, ConnectionSpec dataConnectionSpec, boolean skipProviderHierarchy) throws SQLException {
-        this.qrhId = qrhId;
+    public ProviderDimensionFactory(Metadata metadata, Settings settings, ConnectionSpec dataConnectionSpec) throws SQLException {
         this.metadata = metadata;
         this.providerDimension = new ProviderDimension();
         this.providerDimensionHandler = new ProviderDimensionHandler(dataConnectionSpec);
-        this.skipProviderHierarchy = skipProviderHierarchy;
+        this.skipProviderHierarchy = settings.getSkipProviderHierarchy();
     }
     
     public ProviderDimension getInstance(Proposition encounterProp, String fullNameReference, String fullNameProperty,
@@ -86,7 +85,7 @@ public class ProviderDimensionFactory {
             source = MetadataUtil.toSourceSystemCode(StringUtils.join(sources, " & "));
         } else {
             id = NOT_RECORDED_PROVIDER_ID;
-            source = MetadataUtil.toSourceSystemCode(this.qrhId);
+            source = this.metadata.getSourceSystemCode();
             fullName = "Not Recorded";
         }
         ConceptId cid = SimpleConceptId.getInstance(id, this.metadata);

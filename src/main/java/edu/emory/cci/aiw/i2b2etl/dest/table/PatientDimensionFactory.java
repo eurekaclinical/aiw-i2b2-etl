@@ -24,6 +24,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -110,7 +111,7 @@ public class PatientDimensionFactory extends DimensionFactory {
                 Long ageInYears = computeAgeInYears(birthdate);
 
                 patientDimension.setEncryptedPatientId(keyId);
-                patientDimension.setEncryptedPatientIdSource(prop.getSourceSystem().getStringRepresentation());
+                patientDimension.setEncryptedPatientIdSource(metadata.getSourceSystemCode());
                 patientDimension.setZip(zipCode != null ? zipCode.getFormatted() : null);
                 patientDimension.setAgeInYears(ageInYears);
                 patientDimension.setGender(gender != null ? gender.getFormatted() : null);
@@ -120,7 +121,7 @@ public class PatientDimensionFactory extends DimensionFactory {
                 patientDimension.setDeathDate(null);
                 patientDimension.setMaritalStatus(maritalStatus != null ? maritalStatus.getFormatted() : null);
                 patientDimension.setRace(race != null ? race.getFormatted() : null);
-                patientDimension.setSourceSystem(prop.getSourceSystem().getStringRepresentation());
+                patientDimension.setSourceSystem(MetadataUtil.toSourceSystemCode(prop.getSourceSystem().getStringRepresentation()));
                 patientDimension.setVital(VitalStatusCode.getInstance(null));
                 Date updateDate = prop.getUpdateDate();
                 patientDimension.setUpdated(TableUtil.setTimestampAttribute(updateDate != null ? updateDate : prop.getCreateDate()));

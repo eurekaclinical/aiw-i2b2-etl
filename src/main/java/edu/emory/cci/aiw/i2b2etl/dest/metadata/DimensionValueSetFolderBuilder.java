@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
@@ -66,7 +65,7 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
         assert metadata != null : "metadata cannot be null";
         assert childName != null : "childName cannot be null";
         assert columnName != null : "columnName cannot be null";
-        
+
         this.cache = cache;
         this.knowledgeSource = knowledgeSource;
         this.dataSection = metadata.getDataSection();
@@ -76,13 +75,17 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
         this.tableName = "patient_dimension";
         this.settings = metadata.getSettings();
         String propId = settings.getVisitDimension();
-        try {
-            this.propDef = cache.get(propId);
-            if (this.propDef == null) {
-                throw new UnknownPropositionDefinitionException(propId);
+        if (propId != null) {
+            try {
+                this.propDef = cache.get(propId);
+                if (this.propDef == null) {
+                    throw new UnknownPropositionDefinitionException(propId);
+                }
+            } catch (UnknownPropositionDefinitionException ex) {
+                throw new OntologyBuildException("Could not build descendants", ex);
             }
-        } catch (UnknownPropositionDefinitionException ex) {
-            throw new OntologyBuildException("Could not build descendants", ex);
+        } else {
+            this.propDef = null;
         }
         this.childName = childName;
         this.dictVal = dictVal;
@@ -92,11 +95,11 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
     Settings getSettings() {
         return settings;
     }
-    
+
     @Override
     public void build(Concept parent) throws OntologyBuildException {
         DataSpec dataSpec = getDataSection(dictVal);
-        if (dataSpec != null) {
+        if (dataSpec != null && this.propDef != null) {
             ConceptId conceptId = SimpleConceptId.getInstance(childName, metadata);
             Concept concept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
             concept.setColumnName(columnName);
@@ -163,12 +166,12 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
             }
         }
     }
-    
+
     private Concept newQueryableConcept(ConceptId conceptId, String conceptCodePrefix) throws OntologyBuildException {
         Concept concept = this.metadata.newConcept(conceptId, conceptCodePrefix, this.sourceSystemCode);
         concept.setFactTableColumn(this.factTableColumn);
         concept.setTableName(this.tableName);
         return concept;
     }
-    
+
 }

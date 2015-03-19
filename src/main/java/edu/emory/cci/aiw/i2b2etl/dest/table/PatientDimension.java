@@ -131,7 +131,7 @@ public class PatientDimension extends AbstractRecord {
         return this.encryptedPatientId;
     }
 
-    public String getEncryptedPatientIdSourceSystem() {
+    public String getEncryptedPatientIdSource() {
         return this.encryptedPatientIdSource;
     }
 
@@ -139,10 +139,6 @@ public class PatientDimension extends AbstractRecord {
         return this.ageInYears;
     }
     
-    public String getEncryptedPatientIdSource() {
-        return encryptedPatientIdSource;
-    }
-
     public String getZip() {
         return zip;
     }

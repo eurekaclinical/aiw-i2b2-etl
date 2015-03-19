@@ -53,7 +53,7 @@ public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<Ob
         VisitDimension visit = record.getVisit();
         if (visit != null) {
             ps.setString(1, visit.getVisitId());
-            ps.setString(2, visit.getVisitIdSourceSystem());
+            ps.setString(2, visit.getVisitIdSource());
         } else {
             ps.setString(1, null);
             ps.setString(2, null);
@@ -61,7 +61,7 @@ public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<Ob
         Concept concept = record.getConcept();
         ps.setString(3, concept != null ? concept.getConceptCode() : null);
         ps.setString(4, record.getPatient().getEncryptedPatientId());
-        ps.setString(5, record.getPatient().getEncryptedPatientIdSourceSystem());
+        ps.setString(5, record.getPatient().getEncryptedPatientIdSource());
         ps.setString(6, TableUtil.setStringAttribute(record.getProvider().getConcept().getConceptCode()));
         ps.setTimestamp(7, record.getStartDate());
         ps.setString(8, record.getModifierCd());

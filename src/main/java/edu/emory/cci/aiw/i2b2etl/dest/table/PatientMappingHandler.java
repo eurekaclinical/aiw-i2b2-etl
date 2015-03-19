@@ -21,7 +21,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  */
 
 import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.arp.javautil.sql.ConnectionSpec;
@@ -42,14 +41,14 @@ public class PatientMappingHandler extends ConnectionSpecRecordHandler<PatientDi
     @Override
     protected void setParameters(PreparedStatement ps2, PatientDimension patient) throws SQLException {
         ps2.setString(1, patient.getEncryptedPatientId());
-        ps2.setString(2, MetadataUtil.toSourceSystemCode(patient.getEncryptedPatientIdSourceSystem()));
+        ps2.setString(2, patient.getEncryptedPatientIdSource());
         ps2.setString(3, patient.getEncryptedPatientId());
-        ps2.setString(4, MetadataUtil.toSourceSystemCode(patient.getEncryptedPatientIdSourceSystem()));
+        ps2.setString(4, patient.getEncryptedPatientIdSource());
         ps2.setString(5, PatientIdeStatusCode.ACTIVE.getCode());
-        ps2.setDate(6, null);
-        ps2.setDate(7, null);
-        ps2.setDate(8, null);
-        ps2.setString(9, MetadataUtil.toSourceSystemCode(patient.getSourceSystem()));
+        ps2.setTimestamp(6, patient.getUpdated());
+        ps2.setTimestamp(7, patient.getDownloaded());
+        ps2.setTimestamp(8, importTimestamp());
+        ps2.setString(9, patient.getSourceSystem());
     }
     
 }

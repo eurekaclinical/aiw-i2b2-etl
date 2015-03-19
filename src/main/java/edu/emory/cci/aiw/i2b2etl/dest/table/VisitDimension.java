@@ -30,14 +30,14 @@ public class VisitDimension extends AbstractRecord {
     private Date startDate;
     private Date endDate;
     private String visitSourceSystem;
-    private String encryptedPatientIdSourceSystem;
+    private String encryptedPatientIdSource;
     private String activeStatus;
     private String encryptedPatientId;
     private Timestamp downloaded;
     private Timestamp updated;
     private String inOut;
 
-    private String visitIdSourceSystem;
+    private String visitIdSource;
 
     public VisitDimension() {
     }
@@ -58,8 +58,8 @@ public class VisitDimension extends AbstractRecord {
         this.visitSourceSystem = visitSourceSystem;
     }
 
-    public void setEncryptedPatientIdSourceSystem(String encryptedPatientIdSourceSystem) {
-        this.encryptedPatientIdSourceSystem = encryptedPatientIdSourceSystem;
+    public void setEncryptedPatientIdSource(String encryptedPatientIdSource) {
+        this.encryptedPatientIdSource = encryptedPatientIdSource;
     }
 
     public void setActiveStatus(String activeStatus) {
@@ -74,16 +74,16 @@ public class VisitDimension extends AbstractRecord {
         this.downloaded = downloaded;
     }
 
-    public void setVisitIdSourceSystem(String visitIdSourceSystem) {
-        this.visitIdSourceSystem = visitIdSourceSystem;
+    public void setVisitIdSource(String visitIdSource) {
+        this.visitIdSource = visitIdSource;
     }
     
     public String getVisitId() {
         return this.visitId;
     }
 
-    public String getVisitIdSourceSystem() {
-        return this.visitIdSourceSystem;
+    public String getVisitIdSource() {
+        return this.visitIdSource;
     }
 
     public Date getStartDate() {
@@ -98,8 +98,8 @@ public class VisitDimension extends AbstractRecord {
         return visitSourceSystem;
     }
 
-    public String getEncryptedPatientIdSourceSystem() {
-        return encryptedPatientIdSourceSystem;
+    public String getEncryptedPatientIdSource() {
+        return encryptedPatientIdSource;
     }
 
     public String getActiveStatus() {

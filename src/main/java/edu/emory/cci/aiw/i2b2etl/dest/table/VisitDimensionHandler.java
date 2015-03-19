@@ -44,9 +44,9 @@ public class VisitDimensionHandler extends ConnectionSpecRecordHandler<VisitDime
     @Override
     protected void setParameters(PreparedStatement ps, VisitDimension visit) throws SQLException {
         ps.setString(1, visit.getVisitId());
-        ps.setString(2, MetadataUtil.toSourceSystemCode(visit.getVisitIdSourceSystem()));
+        ps.setString(2, MetadataUtil.toSourceSystemCode(visit.getVisitIdSource()));
         ps.setString(3, visit.getEncryptedPatientId());
-        ps.setString(4, MetadataUtil.toSourceSystemCode(visit.getEncryptedPatientIdSourceSystem()));
+        ps.setString(4, MetadataUtil.toSourceSystemCode(visit.getEncryptedPatientIdSource()));
         ps.setString(5, visit.getInOut());
         ps.setString(6, null);
         ps.setString(7, null);

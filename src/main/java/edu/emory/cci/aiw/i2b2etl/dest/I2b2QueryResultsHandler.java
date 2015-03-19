@@ -121,7 +121,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final DataSpec providerLastNameSpec;
     private final ConnectionSpec metadataConnectionSpec;
     private final String visitPropId;
-    private boolean skipProviderHierarchy;
     private Connection dataSchemaConnection;
     private final Set<String> dataSourceBackendIds;
     private final RemoveMethod dataRemoveMethod;
@@ -204,7 +203,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
-        this.skipProviderHierarchy = this.settings.getSkipProviderHierarchy();
         RemoveMethod removeMethod = this.settings.getDataRemoveMethod();
         if (removeMethod != null) {
             this.dataRemoveMethod = removeMethod;
@@ -264,9 +262,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 this.cache.put(pd.getId(), pd);
             }
             this.ontologyModel = new Metadata(this.qrhId, this.cache, knowledgeSource, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data);
-            this.providerDimensionFactory = new ProviderDimensionFactory(this.qrhId, this.ontologyModel, this.dataConnectionSpec, this.skipProviderHierarchy);
+            this.providerDimensionFactory = new ProviderDimensionFactory(this.ontologyModel, this.settings, this.dataConnectionSpec);
             this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
-            this.visitDimensionFactory = new VisitDimensionFactory(this.qrhId, this.settings, this.data, this.dataConnectionSpec);
+            this.visitDimensionFactory = new VisitDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
             if (this.query.getQueryMode() == QueryMode.REPLACE) {
                 DataRemoverFactory f = new DataRemoverFactory();
                 f.getInstance(this.dataRemoveMethod).doRemoveData();
@@ -357,7 +355,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                             this.providerLastNameSpec != null ? this.providerLastNameSpec.getReferenceName() : null,
                             this.providerLastNameSpec != null ? this.providerLastNameSpec.getPropertyName() : null,
                             references);
-                    VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSourceSystem(), (TemporalProposition) prop, references);
+                    VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSource(), (TemporalProposition) prop, references);
                     for (FactHandler factHandler : this.factHandlers) {
                         factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, derivedPropositions);
                     }
@@ -729,23 +727,25 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void readPropIdsFromKnowledgeSource() throws KnowledgeSourceReadException {
         this.propIdsFromKnowledgeSource = new HashSet<>();
-        this.propIdsFromKnowledgeSource.add(this.visitPropId);
-        PropositionDefinition visitProp = this.knowledgeSource.readPropositionDefinition(this.visitPropId);
-        if (visitProp == null) {
-            throw new KnowledgeSourceReadException("Invalid visit proposition id: " + this.visitPropId);
-        }
-        for (DataSpec dataSpec : this.data.getAll()) {
-            if (dataSpec.getReferenceName() != null) {
-                ReferenceDefinition refDef = visitProp.referenceDefinition(dataSpec.getReferenceName());
-                if (refDef == null) {
-                    throw new KnowledgeSourceReadException("missing reference " + dataSpec.getReferenceName() + " for proposition definition " + visitPropId + " for query " + this.query.getId());
-                }
-                org.arp.javautil.arrays.Arrays.addAll(this.propIdsFromKnowledgeSource, refDef.getPropositionIds());
+        if (this.visitPropId != null) {
+            this.propIdsFromKnowledgeSource.add(this.visitPropId);
+            PropositionDefinition visitProp = this.knowledgeSource.readPropositionDefinition(this.visitPropId);
+            if (visitProp == null) {
+                throw new KnowledgeSourceReadException("Invalid visit proposition id: " + this.visitPropId);
             }
-        }
-        for (FolderSpec folderSpec : this.conceptsSection.getFolderSpecs()) {
-            for (String proposition : folderSpec.getPropositions()) {
-                this.propIdsFromKnowledgeSource.add(proposition);
+            for (DataSpec dataSpec : this.data.getAll()) {
+                if (dataSpec.getReferenceName() != null) {
+                    ReferenceDefinition refDef = visitProp.referenceDefinition(dataSpec.getReferenceName());
+                    if (refDef == null) {
+                        throw new KnowledgeSourceReadException("missing reference " + dataSpec.getReferenceName() + " for proposition definition " + visitPropId + " for query " + this.query.getId());
+                    }
+                    org.arp.javautil.arrays.Arrays.addAll(this.propIdsFromKnowledgeSource, refDef.getPropositionIds());
+                }
+            }
+            for (FolderSpec folderSpec : this.conceptsSection.getFolderSpecs()) {
+                for (String proposition : folderSpec.getPropositions()) {
+                    this.propIdsFromKnowledgeSource.add(proposition);
+                }
             }
         }
     }
