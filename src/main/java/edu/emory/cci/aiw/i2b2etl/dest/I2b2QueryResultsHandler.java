@@ -452,19 +452,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection()) {
-                try (CallableStatement call = conn.prepareCall("{ call INSERT_PATIENT_FROMTEMP(?, ?, ?) }")) {
+                try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PATIENT_FROMTEMP(?, ?, ?) }")) {
                     call.setString(1, tempPatientTableName());
                     call.setInt(2, UPLOAD_ID);
                     call.registerOutParameter(3, Types.VARCHAR);
                     call.execute();
-                    logger.log(Level.INFO, "INSERT_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
-                    conn.commit();
-                } catch (SQLException ex) {
-                    try {
-                        conn.rollback();
-                    } catch (SQLException ignore) {
-                    }
-                    throw ex;
+                    logger.log(Level.INFO, "EK_INS_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
+                    //commit and rollback are called by the stored procedure.
                 }
             } catch (SQLException ex) {
                 exception = ex;
@@ -472,13 +466,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
 
         if (exception == null) {
-            try (Connection conn = openDataDatabaseConnection(); CallableStatement call = conn.prepareCall("{ call INSERT_ENCOUNTERVISIT_FROMTEMP(?, ?, ?) }")) {
+            try (Connection conn = openDataDatabaseConnection(); CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROM_TEMP(?, ?, ?) }")) {
                 logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
                 call.setString(1, tempVisitTableName());
                 call.setInt(2, UPLOAD_ID);
                 call.registerOutParameter(3, Types.VARCHAR);
                 call.execute();
-                logger.log(Level.INFO, "INSERT_ENCOUNTERVISIT_FROMTEMP errmsg: {0}", call.getString(3));
+                logger.log(Level.INFO, "EK_INS_ENC_VISIT_FROM_TEMP errmsg: {0}", call.getString(3));
                 //commit and rollback are called by the stored procedure.
             } catch (SQLException ex) {
                 exception = ex;
@@ -501,19 +495,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try {
                 logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
                 try (Connection conn = openDataDatabaseConnection()) {
-                    try (CallableStatement call = conn.prepareCall("{ call INSERT_PROVIDER_FROMTEMP(?, ?, ?) }")) {
+                    try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PROVIDER_FROMTEMP(?, ?, ?) }")) {
                         call.setString(1, tempProviderTableName());
                         call.setInt(2, UPLOAD_ID);
                         call.registerOutParameter(3, Types.VARCHAR);
                         call.execute();
-                        logger.log(Level.INFO, "INSERT_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
-                        conn.commit();
-                    } catch (SQLException ex) {
-                        try {
-                            conn.rollback();
-                        } catch (SQLException ignore) {
-                        }
-                        throw ex;
+                        logger.log(Level.INFO, "EK_INS_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
+                        //commit and rollback are called by the stored procedure.
                     }
                 }
             } catch (SQLException ex) {
@@ -544,19 +532,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try {
                 try (Connection conn = openDataDatabaseConnection()) {
-                    try (CallableStatement call = conn.prepareCall("{ call INSERT_CONCEPT_FROMTEMP(?, ?, ?) }")) {
+                    try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_CONCEPT_FROMTEMP(?, ?, ?) }")) {
                         call.setString(1, tempConceptTableName());
                         call.setInt(2, UPLOAD_ID);
                         call.registerOutParameter(3, Types.VARCHAR);
                         call.execute();
-                        logger.log(Level.INFO, "INSERT_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
-                        conn.commit();
-                    } catch (SQLException ex) {
-                        try {
-                            conn.rollback();
-                        } catch (SQLException ignore) {
-                        }
-                        throw ex;
+                        logger.log(Level.INFO, "EK_INS_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
+                        //commit and rollback are called by the stored procedure.
                     }
                 }
             } catch (SQLException ex) {
@@ -585,19 +567,13 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection()) {
-                try (CallableStatement call = conn.prepareCall("{ call INSERT_MODIFIER_FROMTEMP(?, ?, ?) }")) {
+                try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_MODIFIER_FROMTEMP(?, ?, ?) }")) {
                     call.setString(1, tempModifierTableName());
                     call.setInt(2, UPLOAD_ID);
                     call.registerOutParameter(3, Types.VARCHAR);
                     call.execute();
-                    logger.log(Level.INFO, "INSERT_MODIFIER_FROMTEMP errmsg: {0}", call.getString(3));
-                    conn.commit();
-                } catch (SQLException ex) {
-                    try {
-                        conn.rollback();
-                    } catch (SQLException ignore) {
-                    }
-                    throw ex;
+                    logger.log(Level.INFO, "EK_INS_MODIFIER_FROMTEMP errmsg: {0}", call.getString(3));
+                    //commit and rollback are called by the stored procedure.
                 }
             } catch (SQLException ex) {
                 exception = ex;
