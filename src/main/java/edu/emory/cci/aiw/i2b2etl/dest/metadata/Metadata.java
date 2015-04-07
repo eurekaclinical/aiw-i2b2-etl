@@ -29,7 +29,12 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.table.ProviderDimension;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -43,6 +48,8 @@ import java.util.logging.Logger;
 import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.lang3.StringUtils;
 import org.arp.javautil.arrays.Arrays;
+import org.arp.javautil.collections.Collections;
+import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
@@ -91,6 +98,7 @@ public final class Metadata {
 
     private static final PropositionDefinition[] EMPTY_PROPOSITION_DEFINITION_ARRAY
             = new PropositionDefinition[0];
+    private static final Logger LOGGER = Logger.getLogger(Metadata.class.getName());
 
     private Concept conceptRoot;
     private final Map<ConceptId, Concept> conceptCache = new HashMap<>();
@@ -105,6 +113,7 @@ public final class Metadata {
     private final FolderSpec[] folderSpecs;
     private final List<Concept> modifierRoots;
     private final List<Concept> allRoots;
+    private ConnectionSpec metaConnectionSpec;
 
     /**
      *
@@ -124,7 +133,7 @@ public final class Metadata {
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
-            Data dataSection) throws OntologyBuildException {
+            Data dataSection, ConnectionSpec metaConnectionSpec) throws OntologyBuildException {
         if (knowledgeSource == null) {
             throw new IllegalArgumentException("knowledgeSource cannot be null");
         }
@@ -192,20 +201,94 @@ public final class Metadata {
             throwOntologyBuildException(ex);
         }
 
+        this.metaConnectionSpec = metaConnectionSpec;
+
         setI2B2PathsToConcepts();
         assert !this.allRoots.contains(null) : "Null root concepts! " + this.allRoots;
     }
 
-    private void setI2B2PathsToConcepts() {
+    private void setI2B2PathsToConcepts() throws OntologyBuildException {
+        List<Concept> conceptsToQuery = new ArrayList<>();
+        
         for (Concept c : getAllRoots()) {
             Enumeration<Concept> emu = c.breadthFirstEnumeration();
             while (emu.hasMoreElements()) {
                 Concept concept = emu.nextElement();
                 Concept conceptFromCache = getFromIdCache(concept.getId());
                 if (conceptFromCache != null) {
-                    conceptFromCache.addHierarchyPath(concept.getFullName());
+                    if (!conceptFromCache.isAlreadyLoaded() || this.metaConnectionSpec == null) {
+                        conceptFromCache.addHierarchyPath(concept.getFullName());
+                    } else {
+                        conceptsToQuery.add(conceptFromCache);
+                    }
                 }
             }
+        }
+        if (!conceptsToQuery.isEmpty()) {
+            Set<String> conceptCodes = new HashSet<>();
+            for (Concept concept : conceptsToQuery) {
+                conceptCodes.add(concept.getConceptCode());
+            }
+            
+            List<String> ontTables = readOntologyTables();
+            MessageFormat queryMsgFmt;
+            if (conceptsToQuery.size() <= 1000) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("SELECT C_BASECODE, C_FULLNAME FROM {0} WHERE C_BASECODE IN ('");
+                int index = 0;
+                for (String conceptCode : conceptCodes) {
+                    if (index++ > 0) {
+                        sb.append("','");
+                    }
+                    sb.append(conceptCode);
+                }
+                sb.append("')");
+                queryMsgFmt = new MessageFormat(sb.toString());
+            } else {
+                queryMsgFmt = new MessageFormat("SELECT C_BASECODE, C_FULLNAME FROM {0}");
+            }
+            
+            Map<String, List<String>> conceptCodeToFullNames = new HashMap<>();
+            for (String table : ontTables) {
+                String query = queryMsgFmt.format(new Object[]{table});
+                try (Connection conn = this.metaConnectionSpec.getOrCreate();
+                        Statement stmt = conn.createStatement();
+                        ResultSet resultSet = stmt.executeQuery(query)) {
+                    while (resultSet.next()) {
+                        String conceptCode = resultSet.getString(1);
+                        String fullName = resultSet.getString(2);
+                        Collections.putList(conceptCodeToFullNames, conceptCode, fullName);
+                    }
+                } catch (SQLException ex) {
+                    throw new OntologyBuildException(ex);
+                }
+            }
+            
+            for (Concept concept : conceptsToQuery) {
+                List<String> fullNames = conceptCodeToFullNames.get(concept.getConceptCode());
+                if (fullNames != null) {
+                    for (String fullName : fullNames) {
+                        concept.addHierarchyPath(fullName);
+                    }
+                }
+            }
+        }
+    }
+
+    private List<String> readOntologyTables() throws OntologyBuildException {
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS");
+        try (Connection conn = this.metaConnectionSpec.getOrCreate();
+                PreparedStatement stmt = conn.prepareStatement(query.toString())) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<String> tables = new ArrayList<>();
+                while (rs.next()) {
+                    tables.add(rs.getString(1));
+                }
+                return tables;
+            }
+        } catch (SQLException ex) {
+            throw new OntologyBuildException(ex);
         }
     }
 

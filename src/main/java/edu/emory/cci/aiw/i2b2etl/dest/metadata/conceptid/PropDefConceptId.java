@@ -66,10 +66,11 @@ public final class PropDefConceptId implements PropertyConceptId {
      */
     public static PropDefConceptId getInstance(String propId,
             String propertyName, Value value, Metadata metadata) {
-        List<Object> key = new ArrayList<>(3);
+        List<Object> key = new ArrayList<>(4);
         key.add(propId);
         key.add(propertyName);
         key.add(value);
+        key.add(Boolean.TRUE); //distinguishes these from properties represented as a modifier.
         PropDefConceptId conceptId = (PropDefConceptId) metadata.getFromConceptIdCache(key);
         if (conceptId == null) {
             conceptId = new PropDefConceptId(propId, propertyName, value, metadata);

@@ -111,8 +111,7 @@ public abstract class FactHandler extends AbstractFactHandler {
     protected ObservationFact populateObxFact(Proposition prop,
             Proposition encounterProp, PatientDimension patient,
             VisitDimension visit, ProviderDimension provider,
-            PropertyConceptId conceptId, ModifierConceptId modConceptId, 
-            int instanceNum)
+            PropertyConceptId conceptId, ModifierConceptId modConceptId)
             throws InvalidFactException {
         Concept concept = this.metadata.getFromIdCache(conceptId);
         assert concept != null : "No concept found matching concept id " + conceptId;
@@ -149,7 +148,7 @@ public abstract class FactHandler extends AbstractFactHandler {
             updateDate = prop.getCreateDate();
         }
         obx.setUpdateDate(TableUtil.setTimestampAttribute(updateDate));
-        obx.setInstanceNum(instanceNum);
+        obx.setInstanceNum(prop.getUniqueId().getLocalUniqueId().getNumericalId());
         if (concept != null) {
             obx.setDisplayName(concept.getDisplayName());
             if (modConcept != null) {

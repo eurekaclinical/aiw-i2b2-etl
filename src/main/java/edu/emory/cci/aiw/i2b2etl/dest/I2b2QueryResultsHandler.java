@@ -261,7 +261,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             for (PropositionDefinition pd : propDefs) {
                 this.cache.put(pd.getId(), pd);
             }
-            this.ontologyModel = new Metadata(this.qrhId, this.cache, knowledgeSource, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data);
+            this.ontologyModel = new Metadata(this.qrhId, this.cache, knowledgeSource, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.metadataConnectionSpec);
             this.providerDimensionFactory = new ProviderDimensionFactory(this.ontologyModel, this.settings, this.dataConnectionSpec);
             this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
             this.visitDimensionFactory = new VisitDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);

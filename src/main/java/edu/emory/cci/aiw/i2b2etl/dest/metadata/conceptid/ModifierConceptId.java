@@ -51,10 +51,11 @@ public final class ModifierConceptId implements PropertyConceptId {
      * @return a {@link PropDefConceptId}.
      */
     public static ModifierConceptId getInstance(String propId, String propertyName, Value value, Metadata metadata) {
-        List<Object> key = new ArrayList<>(3);
+        List<Object> key = new ArrayList<>(4);
         key.add(propId);
         key.add(propertyName);
         key.add(value);
+        key.add(Boolean.FALSE); //distinguishes these from properties represented as a concept.
         ModifierConceptId conceptId = (ModifierConceptId) metadata.getFromConceptIdCache(key);
         if (conceptId == null) {
             conceptId = new ModifierConceptId(propId, propertyName, value, metadata);

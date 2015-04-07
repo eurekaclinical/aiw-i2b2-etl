@@ -26,7 +26,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -49,7 +51,7 @@ public class UserObject {
     private boolean inUse;
     private final String conceptCodePrefix;
     private String dimCode;
-    private ArrayList<String> hierarchyPaths;
+    private Set<String> hierarchyPaths;
     private String appliedPath;
     private String metadataXml;
     private String factTableColumn;
@@ -275,11 +277,9 @@ public class UserObject {
 
     public void addHierarchyPath(String path) {
         if (this.hierarchyPaths == null) {
-            hierarchyPaths = new ArrayList<>();
+            this.hierarchyPaths = new HashSet<>();
         }
-        if (!this.hierarchyPaths.contains(path)) {
-            hierarchyPaths.add(path);
-        }
+        this.hierarchyPaths.add(path);
     }
     
     public void setAppliedPath(String appliedPath) {

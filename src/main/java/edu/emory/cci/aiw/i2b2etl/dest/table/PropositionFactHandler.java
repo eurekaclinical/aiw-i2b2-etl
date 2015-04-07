@@ -158,7 +158,7 @@ public final class PropositionFactHandler extends FactHandler {
             }
         } else {
             ObservationFact obx = populateObxFact(prop,
-                    encounterProp, patient, visit, provider, conceptId, null, 1);
+                    encounterProp, patient, visit, provider, conceptId, null);
             PropositionDefinition propDef = this.cache.get(prop.getId());
             if (propDef == null) {
                 throw new UnknownPropositionDefinitionException(prop);
@@ -181,10 +181,10 @@ public final class PropositionFactHandler extends FactHandler {
                     }
                     if (!found) {
                         if (this.missingConcepts.add(modConceptId)) {
-                            TableUtil.logger().log(Level.WARNING, "No metadata for modifier concept {0}; this modifier data will not be loaded", modConceptId);
+                            TableUtil.logger().log(Level.WARNING, "No metadata for modifier {0}; this modifier data will not be loaded. If you already are loading it as a concept, you may ignore this warning.", modConceptId);
                         }
                     } else {
-                        ObservationFact modObx = populateObxFact(prop, encounterProp, patient, visit, provider, conceptId, modConceptId, 1);
+                        ObservationFact modObx = populateObxFact(prop, encounterProp, patient, visit, provider, conceptId, modConceptId);
                         try {
                             insert(modObx);
                         } catch (SQLException ex) {
