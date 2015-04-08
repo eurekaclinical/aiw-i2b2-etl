@@ -418,7 +418,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 mappingCall.setInt(2, UPLOAD_ID);
                 mappingCall.registerOutParameter(3, Types.VARCHAR);
                 mappingCall.execute();
-                logger.log(Level.INFO, "EUREKA.EK_INSERT_PID_MAP_FROMTEMP errmsg: {0}", mappingCall.getString(3));
                 //commit and rollback are called by stored procedure.
             } catch (SQLException ex) {
                 exception = ex;
@@ -443,7 +442,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 mappingCall.setInt(2, UPLOAD_ID);
                 mappingCall.registerOutParameter(3, Types.VARCHAR);
                 mappingCall.execute();
-                logger.log(Level.INFO, "EUREKA.EK_INSERT_EID_MAP_FROMTEMP errmsg: {0}", mappingCall.getString(3));
                 //commit and rollback are called by the stored procedure.
             } catch (SQLException ex) {
                 exception = ex;
@@ -457,7 +455,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     call.setInt(2, UPLOAD_ID);
                     call.registerOutParameter(3, Types.VARCHAR);
                     call.execute();
-                    logger.log(Level.INFO, "EK_INS_PATIENT_FROMTEMP errmsg: {0}", call.getString(3));
                     //commit and rollback are called by the stored procedure.
                 }
             } catch (SQLException ex) {
@@ -466,13 +463,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
 
         if (exception == null) {
-            try (Connection conn = openDataDatabaseConnection(); CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROM_TEMP(?, ?, ?) }")) {
+            try (Connection conn = openDataDatabaseConnection(); CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROMTEMP(?, ?, ?) }")) {
                 logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
                 call.setString(1, tempVisitTableName());
                 call.setInt(2, UPLOAD_ID);
                 call.registerOutParameter(3, Types.VARCHAR);
                 call.execute();
-                logger.log(Level.INFO, "EK_INS_ENC_VISIT_FROM_TEMP errmsg: {0}", call.getString(3));
                 //commit and rollback are called by the stored procedure.
             } catch (SQLException ex) {
                 exception = ex;
@@ -500,7 +496,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         call.setInt(2, UPLOAD_ID);
                         call.registerOutParameter(3, Types.VARCHAR);
                         call.execute();
-                        logger.log(Level.INFO, "EK_INS_PROVIDER_FROMTEMP errmsg: {0}", call.getString(3));
                         //commit and rollback are called by the stored procedure.
                     }
                 }
@@ -537,7 +532,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         call.setInt(2, UPLOAD_ID);
                         call.registerOutParameter(3, Types.VARCHAR);
                         call.execute();
-                        logger.log(Level.INFO, "EK_INS_CONCEPT_FROMTEMP errmsg: {0}", call.getString(3));
                         //commit and rollback are called by the stored procedure.
                     }
                 }
@@ -572,7 +566,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     call.setInt(2, UPLOAD_ID);
                     call.registerOutParameter(3, Types.VARCHAR);
                     call.execute();
-                    logger.log(Level.INFO, "EK_INS_MODIFIER_FROMTEMP errmsg: {0}", call.getString(3));
                     //commit and rollback are called by the stored procedure.
                 }
             } catch (SQLException ex) {
@@ -592,7 +585,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         call.setLong(3, 1); // appendFlag
                         call.registerOutParameter(4, Types.VARCHAR);
                         call.execute();
-                        logger.log(Level.INFO, "EUREKA.EK_UPDATE_OBSERVATION_FACT errmsg: {0}", call.getString(4));
                         //commit and rollback are called by the stored procedure.
                     }
                 }

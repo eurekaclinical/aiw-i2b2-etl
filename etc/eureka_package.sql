@@ -19,12 +19,12 @@ PROCEDURE EK_INS_CONCEPT_FROMTEMP(
         errorMsg OUT VARCHAR ) ;
 
 -- Load new modifiers into MODIFIER_DIMENSION, and update existing modifiers.
-PROCEDURE EK_INS_MODIFIER_FROM_TEMP(
+PROCEDURE EK_INS_MODIFIER_FROMTEMP(
         tempModifierTableName IN VARCHAR, 
         upload_id IN NUMBER, 
         errorMsg OUT VARCHAR ) ;
 
-PROCEDURE EK_INS_ENC_VISIT_FROM_TEMP(
+PROCEDURE EK_INS_ENC_VISIT_FROMTEMP(
     tempTableName IN VARCHAR,
     upload_id     IN NUMBER,
     errorMsg OUT VARCHAR ) ;
