@@ -193,7 +193,8 @@ CREATE TABLE EK_TEMP_VISIT
     download_date   DATE,
     import_date     DATE,
     sourcesystem_cd VARCHAR2(50),
-    active_status_cd VARCHAR2(50)
+    active_status_cd VARCHAR2(50),
+    length_of_stay NUMBER(38,0)
   );
 CREATE INDEX EK_IDX_TEMP_VISIT_ENC_ID ON EK_TEMP_VISIT
   (

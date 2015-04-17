@@ -19,7 +19,8 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.table;
 
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents the possible values of the <code>VITAL_STATUS_CD</code> attribute 
@@ -33,14 +34,27 @@ public enum VitalStatusCode {
     DECEASED_ACCURATE_TO_MONTH("M"),
     DECEASED_ACCURATE_TO_YEAR("X");
     
+    private static final Map<String, VitalStatusCode> fromCodeMap =
+            new HashMap<>();
+    static {
+        fromCodeMap.put("N", LIVING);
+        fromCodeMap.put("Y", DECEASED_ACCURATE_TO_DAY);
+        fromCodeMap.put("M", DECEASED_ACCURATE_TO_MONTH);
+        fromCodeMap.put("X", DECEASED_ACCURATE_TO_YEAR);
+    }
+    
     private final String code;
     
-    public static VitalStatusCode getInstance(Date deathDate) {
-        if (deathDate != null) {
+    public static VitalStatusCode getInstance(Boolean knownDeceased) {
+        if (knownDeceased != null && knownDeceased.booleanValue()) {
             return DECEASED_ACCURATE_TO_DAY;
         } else {
             return LIVING;
         }
+    }
+    
+    public static VitalStatusCode fromCode(String code) {
+        return fromCodeMap.get(code);
     }
     
     private VitalStatusCode(String code) {

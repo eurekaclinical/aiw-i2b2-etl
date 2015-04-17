@@ -37,7 +37,9 @@ import org.protempa.proposition.UniqueId;
 import org.protempa.proposition.value.AbsoluteTimeGranularity;
 import org.protempa.proposition.value.AbsoluteTimeGranularityUtil;
 import org.protempa.proposition.value.AbsoluteTimeUnit;
+import org.protempa.proposition.value.BooleanValue;
 import org.protempa.proposition.value.DateValue;
+import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.Value;
 
 /**
@@ -90,6 +92,10 @@ public class PatientDimensionFactory extends DimensionFactory {
                         this.settings.getPatientDimensionRace(), encounterProp, references);
                 Value birthdateVal = getField(
                         this.settings.getPatientDimensionBirthdate(), encounterProp, references);
+                Value deathDateVal = getField(
+                        this.settings.getPatientDimensionDeathDate(), encounterProp, references);
+                Value vitalStatus = getField(
+                        this.settings.getPatientDimensionVital(), encounterProp, references);
                 Value gender = getField(
                         this.settings.getPatientDimensionGender(), encounterProp, references);
                 Value language = getField(
@@ -107,6 +113,17 @@ public class PatientDimensionFactory extends DimensionFactory {
                 } else {
                     birthdate = null;
                 }
+                Date deathDate;
+                if (deathDateVal != null) {
+                    try {
+                        deathDate = ((DateValue) deathDateVal).getDate();
+                    } catch (ClassCastException cce) {
+                        deathDate = null;
+                        logger.log(Level.WARNING, "DeathDate property value not a DateValue");
+                    }
+                } else {
+                    deathDate = null;
+                }
 
                 Long ageInYears = computeAgeInYears(birthdate);
 
@@ -118,11 +135,17 @@ public class PatientDimensionFactory extends DimensionFactory {
                 patientDimension.setLanguage(language != null ? language.getFormatted() : null);
                 patientDimension.setReligion(religion != null ? religion.getFormatted() : null);
                 patientDimension.setBirthDate(TableUtil.setDateAttribute(birthdate));
-                patientDimension.setDeathDate(null);
+                patientDimension.setDeathDate(TableUtil.setDateAttribute(deathDate));
                 patientDimension.setMaritalStatus(maritalStatus != null ? maritalStatus.getFormatted() : null);
                 patientDimension.setRace(race != null ? race.getFormatted() : null);
                 patientDimension.setSourceSystem(MetadataUtil.toSourceSystemCode(prop.getSourceSystem().getStringRepresentation()));
-                patientDimension.setVital(VitalStatusCode.getInstance(null));
+                if (vitalStatus instanceof NominalValue) {
+                    patientDimension.setVital(VitalStatusCode.fromCode(vitalStatus.getFormatted()));
+                } else if (vitalStatus instanceof BooleanValue) {
+                    patientDimension.setVital(VitalStatusCode.getInstance(((BooleanValue) vitalStatus).booleanValue()));
+                } else {
+                    patientDimension.setVital(VitalStatusCode.getInstance(null));
+                }
                 Date updateDate = prop.getUpdateDate();
                 patientDimension.setUpdated(TableUtil.setTimestampAttribute(updateDate != null ? updateDate : prop.getCreateDate()));
                 patientDimension.setDownloaded(TableUtil.setTimestampAttribute(prop.getDownloadDate()));

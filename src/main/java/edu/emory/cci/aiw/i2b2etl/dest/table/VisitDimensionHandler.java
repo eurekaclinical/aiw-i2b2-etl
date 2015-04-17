@@ -38,7 +38,7 @@ public class VisitDimensionHandler extends ConnectionSpecRecordHandler<VisitDime
         super(connSpec, 
                 "insert into " + TEMP_VISIT_TABLE + "(encounter_id, encounter_id_source,"
                 + "patient_id, patient_id_source, inout_cd, location_cd, location_path, start_date, end_date, "
-                + "visit_blob, update_date, download_date, import_date, sourcesystem_cd, active_status_cd) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                + "visit_blob, update_date, download_date, import_date, sourcesystem_cd, active_status_cd, length_of_stay) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     }
 
     @Override
@@ -58,6 +58,7 @@ public class VisitDimensionHandler extends ConnectionSpecRecordHandler<VisitDime
         ps.setTimestamp(13, importTimestamp());
         ps.setString(14, MetadataUtil.toSourceSystemCode(visit.getVisitSourceSystem()));
         ps.setString(15, visit.getActiveStatus());
+        ps.setObject(16, visit.getLengthOfStayInDays());
     }
 
 }

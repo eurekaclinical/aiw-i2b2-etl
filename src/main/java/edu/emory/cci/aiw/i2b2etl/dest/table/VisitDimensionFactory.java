@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
@@ -33,7 +32,9 @@ import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.UniqueId;
 import org.protempa.proposition.interval.Interval;
+import org.protempa.proposition.value.AbsoluteTimeGranularity;
 import org.protempa.proposition.value.AbsoluteTimeGranularityUtil;
+import org.protempa.proposition.value.AbsoluteTimeUnit;
 import org.protempa.proposition.value.Value;
 
 /**
@@ -41,6 +42,7 @@ import org.protempa.proposition.value.Value;
  * @author Andrew Post
  */
 public class VisitDimensionFactory extends DimensionFactory {
+
     private final Metadata metadata;
     private final VisitDimension visitDimension;
     private final VisitDimensionHandler visitDimensionHandler;
@@ -57,10 +59,10 @@ public class VisitDimensionFactory extends DimensionFactory {
         this.visitDimensionHandler = new VisitDimensionHandler(dataConnectionSpec);
         this.encounterMappingHandler = new EncounterMappingHandler(dataConnectionSpec);
     }
-    
+
     public VisitDimension getInstance(String encryptedPatientId,
             String encryptedPatientIdSourceSystem,
-            TemporalProposition encounterProp, 
+            TemporalProposition encounterProp,
             Map<UniqueId, Proposition> references) throws SQLException {
         Interval interval = encounterProp.getInterval();
         java.util.Date visitStartDate = AbsoluteTimeGranularityUtil.asDate(interval.getMinStart());
@@ -83,6 +85,11 @@ public class VisitDimensionFactory extends DimensionFactory {
         visitDimension.setEncryptedPatientIdSource(encryptedPatientIdSourceSystem);
         visitDimension.setActiveStatus(ActiveStatusCode.getInstance(visitStartDate, interval.getStartGranularity(), visitEndDate, interval.getFinishGranularity()));
         visitDimension.setInOut(CodeUtil.toString(inout));
+        if (visitStartDate != null && visitEndDate != null) {
+            visitDimension.setLengthOfStayInDays(AbsoluteTimeGranularity.DAY.distance(AbsoluteTimeGranularityUtil.asPosition(visitStartDate), AbsoluteTimeGranularityUtil.asPosition(visitEndDate), AbsoluteTimeGranularity.DAY, AbsoluteTimeUnit.DAY));
+        } else {
+            visitDimension.setLengthOfStayInDays(null);
+        }
         Date updated = encounterProp.getUpdateDate();
         if (updated == null) {
             updated = encounterProp.getCreateDate();
@@ -93,7 +100,7 @@ public class VisitDimensionFactory extends DimensionFactory {
         this.encounterMappingHandler.insert(visitDimension);
         return visitDimension;
     }
-    
+
     public void close() throws SQLException {
         this.visitDimensionHandler.close();
         this.encounterMappingHandler.close();

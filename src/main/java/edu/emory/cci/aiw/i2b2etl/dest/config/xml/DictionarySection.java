@@ -196,4 +196,11 @@ final class DictionarySection extends ConfigurationSection implements Settings {
         return this.settingsSupport.getDimensionDataTypes();
     }
 
+    @Override
+    public String getPatientDimensionDeathDate() {
+        return this.dictionary.get("patientDimensionDeathDate");
+    }
+    
+    
+
 }

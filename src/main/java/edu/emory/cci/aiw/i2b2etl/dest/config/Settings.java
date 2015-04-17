@@ -48,6 +48,7 @@ public interface Settings {
     String getPatientDimensionMaritalStatus();
     String getPatientDimensionRace();
     String getPatientDimensionBirthdate();
+    String getPatientDimensionDeathDate();
     String getPatientDimensionGender();
     String getPatientDimensionLanguage();
     String getPatientDimensionReligion();

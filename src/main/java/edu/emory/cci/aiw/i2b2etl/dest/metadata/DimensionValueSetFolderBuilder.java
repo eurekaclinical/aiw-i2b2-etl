@@ -146,22 +146,21 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
             PropertyDefinition propertyDef = propositionDef.propertyDefinition(dataSpec.getPropertyName());
             if (propertyDef != null) {
                 String valueSetId = propertyDef.getValueSetId();
-                if (valueSetId == null) {
-                    throw new UnsupportedOperationException("We don't support non-enumerated property values for demographics yet!");
-                }
-                ValueSet valueSet
-                        = this.knowledgeSource.readValueSet(valueSetId);
-                ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
-                for (ValueSetElement valueSetElement : valueSetElements) {
-                    Value valueSetElementVal = valueSetElement.getValue();
-                    PropDefConceptId conceptId = PropDefConceptId.getInstance(propId, dataSpec.getPropertyName(), valueSetElementVal, metadata);
-                    Concept childConcept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
-                    childConcept.setDisplayName(valueSetElement.getDisplayName());
-                    childConcept.setColumnName(columnName);
-                    childConcept.setDimCode(valueSetElementVal != null ? valueSetElementVal.getFormatted() : "");
-                    childConcept.setOperator(ConceptOperator.EQUAL);
-                    childConcept.setAlreadyLoaded(concept.isAlreadyLoaded());
-                    concept.add(childConcept);
+                if (valueSetId != null) {
+                    ValueSet valueSet
+                            = this.knowledgeSource.readValueSet(valueSetId);
+                    ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
+                    for (ValueSetElement valueSetElement : valueSetElements) {
+                        Value valueSetElementVal = valueSetElement.getValue();
+                        PropDefConceptId conceptId = PropDefConceptId.getInstance(propId, dataSpec.getPropertyName(), valueSetElementVal, metadata);
+                        Concept childConcept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
+                        childConcept.setDisplayName(valueSetElement.getDisplayName());
+                        childConcept.setColumnName(columnName);
+                        childConcept.setDimCode(valueSetElementVal != null ? valueSetElementVal.getFormatted() : "");
+                        childConcept.setOperator(ConceptOperator.EQUAL);
+                        childConcept.setAlreadyLoaded(concept.isAlreadyLoaded());
+                        concept.add(childConcept);
+                    }
                 }
             }
         }

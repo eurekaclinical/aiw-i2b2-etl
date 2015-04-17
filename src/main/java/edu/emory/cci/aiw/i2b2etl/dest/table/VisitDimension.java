@@ -38,6 +38,7 @@ public class VisitDimension extends AbstractRecord {
     private String inOut;
 
     private String visitIdSource;
+    private Long lengthOfStayInDays;
 
     public VisitDimension() {
     }
@@ -135,4 +136,12 @@ public class VisitDimension extends AbstractRecord {
         return ToStringBuilder.reflectionToString(this);
     }
 
+    void setLengthOfStayInDays(Long distance) {
+        this.lengthOfStayInDays = distance;
+    }
+
+    public Long getLengthOfStayInDays() {
+        return lengthOfStayInDays;
+    }
+    
 }
