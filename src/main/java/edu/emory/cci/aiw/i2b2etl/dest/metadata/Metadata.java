@@ -210,7 +210,7 @@ public final class Metadata {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT DISTINCT C_SYMBOL, C_FULLNAME FROM ");
+            sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
             sql.append(table);
         }
     };

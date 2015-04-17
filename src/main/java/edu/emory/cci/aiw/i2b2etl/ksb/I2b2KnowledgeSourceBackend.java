@@ -321,15 +321,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         this.sourceIdFactory = new BackendSourceIdFactory(this);
     }
 
-    public String getEurekaIdColumn() {
-        return querySupport.getEurekaIdColumn();
-    }
-
-    @BackendProperty
-    public void setEurekaIdColumn(String eurekaIdColumn) {
-        querySupport.setEurekaIdColumn(eurekaIdColumn);
-    }
-
     /**
      * Returns which Java database API this backend is configured to use.
      *

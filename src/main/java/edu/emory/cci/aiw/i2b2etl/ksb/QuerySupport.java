@@ -32,7 +32,7 @@ import org.protempa.KnowledgeSourceReadException;
  * @author Andrew Post
  */
 class QuerySupport {
-    private static final String DEFAULT_EUREKA_ID_COLUMN = "C_SYMBOL";
+    private static final String DEFAULT_EUREKA_ID_COLUMN = "EK_UNIQUE_ID";
     
     private DatabaseAPI databaseApi;
     private String databaseId;
