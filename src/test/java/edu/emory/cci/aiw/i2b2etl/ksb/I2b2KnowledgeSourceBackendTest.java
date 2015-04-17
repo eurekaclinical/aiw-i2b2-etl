@@ -20,7 +20,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * #L%
  */
 import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
 import org.junit.Test;
 import org.protempa.KnowledgeSourceReadException;
@@ -29,12 +28,10 @@ import org.protempa.SourceFactory;
 import org.protempa.bconfigs.ini4j.INIConfigurations;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import javax.naming.NamingException;
@@ -166,12 +163,12 @@ public class I2b2KnowledgeSourceBackendTest {
         try (XMLDecoder d = new XMLDecoder(
                 new BufferedInputStream(
                         getClass().getResourceAsStream("/truth/testReadPropositionDefinitionPropertyDefs.xml")))) {
-                    Integer size = (Integer) d.readObject();
-                    for (int i = 0; i < size; i++) {
-                        expected.add((PropertyDefinitionBuilder) d.readObject());
-                    }
-                }
-                assertEquals(expected, actual);
+            Integer size = (Integer) d.readObject();
+            for (int i = 0; i < size; i++) {
+                expected.add((PropertyDefinitionBuilder) d.readObject());
+            }
+        }
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -224,12 +221,12 @@ public class I2b2KnowledgeSourceBackendTest {
         try (XMLDecoder d = new XMLDecoder(
                 new BufferedInputStream(
                         getClass().getResourceAsStream("/truth/testCollectPropDefDescendants285.xml")))) {
-            Integer size = (Integer) d.readObject();
-            for (int i = 0; i < size; i++) {
-                expected.add((PropertyDefinitionBuilder) d.readObject());
-            }
-        }
-        assertEquals(expected, actual);
+                    Integer size = (Integer) d.readObject();
+                    for (int i = 0; i < size; i++) {
+                        expected.add((PropertyDefinitionBuilder) d.readObject());
+                    }
+                }
+                assertEquals(expected, actual);
     }
 
     @Test
@@ -312,22 +309,21 @@ public class I2b2KnowledgeSourceBackendTest {
 //                }
 //                assertEquals(expected, actual);
 //    }
-
     @Test
     public void testReadValueSetExistsCMetadataXML() throws KnowledgeSourceReadException {
-        ValueSet valueSet = ksb.readValueSet("DXPRIORITY");
+        ValueSet valueSet = ksb.readValueSet("ICD9:Diagnoses^DXPRIORITY");
         assertNotNull(valueSet);
     }
 
     @Test
     public void testReadValueSetExistsNoCMetadataXML() throws KnowledgeSourceReadException {
-        ValueSet valueSet = ksb.readValueSet("DXSOURCE");
+        ValueSet valueSet = ksb.readValueSet("ICD9:Diagnoses^DXPRIORITY");
         assertNotNull(valueSet);
     }
 
     @Test
     public void testReadValueSetContentCMetadataXML() throws KnowledgeSourceReadException {
-        ValueSet actual = ksb.readValueSet("DXPRIORITY");
+        ValueSet actual = ksb.readValueSet("ICD9:Diagnoses^DXPRIORITY");
         if (actual != null) {
             ValueSetBuilder expected;
             try (XMLDecoder e = new XMLDecoder(
@@ -335,19 +331,19 @@ public class I2b2KnowledgeSourceBackendTest {
                             getClass().getResourceAsStream("/truth/testReadValueSetContentCMetadataXML.xml")))) {
                         expected = (ValueSetBuilder) e.readObject();
                     }
-                    assertEquals(expected, new ValueSetBuilder(actual));
+                    assertEquals(expected, actual.asBuilder());
         }
     }
 
     @Test
     public void testReadValueSetContentNoCMetadataXML() throws KnowledgeSourceReadException {
-        ValueSet actual = ksb.readValueSet("DXSOURCE");
+        ValueSet actual = ksb.readValueSet("ICD9:Diagnoses^DXSOURCE");
         if (actual != null) {
             ValueSetBuilder expected;
             try (XMLDecoder d = new XMLDecoder(new BufferedInputStream(getClass().getResourceAsStream("/truth/testReadValueSetContentNoCMetadataXML.xml")))) {
                 expected = (ValueSetBuilder) d.readObject();
             }
-            assertEquals(expected, new ValueSetBuilder(actual));
+            assertEquals(expected, actual.asBuilder());
         }
     }
 

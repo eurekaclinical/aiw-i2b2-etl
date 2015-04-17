@@ -21,6 +21,8 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid;
  */
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -38,8 +40,18 @@ public final class SimpleConceptId implements ConceptId {
      * @return a {@link PropDefConceptId}.
      */
     public static ConceptId getInstance(String id, Metadata metadata) {
-        return new SimpleConceptId(id, metadata);
+        List<Object> key = new ArrayList<>(1);
+        key.add(id);
+        ConceptId result = metadata.getFromConceptIdCache(key);
+        if (result != null) {
+            return result;
+        } else {
+            result = new SimpleConceptId(id, metadata);
+            metadata.putInConceptIdCache(key, result);
+            return result;
+        }
     }
+    
     private final Metadata metadata;
     private final String id;
     private String conceptCode;

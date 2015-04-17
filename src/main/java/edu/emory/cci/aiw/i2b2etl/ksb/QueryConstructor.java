@@ -24,7 +24,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  *
  * @author Andrew Post
  */
-interface QueryConstructor {
+public interface QueryConstructor {
 
     void appendStatement(StringBuilder sql, String table);
     

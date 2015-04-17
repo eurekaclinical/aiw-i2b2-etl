@@ -74,7 +74,7 @@ class ConceptPropertyReader {
     ValueSet readFromDatabase(String id) throws KnowledgeSourceReadException {
         try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FROM_DB_QUERY_CONSTRUCTOR)) {
             return new ValueSet(
-                    id,
+                    id, null,
                     queryExecutor.execute(
                             id,
                             reader

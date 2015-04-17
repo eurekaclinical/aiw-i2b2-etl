@@ -43,10 +43,10 @@ class ProviderConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
     /**
      * Create a hierarchy of providers organized by first letter of their full
      * name.
+     *
      * @return the root of the hierarchy.
-     * 
-     * @throws OntologyBuildException if an error occurs building the 
-     * hierarchy.
+     *
+     * @throws OntologyBuildException if an error occurs building the hierarchy.
      */
     @Override
     public void build(Concept parent) throws OntologyBuildException {
@@ -66,7 +66,7 @@ class ProviderConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
             }
         }
     }
-    
+
     void add(ProviderDimension pd) throws InvalidConceptCodeException {
         if (!this.skipProviderHierarchy) {
             String fullName = pd.getConcept().getDisplayName();
@@ -82,11 +82,9 @@ class ProviderConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
             Concept child = pd.getConcept();
             child.setAlreadyLoaded(child.isAlreadyLoaded());
             parent.add(child);
-
-            this.metadata.addToIdCache(child);
         }
     }
-    
+
     @Override
     public Concept[] getRoots() {
         if (this.root != null) {

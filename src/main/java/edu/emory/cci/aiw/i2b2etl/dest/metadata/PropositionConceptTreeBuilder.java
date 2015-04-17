@@ -25,6 +25,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ModifierConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.config.ModifierSpec;
+import edu.emory.cci.aiw.i2b2etl.util.Util;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.protempa.Attribute;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
@@ -108,7 +110,7 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                     "Could not build proposition concept tree", ex);
         }
     }
-    
+
     @Override
     public Concept[] getRoots() {
         return this.roots.toArray(new Concept[this.roots.size()]);
@@ -147,14 +149,21 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
         newChild.setValueTypeCode(this.valueTypeCode);
         newChild.setComment(propDef.getDescription());
         newChild.setAlreadyLoaded(this.alreadyLoaded);
+        Attribute attribute = propDef.attribute(Util.C_FULLNAME_ATTRIBUTE_NAME);
+        if (attribute != null) {
+            Value value = attribute.getValue();
+            if (value != null) {
+                newChild.setFullName(value.getFormatted());
+            }
+        }
         if (this.valueTypeCode == ValueTypeCode.LABORATORY_TESTS) {
             ValueType valueType
                     = ((ParameterDefinition) propDef).getValueType();
             newChild.setDataType(DataType.dataTypeFor(valueType));
             if (children.length < 1) {
                 newChild.setMetadataXml("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>" + this.createDate
-                        + "</CreationDateTime><TestID>" + StringEscapeUtils.escapeXml(newChild.getConceptCode())
-                        + "</TestID><TestName>" + StringEscapeUtils.escapeXml(newChild.getDisplayName())
+                        + "</CreationDateTime><TestID>" + StringEscapeUtils.escapeXml10(newChild.getConceptCode())
+                        + "</TestID><TestName>" + StringEscapeUtils.escapeXml10(newChild.getDisplayName())
                         + "</TestName><DataType>" + (newChild.getDataType() == DataType.NUMERIC ? "Float" : "String") + "</DataType><Flagstouse></Flagstouse><Oktousevalues>Y</Oktousevalues><UnitValues><NormalUnits> </NormalUnits></UnitValues></ValueMetadata>");
             }
         } else {
@@ -185,11 +194,11 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                     String valStr = modifier.getValue();
                     Value val = valStr != null ? propertyDef.getValueType().parse(valStr) : null;
                     ConceptId modId = ModifierConceptId.getInstance(
-                            propDef.getId(), 
-                            propertyDef.getId(), 
+                            propDef.getId(),
+                            propertyDef.getId(),
                             val,
                             this.metadata);
-                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Adding modifier concept {0}", modId);
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Adding modifier concept {0} from {1}", new Object[]{modId, propertyDef});
                     Concept mod = new Concept(modId, modifier.getCodePrefix(), this.metadata);
                     mod.setDisplayName(modifier.getDisplayName());
                     Date updated = propDef.getUpdated();
@@ -205,14 +214,21 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                     mod.setTableName("MODIFIER_DIMENSION");
                     mod.setColumnName("MODIFIER_PATH");
                     mod.setAlreadyLoaded(this.alreadyLoaded);
+                    Attribute attribute = propertyDef.attribute(Util.C_FULLNAME_ATTRIBUTE_NAME);
+                    if (attribute != null) {
+                        Value value = attribute.getValue();
+                        if (value != null) {
+                            mod.setFullName(value.getFormatted());
+                        }
+                    }
                     if (propertyDef.getValueType() != ValueType.BOOLEANVALUE) {
                         StringBuilder mXml = new StringBuilder();
                         mXml.append("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>");
                         mXml.append(this.createDate);
                         mXml.append("</CreationDateTime><TestID>");
-                        mXml.append(StringEscapeUtils.escapeXml(mod.getConceptCode()));
+                        mXml.append(StringEscapeUtils.escapeXml10(mod.getConceptCode()));
                         mXml.append("</TestID><TestName>");
-                        mXml.append(StringEscapeUtils.escapeXml(mod.getDisplayName()));
+                        mXml.append(StringEscapeUtils.escapeXml10(mod.getDisplayName()));
                         mXml.append("</TestName>");
                         String valueSetId = propertyDef.getValueSetId();
                         if (valueSetId != null) {
@@ -221,9 +237,9 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                             if (valueSet != null) {
                                 for (ValueSetElement vse : valueSet.getValueSetElements()) {
                                     mXml.append("<Val description=\"");
-                                    mXml.append(StringEscapeUtils.escapeXml(vse.getDisplayName()));
+                                    mXml.append(StringEscapeUtils.escapeXml10(vse.getDisplayName()));
                                     mXml.append("\">");
-                                    mXml.append(StringEscapeUtils.escapeXml(vse.getValue().getFormatted()));
+                                    mXml.append(StringEscapeUtils.escapeXml10(vse.getValue().getFormatted()));
                                     mXml.append("</Val>");
                                 }
                             }

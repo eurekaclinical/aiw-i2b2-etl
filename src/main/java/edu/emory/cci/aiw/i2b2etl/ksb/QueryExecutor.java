@@ -40,7 +40,7 @@ import org.protempa.KnowledgeSourceReadException;
  *
  * @author arpost
  */
-class QueryExecutor implements AutoCloseable {
+public class QueryExecutor implements AutoCloseable {
 
     private static final Logger LOGGER = Logger.getLogger(QueryExecutor.class.getName());
     private static final ParameterSetter EMPTY_PARAM_SETTER = new ParameterSetter() {
@@ -58,20 +58,20 @@ class QueryExecutor implements AutoCloseable {
     private final QueryConstructor queryConstructor;
     private final String excludeTableName;
 
-    QueryExecutor(Connection connection, QueryConstructor queryConstructor, String excludeTableName) {
+    public QueryExecutor(Connection connection, QueryConstructor queryConstructor, String excludeTableName) {
         this.connection = connection;
         this.queryConstructor = queryConstructor;
         this.excludeTableName = excludeTableName;
     }
 
-    <E extends Object> E execute(ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
+    public <E extends Object> E execute(ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
         return execute(
                 EMPTY_PARAM_SETTER,
                 resultSetReader
         );
     }
 
-    <E extends Object> E execute(final String bindArgument, ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
+    public <E extends Object> E execute(final String bindArgument, ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
         return execute(
                 new ParameterSetter() {
 
@@ -85,7 +85,7 @@ class QueryExecutor implements AutoCloseable {
         );
     }
 
-    <E extends Object> E execute(ParameterSetter paramSetter, ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
+    public <E extends Object> E execute(ParameterSetter paramSetter, ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
         try {
             openConnection();
             readOntologyTables();
@@ -102,7 +102,7 @@ class QueryExecutor implements AutoCloseable {
         }
     }
 
-    Connection getConnection() {
+    public Connection getConnection() {
         return connection;
     }
 
@@ -118,7 +118,7 @@ class QueryExecutor implements AutoCloseable {
         }
     }
 
-    void prepare() throws KnowledgeSourceReadException {
+    public void prepare() throws KnowledgeSourceReadException {
         if (this.preparedStatement == null) {
             try {
                 openConnection();

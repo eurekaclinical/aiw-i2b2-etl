@@ -19,38 +19,52 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
  * @author Andrew Post
  */
 public class ModifierDimensionLoader extends ConceptHierarchyLoader {
+
     private final ModifierDimensionHandler handler;
     private final ModifierDimension modifierDimension;
+    /*
+     * A cache of modifier paths so that we do not insert multiple records
+     * with the same modifier path.
+     */
+    private final Set<String> modifierPaths;
 
     public ModifierDimensionLoader(ModifierDimensionHandler handler) {
         this.handler = handler;
         this.modifierDimension = new ModifierDimension();
+        this.modifierPaths = new HashSet<>();
     }
-    
-    
 
     @Override
     protected void loadConcept(Concept concept) throws SQLException {
         if (concept.isInUse() && concept.isModifier()) {
             for (String path : concept.getHierarchyPaths()) {
-                this.modifierDimension.setPath(path);
-                this.modifierDimension.setConceptCode(concept.getConceptCode());
-                this.modifierDimension.setDisplayName(concept.getDisplayName());
-                this.modifierDimension.setSourceSystemCode(concept.getSourceSystemCode());
-                this.modifierDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
-                this.modifierDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
-                this.handler.insert(this.modifierDimension);
+                /*
+                 * Modifier paths are not globally unique in the metadata
+                 * schema, but there can only be one record per modifier path
+                 * in the modifier dimension. Thus, we need to resolve
+                 * duplicates.
+                 */
+                if (this.modifierPaths.add(path)) {
+                    this.modifierDimension.setPath(path);
+                    this.modifierDimension.setConceptCode(concept.getConceptCode());
+                    this.modifierDimension.setDisplayName(concept.getDisplayName());
+                    this.modifierDimension.setSourceSystemCode(concept.getSourceSystemCode());
+                    this.modifierDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
+                    this.modifierDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
+                    this.handler.insert(this.modifierDimension);
+                }
             }
         }
     }
-    
+
 }

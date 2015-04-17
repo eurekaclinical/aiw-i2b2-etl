@@ -15,7 +15,7 @@
    <string>ICD9:250</string>
   </void>
   <void property="valueSetId">
-   <string>DXPRIORITY</string>
+   <string>"ICD9:Diagnoses"^"DXPRIORITY"</string>
   </void>
   <void property="valueType">
    <object class="java.lang.Enum" id="ValueType$20" method="valueOf">
@@ -38,7 +38,7 @@
    <string>ICD9:250</string>
   </void>
   <void property="valueSetId">
-   <string>DXSOURCE</string>
+   <string>"ICD9:Diagnoses"^"DXSOURCE"</string>
   </void>
   <void property="valueType">
    <object idref="ValueType$20"/>

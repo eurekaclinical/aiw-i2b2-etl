@@ -44,14 +44,23 @@ class CMetadataXmlParser extends DefaultHandler {
     private final StringBuilder charBuffer;
     private ValueType valueType;
     private ValueSet valueSet;
-    private List<ValueSetElement> valueSetElements;
+    private final List<ValueSetElement> valueSetElements;
     private String valueSetElementDescription;
     private String unitsOfMeasure;
     private SAXParseException exception;
+    private String declaringPropId;
 
-    public CMetadataXmlParser() {
+    CMetadataXmlParser() {
         this.valueSetElements = new ArrayList<>();
         this.charBuffer = new StringBuilder();
+    }
+
+    String getDeclaringPropId() {
+        return declaringPropId;
+    }
+
+    void setDeclaringPropId(String declaringPropId) {
+        this.declaringPropId = declaringPropId;
     }
 
     void setConceptBaseCode(String conceptBaseCode) {
@@ -135,7 +144,7 @@ class CMetadataXmlParser extends DefaultHandler {
                     break;
                 case "Val":
                     if (this.conceptBaseCode != null) {
-                        this.valueSetElements.add(new ValueSetElement(NominalValue.getInstance(this.charBuffer.toString()), this.valueSetElementDescription, null));
+                        this.valueSetElements.add(new ValueSetElement(NominalValue.getInstance(this.charBuffer.toString()), this.valueSetElementDescription));
                         this.valueSetElementDescription = null;
                     }
                     break;
@@ -154,8 +163,11 @@ class CMetadataXmlParser extends DefaultHandler {
     @Override
     public void endDocument() throws SAXException {
         if (!this.valueSetElements.isEmpty()) {
+            ValueSetSupport vsSupport = new ValueSetSupport();
+            vsSupport.setDeclaringPropId(this.declaringPropId);
+            vsSupport.setPropertyName(this.conceptBaseCode);
             this.valueSet = new ValueSet(
-                    this.conceptBaseCode,
+                    vsSupport.getId(), null,
                     this.valueSetElements.toArray(new ValueSetElement[this.valueSetElements.size()]),
                     null
             );

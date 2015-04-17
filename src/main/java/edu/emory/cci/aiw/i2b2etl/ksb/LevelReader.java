@@ -87,7 +87,6 @@ class LevelReader {
                 } catch (SQLException ignore) {}
                 throw ex;
             }
-
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
         }

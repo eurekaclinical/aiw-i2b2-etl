@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +31,7 @@ import org.protempa.proposition.value.Value;
  * @author Andrew Post
  */
 public final class ModifierConceptId implements PropertyConceptId {
+
     private final String propId;
     private final String propertyName;
     private final Value value;
@@ -39,13 +39,13 @@ public final class ModifierConceptId implements PropertyConceptId {
     private final Metadata metadata;
 
     /**
-     * Returns a concept propId with the given proposition propId and property 
-     * name and value. It searches the concept id cache for an existing concept 
+     * Returns a concept propId with the given proposition propId and property
+     * name and value. It searches the concept id cache for an existing concept
      * id with the same propId, property name and value. Next, it searches the
-     * concept id cache for an existing concept id with the same propId and 
+     * concept id cache for an existing concept id with the same propId and
      * property name. Then, if none is found, it creates a new one.
-     * 
-     * @param propId a proposition propId {@link String}. Cannot be 
+     *
+     * @param propId a proposition propId {@link String}. Cannot be
      * <code>null</code>.
      * @param propertyName a property name {@link String}.
      * @return a {@link PropDefConceptId}.
@@ -121,7 +121,7 @@ public final class ModifierConceptId implements PropertyConceptId {
         }
         return true;
     }
-    
+
     @Override
     public String toConceptCode() throws InvalidConceptCodeException {
         return toConceptCode(null);
@@ -130,10 +130,8 @@ public final class ModifierConceptId implements PropertyConceptId {
     @Override
     public String toConceptCode(String prefix) throws InvalidConceptCodeException {
         if (this.conceptCode == null) {
-            PropDefConceptCodeBuilder ccBuilder = new PropDefConceptCodeBuilder(this.metadata);
-            ccBuilder.setPropositionId(prefix != null ? prefix : propId);
-            ccBuilder.setPropertyName(prefix != null ? null : propertyName);
-            ccBuilder.setValue(value);
+            SimpleConceptCodeBuilder ccBuilder = new SimpleConceptCodeBuilder(this.metadata);
+            ccBuilder.setId((prefix != null ? prefix : "") + (this.value != null ? this.value.getFormatted() : ""));
             this.conceptCode = ccBuilder.build();
         }
         return this.conceptCode;

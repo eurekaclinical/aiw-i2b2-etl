@@ -27,14 +27,13 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.table.ProviderDimension;
+import edu.emory.cci.aiw.i2b2etl.ksb.QueryConstructor;
+import edu.emory.cci.aiw.i2b2etl.ksb.QueryExecutor;
+import edu.emory.cci.aiw.i2b2etl.ksb.ResultSetReader;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -207,88 +206,55 @@ public final class Metadata {
         assert !this.allRoots.contains(null) : "Null root concepts! " + this.allRoots;
     }
 
-    private void setI2B2PathsToConcepts() throws OntologyBuildException {
-        List<Concept> conceptsToQuery = new ArrayList<>();
-        
-        for (Concept c : getAllRoots()) {
-            Enumeration<Concept> emu = c.breadthFirstEnumeration();
-            while (emu.hasMoreElements()) {
-                Concept concept = emu.nextElement();
-                Concept conceptFromCache = getFromIdCache(concept.getId());
-                if (conceptFromCache != null) {
-                    if (!conceptFromCache.isAlreadyLoaded() || this.metaConnectionSpec == null) {
-                        conceptFromCache.addHierarchyPath(concept.getFullName());
-                    } else {
-                        conceptsToQuery.add(conceptFromCache);
-                    }
-                }
-            }
-        }
-        if (!conceptsToQuery.isEmpty()) {
-            Set<String> conceptCodes = new HashSet<>();
-            for (Concept concept : conceptsToQuery) {
-                conceptCodes.add(concept.getConceptCode());
-            }
-            
-            List<String> ontTables = readOntologyTables();
-            MessageFormat queryMsgFmt;
-            if (conceptsToQuery.size() <= 1000) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("SELECT C_BASECODE, C_FULLNAME FROM {0} WHERE C_BASECODE IN ('");
-                int index = 0;
-                for (String conceptCode : conceptCodes) {
-                    if (index++ > 0) {
-                        sb.append("','");
-                    }
-                    sb.append(conceptCode);
-                }
-                sb.append("')");
-                queryMsgFmt = new MessageFormat(sb.toString());
-            } else {
-                queryMsgFmt = new MessageFormat("SELECT C_BASECODE, C_FULLNAME FROM {0}");
-            }
-            
-            Map<String, List<String>> conceptCodeToFullNames = new HashMap<>();
-            for (String table : ontTables) {
-                String query = queryMsgFmt.format(new Object[]{table});
-                try (Connection conn = this.metaConnectionSpec.getOrCreate();
-                        Statement stmt = conn.createStatement();
-                        ResultSet resultSet = stmt.executeQuery(query)) {
-                    while (resultSet.next()) {
-                        String conceptCode = resultSet.getString(1);
-                        String fullName = resultSet.getString(2);
-                        Collections.putList(conceptCodeToFullNames, conceptCode, fullName);
-                    }
-                } catch (SQLException ex) {
-                    throw new OntologyBuildException(ex);
-                }
-            }
-            
-            for (Concept concept : conceptsToQuery) {
-                List<String> fullNames = conceptCodeToFullNames.get(concept.getConceptCode());
-                if (fullNames != null) {
-                    for (String fullName : fullNames) {
-                        concept.addHierarchyPath(fullName);
-                    }
-                }
-            }
-        }
-    }
+    private static final QueryConstructor ALL_CONCEPTS_QUERY = new QueryConstructor() {
 
-    private List<String> readOntologyTables() throws OntologyBuildException {
-        StringBuilder query = new StringBuilder();
-        query.append("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS");
-        try (Connection conn = this.metaConnectionSpec.getOrCreate();
-                PreparedStatement stmt = conn.prepareStatement(query.toString())) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<String> tables = new ArrayList<>();
-                while (rs.next()) {
-                    tables.add(rs.getString(1));
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT DISTINCT C_SYMBOL, C_FULLNAME FROM ");
+            sql.append(table);
+        }
+    };
+
+    private void setI2B2PathsToConcepts() throws OntologyBuildException {
+        if (this.metaConnectionSpec != null) {
+            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, this.settings.getMetaTableName())) {
+                Map<String, List<String>> result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
+
+                    @Override
+                    public Map<String, List<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
+                        Map<String, List<String>> result = new HashMap<>();
+                        try {
+                            while (rs.next()) {
+                                Collections.putList(result, rs.getString(1), rs.getString(2));
+                            }
+                        } catch (SQLException ex) {
+                            throw new KnowledgeSourceReadException(ex);
+                        }
+                        return result;
+                    }
+                });
+                for (Concept concept : this.conceptCache.values()) {
+                    List<String> get = result.get(concept.getSymbol());
+                    if (get != null) {
+                        for (String path : get) {
+                            concept.addHierarchyPath(path);
+                        }
+                    }
                 }
-                return tables;
+            } catch (KnowledgeSourceReadException | SQLException ex) {
+                throw new OntologyBuildException(ex);
             }
-        } catch (SQLException ex) {
-            throw new OntologyBuildException(ex);
+        } else {
+            for (Concept c : getAllRoots()) {
+                Enumeration<Concept> emu = c.breadthFirstEnumeration();
+                while (emu.hasMoreElements()) {
+                    Concept concept = emu.nextElement();
+                    Concept conceptFromCache = getFromIdCache(concept.getId());
+                    if (conceptFromCache != null) {
+                        conceptFromCache.addHierarchyPath(concept.getFullName());
+                    }
+                }
+            }
         }
     }
 

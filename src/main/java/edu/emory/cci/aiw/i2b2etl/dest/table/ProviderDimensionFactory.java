@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
@@ -48,21 +47,20 @@ import org.protempa.proposition.value.Value;
  * @author arpost
  */
 public class ProviderDimensionFactory {
+
     private static final String PROVIDER_ID_PREFIX = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:";
     private static final String NOT_RECORDED_PROVIDER_ID = PROVIDER_ID_PREFIX + "NotRecorded";
-    
+
     private final Metadata metadata;
     private final ProviderDimension providerDimension;
     private final ProviderDimensionHandler providerDimensionHandler;
-    private final boolean skipProviderHierarchy;
 
     public ProviderDimensionFactory(Metadata metadata, Settings settings, ConnectionSpec dataConnectionSpec) throws SQLException {
         this.metadata = metadata;
         this.providerDimension = new ProviderDimension();
         this.providerDimensionHandler = new ProviderDimensionHandler(dataConnectionSpec);
-        this.skipProviderHierarchy = settings.getSkipProviderHierarchy();
     }
-    
+
     public ProviderDimension getInstance(Proposition encounterProp, String fullNameReference, String fullNameProperty,
             String firstNameReference, String firstNameProperty,
             String middleNameReference, String middleNameProperty,
@@ -100,22 +98,22 @@ public class ProviderDimensionFactory {
             concept.setFactTableColumn("provider_id");
             concept.setTableName("provider_dimension");
             concept.setColumnName("provider_path");
+            this.metadata.addToIdCache(concept);
         }
         providerDimension.setConcept(concept);
         providerDimension.setSourceSystem(source);
         if (!found) {
-            if (!skipProviderHierarchy) {
-                this.metadata.addProvider(providerDimension);
-            }
+            this.metadata.addProvider(providerDimension);
             providerDimensionHandler.insert(providerDimension);
         }
+
         return providerDimension;
     }
-    
+
     public void close() throws SQLException {
         this.providerDimensionHandler.close();
     }
-    
+
     private String extractNamePart(String namePartReference, String namePartProperty, Proposition encounterProp, Map<UniqueId, Proposition> references, Set<String> sources) {
         if (namePartReference != null && namePartProperty != null) {
             Proposition provider = resolveReference(encounterProp, namePartReference, references);
@@ -125,7 +123,7 @@ public class ProviderDimensionFactory {
             return null;
         }
     }
-    
+
     private void extractSource(Set<String> sources, Proposition provider) {
         if (provider != null) {
             sources.add(provider.getSourceSystem().getStringRepresentation());
@@ -150,7 +148,7 @@ public class ProviderDimensionFactory {
         }
         return provider;
     }
-    
+
     private String getNamePart(Proposition provider, String namePartProperty) {
         String namePart;
         if (provider != null) {
@@ -160,7 +158,7 @@ public class ProviderDimensionFactory {
         }
         return namePart;
     }
-    
+
     private String getProperty(String nameProperty, Proposition provider) {
         String name;
         if (nameProperty != null) {
@@ -175,7 +173,7 @@ public class ProviderDimensionFactory {
         }
         return name;
     }
-    
+
     private String constructFullName(String firstName, String middleName, String lastName) {
         StringBuilder result = new StringBuilder();
         if (lastName != null) {

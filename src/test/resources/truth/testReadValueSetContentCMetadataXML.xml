@@ -2,7 +2,10 @@
 <java version="1.7.0_67" class="java.beans.XMLDecoder">
  <object class="org.protempa.valueset.ValueSetBuilder">
   <void property="id">
-   <string>DXPRIORITY</string>
+   <string>"ICD9:Diagnoses"^"DXPRIORITY"</string>
+  </void>
+  <void property="sourceIdBuilder">
+   <object class="org.protempa.NotRecordedSourceIdBuilder"/>
   </void>
   <void property="valueSetElementBuilders">
    <array class="org.protempa.valueset.ValueSetElementBuilder" length="3">
@@ -10,6 +13,10 @@
      <object class="org.protempa.valueset.ValueSetElementBuilder">
       <void property="abbrevDisplayName">
        <string></string>
+      </void>
+      <void id="AttributeBuilderArray0" property="attributeBuilders"/>
+      <void property="attributeBuilders">
+       <object idref="AttributeBuilderArray0"/>
       </void>
       <void property="displayName">
        <string>Principal</string>
@@ -28,6 +35,10 @@
       <void property="abbrevDisplayName">
        <string></string>
       </void>
+      <void id="AttributeBuilderArray1" property="attributeBuilders"/>
+      <void property="attributeBuilders">
+       <object idref="AttributeBuilderArray1"/>
+      </void>
       <void property="displayName">
        <string>Secondary</string>
       </void>
@@ -44,6 +55,10 @@
      <object class="org.protempa.valueset.ValueSetElementBuilder">
       <void property="abbrevDisplayName">
        <string></string>
+      </void>
+      <void id="AttributeBuilderArray2" property="attributeBuilders"/>
+      <void property="attributeBuilders">
+       <object idref="AttributeBuilderArray2"/>
       </void>
       <void property="displayName">
        <string>No information</string>

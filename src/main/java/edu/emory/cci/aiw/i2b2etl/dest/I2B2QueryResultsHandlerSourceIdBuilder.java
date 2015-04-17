@@ -1,8 +1,8 @@
-package edu.emory.cci.aiw.i2b2etl.ksb;
+package edu.emory.cci.aiw.i2b2etl.dest;
 
 /*
  * #%L
- * Protempa i2b2 Knowledge Source Backend
+ * AIW i2b2 ETL
  * %%
  * Copyright (C) 2012 - 2015 Emory University
  * %%
@@ -20,16 +20,28 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * #L%
  */
 
-import java.sql.ResultSet;
-import org.protempa.KnowledgeSourceReadException;
+import org.protempa.SourceId;
+import org.protempa.SourceIdBuilder;
 
 /**
  *
  * @author Andrew Post
- * @param <E>
  */
-public interface ResultSetReader<E extends Object> {
+public class I2B2QueryResultsHandlerSourceIdBuilder implements SourceIdBuilder {
 
-    E read(ResultSet rs) throws KnowledgeSourceReadException;
+    @Override
+    public SourceId build() {
+        return I2B2QueryResultsHandlerSourceId.getInstance();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj != null && getClass() == obj.getClass();
+    }
+
+    @Override
+    public int hashCode() {
+        return 1;
+    }
     
 }
