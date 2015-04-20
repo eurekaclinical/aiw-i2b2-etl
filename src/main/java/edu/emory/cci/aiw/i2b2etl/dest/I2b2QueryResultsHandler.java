@@ -89,10 +89,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.protempa.DataSource;
+import org.protempa.SourceSystem;
 import org.protempa.backend.dsb.DataSourceBackend;
 import org.protempa.backend.ksb.KnowledgeSourceBackend;
 
 import org.protempa.dest.QueryResultsHandlerCloseException;
+import org.protempa.proposition.DerivedSourceId;
 
 /**
  * @author Andrew Post
@@ -230,7 +232,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.qrhId = I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
         }
         this.dataSourceBackendIds.add(this.qrhId);
-
+        
         KnowledgeSourceBackend[] ksBackends = knowledgeSource.getBackends();
         this.knowledgeSourceBackendIds = new HashSet<>();
         for (int i = 0; i < ksBackends.length; i++) {

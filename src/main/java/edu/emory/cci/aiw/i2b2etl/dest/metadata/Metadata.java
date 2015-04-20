@@ -239,6 +239,8 @@ public final class Metadata {
                         for (String path : get) {
                             concept.addHierarchyPath(path);
                         }
+                    } else {
+                        concept.addHierarchyPath(concept.getFullName());
                     }
                 }
             } catch (KnowledgeSourceReadException | SQLException ex) {

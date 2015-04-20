@@ -31,8 +31,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.protempa.Attribute;
 import org.protempa.KnowledgeSource;
@@ -198,7 +196,6 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                             propertyDef.getId(),
                             val,
                             this.metadata);
-                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Adding modifier concept {0} from {1}", new Object[]{modId, propertyDef});
                     Concept mod = new Concept(modId, modifier.getCodePrefix(), this.metadata);
                     mod.setDisplayName(modifier.getDisplayName());
                     Date updated = propDef.getUpdated();
