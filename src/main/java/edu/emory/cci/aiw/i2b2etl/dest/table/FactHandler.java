@@ -44,6 +44,7 @@ import org.protempa.proposition.value.Value;
 public abstract class FactHandler extends AbstractFactHandler {
 
     public static final String TEMP_OBSERVATION_TABLE = "ek_temp_observation";
+    public static final String TEMP_OBSERVATION_COMPLETE_TABLE = "ek_temp_observation_complete";
 
     private final String startConfig;
     private final String finishConfig;

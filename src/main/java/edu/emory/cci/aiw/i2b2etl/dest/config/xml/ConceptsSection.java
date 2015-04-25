@@ -19,19 +19,20 @@ package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
  * limitations under the License.
  * #L%
  */
-
-
 import edu.emory.cci.aiw.i2b2etl.dest.config.Concepts;
 import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ModifierSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.ValueTypeCode;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
- * 
+ *
  * @author Andrew Post
  */
 final class ConceptsSection extends ConfigurationSection implements Concepts {
@@ -47,7 +48,23 @@ final class ConceptsSection extends ConfigurationSection implements Concepts {
     }
 
     @Override
-    protected void put(NamedNodeMap nnm) throws ConfigurationReadException {
+    protected void put(Node node) throws ConfigurationReadException {
+        List<ModifierSpec> msList = new ArrayList<>();
+        NodeList nL = node.getChildNodes();
+        for (int i = 0; i < nL.getLength(); i++) {
+            Node section = nL.item(i);
+            if (section.getNodeType() == Node.ELEMENT_NODE) {
+                if (section.getNodeName().equals("modifier")) {
+                    NamedNodeMap nnm = section.getAttributes();
+                    msList.add(new ModifierSpec(
+                            readAttribute(nnm, "displayName", false),
+                            readAttribute(nnm, "codePrefix", false),
+                            readAttribute(nnm, "property", true),
+                            readAttribute(nnm, "value", false)));
+                }
+            }
+        }
+        NamedNodeMap nnm = node.getAttributes();
         String valueTypeStr = readAttribute(nnm, "valueType", false);
         FolderSpec folderSpec = new FolderSpec(
                 null,
@@ -55,8 +72,8 @@ final class ConceptsSection extends ConfigurationSection implements Concepts {
                 readAttribute(nnm, "property", false),
                 readAttribute(nnm, "conceptCodePrefix", false),
                 valueTypeStr != null ? ValueTypeCode.valueOf(valueTypeStr) : ValueTypeCode.UNSPECIFIED,
-                false,
-                null
+                Boolean.parseBoolean(readAttribute(nnm, "alreadyLoaded", false)),
+                msList.toArray(new ModifierSpec[msList.size()])
         );
         this.folders.add(folderSpec);
     }

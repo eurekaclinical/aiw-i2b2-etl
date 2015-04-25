@@ -45,7 +45,8 @@ final class DictionarySection extends ConfigurationSection implements Settings {
     }
     
     @Override
-    protected void put(NamedNodeMap nnm) throws ConfigurationReadException {
+    protected void put(Node node) throws ConfigurationReadException {
+        NamedNodeMap nnm = node.getAttributes();
         String key = readAttribute(nnm, "key", true);
         String value = readAttribute(nnm, "value", true);
         dictionary.put(key, value);

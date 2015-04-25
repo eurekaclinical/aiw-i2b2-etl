@@ -159,7 +159,37 @@ CREATE TABLE EK_TEMP_OBSERVATION
     upload_id       INTEGER
   )
   NOLOGGING;
-CREATE INDEX EK_IDX_TEMP_OBSERVATION_PK ON EK_TEMP_OBSERVATION
+CREATE TABLE EK_TEMP_OBSERVATION_COMPLETE
+  (
+    encounter_num       NUMBER(38,0),
+    encounter_id        VARCHAR(200) NOT NULL,
+    encounter_id_source VARCHAR(50) NOT NULL,
+    concept_cd          VARCHAR(50) NOT NULL,
+    patient_num         NUMBER(38,0),
+    patient_id          VARCHAR(200) NOT NULL,
+    patient_id_source   VARCHAR(50) NOT NULL,
+    provider_id         VARCHAR(50),
+    start_date          DATE,
+    modifier_cd         VARCHAR2(100),
+    instance_num        NUMBER(18,0),
+    valtype_cd          VARCHAR2(50),
+    tval_char           VARCHAR(255),
+    nval_num            NUMBER(18,5),
+    valueflag_cd        CHAR(50),
+    quantity_num        NUMBER(18,5),
+    confidence_num      NUMBER(18,0),
+    observation_blob CLOB,
+    units_cd        VARCHAR2(50),
+    end_date        DATE,
+    location_cd     VARCHAR2(50),
+    update_date     DATE,
+    download_date   DATE,
+    import_date     DATE,
+    sourcesystem_cd VARCHAR2(50) ,
+    upload_id       INTEGER
+  )
+  NOLOGGING;
+CREATE INDEX EK_IDX_TEMP_OBX_COM_PK ON EK_TEMP_OBSERVATION_COMPLETE
   (
     encounter_num,
     patient_num,
@@ -169,7 +199,7 @@ CREATE INDEX EK_IDX_TEMP_OBSERVATION_PK ON EK_TEMP_OBSERVATION
     modifier_cd,
     instance_num
   );
-CREATE INDEX EK_IDX_TEMP_OBX_ENC_PAT_ID ON EK_TEMP_OBSERVATION
+CREATE INDEX EK_IDX_TEMP_OBX_COM_ENC_PAT_ID ON EK_TEMP_OBSERVATION_COMPLETE
   (
     encounter_id,
     encounter_id_source,

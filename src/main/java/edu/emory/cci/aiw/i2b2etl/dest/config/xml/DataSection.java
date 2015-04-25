@@ -24,6 +24,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSpec;
 import java.util.*;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  *
@@ -49,7 +50,8 @@ final class DataSection extends ConfigurationSection implements Data {
     }
 
     @Override
-    protected void put(NamedNodeMap nnm) throws ConfigurationReadException {
+    protected void put(Node node) throws ConfigurationReadException {
+        NamedNodeMap nnm = node.getAttributes();
         DataSpec dataSpec = new DataSpec(
                 readAttribute(nnm, "key", true),
                 readAttribute(nnm, "reference", false),

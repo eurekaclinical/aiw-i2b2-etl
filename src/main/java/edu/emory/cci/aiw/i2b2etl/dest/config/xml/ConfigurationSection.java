@@ -30,7 +30,7 @@ abstract class ConfigurationSection {
     
     abstract String getNodeName();
     
-    abstract void put(NamedNodeMap attributes) throws ConfigurationReadException;
+    abstract void put(Node elm) throws ConfigurationReadException;
     
     void load(Element elm) throws ConfigurationReadException {
         NodeList nL = elm.getChildNodes();
@@ -38,7 +38,7 @@ abstract class ConfigurationSection {
             Node section = nL.item(i);
             if (section.getNodeType() == Node.ELEMENT_NODE) {
                 if (section.getNodeName().equals(getNodeName())) {
-                    put(section.getAttributes());
+                    put(section);
                 }
             }
         }

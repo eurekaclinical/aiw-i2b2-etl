@@ -57,8 +57,6 @@ import edu.emory.cci.aiw.i2b2etl.dest.table.VisitDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.dest.table.VisitDimensionFactory;
 import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.ConnectionSpec;
-import org.arp.javautil.sql.DatabaseAPI;
-import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
@@ -77,7 +75,6 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -89,12 +86,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.protempa.DataSource;
-import org.protempa.SourceSystem;
 import org.protempa.backend.dsb.DataSourceBackend;
 import org.protempa.backend.ksb.KnowledgeSourceBackend;
 
 import org.protempa.dest.QueryResultsHandlerCloseException;
-import org.protempa.proposition.DerivedSourceId;
 
 /**
  * @author Andrew Post
@@ -178,16 +173,17 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.conceptsSection = this.configuration.getConcepts();
         this.database = this.configuration.getDatabase();
         DatabaseSpec dataSchemaSpec = this.database.getDataSpec();
+        if (dataSchemaSpec != null) {
+            this.dataConnectionSpec = dataSchemaSpec.toConnectionSpec();
+        } else {
+            this.dataConnectionSpec = null;
+        }
+
         DatabaseSpec metadataSchemaSpec = this.database.getMetadataSpec();
-        try {
-            this.dataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(dataSchemaSpec.getConnect(), dataSchemaSpec.getUser(), dataSchemaSpec.getPasswd());
-            if (metadataSchemaSpec != null && metadataSchemaSpec.getConnect() != null) {
-                this.metadataConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(metadataSchemaSpec.getConnect(), metadataSchemaSpec.getUser(), metadataSchemaSpec.getPasswd());
-            } else {
-                this.metadataConnectionSpec = null;
-            }
-        } catch (InvalidConnectionSpecArguments ex) {
-            throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
+        if (metadataSchemaSpec != null) {
+            this.metadataConnectionSpec = metadataSchemaSpec.toConnectionSpec();
+        } else {
+            this.metadataConnectionSpec = null;
         }
 
         this.providerFullNameSpec = this.data.get(this.settings.getProviderFullName());
@@ -232,7 +228,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.qrhId = I2B2QueryResultsHandlerSourceId.getInstance().getStringRepresentation();
         }
         this.dataSourceBackendIds.add(this.qrhId);
-        
+
         KnowledgeSourceBackend[] ksBackends = knowledgeSource.getBackends();
         this.knowledgeSourceBackendIds = new HashSet<>();
         for (int i = 0; i < ksBackends.length; i++) {
@@ -315,6 +311,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private String tempObservationFactTableName() {
         return PropositionFactHandler.TEMP_OBSERVATION_TABLE;
     }
+    
+    private String tempObservationFactCompleteTableName() {
+        return PropositionFactHandler.TEMP_OBSERVATION_COMPLETE_TABLE;
+    }
 
     private String tempModifierTableName() {
         return ModifierDimensionHandler.TEMP_MODIFIER_TABLE;
@@ -327,11 +327,14 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * database
      */
     private void truncateTempTables() throws SQLException {
+        Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.INFO, "Truncating temp data tables for query {0}", this.query.getId());
         try (final Connection conn = openDataDatabaseConnection()) {
-            String[] dataschemaTables = {tempPatientTableName(), tempPatientMappingTableName(), tempVisitTableName(), tempEncounterMappingTableName(), tempProviderTableName(), tempConceptTableName(), tempModifierTableName(), tempObservationFactTableName()};
+            String[] dataschemaTables = {tempPatientTableName(), tempPatientMappingTableName(), tempVisitTableName(), tempEncounterMappingTableName(), tempProviderTableName(), tempConceptTableName(), tempModifierTableName(), tempObservationFactTableName(), tempObservationFactCompleteTableName()};
             for (String tableName : dataschemaTables) {
                 truncateTable(conn, tableName);
             }
+            logger.log(Level.INFO, "Done truncating temp data tables for query {0}", this.query.getId());
         }
     }
 
@@ -409,15 +412,15 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
         }
+        
+        logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
 
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection();
-                    CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_PID_MAP_FROMTEMP(?, ?, ?) }")) {
-                logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
+                    CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_PID_MAP_FROMTEMP(?, ?) }")) {
                 logger.log(Level.INFO, "Populating patient dimension for query {0}", queryId);
                 mappingCall.setString(1, tempPatientMappingTableName());
                 mappingCall.setInt(2, UPLOAD_ID);
-                mappingCall.registerOutParameter(3, Types.VARCHAR);
                 mappingCall.execute();
                 //commit and rollback are called by stored procedure.
             } catch (SQLException ex) {
@@ -438,10 +441,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection();
-                    CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?, ?) }")) {
+                    CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?) }")) {
                 mappingCall.setString(1, tempEncounterMappingTableName());
                 mappingCall.setInt(2, UPLOAD_ID);
-                mappingCall.registerOutParameter(3, Types.VARCHAR);
                 mappingCall.execute();
                 //commit and rollback are called by the stored procedure.
             } catch (SQLException ex) {
@@ -451,10 +453,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection()) {
-                try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PATIENT_FROMTEMP(?, ?, ?) }")) {
+                try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PATIENT_FROMTEMP(?, ?) }")) {
                     call.setString(1, tempPatientTableName());
                     call.setInt(2, UPLOAD_ID);
-                    call.registerOutParameter(3, Types.VARCHAR);
                     call.execute();
                     //commit and rollback are called by the stored procedure.
                 }
@@ -464,11 +465,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
 
         if (exception == null) {
-            try (Connection conn = openDataDatabaseConnection(); CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROMTEMP(?, ?, ?) }")) {
+            try (Connection conn = openDataDatabaseConnection(); CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROMTEMP(?, ?) }")) {
                 logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
                 call.setString(1, tempVisitTableName());
                 call.setInt(2, UPLOAD_ID);
-                call.registerOutParameter(3, Types.VARCHAR);
                 call.execute();
                 //commit and rollback are called by the stored procedure.
             } catch (SQLException ex) {
@@ -492,10 +492,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try {
                 logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
                 try (Connection conn = openDataDatabaseConnection()) {
-                    try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PROVIDER_FROMTEMP(?, ?, ?) }")) {
+                    try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PROVIDER_FROMTEMP(?, ?) }")) {
                         call.setString(1, tempProviderTableName());
                         call.setInt(2, UPLOAD_ID);
-                        call.registerOutParameter(3, Types.VARCHAR);
                         call.execute();
                         //commit and rollback are called by the stored procedure.
                     }
@@ -528,10 +527,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try {
                 try (Connection conn = openDataDatabaseConnection()) {
-                    try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_CONCEPT_FROMTEMP(?, ?, ?) }")) {
+                    try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_CONCEPT_FROMTEMP(?, ?) }")) {
                         call.setString(1, tempConceptTableName());
                         call.setInt(2, UPLOAD_ID);
-                        call.registerOutParameter(3, Types.VARCHAR);
                         call.execute();
                         //commit and rollback are called by the stored procedure.
                     }
@@ -562,10 +560,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection()) {
-                try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_MODIFIER_FROMTEMP(?, ?, ?) }")) {
+                try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_MODIFIER_FROMTEMP(?, ?) }")) {
                     call.setString(1, tempModifierTableName());
                     call.setInt(2, UPLOAD_ID);
-                    call.registerOutParameter(3, Types.VARCHAR);
                     call.execute();
                     //commit and rollback are called by the stored procedure.
                 }
@@ -582,9 +579,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     logger.log(Level.INFO, "Populating observation_fact from temporary table");
                     try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }")) {
                         call.setString(1, tempObservationFactTableName());
-                        call.setLong(2, UPLOAD_ID);
-                        call.setLong(3, 1); // appendFlag
-                        call.registerOutParameter(4, Types.VARCHAR);
+                        call.setString(2, tempObservationFactCompleteTableName());
+                        call.setLong(3, UPLOAD_ID);
+                        call.setLong(4, this.query.getQueryMode() == QueryMode.UPDATE ? 1 : 0); // appendFlag
                         call.execute();
                         //commit and rollback are called by the stored procedure.
                     }
@@ -598,14 +595,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try {
                 // re-enable the indexes now that we're done populating the table
                 enableObservationFactIndexes();
-            } catch (SQLException ex) {
-                exception = ex;
-            }
-        }
-
-        if (exception == null) {
-            try {
-                gatherStatisticsOnObservationFact();
             } catch (SQLException ex) {
                 exception = ex;
             }
@@ -869,15 +858,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Disabling indices on observation_fact");
         try (Connection conn = openDataDatabaseConnection();
-                Statement stmt = conn.createStatement()) {
-            for (String idx : OBX_FACT_IDXS) {
-                if (logger.isLoggable(Level.FINE)) {
-                    logger.log(Level.FINE, "Disabling index: {0}", idx);
-                }
-                stmt.executeUpdate("ALTER INDEX " + idx + " UNUSABLE");
-            }
-            stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = true");
+                CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_DISABLE_INDEXES()}")) {
+            //stmt.registerOutParameter(1, Types.VARCHAR);
+            stmt.execute();
             logger.log(Level.INFO, "Disabled indices on observation_fact");
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -885,27 +871,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Enabling indices on observation_fact");
         try (Connection conn = openDataDatabaseConnection();
-                Statement stmt = conn.createStatement()) {
-            for (String idx : OBX_FACT_IDXS) {
-                if (logger.isLoggable(Level.FINE)) {
-                    logger.log(Level.FINE, "Enabling index: {0}", idx);
-                }
-                stmt.executeUpdate("ALTER INDEX " + idx + " REBUILD");
-            }
-            stmt.executeUpdate("ALTER SESSION SET skip_unusable_indexes = false");
-            logger.log(Level.INFO, "Enabled indices on observation_fact");
-        }
-    }
-
-    private void gatherStatisticsOnObservationFact() throws SQLException {
-        Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, "Gathering statistics on observation_fact");
-        try (Connection conn = openDataDatabaseConnection();
-                CallableStatement stmt = conn.prepareCall("{call dbms_stats.gather_table_stats(?, ?)}")) {
-            stmt.setString(1, this.database.getDataSpec().getUser());
-            stmt.setString(2, "observation_fact");
+                CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_ENABLE_INDEXES()}")) {
             stmt.execute();
-            logger.log(Level.INFO, "Finished gathering statistics on observation_fact");
+            logger.log(Level.INFO, "Enabled indices on observation_fact");
         }
     }
 

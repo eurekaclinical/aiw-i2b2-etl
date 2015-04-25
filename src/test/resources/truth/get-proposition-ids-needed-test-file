@@ -1,0 +1,8 @@
+Encounter
+VitalSign
+ICD9:Diagnoses
+ICD9:Procedures
+LAB:LabTest
+PatientDetails
+Provider
+MED:medications

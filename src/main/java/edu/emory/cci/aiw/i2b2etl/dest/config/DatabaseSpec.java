@@ -1,9 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package edu.emory.cci.aiw.i2b2etl.dest.config;
+
+import org.arp.javautil.sql.ConnectionSpec;
+import org.arp.javautil.sql.DatabaseAPI;
+import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 
 /*
  * #%L
@@ -27,21 +26,15 @@ package edu.emory.cci.aiw.i2b2etl.dest.config;
 
 // this is simply a place for database schema connect information.
 
-public class DatabaseSpec {
-    private final String key;
+public abstract class DatabaseSpec {
     private final String user;
     private final String passwd;
     private final String connect;
 
-    public DatabaseSpec(String key, String user, String passwd, String connect) {
-        this.key = key;
+    DatabaseSpec(String connect, String user, String passwd) {
         this.user = user;
         this.passwd = passwd;
         this.connect = connect;
-    }
-
-    public String getKey() {
-        return key;
     }
 
     public String getUser() {
@@ -54,6 +47,16 @@ public class DatabaseSpec {
 
     public String getConnect() {
         return connect;
+    }
+    
+    public abstract DatabaseAPI getDatabaseAPI();
+    
+    public ConnectionSpec toConnectionSpec() {
+        try {
+            return getDatabaseAPI().newConnectionSpecInstance(getConnect(), getUser(), getPasswd());
+        } catch (InvalidConnectionSpecArguments ex) {
+            throw new AssertionError(ex);
+        }
     }
     
 }

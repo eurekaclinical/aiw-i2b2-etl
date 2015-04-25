@@ -21,6 +21,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  */
 
 import java.sql.Timestamp;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  *
@@ -83,4 +84,9 @@ public class ModifierDimension extends AbstractRecord {
         this.updated = updated;
     }
 
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
+    }
+    
 }

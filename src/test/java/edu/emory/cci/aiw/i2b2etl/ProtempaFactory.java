@@ -19,34 +19,112 @@
  */
 package edu.emory.cci.aiw.i2b2etl;
 
-import java.io.File;
 import java.io.IOException;
-import org.arp.javautil.io.IOUtil;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.sql.Connection;
+import java.sql.SQLException;
+import javax.naming.NamingException;
+import org.arp.javautil.sql.DatabaseAPI;
+import org.arp.javautil.sql.InvalidConnectionSpecArguments;
+import org.dbunit.Assertion;
+import org.dbunit.DatabaseUnitException;
+import org.dbunit.database.DatabaseConnection;
+import org.dbunit.database.IDatabaseConnection;
+import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.xml.FlatDtdWriter;
+import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.protempa.Protempa;
 import org.protempa.ProtempaException;
 import org.protempa.SourceFactory;
-import org.protempa.backend.Configurations;
-import org.protempa.bconfigs.ini4j.INIConfigurations;
+import org.protempa.query.Query;
+import org.protempa.query.QueryBuilder;
 
 /**
  *
  * @author Andrew Post
  */
-public class ProtempaFactory {
-    public Protempa newInstance() throws IOException, ProtempaException {
-        File config = IOUtil.resourceToFile(
-                "/protempa-config/protege-h2-test-config", 
-                "protege-h2-test-config", null);
-        Configurations configurations = 
-                new INIConfigurations(config.getParentFile());
-        SourceFactory sourceFactory = 
-                new SourceFactory(configurations, config.getName());
-        
-        // force the use of the H2 driver so we don't bother trying to load
-        // others
-        System.setProperty("protempa.dsb.relationaldatabase.sqlgenerator",
-                "org.protempa.backend.dsb.relationaldb.H2SQLGenerator");
-        
+public class ProtempaFactory implements AutoCloseable {
+    private final ConfigurationFactory configurationFactory;
+    private final DatabasePopulator databasePopulator;
+
+    public ProtempaFactory(ConfigurationFactory configurationFactory) throws DatabaseUnitException, SQLException, IOException {
+        this.configurationFactory = configurationFactory;
+        this.databasePopulator = new DatabasePopulator();
+        this.databasePopulator.doPopulate();
+    }
+
+    public Protempa newInstance() throws ProtempaException {
+        SourceFactory sourceFactory = new SourceFactory(this.configurationFactory.getProtempaConfiguration());
         return Protempa.newInstance(sourceFactory);
+    }
+
+    public void execute(QueryBuilder queryBuilder) throws IOException, ProtempaException, NamingException, SQLException {
+        try (Protempa protempa = newInstance()) {
+            Query query = protempa.buildQuery(queryBuilder);
+            protempa.execute(query, new I2b2DestinationFactory().getInstance());
+        }
+    }
+
+    public void exportI2b2DataSchema(OutputStream outputStream) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null).getOrCreate()) {
+            IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
+            try {
+                IDataSet dataSet = dbUnitConn.createDataSet();
+                FlatXmlDataSet.write(dataSet, outputStream);
+                dbUnitConn.close();
+                dbUnitConn = null;
+            } finally {
+                if (dbUnitConn != null) {
+                    try {
+                        dbUnitConn.close();
+                    } catch (Exception ignore) {
+                    }
+                }
+            }
+        }
+    }
+    
+    public void exportI2b2DataSchemaDtd(Writer writer) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null).getOrCreate()) {
+            IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
+            try {
+                IDataSet dataSet = dbUnitConn.createDataSet();
+                FlatDtdWriter dtdWriter = new FlatDtdWriter(writer);
+                dtdWriter.write(dataSet);
+                dbUnitConn.close();
+                dbUnitConn = null;
+            } finally {
+                if (dbUnitConn != null) {
+                    try {
+                        dbUnitConn.close();
+                    } catch (Exception ignore) {}
+                }
+            }
+        }
+    }
+
+    public void testTable(String tableName, IDataSet expectedDataSet) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null).getOrCreate()) {
+            IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
+            try {
+                IDataSet actualDataSet = dbUnitConn.createDataSet();
+                Assertion.assertEqualsIgnoreCols(expectedDataSet, actualDataSet, tableName, new String[]{"IMPORT_DATE", "DOWNLOAD_DATE"});
+                dbUnitConn.close();
+                dbUnitConn = null;
+            } finally {
+                if (dbUnitConn != null) {
+                    try {
+                        dbUnitConn.close();
+                    } catch (Exception ignore) {
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.databasePopulator.close();
     }
 }

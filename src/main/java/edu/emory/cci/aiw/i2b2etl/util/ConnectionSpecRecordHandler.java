@@ -25,6 +25,8 @@ import org.arp.javautil.sql.ConnectionSpec;
 
 /**
  *
+ * @param <E> any object representing a database record.
+ * 
  * @author Andrew Post
  */
 public abstract class ConnectionSpecRecordHandler<E> extends RecordHandler<E> {

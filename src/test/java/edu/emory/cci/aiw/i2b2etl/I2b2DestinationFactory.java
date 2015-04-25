@@ -1,8 +1,10 @@
+package edu.emory.cci.aiw.i2b2etl;
+
 /*
  * #%L
  * AIW i2b2 ETL
  * %%
- * Copyright (C) 2012 - 2013 Emory University
+ * Copyright (C) 2012 - 2015 Emory University
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +19,26 @@
  * limitations under the License.
  * #L%
  */
-package edu.emory.cci.aiw.i2b2etl.dest;
 
+import edu.emory.cci.aiw.i2b2etl.dest.I2b2Destination;
+import edu.emory.cci.aiw.i2b2etl.dest.config.xml.XmlFileConfiguration;
 import java.io.File;
 import java.io.IOException;
-import org.arp.javautil.io.IOUtil;
 
 /**
  *
  * @author Andrew Post
  */
-class I2b2ETLConfAsFile {
+public class I2b2DestinationFactory {
+    
     private final File confXML;
 
-    public I2b2ETLConfAsFile() throws IOException {
-        this.confXML = IOUtil.resourceToFile("/conf.xml", "conf", null);
+    public I2b2DestinationFactory() throws IOException {
+        this.confXML = new I2b2ETLConfAsFile().getFile();
     }
     
-    File getFile() {
-        return this.confXML;
+    public I2b2Destination getInstance() {
+        return new I2b2Destination(new XmlFileConfiguration(this.confXML));
     }
+    
 }

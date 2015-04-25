@@ -1583,17 +1583,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                         }
                                     }
                                     Map<String, Map<String, ModInterp>> modInterp = readModInterp(connection);
-                                    List<ValueSetElement> vses = new ArrayList<>();
                                     Map<String, ModInterp> get = modInterp.get(vsSupport.getDeclaringPropId());
-                                    if (get != null) {
+                                    if (get != null && !get.isEmpty()) {
                                         ValueSetElement[] elts = new ValueSetElement[get.size()];
                                         int i = 0;
                                         for (Map.Entry<String, ModInterp> me : get.entrySet()) {
                                             elts[i++] = new ValueSetElement(NominalValue.getInstance(me.getKey()), me.getKey());
                                         }
-                                        if (!vses.isEmpty()) {
-                                            return new ValueSet(id, null, elts, null);
-                                        }
+                                        return new ValueSet(id, null, elts, null);
                                     }
                                     return null;
                                 } catch (SQLException | SAXParseException ex) {

@@ -19,82 +19,31 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import org.protempa.query.QueryMode;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
+import edu.emory.cci.aiw.i2b2etl.AbstractTest;
 
-import org.arp.javautil.arrays.Arrays;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.protempa.CloseException;
-import org.protempa.KnowledgeSource;
 import org.protempa.Protempa;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
-import org.protempa.query.QueryBuildException;
 import org.protempa.query.QueryBuilder;
-import org.protempa.dest.QueryResultsHandlerInitException;
-
-import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
-import edu.emory.cci.aiw.i2b2etl.dest.config.xml.XmlFileConfiguration;
-import org.apache.commons.io.IOUtils;
 import org.protempa.dest.QueryResultsHandler;
-import org.protempa.dest.QueryResultsHandlerCloseException;
-import org.protempa.dest.QueryResultsHandlerProcessingException;
 
 /**
  *
  * @author Andrew Post
  */
-public class GetPropositionIdsNeededTest {
-
-    private static Protempa protempa;
-    private static File confXML;
-    private static Set<String> expectedPropIds;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        protempa = new ProtempaFactory().newInstance();
-        confXML = new I2b2ETLConfAsFile().getFile();
-        expectedPropIds = expectedPropIds();
-    }
+public class GetPropositionIdsNeededTest extends AbstractTest {
 
     @Test
-    public void testPropositionIds() throws
-            QueryResultsHandlerInitException, 
-            QueryResultsHandlerProcessingException, QueryBuildException, 
-            QueryResultsHandlerCloseException {
-        KnowledgeSource knowledgeSource = protempa.getKnowledgeSource();
+    public void testPropositionIds() throws Exception {
         QueryBuilder queryBuilder = new DefaultQueryBuilder();
-        Query query = protempa.buildQuery(queryBuilder);
-        I2b2Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML));
-        try (QueryResultsHandler qrh = 
-                destination.getQueryResultsHandler(query, protempa.getDataSource(), knowledgeSource)) {
-            String[] actualPropIds = qrh.getPropositionIdsNeeded();
-            Assert.assertEquals(expectedPropIds, Arrays.asSet(actualPropIds));
+        try (Protempa protempa = getProtempaFactory().newInstance()) {
+            Query query = protempa.buildQuery(queryBuilder);
+            I2b2Destination destination = getI2b2DestFactory().getInstance();
+            try (QueryResultsHandler qrh = 
+                    destination.getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource())) {
+                assertEqualsStrings("/truth/get-proposition-ids-needed-test-file", qrh.getPropositionIdsNeeded());
+            }
         }
-    }
-
-    @AfterClass
-    public static void tearDown() throws CloseException {
-        if (protempa != null) {
-            protempa.close();
-        }
-    }
-
-    private static Set<String> expectedPropIds() throws IOException {
-        final Set<String> result = new HashSet<>();
-        try (InputStream is
-                = GetPropositionIdsNeededTest.class.getResourceAsStream(
-                        "/get-proposition-ids-needed-test-file")) {
-            result.addAll(IOUtils.readLines(is));
-        }
-
-        return result;
     }
 }

@@ -207,21 +207,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.protempa</groupId>
-            <artifactId>protempa-handler-test</artifactId>
-            <version>1.0.5-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.protempa</groupId>
-            <artifactId>protempa-ksb-protege</artifactId>
-            <version>${protempa.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.protempa</groupId>
-            <artifactId>protempa-tsb-umls</artifactId>
-            <version>${protempa.version}</version>
+            <groupId>org.dbunit</groupId>
+            <artifactId>dbunit</artifactId>
+            <version>2.5.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -229,12 +217,6 @@
             <artifactId>protempa-dsb-relationaldb</artifactId>
             <version>${protempa.version}</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>11.2.0.3</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.protempa</groupId>
@@ -259,6 +241,12 @@
             <artifactId>commons-csv</artifactId>
             <version>1.1</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.185</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

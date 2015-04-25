@@ -1,5 +1,9 @@
+[edu.emory.cci.aiw.i2b2etl.dest.TestDataSourceBackend]
+dataSourceBackendId = Test
+databaseId = jdbc:h2:mem:test;DB_CLOSE_DELAY=-1
+
 [org.protempa.backend.asb.java.JavaAlgorithmBackend]
 
 [edu.emory.cci.aiw.i2b2etl.ksb.I2b2KnowledgeSourceBackend]
 databaseAPI = DATASOURCE
-databaseId = java:/comp/env/jdbc/I2b2DS
+databaseId = java:/comp/env/jdbc/I2b2Meta

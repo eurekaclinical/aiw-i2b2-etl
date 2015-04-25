@@ -11,12 +11,12 @@
         <!-- The name of the metadata table for this project as specified in
              the project's i2b2 project manager configuration. 
         -->
-        <entry key="metaTableName"         value="cardiovascularregistry"/>
+        <entry key="metaTableName"         value="EUREKAPHENOTYPEONTOLOGY"/>
         <!-- The name of the root concept in the term browser. Must be the same
              as the concept name specified in the i2b2 project manager 
              configuration.
         -->
-        <entry key="rootNodeName"          value="Cardiovascular Registry"/>
+        <entry key="rootNodeName"          value="Eureka"/>
         <!-- Whether to truncate the data and metadata tables before loading.
              May be true or false.
         -->
@@ -77,6 +77,8 @@
              a patient's date of birth.
         -->
         <entry key="patientDimensionBirthdate" value="demographics_dob" />
+        
+        <entry key="skipDemographicsHierarchy" value="true"/>
     </dictionary>
 
     <!-- JDBC database connection information for the data schema and the 
@@ -88,8 +90,8 @@
             passwd = database password.
     -->
     <database>
-        <dbschema key="dataschema" connect="jdbc:oracle:thin:@${aiw.i2b2etl.conf.host}:1521/xe" user="${aiw.i2b2etl.conf.data.user}" passwd="${aiw.i2b2etl.conf.data.password}"/>
-        <dbschema key="metaschema" connect="jdbc:oracle:thin:@${aiw.i2b2etl.conf.host}:1521/xe" user="${aiw.i2b2etl.conf.metadata.user}" passwd="${aiw.i2b2etl.conf.metadata.password}"/>
+        <dbschema key="dataschemaDataSource" connect="java:/comp/env/jdbc/I2b2Data"/>
+        <dbschema key="metaschemaDataSource" connect="java:/comp/env/jdbc/I2b2Meta"/>
     </database>
 
     <!-- Specifies the data to load into the observation_fact table. Different
@@ -111,11 +113,11 @@
         <!-- Specifies that propositions referred-to by a visit proposition's
              diagnosisCodes reference should be loaded.
         -->
-        <dataType key="diagnoses" reference="diagnosisCodes"/>
-        <dataType key="meds" reference="medicationHistory"/>
-        <dataType key="labs" reference="labs" units="unitOfMeasure" />
-        <dataType key="procedures" reference="procedures"/>
-        <dataType key="vital" reference="vitals"/>
+        <dataType key="diagnoses" reference="EK_ICD9D"/>
+        <dataType key="meds" reference="EK_MED_ORDERS"/>
+        <dataType key="labs" reference="EK_LABS" units="unitOfMeasure" />
+        <dataType key="procedures" reference="EK_ICD9P"/>
+        <dataType key="vital" reference="EK_VITALS"/>
         <!-- Specifies that the value of every visit proposition's 
              dischargeDisposition property should be loaded.
         -->
@@ -176,19 +178,23 @@
              contents will be the "CPTCode" subtree of the AIW ontology, 
              starting at the second level of the subtree.
         -->
-        <folder displayName="CPT Codes"             skipGen="1" proposition="CPTCode"/>
-        <folder displayName="ICD9 Diagnostic Codes" skipGen="1" proposition="ICD9:Diagnoses"/>
-        <folder displayName="ICD9 Procedure Codes"  skipGen="1" proposition="ICD9:Procedures"/>
-        <folder displayName="Laboratory Tests"      skipGen="1" proposition="LAB:LabTest" valueType="LABORATORY_TESTS" />
+        <!--<folder displayName="CPT Codes"             skipGen="1" proposition="CPTCode"/>-->
+        <folder displayName="ICD9 Diagnostic Codes" skipGen="1" proposition="ICD9:Diagnoses" alreadyLoaded="true">
+            <modifier displayName="Admitting" property="DXSOURCE" value="DXSOURCE:A"/>
+            <modifier displayName="Discharge" property="DXSOURCE" value="DXSOURCE:D"/>
+            <modifier displayName="Diagnosis Priority" codePrefix="DXPRIORITY" property="DXPRIORITY"/>
+        </folder>
+        <folder displayName="ICD9 Procedure Codes"  skipGen="1" proposition="ICD9:Procedures" alreadyLoaded="true"/>
+        <folder displayName="Laboratory Tests"      skipGen="1" proposition="LAB:LabTest" valueType="LABORATORY_TESTS" alreadyLoaded="true" />
         <!-- Creates a folder in the term browser named 
              "Discharge Disposition". Its contents will be the allowed values
              of the dischargeDisposition property of the ENcounter proposition
              definition.
         -->
-        <folder displayName="Discharge Disposition" skipGen="1" proposition="Encounter" property="dischargeDisposition"/>
-        <folder displayName="Medication"            skipGen="3" proposition="MED:medications"/>
-        <folder displayName="Vital Signs"           skipGen="1" proposition="VitalSign"/>
-        <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:EncounterWithSubsequent30DayReadmission"/>
+        <folder displayName="Visit Details" skipGen="1" proposition="Encounter" property="type" alreadyLoaded="true"/>
+        <folder displayName="Medication"            skipGen="3" proposition="MED:medications" alreadyLoaded="true"/>
+        <folder displayName="Vital Signs"           skipGen="1" proposition="VitalSign" alreadyLoaded="true"/>
+        <!--<folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:EncounterWithSubsequent30DayReadmission"/>
         <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:SecondReadmit"/>
         <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:FrequentFlierEncounter"/>
         <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:Chemotherapy180DaysBeforeSurgery"/>
@@ -213,6 +219,6 @@
         <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:SickleCellCrisisEvent"/>
         <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:ThrombocytopeniaEvent"/>
         <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:MetastasisEvent"/>
-        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:HypertensionEvent"/>
+        <folder displayName="Comorbidities" skipGen="0" proposition="DISEASEINDICATOR:HypertensionEvent"/>-->
     </concepts>
 </queryResultsHandler>

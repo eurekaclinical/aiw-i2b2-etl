@@ -19,37 +19,29 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import org.protempa.query.QueryMode;
+import static edu.emory.cci.aiw.i2b2etl.AbstractTest.getProtempaFactory;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.protempa.FinderException;
-import org.protempa.Protempa;
 import org.protempa.ProtempaStartupException;
 import org.protempa.query.DefaultQueryBuilder;
-import org.protempa.query.Query;
 import org.protempa.query.QueryBuildException;
-import org.protempa.dest.test.DatabasePopulator;
-
-import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
-import edu.emory.cci.aiw.i2b2etl.dest.config.xml.XmlFileConfiguration;
-import org.protempa.dest.Destination;
 
 /**
  * Integration tests for the i2b2 ETL. This assumes that there is an i2b2
  * instance somewhere to use for testing. Specify where it is in your
- * settings.xml file (future). 
- * 
+ * settings.xml file (future).
+ *
  * @author Andrew Post
  */
-public class I2b2LoadTestNoDerivedVariables {
+public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2LoadTest {
 
     /**
      * Executes the i2b2 ETL load.
-     * 
+     *
      * @throws ProtempaStartupException if Protempa could not be initialized.
      * @throws IOException if there was a problem reading the Protempa
      * configuration file or the i2b2 query results handler configuration file.
@@ -58,26 +50,17 @@ public class I2b2LoadTestNoDerivedVariables {
      */
     @BeforeClass
     public static void setUp() throws Exception {
-        new DatabasePopulator().doPopulate();
-        try (Protempa protempa = new ProtempaFactory().newInstance()) {
-            File confXML = new I2b2ETLConfAsFile().getFile();
-            
-            DefaultQueryBuilder q = new DefaultQueryBuilder();
-            q.setId("i2b2 ETL Test Query No Derived Variables");
-            
-            Query query = protempa.buildQuery(q);
-            Destination destination = new I2b2Destination(new XmlFileConfiguration(confXML));
-            protempa.execute(query, destination);
+        DefaultQueryBuilder q = new DefaultQueryBuilder();
+        q.setId("i2b2 ETL Test Query No Derived Variables");
+        getProtempaFactory().execute(q);
+        
+        File file = File.createTempFile("i2b2LoadTest", ".xml");
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            getProtempaFactory().exportI2b2DataSchema(out);
+            System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
         }
-
+        
+        setExpectedDataSet("/i2b2LoadNoDerivedVariablesTestData.xml");
     }
 
-    @Test
-    public void testSomeAspectOfI2b2Database() {
-    }
-    
-    @AfterClass
-    public static void shutdown() {
-        //We leave the i2b2 load behind for post-mortum analyses.
-    }
 }
