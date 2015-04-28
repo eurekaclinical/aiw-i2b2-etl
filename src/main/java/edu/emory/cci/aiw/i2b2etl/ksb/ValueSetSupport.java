@@ -63,8 +63,7 @@ final class ValueSetSupport {
     }
 
     void parseId(String id) {
-        try {
-            CSVParser csvParser = CSVParser.parse(id, CSV_FORMAT);
+        try (CSVParser csvParser = CSVParser.parse(id, CSV_FORMAT)) {
             List<CSVRecord> records = csvParser.getRecords();
             if (records.size() != 1) {
                 return;
