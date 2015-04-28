@@ -862,8 +862,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             //stmt.registerOutParameter(1, Types.VARCHAR);
             stmt.execute();
             logger.log(Level.INFO, "Disabled indices on observation_fact");
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 
