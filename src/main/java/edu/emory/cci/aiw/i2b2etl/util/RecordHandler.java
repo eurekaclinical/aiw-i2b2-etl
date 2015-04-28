@@ -23,12 +23,17 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- *
+ * Inserts a record into a database using prepared statements in batch mode.
+ * The actual batch inserts occur in a separate thread.
+ * 
  * @author Andrew Post
  */
 public abstract class RecordHandler<E> implements AutoCloseable {
+    private static final Logger LOGGER = Logger.getLogger(RecordHandler.class.getName());
 
     private boolean inited;
     private int counter = 0;
@@ -40,6 +45,8 @@ public abstract class RecordHandler<E> implements AutoCloseable {
     private Connection cn;
     private final Timestamp importTimestamp;
     private final boolean commit;
+    private final SqlRunner executor;
+    private SQLException sqlExceptionThrownInExecutor;
 
     public RecordHandler(Connection connection, String statement) throws SQLException {
         this(connection, statement, true);
@@ -50,32 +57,27 @@ public abstract class RecordHandler<E> implements AutoCloseable {
         this.statement = statement;
         this.importTimestamp = new Timestamp(System.currentTimeMillis());
         this.commit = commit;
+        this.executor = new SqlRunner();
     }
 
     public void insert(E record) throws SQLException {
+        if (this.sqlExceptionThrownInExecutor != null) {
+            throw new SQLException("Previous call to insert caused the following exception to be thrown: " + this.sqlExceptionThrownInExecutor);
+        }
         if (record != null) {
             try {
                 if (!inited) {
                     ps = cn.prepareStatement(this.statement);
                     inited = true;
+                    this.executor.start();
                 }
-                setParameters(ps, record);
-
-                ps.addBatch();
-                counter++;
-                commitCounter++;
-                if (counter >= batchSize) {
-                    ps.executeBatch();
-                    ps.clearBatch();
-                    counter = 0;
+                synchronized (this.executor) {
+                    setParameters(ps, record);
+                    ps.addBatch();
+                    counter++;
+                    commitCounter++;
+                    this.executor.notify();
                 }
-                if (commitCounter >= commitSize) {
-                    if (commit) {
-                        cn.commit();
-                    }
-                    commitCounter = 0;
-                }
-                ps.clearParameters();
             } catch (SQLException e) {
                 if (ps != null) {
                     try {
@@ -88,6 +90,43 @@ public abstract class RecordHandler<E> implements AutoCloseable {
         }
     }
 
+    private class SqlRunner extends Thread {
+        private volatile boolean stop;
+
+        @Override
+        public void run() {
+            try {
+                while (!isInterrupted() && !stop) {
+                    synchronized (this) {
+                        wait();
+                        if (!stop) {
+                            if (counter >= batchSize) {
+                                ps.executeBatch();
+                                ps.clearBatch();
+                                counter = 0;
+                            }
+                            if (commitCounter >= commitSize) {
+                                if (commit) {
+                                    cn.commit();
+                                }
+                                commitCounter = 0;
+                            }
+                            ps.clearParameters();
+                        }
+                    }
+                }
+            } catch (SQLException ex) {
+                RecordHandler.this.sqlExceptionThrownInExecutor = ex;
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.FINE, "Batch inserter was interrupted: {0}", ex);
+            }
+        }
+        
+        public void requestStop() {
+            this.stop = true;
+        }
+    }
+
     protected abstract void setParameters(PreparedStatement statement, E record) throws SQLException;
 
     protected Connection getConnection() {
@@ -96,8 +135,16 @@ public abstract class RecordHandler<E> implements AutoCloseable {
 
     @Override
     public void close() throws SQLException {
+        if (this.sqlExceptionThrownInExecutor != null) {
+            throw new SQLException("Previous call to insert caused the following exception to be thrown: " + this.sqlExceptionThrownInExecutor);
+        }
         if (this.ps != null) {
             try {
+                synchronized (this.executor) {
+                    this.executor.requestStop();
+                    this.executor.notify();
+                }
+                this.executor.join();
                 if (counter > 0) {
                     ps.executeBatch();
                 }
@@ -106,6 +153,8 @@ public abstract class RecordHandler<E> implements AutoCloseable {
                 }
                 ps.close();
                 ps = null;
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.FINE, "Close was interrupted: {0}", ex);
             } finally {
                 if (ps != null) {
                     try {
