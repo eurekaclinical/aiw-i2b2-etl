@@ -30,10 +30,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.protempa.Attribute;
 import org.protempa.KnowledgeSource;
+import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
 import org.protempa.PropertyDefinition;
@@ -48,28 +48,24 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
     private static final ModifierSpec[] EMPTY_MODIFIER_SPEC_ARRAY = new ModifierSpec[0];
 
     private final SimpleDateFormat valueMetadataCreateDateTimeFormat;
-    private final KnowledgeSource knowledgeSource;
     private final String conceptCode;
     private final Metadata metadata;
     private final ValueTypeCode valueTypeCode;
     private final String createDate;
     private final ModifierSpec[] modifiers;
     private final String[] propIds;
-    private final Map<String, PropositionDefinition> cache;
+    private final KnowledgeSourceCache knowledgeSourceCache;
     private final boolean alreadyLoaded;
     private List<Concept> roots;
 
-    PropositionConceptTreeBuilder(Map<String, PropositionDefinition> cache,
-            KnowledgeSource knowledgeSource,
+    PropositionConceptTreeBuilder(KnowledgeSourceCache knowledgeSourceCache,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
             ModifierSpec[] modifiers, boolean alreadyLoaded, Metadata metadata)
             throws KnowledgeSourceReadException,
             UnknownPropositionDefinitionException {
-        assert knowledgeSource != null : "knowledgeSource cannot be null";
-        assert cache != null : "cache cannot be null";
+        assert knowledgeSourceCache != null : "knowledgeSourceCache cannot be null";
         assert metadata != null : "metadata cannot be null";
         this.propIds = propIds;
-        this.knowledgeSource = knowledgeSource;
         this.conceptCode = conceptCode;
         this.metadata = metadata;
         this.valueTypeCode = valueTypeCode;
@@ -80,7 +76,7 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
         } else {
             this.modifiers = EMPTY_MODIFIER_SPEC_ARRAY;
         }
-        this.cache = cache;
+        this.knowledgeSourceCache = knowledgeSourceCache;
         this.alreadyLoaded = alreadyLoaded;
         this.roots = new ArrayList<>();
     }
@@ -230,7 +226,7 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                         String valueSetId = propertyDef.getValueSetId();
                         if (valueSetId != null) {
                             mXml.append("<DataType>Enum</DataType><EnumValues>");
-                            ValueSet valueSet = this.knowledgeSource.readValueSet(valueSetId);
+                            ValueSet valueSet = this.knowledgeSourceCache.getValueSet(valueSetId);
                             if (valueSet != null) {
                                 for (ValueSetElement vse : valueSet.getValueSetElements()) {
                                     mXml.append("<Val description=\"");
@@ -268,7 +264,7 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
     private PropositionDefinition readPropositionDefinition(String propId)
             throws UnknownPropositionDefinitionException,
             KnowledgeSourceReadException {
-        PropositionDefinition result = cache.get(propId);
+        PropositionDefinition result = knowledgeSourceCache.get(propId);
         if (result != null) {
             return result;
         } else {

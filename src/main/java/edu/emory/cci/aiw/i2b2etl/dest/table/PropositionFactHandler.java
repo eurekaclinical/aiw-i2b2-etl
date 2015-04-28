@@ -38,8 +38,7 @@ import java.util.logging.Level;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.drools.util.StringUtils;
-import org.protempa.KnowledgeSource;
-import org.protempa.KnowledgeSourceReadException;
+import org.protempa.KnowledgeSourceCache;
 import org.protempa.PropertyDefinition;
 import org.protempa.PropositionDefinition;
 import org.protempa.proposition.*;
@@ -57,21 +56,16 @@ public final class PropositionFactHandler extends FactHandler {
     private final LinkTraverser linkTraverser;
     private final Link[] links;
     private final Link[] derivationLinks;
-    private final KnowledgeSource knowledgeSource;
-    private Map<String, PropositionDefinition> cache;
+    private KnowledgeSourceCache cache;
     private final Set<ConceptId> missingConcepts;
 
     public PropositionFactHandler(ConnectionSpec connSpec,
             Link[] links, String propertyName,
             String start, String finish, String unitsPropertyName,
             String[] potentialDerivedPropIds, Metadata metadata,
-            KnowledgeSource knowledgeSource,
-            Map<String, PropositionDefinition> cache,
+            KnowledgeSourceCache cache,
             RejectedFactHandlerFactory rejectedFactHandlerFactory) throws SQLException {
         super(connSpec, propertyName, start, finish, unitsPropertyName, metadata, rejectedFactHandlerFactory);
-        if (knowledgeSource == null) {
-            throw new IllegalArgumentException("knowledgeSource cannot be null");
-        }
         if (cache == null) {
             throw new IllegalArgumentException("cache cannot be null");
         }
@@ -85,7 +79,6 @@ public final class PropositionFactHandler extends FactHandler {
             new Derivation(potentialDerivedPropIds,
             Derivation.Behavior.MULT_FORWARD)
         };
-        this.knowledgeSource = knowledgeSource;
         this.cache = cache;
         this.missingConcepts = new HashSet<>();
     }
@@ -118,28 +111,23 @@ public final class PropositionFactHandler extends FactHandler {
         try {
             props = this.linkTraverser.traverseLinks(this.links, encounterProp,
                     forwardDerivations,
-                    backwardDerivations, references, knowledgeSource);
+                    backwardDerivations, references, this.cache);
             for (Proposition prop : props) {
                 String propertyName = getPropertyName();
                 Value propertyVal = propertyName != null
                         ? prop.getProperty(propertyName) : null;
                 PropDefConceptId conceptId = PropDefConceptId.getInstance(prop.getId(), propertyName, propertyVal, getMetadata());
                 doInsert(conceptId, prop, encounterProp, patient, visit, provider);
-                List<Proposition> derivedProps;
-                try {
-                    derivedProps = this.linkTraverser.traverseLinks(
+                List<Proposition> derivedProps = this.linkTraverser.traverseLinks(
                             this.derivationLinks, prop, forwardDerivations,
                             backwardDerivations, references,
-                            knowledgeSource);
-                } catch (KnowledgeSourceReadException ex) {
-                    throw new InvalidFactException(ex);
-                }
+                            this.cache);
                 for (Proposition derivedProp : derivedProps) {
                     PropDefConceptId derivedConceptId = PropDefConceptId.getInstance(derivedProp.getId(), null, null, getMetadata());
                     doInsert(derivedConceptId, derivedProp, encounterProp, patient, visit, provider);
                 }
             }
-        } catch (KnowledgeSourceReadException | UnknownPropositionDefinitionException ex) {
+        } catch (UnknownPropositionDefinitionException ex) {
             throw new InvalidFactException(ex);
         }
     }

@@ -20,9 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * #L%
  */
 
-import java.util.Map;
-import org.protempa.KnowledgeSource;
-import org.protempa.PropositionDefinition;
+import org.protempa.KnowledgeSourceCache;
 
 /**
  *
@@ -30,8 +28,8 @@ import org.protempa.PropositionDefinition;
  */
 class DemographicsVitalStatusBuilder extends DimensionValueSetFolderBuilder {
 
-    DemographicsVitalStatusBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, Metadata metadata) throws OntologyBuildException {
-        super(knowledgeSource, cache, metadata, "Vital Status", metadata.getSettings().getPatientDimensionVital(), "vital_status_cd");
+    DemographicsVitalStatusBuilder(KnowledgeSourceCache cache, Metadata metadata) throws OntologyBuildException {
+        super(cache, metadata, "Vital Status", metadata.getSettings().getPatientDimensionVital(), "vital_status_cd");
     }
     
 }

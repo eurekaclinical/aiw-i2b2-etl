@@ -86,6 +86,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.protempa.DataSource;
+import org.protempa.KnowledgeSourceCache;
+import org.protempa.KnowledgeSourceCacheFactory;
 import org.protempa.backend.dsb.DataSourceBackend;
 import org.protempa.backend.ksb.KnowledgeSourceBackend;
 
@@ -127,7 +129,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private PatientDimensionFactory patientDimensionFactory;
     private VisitDimensionFactory visitDimensionFactory;
     private final Configuration configuration;
-    private HashMap<String, PropositionDefinition> cache;
+    private KnowledgeSourceCache cache;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -254,10 +256,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         try {
             this.conceptDimensionHandler = new ConceptDimensionHandler(dataConnectionSpec);
             this.modifierDimensionHandler = new ModifierDimensionHandler(dataConnectionSpec);
-            this.cache = new HashMap<>();
-            for (PropositionDefinition pd : propDefs) {
-                this.cache.put(pd.getId(), pd);
-            }
+            this.cache = new KnowledgeSourceCacheFactory().getInstance(this.knowledgeSource, propDefs, true);
             this.ontologyModel = new Metadata(this.qrhId, this.cache, knowledgeSource, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.metadataConnectionSpec);
             this.providerDimensionFactory = new ProviderDimensionFactory(this.ontologyModel, this.settings, this.dataConnectionSpec);
             this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
@@ -724,7 +723,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 PropositionFactHandler propFactHandler
                         = new PropositionFactHandler(this.dataConnectionSpec, links, dataSpec.getPropertyName(),
                                 dataSpec.getStart(), dataSpec.getFinish(), dataSpec.getUnits(),
-                                potentialDerivedPropIdsArr, this.ontologyModel, this.knowledgeSource,
+                                potentialDerivedPropIdsArr, this.ontologyModel,
                                 this.cache,
                                 rejectedFactHandlerFactory);
                 this.factHandlers.add(propFactHandler);

@@ -20,9 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * #L%
  */
 
-import java.util.Map;
-import org.protempa.KnowledgeSource;
-import org.protempa.PropositionDefinition;
+import org.protempa.KnowledgeSourceCache;
 
 /**
  *
@@ -30,8 +28,8 @@ import org.protempa.PropositionDefinition;
  */
 class DemographicsRaceBuilder extends DimensionValueSetFolderBuilder {
 
-    DemographicsRaceBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, Metadata metadata) throws OntologyBuildException {
-        super(knowledgeSource, cache, metadata, "Race", metadata.getSettings().getPatientDimensionRace(), "race_cd");
+    DemographicsRaceBuilder(KnowledgeSourceCache cache, Metadata metadata) throws OntologyBuildException {
+        super(cache, metadata, "Race", metadata.getSettings().getPatientDimensionRace(), "race_cd");
     }
     
 }

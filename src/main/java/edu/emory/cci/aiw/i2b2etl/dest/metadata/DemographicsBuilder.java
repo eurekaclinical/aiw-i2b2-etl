@@ -20,9 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * #L%
  */
 
-import java.util.Map;
-import org.protempa.KnowledgeSource;
-import org.protempa.PropositionDefinition;
+import org.protempa.KnowledgeSourceCache;
 
 /**
  *
@@ -31,17 +29,17 @@ import org.protempa.PropositionDefinition;
 public class DemographicsBuilder extends ParentBuilder implements SubtreeBuilder {
     private Concept root;
 
-    public DemographicsBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, Metadata metadata) throws OntologyBuildException {
+    public DemographicsBuilder(KnowledgeSourceCache cache, Metadata metadata) throws OntologyBuildException {
         super(metadata, "Demographics", 
                 MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics", 
                 metadata.getSettings().getSkipDemographicsHierarchy(),
                 new DemographicsAgeBuilder(metadata),
-                new DemographicsGenderBuilder(knowledgeSource, cache, metadata),
-                new DemographicsLanguageBuilder(knowledgeSource, cache, metadata),
-                new DemographicsMaritalStatusBuilder(knowledgeSource, cache, metadata),
-                new DemographicsRaceBuilder(knowledgeSource, cache, metadata),
-                new DemographicsReligionBuilder(knowledgeSource, cache, metadata),
-                new DemographicsVitalStatusBuilder(knowledgeSource, cache, metadata));
+                new DemographicsGenderBuilder(cache, metadata),
+                new DemographicsLanguageBuilder(cache, metadata),
+                new DemographicsMaritalStatusBuilder(cache, metadata),
+                new DemographicsRaceBuilder(cache, metadata),
+                new DemographicsReligionBuilder(cache, metadata),
+                new DemographicsVitalStatusBuilder(cache, metadata));
     }
 
     @Override

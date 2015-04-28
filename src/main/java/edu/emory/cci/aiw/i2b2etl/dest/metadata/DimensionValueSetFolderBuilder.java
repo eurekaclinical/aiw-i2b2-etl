@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.protempa.KnowledgeSource;
+import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropertyDefinition;
 import org.protempa.PropositionDefinition;
@@ -47,27 +48,24 @@ import org.protempa.valueset.ValueSetElement;
 abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
 
     private final PropositionDefinition propDef;
-    private final KnowledgeSource knowledgeSource;
     private final Data dataSection;
     private final Metadata metadata;
     private final String sourceSystemCode;
     private final String tableName;
     private final String factTableColumn;
-    private final Map<String, PropositionDefinition> cache;
+    private final KnowledgeSourceCache cache;
     private final String childName;
     private final String dictVal;
     private final String columnName;
     private final Settings settings;
 
-    DimensionValueSetFolderBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, Metadata metadata, String childName, String dictVal, String columnName) throws OntologyBuildException {
-        assert knowledgeSource != null : "knowledgeSource cannot be null";
+    DimensionValueSetFolderBuilder(KnowledgeSourceCache cache, Metadata metadata, String childName, String dictVal, String columnName) throws OntologyBuildException {
         assert cache != null : "cache cannot be null";
         assert metadata != null : "metadata cannot be null";
         assert childName != null : "childName cannot be null";
         assert columnName != null : "columnName cannot be null";
 
         this.cache = cache;
-        this.knowledgeSource = knowledgeSource;
         this.dataSection = metadata.getDataSection();
         this.metadata = metadata;
         this.sourceSystemCode = metadata.getSourceSystemCode();
@@ -148,7 +146,7 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
                 String valueSetId = propertyDef.getValueSetId();
                 if (valueSetId != null) {
                     ValueSet valueSet
-                            = this.knowledgeSource.readValueSet(valueSetId);
+                            = this.cache.getValueSet(valueSetId);
                     ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
                     for (ValueSetElement valueSetElement : valueSetElements) {
                         Value valueSetElementVal = valueSetElement.getValue();

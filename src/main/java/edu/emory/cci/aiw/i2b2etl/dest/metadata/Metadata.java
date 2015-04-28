@@ -51,6 +51,7 @@ import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.collections.Collections;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.KnowledgeSource;
+import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
 import org.protempa.proposition.value.Value;
@@ -109,7 +110,7 @@ public final class Metadata {
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
     private final String sourceSystemCode;
     private final ProviderConceptTreeBuilder providerConceptTreeBuilder;
-    private final Map<String, PropositionDefinition> cache;
+    private final KnowledgeSourceCache cache;
     private final FolderSpec[] folderSpecs;
     private final List<Concept> modifierRoots;
     private final List<Concept> allRoots;
@@ -129,7 +130,7 @@ public final class Metadata {
      * @param dataSection
      * @throws OntologyBuildException
      */
-    public Metadata(String sourceSystemCode, Map<String, PropositionDefinition> cache, KnowledgeSource knowledgeSource,
+    public Metadata(String sourceSystemCode, KnowledgeSourceCache cache, KnowledgeSource knowledgeSource,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
@@ -186,8 +187,8 @@ public final class Metadata {
             constructTreePre();
 
             SubtreeBuilder[] builders = {
-                new PhenotypesBuilder(this.cache, this.knowledgeSource, this),
-                new DemographicsBuilder(this.knowledgeSource, this.cache, this),
+                new PhenotypesBuilder(this.cache, this),
+                new DemographicsBuilder(this.cache, this),
                 this.providerConceptTreeBuilder
             };
             for (SubtreeBuilder builder : builders) {
@@ -425,7 +426,7 @@ public final class Metadata {
             UnknownPropositionDefinitionException, OntologyBuildException {
         if (folderSpec.getProperty() == null) {
             PropositionConceptTreeBuilder propProxy
-                    = new PropositionConceptTreeBuilder(this.cache, this.knowledgeSource,
+                    = new PropositionConceptTreeBuilder(this.cache,
                             folderSpec.getPropositions(), folderSpec.getConceptCodePrefix(),
                             folderSpec.getValueType(), folderSpec.getModifiers(),
                             folderSpec.isAlreadyLoaded(), this);
@@ -458,8 +459,7 @@ public final class Metadata {
                     }
                 }
                 ValueSetConceptTreeBuilder vsProxy
-                        = new ValueSetConceptTreeBuilder(this.knowledgeSource,
-                                this.cache,
+                        = new ValueSetConceptTreeBuilder(this.cache,
                                 folderSpec.getPropositions(), folderSpec.getProperty(),
                                 folderSpec.getConceptCodePrefix(), this);
                 vsProxy.build(concept);

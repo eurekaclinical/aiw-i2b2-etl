@@ -22,8 +22,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
-import java.util.Map;
-import org.protempa.KnowledgeSource;
+import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropertyDefinition;
 import org.protempa.PropositionDefinition;
@@ -33,18 +32,18 @@ import org.protempa.valueset.ValueSetElement;
 
 class ValueSetConceptTreeBuilder implements OntologyBuilder {
 
-    private final KnowledgeSource knowledgeSource;
     private final String propertyName;
     private final String conceptCodePrefix;
     private final PropositionDefinition[] rootPropositionDefinitions;
     private final Metadata metadata;
+    private final KnowledgeSourceCache cache;
 
-    ValueSetConceptTreeBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, String[] propIds, String property,
+    ValueSetConceptTreeBuilder(KnowledgeSourceCache cache, String[] propIds, String property,
             String conceptCodePrefix, Metadata metadata) throws KnowledgeSourceReadException, UnknownPropositionDefinitionException {
-        assert knowledgeSource != null : "knowledgeSource cannot be null";
+        assert cache != null : "cache cannot be null";
         ProtempaUtil.checkArray(propIds, "propIds");
         assert metadata != null : "metadata cannot be null";
-        this.knowledgeSource = knowledgeSource;
+        this.cache = cache;
         this.propertyName = property;
         this.conceptCodePrefix = conceptCodePrefix;
         this.rootPropositionDefinitions
@@ -75,7 +74,7 @@ class ValueSetConceptTreeBuilder implements OntologyBuilder {
                 PropertyDefinition propertyDef
                         = propDefinition.propertyDefinition(propertyName);
                 ValueSet valueSet
-                        = knowledgeSource.readValueSet(propertyDef.getValueSetId());
+                        = this.cache.getValueSet(propertyDef.getValueSetId());
                 ValueSetElement[] vse = valueSet.getValueSetElements();
                 for (ValueSetElement e : vse) {
                     Concept vsEltConcept = new Concept(PropDefConceptId.getInstance(
@@ -92,7 +91,7 @@ class ValueSetConceptTreeBuilder implements OntologyBuilder {
                     concept.add(root);
                 }
             }
-        } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
+        } catch (InvalidConceptCodeException ex) {
             throw new OntologyBuildException("Could not build value set concept tree", ex);
         }
     }

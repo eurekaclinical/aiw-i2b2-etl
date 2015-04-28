@@ -20,9 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
  * #L%
  */
 
-import java.util.Map;
-import org.protempa.KnowledgeSource;
-import org.protempa.PropositionDefinition;
+import org.protempa.KnowledgeSourceCache;
 
 /**
  *
@@ -30,8 +28,8 @@ import org.protempa.PropositionDefinition;
  */
 class DemographicsMaritalStatusBuilder extends DimensionValueSetFolderBuilder {
 
-    DemographicsMaritalStatusBuilder(KnowledgeSource knowledgeSource, Map<String, PropositionDefinition> cache, Metadata metadata) throws OntologyBuildException {
-        super(knowledgeSource, cache, metadata, "Marital Status", metadata.getSettings().getPatientDimensionMaritalStatus(), "marital_status_cd");
+    DemographicsMaritalStatusBuilder(KnowledgeSourceCache cache, Metadata metadata) throws OntologyBuildException {
+        super(cache, metadata, "Marital Status", metadata.getSettings().getPatientDimensionMaritalStatus(), "marital_status_cd");
     }
     
 }

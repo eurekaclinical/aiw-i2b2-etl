@@ -23,9 +23,8 @@ import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeExcep
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.SimpleConceptId;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import org.protempa.KnowledgeSource;
+import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
 
@@ -38,8 +37,8 @@ class PhenotypesBuilder extends PropositionConceptTreeBuilder implements Subtree
     private final String sourceSystemCode;
     private Concept concept;
 
-    PhenotypesBuilder(Map<String, PropositionDefinition> cache, KnowledgeSource knowledgeSource, Metadata metadata) throws KnowledgeSourceReadException, UnknownPropositionDefinitionException {
-        super(cache, knowledgeSource, phenotypePropIds(metadata), null, null, null, false, metadata);
+    PhenotypesBuilder(KnowledgeSourceCache cache, Metadata metadata) throws KnowledgeSourceReadException, UnknownPropositionDefinitionException {
+        super(cache, phenotypePropIds(metadata), null, null, null, false, metadata);
         this.sourceSystemCode = metadata.getSourceSystemCode();
     }
 
