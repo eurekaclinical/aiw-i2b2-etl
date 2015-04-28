@@ -40,6 +40,7 @@ import org.protempa.backend.annotations.BackendProperty;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -79,7 +80,7 @@ import org.xml.sax.XMLReader;
 @BackendInfo(displayName = "I2b2 Knowledge Source Backend")
 public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBackend {
 
-    private static final Logger logger = Logger.getLogger(I2b2KnowledgeSourceBackend.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(I2b2KnowledgeSourceBackend.class.getName());
     private static final char DEFAULT_DELIMITER = '\t';
     private static final ConceptProperty[] DEFAULT_CONCEPT_PROPERTIES_ARR = new ConceptProperty[0];
     private static final Properties visitPropositionProperties;
@@ -226,6 +227,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private final BackendSourceIdFactory sourceIdFactory;
     private String patientPatientIdPropertyName;
     private String patientDetailsPatientIdPropertyName;
+    private Map<String, Map<String, ModInterp>> modInterpCached;
+    private final String modInterpCachedSyncVariable = "MOD_INTERP_CACHED_SYNC";
 
     public I2b2KnowledgeSourceBackend() {
         this.querySupport = new QuerySupport();
@@ -1204,8 +1207,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public PropositionDefinition readPropositionDefinition(String id) throws KnowledgeSourceReadException {
-        if (logger.isLoggable(Level.FINEST)) {
-            logger.log(Level.FINEST, "Looking for proposition {0}", id);
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.log(Level.FINEST, "Looking for proposition {0}", id);
         }
 
         if (id != null) {
@@ -1223,11 +1226,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
 
             if (result != null) {
-                logger.log(Level.FINEST, "Found proposition id: {0}", id);
+                LOGGER.log(Level.FINEST, "Found proposition id: {0}", id);
 
                 return result;
             }
-            logger.log(Level.FINER, "Failed to find proposition id: {0}", id);
+            LOGGER.log(Level.FINER, "Failed to find proposition id: {0}", id);
         }
         return null;
     }
@@ -1475,8 +1478,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public TemporalPropositionDefinition readTemporalPropositionDefinition(String id) throws KnowledgeSourceReadException {
-        if (logger.isLoggable(Level.FINEST)) {
-            logger.log(Level.FINEST, "Looking for proposition {0}", id);
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.log(Level.FINEST, "Looking for proposition {0}", id);
         }
 
         if (id != null) {
@@ -1488,10 +1491,10 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
 
             if (result != null) {
-                logger.log(Level.FINEST, "Found proposition id: {0}", id);
+                LOGGER.log(Level.FINEST, "Found proposition id: {0}", id);
                 return result;
             }
-            logger.log(Level.FINER, "Failed to find proposition id: {0}", id);
+            LOGGER.log(Level.FINER, "Failed to find proposition id: {0}", id);
         }
         return null;
     }
@@ -1531,6 +1534,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     @Override
     public String[] readSubContextOfs(String propId) throws KnowledgeSourceReadException {
         return ArrayUtils.EMPTY_STRING_ARRAY;
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        synchronized (this.modInterpCachedSyncVariable) {
+            this.modInterpCached = null;
+        }
     }
 
     private final QueryConstructor READ_ONE_PROPERTY_DEF_QUERY_CONSTRUCTOR = new QueryConstructor() {
@@ -2271,43 +2282,35 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
     }
 
-    private final QueryConstructor MODIFIER_INTERP_QUERY_CONSTRUCTOR = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT DECLARING_CONCEPT, C_BASECODE, PROPERTYNAME, DISPLAYNAME FROM EK_MODIFIER_INTERP");
-        }
-    };
-
     private Map<String, Map<String, ModInterp>> readModInterp(Connection connection) throws KnowledgeSourceReadException {
-        final Map<String, Map<String, ModInterp>> modInterp;
-        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, MODIFIER_INTERP_QUERY_CONSTRUCTOR)) {
-            modInterp = queryExecutor.execute(new ResultSetReader<Map<String, Map<String, ModInterp>>>() {
-
-                @Override
-                public Map<String, Map<String, ModInterp>> read(ResultSet rs) throws KnowledgeSourceReadException {
-                    try {
-                        Map<String, Map<String, ModInterp>> modInterp = new HashMap<>();
-                        while (rs.next()) {
-                            String declaringSymbol = rs.getString(1);
-                            String propertySymbol = rs.getString(2);
-                            String propertyName = rs.getString(3);
-                            String displayName = rs.getString(4);
-                            Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
-                            if (modInterpVal == null) {
-                                modInterpVal = new HashMap<>();
-                                modInterp.put(declaringSymbol, modInterpVal);
-                            }
-                            modInterpVal.put(propertySymbol, new ModInterp(propertyName, displayName));
+        synchronized (this.modInterpCachedSyncVariable) {
+            if (this.modInterpCached == null) {
+                Map<String, Map<String, ModInterp>> modInterp = new HashMap<>();
+                LOGGER.fine("Getting modifier information from EK_MODIFIER_INTERP");
+                try (Connection conn = connection != null ? connection : this.querySupport.getConnection();
+                        Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT DECLARING_CONCEPT, C_BASECODE, PROPERTYNAME, DISPLAYNAME FROM EK_MODIFIER_INTERP")) {
+                    while (rs.next()) {
+                        String declaringSymbol = rs.getString(1);
+                        String propertySymbol = rs.getString(2);
+                        String propertyName = rs.getString(3);
+                        String displayName = rs.getString(4);
+                        Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
+                        if (modInterpVal == null) {
+                            modInterpVal = new HashMap<>();
+                            modInterp.put(declaringSymbol, modInterpVal);
                         }
-                        return modInterp;
-                    } catch (SQLException ex) {
-                        throw new KnowledgeSourceReadException(ex);
+                        modInterpVal.put(propertySymbol, new ModInterp(propertyName, displayName));
                     }
+                } catch (InvalidConnectionSpecArguments | SQLException ex) {
+                    throw new KnowledgeSourceReadException(ex);
                 }
-            });
+                LOGGER.fine("Done!");
+
+                this.modInterpCached = modInterp;
+            }
         }
-        return modInterp;
+        return this.modInterpCached;
     }
 
     private static ValueSet parseValueSet(String valueSetId, String vses) {

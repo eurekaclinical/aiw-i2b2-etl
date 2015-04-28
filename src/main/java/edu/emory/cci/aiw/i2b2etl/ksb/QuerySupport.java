@@ -40,11 +40,13 @@ class QuerySupport {
     private String password;
     private ConnectionSpec connectionSpecInstance;
     private String excludeTableName;
+    private TableAccessReader ontTableReader;
     private String eurekaIdColumn;
 
     QuerySupport() {
          this.databaseApi = DatabaseAPI.DRIVERMANAGER;
          this.eurekaIdColumn = DEFAULT_EUREKA_ID_COLUMN;
+         this.ontTableReader = new TableAccessReader(null);
     }
 
     String getEurekaIdColumn() {
@@ -97,6 +99,7 @@ class QuerySupport {
 
     void setExcludeTableName(String excludeTableName) {
         this.excludeTableName = excludeTableName;
+        this.ontTableReader = new TableAccessReader(excludeTableName);
     }
     
     Connection getConnection() throws InvalidConnectionSpecArguments, SQLException {
@@ -105,7 +108,7 @@ class QuerySupport {
     
     ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         try {
-            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, this.excludeTableName);
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, this.ontTableReader);
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
@@ -113,7 +116,7 @@ class QuerySupport {
     
     QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         if (connection != null) {
-            return new QueryExecutor(connection, queryConstructor, this.excludeTableName);
+            return new QueryExecutor(connection, queryConstructor, this.ontTableReader);
         } else {
             return getQueryExecutorInstance(queryConstructor);
         }

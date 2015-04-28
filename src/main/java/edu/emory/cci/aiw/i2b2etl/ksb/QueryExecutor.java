@@ -29,8 +29,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
@@ -38,7 +36,7 @@ import org.protempa.KnowledgeSourceReadException;
 
 /**
  *
- * @author arpost
+ * @author Andrew Post
  */
 public class QueryExecutor implements AutoCloseable {
 
@@ -54,14 +52,14 @@ public class QueryExecutor implements AutoCloseable {
     private Connection connection;
     private String sql;
     private PreparedStatement preparedStatement;
-    private List<String> ontTables;
+    private String[] ontTables;
     private final QueryConstructor queryConstructor;
-    private final String excludeTableName;
+    private final TableAccessReader ontTableReader;
 
-    public QueryExecutor(Connection connection, QueryConstructor queryConstructor, String excludeTableName) {
+    public QueryExecutor(Connection connection, QueryConstructor queryConstructor, TableAccessReader ontTableReader) {
         this.connection = connection;
         this.queryConstructor = queryConstructor;
-        this.excludeTableName = excludeTableName;
+        this.ontTableReader = ontTableReader;
     }
 
     public <E extends Object> E execute(ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
@@ -91,7 +89,7 @@ public class QueryExecutor implements AutoCloseable {
             readOntologyTables();
             prepare();
             int j = 1;
-            for (int i = 0, n = this.ontTables.size(); i < n; i++) {
+            for (int i = 0, n = this.ontTables.length; i < n; i++) {
                 j = paramSetter.set(this.preparedStatement, j);
             }
             try (ResultSet rs = this.preparedStatement.executeQuery()) {
@@ -124,17 +122,17 @@ public class QueryExecutor implements AutoCloseable {
                 openConnection();
                 readOntologyTables();
                 StringBuilder sql = new StringBuilder();
-                if (this.ontTables.size() > 1) {
+                if (this.ontTables.length > 1) {
                     sql.append('(');
                 }
-                for (int i = 0, n = this.ontTables.size(); i < n; i++) {
-                    String table = this.ontTables.get(i);
+                for (int i = 0, n = this.ontTables.length; i < n; i++) {
+                    String table = this.ontTables[i];
                     if (i > 0) {
                         sql.append(") UNION ALL (");
                     }
                     this.queryConstructor.appendStatement(sql, table);
                 }
-                if (this.ontTables.size() > 1) {
+                if (this.ontTables.length > 1) {
                     sql.append(')');
                 }
                 this.sql = sql.toString();
@@ -152,29 +150,6 @@ public class QueryExecutor implements AutoCloseable {
     }
 
     private void readOntologyTables() throws KnowledgeSourceReadException {
-        if (this.ontTables == null) {
-            StringBuilder query = new StringBuilder();
-            query.append("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS");
-            if (this.excludeTableName != null) {
-                query.append(" WHERE C_TABLE_NAME <> ?");
-            }
-            try (PreparedStatement stmt = this.connection.prepareStatement(query.toString())) {
-                if (this.excludeTableName != null) {
-                    stmt.setString(1, this.excludeTableName);
-                }
-                try (ResultSet rs = stmt.executeQuery()) {
-                    List<String> tables = new ArrayList<>();
-                    while (rs.next()) {
-                        tables.add(rs.getString(1));
-                    }
-                    if (tables.isEmpty()) {
-                        throw new KnowledgeSourceReadException("No metadata tables found!");
-                    }
-                    this.ontTables = tables;
-                }
-            } catch (SQLException ex) {
-                throw new KnowledgeSourceReadException(ex);
-            }
-        }
+        this.ontTables = this.ontTableReader.read(this.connection);
     }
 }

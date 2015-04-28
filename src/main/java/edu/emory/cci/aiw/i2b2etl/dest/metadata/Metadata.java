@@ -27,6 +27,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.table.ProviderDimension;
+import edu.emory.cci.aiw.i2b2etl.ksb.TableAccessReader;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryConstructor;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryExecutor;
 import edu.emory.cci.aiw.i2b2etl.ksb.ResultSetReader;
@@ -217,7 +218,7 @@ public final class Metadata {
 
     private void setI2B2PathsToConcepts() throws OntologyBuildException {
         if (this.metaConnectionSpec != null) {
-            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, this.settings.getMetaTableName())) {
+            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, new TableAccessReader(this.settings.getMetaTableName()))) {
                 Map<String, List<String>> result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
 
                     @Override
