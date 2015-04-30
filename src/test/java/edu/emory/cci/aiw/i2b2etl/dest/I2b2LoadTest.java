@@ -20,8 +20,6 @@
 package edu.emory.cci.aiw.i2b2etl.dest;
 
 import static edu.emory.cci.aiw.i2b2etl.AbstractTest.getProtempaFactory;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.junit.BeforeClass;
