@@ -32,6 +32,7 @@ import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.SortedDataSet;
 import org.dbunit.dataset.xml.FlatDtdWriter;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.protempa.Protempa;
@@ -109,7 +110,7 @@ public class ProtempaFactory implements AutoCloseable {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet actualDataSet = dbUnitConn.createDataSet();
-                Assertion.assertEqualsIgnoreCols(expectedDataSet, actualDataSet, tableName, new String[]{"IMPORT_DATE", "DOWNLOAD_DATE"});
+                Assertion.assertEqualsIgnoreCols(new SortedDataSet(expectedDataSet), new SortedDataSet(actualDataSet), tableName, new String[]{"IMPORT_DATE", "DOWNLOAD_DATE"});
                 dbUnitConn.close();
                 dbUnitConn = null;
             } finally {
