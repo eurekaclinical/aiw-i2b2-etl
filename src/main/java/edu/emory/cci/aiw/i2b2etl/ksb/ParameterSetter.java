@@ -27,6 +27,6 @@ import java.sql.SQLException;
  *
  * @author Andrew Post
  */
-interface ParameterSetter {
+public interface ParameterSetter {
     int set(PreparedStatement stmt, int j) throws SQLException;
 }

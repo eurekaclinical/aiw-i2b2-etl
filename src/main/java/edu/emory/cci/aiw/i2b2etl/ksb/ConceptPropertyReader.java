@@ -46,7 +46,7 @@ class ConceptPropertyReader {
         @Override
         public ValueSetElement[] read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
-                if (rs.next()) {
+                if (rs != null && rs.next()) {
                     int c_hlevel = rs.getInt(1);
                     String fullName = rs.getString(2);
                     return readLevelFromDatabaseHelper(c_hlevel, fullName, 1);
@@ -128,13 +128,14 @@ class ConceptPropertyReader {
                         @Override
                         public ValueSetElement[] read(ResultSet rs) throws KnowledgeSourceReadException {
                             List<ValueSetElement> result = new ArrayList<>();
-                            try {
-                                while (rs.next()) {
-                                    result.add(new ValueSetElement(NominalValue.getInstance(rs.getString(1)), rs.getString(2), null));
+                            if (rs != null)
+                                try {
+                                    while (rs.next()) {
+                                        result.add(new ValueSetElement(NominalValue.getInstance(rs.getString(1)), rs.getString(2), null));
+                                    }
+                                } catch (SQLException ex) {
+                                    throw new KnowledgeSourceReadException(ex);
                                 }
-                            } catch (SQLException ex) {
-                                throw new KnowledgeSourceReadException(ex);
-                            }
                             return result.toArray(new ValueSetElement[result.size()]);
                         }
                     });

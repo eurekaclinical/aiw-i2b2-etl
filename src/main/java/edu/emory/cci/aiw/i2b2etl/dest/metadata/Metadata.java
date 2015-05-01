@@ -218,19 +218,22 @@ public final class Metadata {
     };
 
     private void setI2B2PathsToConcepts() throws OntologyBuildException {
+        Map<String, List<String>> result;
         if (this.metaConnectionSpec != null) {
             try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, new TableAccessReader(this.settings.getMetaTableName()))) {
-                Map<String, List<String>> result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
+                result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
 
                     @Override
                     public Map<String, List<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
                         Map<String, List<String>> result = new HashMap<>();
-                        try {
-                            while (rs.next()) {
-                                Collections.putList(result, rs.getString(1), rs.getString(2));
+                        if (rs != null) {
+                            try {
+                                while (rs.next()) {
+                                    Collections.putList(result, rs.getString(1), rs.getString(2));
+                                }
+                            } catch (SQLException ex) {
+                                throw new KnowledgeSourceReadException(ex);
                             }
-                        } catch (SQLException ex) {
-                            throw new KnowledgeSourceReadException(ex);
                         }
                         return result;
                     }
@@ -241,22 +244,21 @@ public final class Metadata {
                         for (String path : get) {
                             concept.addHierarchyPath(path);
                         }
-                    } else {
-                        concept.addHierarchyPath(concept.getFullName());
                     }
                 }
             } catch (KnowledgeSourceReadException | SQLException ex) {
                 throw new OntologyBuildException(ex);
             }
         } else {
-            for (Concept c : getAllRoots()) {
-                Enumeration<Concept> emu = c.breadthFirstEnumeration();
-                while (emu.hasMoreElements()) {
-                    Concept concept = emu.nextElement();
-                    Concept conceptFromCache = getFromIdCache(concept.getId());
-                    if (conceptFromCache != null) {
-                        conceptFromCache.addHierarchyPath(concept.getFullName());
-                    }
+            result = new HashMap<>();
+        }
+        for (Concept c : getAllRoots()) {
+            Enumeration<Concept> emu = c.breadthFirstEnumeration();
+            while (emu.hasMoreElements()) {
+                Concept concept = emu.nextElement();
+                Concept conceptFromCache = getFromIdCache(concept.getId());
+                if (conceptFromCache != null && !result.containsKey(conceptFromCache.getSymbol())) {
+                    conceptFromCache.addHierarchyPath(concept.getFullName());
                 }
             }
         }

@@ -1286,8 +1286,10 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public Set<String> read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
                 Set<String> result = new HashSet<>();
-                while (rs.next()) {
-                    result.add(rs.getString(1));
+                if (rs != null) {
+                    while (rs.next()) {
+                        result.add(rs.getString(1));
+                    }
                 }
                 return result;
             } catch (SQLException ex) {
@@ -1372,14 +1374,17 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         @Override
         public List<Root> read(ResultSet rs) throws KnowledgeSourceReadException {
             List<Root> result = new ArrayList<>();
-            try {
-                while (rs.next()) {
-                    result.add(new Root(rs.getString(1), rs.getString(2), rs.getString(3)));
+            if (rs != null) {
+                try {
+                    while (rs.next()) {
+                        result.add(new Root(rs.getString(1), rs.getString(2), rs.getString(3)));
+                    }
+
+                } catch (SQLException ex) {
+                    throw new KnowledgeSourceReadException(ex);
                 }
-                return result;
-            } catch (SQLException ex) {
-                throw new KnowledgeSourceReadException(ex);
             }
+            return result;
         }
 
     };
@@ -1578,7 +1583,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                             @Override
                             public ValueSet read(ResultSet rs) throws KnowledgeSourceReadException {
                                 try {
-                                    if (rs.next()) {
+                                    if (rs != null && rs.next()) {
                                         Clob clob = rs.getClob(2);
                                         if (clob != null) {
                                             CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
@@ -1623,13 +1628,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public Collection<String> read(ResultSet rs) throws KnowledgeSourceReadException {
             List<String> result = new ArrayList<>();
             try {
-                while (rs.next()) {
-                    result.add(rs.getString(1));
+                if (rs != null) {
+                    while (rs.next()) {
+                        result.add(rs.getString(1));
+                    }
                 }
-                return result;
             } catch (SQLException ex) {
                 throw new KnowledgeSourceReadException(ex);
             }
+            return result;
         }
     };
 
@@ -1971,57 +1978,59 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         @Override
         public Map<String, List<PropertyDefinition>> read(ResultSet rs) throws KnowledgeSourceReadException {
             Map<String, List<PropertyDefinition>> result = new HashMap<>();
-            try {
-                CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                Map<String, Map<String, ModInterp>> modInterp;
-                try (Connection connection = querySupport.getConnection()) {
-                    modInterp = readModInterp(connection);
-                } catch (InvalidConnectionSpecArguments ex) {
+            if (rs != null) {
+                try {
+                    CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
+                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
+                    Map<String, Map<String, ModInterp>> modInterp;
+                    try (Connection connection = querySupport.getConnection()) {
+                        modInterp = readModInterp(connection);
+                    } catch (InvalidConnectionSpecArguments ex) {
+                        throw new KnowledgeSourceReadException(ex);
+                    }
+                    Set<List<String>> propertyDefUids = new HashSet<>();
+                    while (rs.next()) {
+                        String declaringConceptSymbol = rs.getString(5);
+                        String conceptSymbol = rs.getString(4);
+                        String symbol = rs.getString(3);
+                        String name = rs.getString(1); // the display name
+                        if (name == null) {
+                            throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
+                        }
+                        Clob clob = rs.getClob(6);
+                        valueMetadataParser.setDeclaringPropId(declaringConceptSymbol);
+                        valueMetadataParser.setConceptBaseCode(symbol);
+                        valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
+                        ValueType valueType = valueMetadataParser.getValueType();
+
+                        Map<String, ModInterp> get = modInterp.get(declaringConceptSymbol);
+                        if (get != null) {
+                            ModInterp get1 = get.get(symbol);
+                            if (get1 != null && get1.getPropertyName() != null) {
+                                symbol = get1.getPropertyName();
+                            }
+                            if (get1 != null && get1.getDisplayName() != null) {
+                                name = get1.getDisplayName();
+                            }
+                            if (get1 != null) {
+                                valueType = ValueType.NOMINALVALUE;
+                            }
+                        }
+                        if (get != null || clob != null) {
+                            List<String> l = new ArrayList<>(2);
+                            l.add(conceptSymbol);
+                            l.add(symbol);
+                            if (propertyDefUids.add(l)) {
+                                ValueSetSupport vsSupport = new ValueSetSupport();
+                                vsSupport.setPropertyName(symbol);
+                                vsSupport.setDeclaringPropId(declaringConceptSymbol);
+                                Collections.putList(result, conceptSymbol, new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
+                            }
+                        }
+                    }
+                } catch (SQLException ex) {
                     throw new KnowledgeSourceReadException(ex);
                 }
-                Set<List<String>> propertyDefUids = new HashSet<>();
-                while (rs.next()) {
-                    String declaringConceptSymbol = rs.getString(5);
-                    String conceptSymbol = rs.getString(4);
-                    String symbol = rs.getString(3);
-                    String name = rs.getString(1); // the display name
-                    if (name == null) {
-                        throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
-                    }
-                    Clob clob = rs.getClob(6);
-                    valueMetadataParser.setDeclaringPropId(declaringConceptSymbol);
-                    valueMetadataParser.setConceptBaseCode(symbol);
-                    valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
-                    ValueType valueType = valueMetadataParser.getValueType();
-
-                    Map<String, ModInterp> get = modInterp.get(declaringConceptSymbol);
-                    if (get != null) {
-                        ModInterp get1 = get.get(symbol);
-                        if (get1 != null && get1.getPropertyName() != null) {
-                            symbol = get1.getPropertyName();
-                        }
-                        if (get1 != null && get1.getDisplayName() != null) {
-                            name = get1.getDisplayName();
-                        }
-                        if (get1 != null) {
-                            valueType = ValueType.NOMINALVALUE;
-                        }
-                    }
-                    if (get != null || clob != null) {
-                        List<String> l = new ArrayList<>(2);
-                        l.add(conceptSymbol);
-                        l.add(symbol);
-                        if (propertyDefUids.add(l)) {
-                            ValueSetSupport vsSupport = new ValueSetSupport();
-                            vsSupport.setPropertyName(symbol);
-                            vsSupport.setDeclaringPropId(declaringConceptSymbol);
-                            Collections.putList(result, conceptSymbol, new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
-                        }
-                    }
-                }
-            } catch (SQLException ex) {
-                throw new KnowledgeSourceReadException(ex);
             }
             return result;
         }
@@ -2075,10 +2084,12 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
                 List<TemporalPropositionDefinition> r = new ArrayList<>();
-                Date now = new Date();
-                while (rs.next()) {
-                    if (this.propIds.add(rs.getString(7))) {
-                        r.add(newTemporalPropositionDefinition(rs, now));
+                if (rs != null) {
+                    Date now = new Date();
+                    while (rs.next()) {
+                        if (this.propIds.add(rs.getString(7))) {
+                            r.add(newTemporalPropositionDefinition(rs, now));
+                        }
                     }
                 }
                 return r;
@@ -2095,7 +2106,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         public TemporalPropositionDefinition read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
                 List<TemporalPropositionDefinition> r = new ArrayList<>();
-                if (rs.next()) {
+                if (rs != null && rs.next()) {
                     AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
                     Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
                     abd.setInverseIsA(children.toArray(new String[children.size()]));
@@ -2135,16 +2146,18 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         @Override
         public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
-                Set<String> propIds = new HashSet<>();
                 List<TemporalPropositionDefinition> r = new ArrayList<>();
-                while (rs.next()) {
-                    AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
-                    if (propIds.add(abd.getId())) {
-                        Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
-                        abd.setInverseIsA(children.toArray(new String[children.size()]));
-                        List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2));
-                        abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
-                        r.add((TemporalPropositionDefinition) abd);
+                if (rs != null) {
+                    Set<String> propIds = new HashSet<>();
+                    while (rs.next()) {
+                        AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
+                        if (propIds.add(abd.getId())) {
+                            Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
+                            abd.setInverseIsA(children.toArray(new String[children.size()]));
+                            List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2));
+                            abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
+                            r.add((TemporalPropositionDefinition) abd);
+                        }
                     }
                 }
                 return r;
@@ -2217,7 +2230,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         public List<PropertyDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
                             try {
                                 List<PropertyDefinition> result = new ArrayList<>();
-                                if (rs.isBeforeFirst()) {
+                                if (rs != null && rs.isBeforeFirst()) {
                                     CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
                                     XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
                                     Set<List<String>> propertyDefUids = new HashSet<>();

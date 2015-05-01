@@ -24,7 +24,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -49,7 +48,7 @@ public class QueryExecutor implements AutoCloseable {
         }
     };
 
-    private Connection connection;
+    private final Connection connection;
     private String sql;
     private PreparedStatement preparedStatement;
     private String[] ontTables;
@@ -85,17 +84,19 @@ public class QueryExecutor implements AutoCloseable {
 
     public <E extends Object> E execute(ParameterSetter paramSetter, ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
         try {
-            openConnection();
-            readOntologyTables();
             prepare();
-            int j = 1;
-            for (int i = 0, n = this.ontTables.length; i < n; i++) {
-                j = paramSetter.set(this.preparedStatement, j);
+            if (this.preparedStatement == null) {
+                return resultSetReader.read(null);
+            } else {
+                int j = 1;
+                for (int i = 0, n = this.ontTables.length; i < n; i++) {
+                    j = paramSetter.set(this.preparedStatement, j);
+                }
+                try (ResultSet rs = this.preparedStatement.executeQuery()) {
+                    return resultSetReader.read(rs);
+                }
             }
-            try (ResultSet rs = this.preparedStatement.executeQuery()) {
-                return resultSetReader.read(rs);
-            }
-        } catch (InvalidConnectionSpecArguments | SQLException ex) {
+        } catch (SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
     }
@@ -122,23 +123,26 @@ public class QueryExecutor implements AutoCloseable {
                 openConnection();
                 readOntologyTables();
                 StringBuilder sql = new StringBuilder();
-                if (this.ontTables.length > 1) {
-                    sql.append('(');
-                }
-                for (int i = 0, n = this.ontTables.length; i < n; i++) {
-                    String table = this.ontTables[i];
-                    if (i > 0) {
-                        sql.append(") UNION ALL (");
+                if (this.ontTables.length > 0) {
+                    if (this.ontTables.length > 1) {
+                        sql.append('(');
                     }
-                    this.queryConstructor.appendStatement(sql, table);
+                    for (int i = 0, n = this.ontTables.length; i < n; i++) {
+                        String table = this.ontTables[i];
+                        if (i > 0) {
+                            sql.append(") UNION ALL (");
+                        }
+                        this.queryConstructor.appendStatement(sql, table);
+                    }
+                    if (this.ontTables.length > 1) {
+                        sql.append(')');
+                    }
+
+                    this.sql = sql.toString();
+                    LOGGER.log(Level.FINE, "Preparing query {0}", this.sql);
+                    this.preparedStatement = this.connection.prepareStatement(this.sql);
+                    this.preparedStatement.setFetchSize(1000);
                 }
-                if (this.ontTables.length > 1) {
-                    sql.append(')');
-                }
-                this.sql = sql.toString();
-                LOGGER.log(Level.FINE, "Preparing query {0}", this.sql);
-                this.preparedStatement = this.connection.prepareStatement(this.sql);
-                this.preparedStatement.setFetchSize(1000);
             } catch (SQLException | InvalidConnectionSpecArguments ex) {
                 throw new KnowledgeSourceReadException(ex);
             }

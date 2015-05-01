@@ -121,8 +121,10 @@ class LevelReader {
         public Set<String> read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
                 Set<String> result = new HashSet<>();
-                while (rs.next()) {
-                    result.add(rs.getString(1));
+                if (rs != null) {
+                    while (rs.next()) {
+                        result.add(rs.getString(1));
+                    }
                 }
                 return result;
             } catch (SQLException ex) {
@@ -138,8 +140,10 @@ class LevelReader {
         public Map<String, Set<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
                 Map<String, Set<String>> result = new HashMap<>();
-                while (rs.next()) {
-                    putSet(result, rs.getString(1), rs.getString(2));
+                if (rs != null) {
+                    while (rs.next()) {
+                        putSet(result, rs.getString(1), rs.getString(2));
+                    }
                 }
                 return result;
             } catch (SQLException ex) {
