@@ -59,9 +59,6 @@ public class TableAccessReader {
                         while (rs.next()) {
                             tables.add(rs.getString(1));
                         }
-                        if (tables.isEmpty()) {
-                            throw new KnowledgeSourceReadException("No metadata tables found!");
-                        }
                         this.ontTables = tables.toArray(new String[tables.size()]);
                     }
                 } catch (SQLException ex) {
