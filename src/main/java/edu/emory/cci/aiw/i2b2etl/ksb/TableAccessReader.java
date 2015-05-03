@@ -36,14 +36,13 @@ public class TableAccessReader {
 
     private String[] ontTables;
     private final String excludeTableName;
-    private final String ontTablesSyncVariable = "ONT_TABLES_SYNC_VARIABLE";
 
     public TableAccessReader(String excludeTableName) {
         this.excludeTableName = excludeTableName;
     }
 
     public String[] read(Connection connection) throws KnowledgeSourceReadException {
-        synchronized (this.ontTablesSyncVariable) {
+        synchronized (this) {
             if (this.ontTables == null) {
                 StringBuilder query = new StringBuilder();
                 query.append("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS");
