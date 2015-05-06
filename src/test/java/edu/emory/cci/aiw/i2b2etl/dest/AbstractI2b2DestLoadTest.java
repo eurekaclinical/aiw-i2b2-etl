@@ -19,7 +19,8 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  * limitations under the License.
  * #L%
  */
-import edu.emory.cci.aiw.i2b2etl.AbstractTest;
+
+import static edu.emory.cci.aiw.i2b2etl.dest.AbstractI2b2DestTest.getProtempaFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
@@ -33,14 +34,13 @@ import org.junit.Test;
  *
  * @author Andrew Post
  */
-public abstract class AbstractI2b2LoadTest extends AbstractTest {
-
+public abstract class AbstractI2b2DestLoadTest extends AbstractI2b2DestTest {
     private static IDataSet expectedDataSet;
-
+    
     protected static void setExpectedDataSet(String resource) throws IOException, DataSetException {
-        expectedDataSet = new FlatXmlDataSetBuilder().build(AbstractI2b2LoadTest.class.getResource(resource));
+        expectedDataSet = new FlatXmlDataSetBuilder().build(AbstractI2b2DestTest.class.getResource(resource));
     }
-
+    
     @Test
     public void testEKRejectedObservationFact() throws Exception {
         testTable("EK_REJECTED_OBSERVATION_FACT", expectedDataSet);

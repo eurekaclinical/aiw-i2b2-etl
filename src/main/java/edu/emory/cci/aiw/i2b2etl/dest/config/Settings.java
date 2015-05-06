@@ -40,6 +40,7 @@ public interface Settings {
     String getVisitDimension();
     boolean getSkipProviderHierarchy();
     boolean getSkipDemographicsHierarchy();
+    boolean getMergeOnUpdate();
     RemoveMethod getDataRemoveMethod();
     RemoveMethod getMetaRemoveMethod();
     String getSourceSystemCode();

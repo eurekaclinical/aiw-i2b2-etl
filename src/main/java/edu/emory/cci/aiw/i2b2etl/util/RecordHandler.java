@@ -27,18 +27,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Inserts a record into a database using prepared statements in batch mode.
- * The actual batch inserts occur in a separate thread.
- * 
+ * Inserts a record into a database using prepared statements in batch mode. The
+ * actual batch inserts occur in a separate thread.
+ *
  * @author Andrew Post
  */
 public abstract class RecordHandler<E> implements AutoCloseable {
+
     private static final Logger LOGGER = Logger.getLogger(RecordHandler.class.getName());
 
     private boolean inited;
     private int counter = 0;
     private final int batchSize = 1000;
-    private int commitCounter = 0;
+    private volatile int commitCounter = 0;
     private final int commitSize = 10000;
     private PreparedStatement ps;
     private final String statement;
@@ -76,7 +77,10 @@ public abstract class RecordHandler<E> implements AutoCloseable {
                     ps.addBatch();
                     counter++;
                     commitCounter++;
-                    this.executor.notify();
+                    if (counter >= batchSize) {
+                        this.executor.notify();
+                        counter = 0;
+                    }
                 }
             } catch (SQLException e) {
                 if (ps != null) {
@@ -91,20 +95,18 @@ public abstract class RecordHandler<E> implements AutoCloseable {
     }
 
     private class SqlRunner extends Thread {
+
         private volatile boolean stop;
 
         @Override
         public void run() {
             try {
-                while (!isInterrupted() && !stop) {
-                    synchronized (this) {
+                synchronized (this) {
+                    while (!isInterrupted() && !stop) {
                         wait();
                         if (!stop) {
-                            if (counter >= batchSize) {
-                                ps.executeBatch();
-                                ps.clearBatch();
-                                counter = 0;
-                            }
+                            ps.executeBatch();
+                            ps.clearBatch();
                             if (commitCounter >= commitSize) {
                                 if (commit) {
                                     cn.commit();
@@ -121,7 +123,7 @@ public abstract class RecordHandler<E> implements AutoCloseable {
                 LOGGER.log(Level.FINE, "Batch inserter was interrupted: {0}", ex);
             }
         }
-        
+
         public void requestStop() {
             this.stop = true;
         }

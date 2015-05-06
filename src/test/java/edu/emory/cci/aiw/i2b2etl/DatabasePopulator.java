@@ -19,9 +19,6 @@
  */
 package edu.emory.cci.aiw.i2b2etl;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -35,8 +32,6 @@ import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
-import org.dbunit.dataset.xml.FlatDtdWriter;
-import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
 

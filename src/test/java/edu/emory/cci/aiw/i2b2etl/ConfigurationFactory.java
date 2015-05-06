@@ -24,14 +24,12 @@ package edu.emory.cci.aiw.i2b2etl;
  * limitations under the License.
  * #L%
  */
-import edu.emory.cci.aiw.i2b2etl.ksb.I2b2KnowledgeSourceBackend;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import javax.naming.NamingException;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.arp.javautil.sql.DataSourceInitialContextBinder;
-import org.protempa.backend.BackendInitializationException;
 import org.protempa.backend.Configuration;
 import org.protempa.backend.ConfigurationsLoadException;
 import org.protempa.backend.ConfigurationsNotFoundException;
@@ -42,6 +40,7 @@ import org.protempa.bconfigs.ini4j.INIConfigurations;
  * @author Andrew Post
  */
 public class ConfigurationFactory implements AutoCloseable {
+
     private static final String DRIVER_CLASS_NAME = "org.h2.Driver";
     private static final String I2B2_DATASOURCE = "I2b2Data";
     public static final String I2B2_DATA_JNDI_URI = "java:/comp/env/jdbc/" + I2B2_DATASOURCE;
@@ -60,11 +59,11 @@ public class ConfigurationFactory implements AutoCloseable {
         this.initialContextBinder = new DataSourceInitialContextBinder();
 
         File ksbDb = new I2b2MetadataSchemaPopulator().populate();
-        this.metaDS = newBasicDataSource("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql';CACHE_SIZE=262400");
+        this.metaDS = newBasicDataSource("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql'");
         this.initialContextBinder.bind("I2b2Meta", this.metaDS);
 
         File dsbDb = new I2b2DataSchemaPopulator().populate();
-        this.dataDS = newBasicDataSource("jdbc:h2:" + dsbDb.getAbsolutePath() + ";CACHE_SIZE=262400");
+        this.dataDS = newBasicDataSource("jdbc:h2:" + dsbDb.getAbsolutePath());
         this.initialContextBinder.bind("I2b2Data", this.dataDS);
     }
 
@@ -72,20 +71,21 @@ public class ConfigurationFactory implements AutoCloseable {
         return new INIConfigurations(new File("src/test/resources")).load("i2b2-test-config");
     }
 
-    public I2b2KnowledgeSourceBackend newKnowledgeSourceBackend() throws ConfigurationsLoadException, ConfigurationsNotFoundException, BackendInitializationException {
-        Configuration config = getProtempaConfiguration();
-        I2b2KnowledgeSourceBackend ksb = new I2b2KnowledgeSourceBackend();
-        ksb.initialize(config.getKnowledgeSourceBackendSections().get(0));
-        return ksb;
-    }
-
     @Override
     public void close() throws Exception {
-        if (this.initialContextBinder != null) {
-            this.initialContextBinder.close();
+        try {
+            if (this.initialContextBinder != null) {
+                this.initialContextBinder.close();
+            }
+        } finally {
+            try {
+                this.metaDS.close();
+            } finally {
+                this.dataDS.close();
+            }
         }
     }
-    
+
     private static BasicDataSource newBasicDataSource(String url) {
         BasicDataSource bds = new BasicDataSource();
         bds.setDriverClassName(DRIVER_CLASS_NAME);

@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.AbstractTest;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.arp.javautil.sql.DatabaseAPI;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.protempa.AbstractionDefinition;
 import org.protempa.ContextDefinition;
@@ -37,6 +37,7 @@ import org.protempa.PropositionDefinition;
 import org.protempa.TemporalPropositionDefinition;
 import org.protempa.backend.BackendInitializationException;
 import org.protempa.backend.BackendInstanceSpec;
+import org.protempa.backend.Configuration;
 import org.protempa.valueset.ValueSet;
 
 /**
@@ -44,17 +45,25 @@ import org.protempa.valueset.ValueSet;
  * @author Andrew Post
  */
 public abstract class AbstractKSBTest extends AbstractTest {
+
     private static I2b2KnowledgeSourceBackend ksb;
-    
+
     @BeforeClass
     public static void setUpClsAbstractKSBTest() throws Exception {
-        ksb = getConfigFactory().newKnowledgeSourceBackend();
+        Configuration config = getConfigFactory().getProtempaConfiguration();
+        ksb = new I2b2KnowledgeSourceBackend();
+        ksb.initialize(config.getKnowledgeSourceBackendSections().get(0));
+    }
+    
+    @AfterClass
+    public static void tearDownClsAbstractKSBTest() {
+        ksb.close();
     }
 
     public static I2b2KnowledgeSourceBackend getKnowledgeSourceBackend() {
         return ksb;
     }
-    
+
     public PropositionDefinition readPropositionDefinition(String propId) throws KnowledgeSourceReadException {
         return ksb.readPropositionDefinition(propId);
     }
@@ -762,7 +771,7 @@ public abstract class AbstractKSBTest extends AbstractTest {
     public Collection<PropositionDefinition> collectPropDefDescendantsUsingInverseIsA(String[] propIds) throws KnowledgeSourceReadException {
         return ksb.collectPropDefDescendantsUsingInverseIsA(propIds);
     }
-    
+
     public Set<String> toPropId(Set<PropositionDefinition> actualPropDef) {
         Set<String> actual = new HashSet<>();
         for (PropositionDefinition propDef : actualPropDef) {
@@ -770,11 +779,11 @@ public abstract class AbstractKSBTest extends AbstractTest {
         }
         return actual;
     }
-    
+
     public Set<PropertyDefinitionBuilder> collectPropertyDefinitionBuilders(PropositionDefinition propDef) {
         return collectPropertyDefinitionBuilders(Collections.singleton(propDef));
     }
-    
+
     public Set<PropertyDefinitionBuilder> collectPropertyDefinitionBuilders(Collection<PropositionDefinition> propDefs) {
         Set<PropertyDefinitionBuilder> propertyDefBuilders = new HashSet<>();
         for (PropositionDefinition propDef : propDefs) {
@@ -784,5 +793,5 @@ public abstract class AbstractKSBTest extends AbstractTest {
         }
         return propertyDefBuilders;
     }
-    
+
 }

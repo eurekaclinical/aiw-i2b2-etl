@@ -580,7 +580,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         call.setString(1, tempObservationFactTableName());
                         call.setString(2, tempObservationFactCompleteTableName());
                         call.setLong(3, UPLOAD_ID);
-                        call.setLong(4, this.query.getQueryMode() == QueryMode.UPDATE ? 1 : 0); // appendFlag
+                        call.setLong(4, (this.query.getQueryMode() == QueryMode.UPDATE && this.settings.getMergeOnUpdate()) ? 1 : 0); // appendFlag
                         call.execute();
                         //commit and rollback are called by the stored procedure.
                     }

@@ -19,7 +19,6 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import edu.emory.cci.aiw.i2b2etl.AbstractTest;
 
 import org.junit.Test;
 import org.protempa.Protempa;
@@ -32,7 +31,7 @@ import org.protempa.dest.QueryResultsHandler;
  *
  * @author Andrew Post
  */
-public class GetPropositionIdsNeededTest extends AbstractTest {
+public class GetPropositionIdsNeededTest extends AbstractI2b2DestTest {
 
     @Test
     public void testPropositionIds() throws Exception {

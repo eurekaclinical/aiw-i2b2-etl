@@ -33,17 +33,18 @@ import org.w3c.dom.*;
  * @author Andrew Post
  */
 final class DictionarySection extends ConfigurationSection implements Settings {
+
     private final TreeMap<String, String> dictionary = new TreeMap<>();
     private final SettingsSupport settingsSupport;
 
     DictionarySection() {
         this.settingsSupport = new SettingsSupport(this);
     }
-    
+
     String get(String key) {
         return dictionary.get(key);
     }
-    
+
     @Override
     protected void put(Node node) throws ConfigurationReadException {
         NamedNodeMap nnm = node.getAttributes();
@@ -79,7 +80,7 @@ final class DictionarySection extends ConfigurationSection implements Settings {
 
     @Override
     public String getProviderLastName() {
-       return this.dictionary.get("providerLastName");
+        return this.dictionary.get("providerLastName");
     }
 
     @Override
@@ -88,10 +89,20 @@ final class DictionarySection extends ConfigurationSection implements Settings {
     }
 
     @Override
+    public boolean getMergeOnUpdate() {
+        String mergeOnUpdate = this.dictionary.get("mergeOnUpdate");
+        if (mergeOnUpdate != null) {
+            return Boolean.parseBoolean(mergeOnUpdate);
+        } else {
+            return true;
+        }
+    }
+
+    @Override
     public boolean getSkipProviderHierarchy() {
         return Boolean.parseBoolean(this.dictionary.get("skipProviderHierarchy"));
     }
-    
+
     @Override
     public boolean getSkipDemographicsHierarchy() {
         return Boolean.parseBoolean(this.dictionary.get("skipDemographicsHierarchy"));
@@ -166,7 +177,7 @@ final class DictionarySection extends ConfigurationSection implements Settings {
     public String getRootNodeName() {
         return this.dictionary.get("rootNodeName");
     }
-    
+
     @Override
     public String getVisitDimensionId() {
         return this.dictionary.get("visitDimensionDecipheredId");
@@ -176,7 +187,7 @@ final class DictionarySection extends ConfigurationSection implements Settings {
     public String getVisitDimensionInOut() {
         return this.dictionary.get("visitDimensionInOut");
     }
-    
+
     @Override
     public String getAgeConceptCodePrefix() {
         return this.dictionary.get("ageConceptCodePrefix");
@@ -201,7 +212,5 @@ final class DictionarySection extends ConfigurationSection implements Settings {
     public String getPatientDimensionDeathDate() {
         return this.dictionary.get("patientDimensionDeathDate");
     }
-    
-    
 
 }

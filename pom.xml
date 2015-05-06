@@ -242,6 +242,8 @@
             <version>1.1</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Don't upgrade h2 yet. There is a bug causing ORDER BY to be 
+	ignored in SELECT queries with a WHERE clause. -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -330,6 +332,7 @@
                     <threadCountClasses>2</threadCountClasses>-->
                     <systemProperties>
                         <java.awt.headless>true</java.awt.headless>
+                        <argLine>-Xms512m -Xmx2g</argLine>
                     </systemProperties>
                 </configuration>
             </plugin>

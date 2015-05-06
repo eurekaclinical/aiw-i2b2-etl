@@ -19,7 +19,6 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import static edu.emory.cci.aiw.i2b2etl.AbstractTest.getProtempaFactory;
 import java.io.IOException;
 
 import org.junit.BeforeClass;
@@ -52,7 +51,7 @@ import org.protempa.ProtempaStartupException;
  *
  * @author Andrew Post
  */
-public class I2b2LoadTest extends AbstractI2b2LoadTest {
+public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
 
     /**
      * Executes the i2b2 ETL load.

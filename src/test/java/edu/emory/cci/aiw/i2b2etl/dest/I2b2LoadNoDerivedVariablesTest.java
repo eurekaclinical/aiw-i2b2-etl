@@ -19,7 +19,6 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import static edu.emory.cci.aiw.i2b2etl.AbstractTest.getProtempaFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,7 +36,7 @@ import org.protempa.query.QueryBuildException;
  *
  * @author Andrew Post
  */
-public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2LoadTest {
+public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
 
     /**
      * Executes the i2b2 ETL load.

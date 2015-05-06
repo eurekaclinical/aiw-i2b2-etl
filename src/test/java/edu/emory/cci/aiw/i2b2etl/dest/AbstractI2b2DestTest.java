@@ -1,4 +1,4 @@
-package edu.emory.cci.aiw.i2b2etl;
+package edu.emory.cci.aiw.i2b2etl.dest;
 
 /*
  * #%L
@@ -19,17 +19,31 @@ package edu.emory.cci.aiw.i2b2etl;
  * limitations under the License.
  * #L%
  */
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
+import edu.emory.cci.aiw.i2b2etl.AbstractTest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
  *
  * @author Andrew Post
  */
-public class I2b2DataSchemaPopulator extends AbstractH2Populator {
-    public File populate() throws IOException, SQLException {
-        return populate(File.createTempFile("i2b2-data", ".db"), "INIT=RUNSCRIPT FROM 'src/main/resources/i2b2_data_tables_1_7_h2.sql'\\;RUNSCRIPT FROM 'src/main/resources/eureka_data_tables_h2.sql'\\;RUNSCRIPT FROM 'src/main/resources/mock_stored_procedures_h2.sql'");
+public abstract class AbstractI2b2DestTest extends AbstractTest {
+
+    
+    private static ProtempaFactory protempaFactory;
+    
+    @BeforeClass
+    public static void setUpClsCreateProtempaFactory() throws Exception {
+        protempaFactory = new ProtempaFactory(getConfigFactory());
     }
+    
+    @AfterClass
+    public static void tearDownClsCloseProtempaFactory() throws Exception {
+        protempaFactory.close();
+    }
+    
+    public static ProtempaFactory getProtempaFactory() {
+        return protempaFactory;
+    }
+
 }
