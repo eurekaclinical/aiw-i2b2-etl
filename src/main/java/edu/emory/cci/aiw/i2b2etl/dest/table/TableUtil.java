@@ -38,15 +38,16 @@ import java.util.logging.Logger;
 public final class TableUtil {
 
     private static final Map<Date, java.sql.Date> dateCache = new ReferenceMap<>();
-    
+
     private static final Map<Date, Timestamp> timestampCache = new ReferenceMap<>();
-    
-    private TableUtil() {}
-    
+
+    private TableUtil() {
+    }
+
     private static class LazyLoggerHolder {
 
-        private static Logger instance =
-                Logger.getLogger(MetadataUtil.class.getPackage().getName());
+        private static Logger instance
+                = Logger.getLogger(MetadataUtil.class.getPackage().getName());
     }
 
     /**
@@ -57,7 +58,7 @@ public final class TableUtil {
     static Logger logger() {
         return TableUtil.LazyLoggerHolder.instance;
     }
-    
+
     public static String setStringAttribute(String attribute, int maxLength) {
         if (maxLength < 1) {
             throw new IllegalArgumentException("maxLength cannot be < 1");
@@ -70,7 +71,7 @@ public final class TableUtil {
             return attribute;
         }
     }
-    
+
     public static String setStringAttribute(String attribute) {
         if (attribute == null || attribute.length() == 0) {
             return "@";
@@ -78,33 +79,39 @@ public final class TableUtil {
             return attribute;
         }
     }
-    
+
     public static java.sql.Date setDateAttribute(Date date) {
         if (date == null) {
             return null;
         } else {
-            java.sql.Date d = dateCache.get(date);
-            if (d == null) {
-                d = new java.sql.Date(date.getTime());
-                dateCache.put(date, d);
+            java.sql.Date d;
+            synchronized (dateCache) {
+                d = dateCache.get(date);
+                if (d == null) {
+                    d = new java.sql.Date(date.getTime());
+                    dateCache.put(date, d);
+                }
             }
             return d;
         }
     }
-    
+
     public static java.sql.Timestamp setTimestampAttribute(Date date) {
         if (date == null) {
             return null;
         } else {
-            java.sql.Timestamp ts = timestampCache.get(date);
-            if (ts == null) {
-                ts = new java.sql.Timestamp(date.getTime());
-                timestampCache.put(date, ts);
+            java.sql.Timestamp ts;
+            synchronized (timestampCache) {
+                ts = timestampCache.get(date);
+                if (ts == null) {
+                    ts = new java.sql.Timestamp(date.getTime());
+                    timestampCache.put(date, ts);
+                }
             }
             return ts;
         }
     }
-    
+
     public static String setNullableStringAttribute(String attribute,
             int maxLength) {
         if (maxLength < 1) {

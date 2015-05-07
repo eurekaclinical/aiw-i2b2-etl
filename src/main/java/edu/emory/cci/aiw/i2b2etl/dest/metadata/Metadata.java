@@ -104,7 +104,6 @@ public final class Metadata {
     private Concept conceptRoot;
     private final Map<ConceptId, Concept> conceptCache = new HashMap<>();
     private final Map<List<Object>, ConceptId> conceptIdCache = new ReferenceMap<>();
-    private final KnowledgeSource knowledgeSource;
     private final Data dataSection;
     private final Settings settings;
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
@@ -159,7 +158,6 @@ public final class Metadata {
             this.userDefinedPropositionDefinitions
                     = userDefinedPropositionDefinitions.clone();
         }
-        this.knowledgeSource = knowledgeSource;
         this.cache = cache;
         String rootNodeDisplayName = settings.getRootNodeName();
         if (rootNodeDisplayName != null) {
@@ -238,11 +236,13 @@ public final class Metadata {
                         return result;
                     }
                 });
-                for (Concept concept : this.conceptCache.values()) {
-                    List<String> get = result.get(concept.getSymbol());
-                    if (get != null) {
-                        for (String path : get) {
-                            concept.addHierarchyPath(path);
+                synchronized (this.conceptCache) {
+                    for (Concept concept : this.conceptCache.values()) {
+                        List<String> get = result.get(concept.getSymbol());
+                        if (get != null) {
+                            for (String path : get) {
+                                concept.addHierarchyPath(path);
+                            }
                         }
                     }
                 }
@@ -349,7 +349,9 @@ public final class Metadata {
     }
 
     public Concept getFromIdCache(ConceptId conceptId) {
-        return this.conceptCache.get(conceptId);
+        synchronized (this.conceptCache) {
+            return this.conceptCache.get(conceptId);
+        }
     }
 
     public Concept getFromIdCache(String propId, String propertyName, Value value) {
@@ -358,23 +360,29 @@ public final class Metadata {
     }
 
     public void addToIdCache(Concept concept) {
-        if (!this.conceptCache.containsKey(concept.getId())) {
-            this.conceptCache.put(concept.getId(), concept);
-        } else {
-            throw new IllegalArgumentException("concept already added!");
+        synchronized (this.conceptCache) {
+            if (!this.conceptCache.containsKey(concept.getId())) {
+                this.conceptCache.put(concept.getId(), concept);
+            } else {
+                throw new IllegalArgumentException("concept already added!");
+            }
         }
     }
 
     public void putInConceptIdCache(List<Object> key, ConceptId conceptId) {
-        if (!this.conceptIdCache.containsKey(key)) {
-            this.conceptIdCache.put(key, conceptId);
-        } else {
-            throw new IllegalArgumentException("concept id already added!");
+        synchronized (this.conceptIdCache) {
+            if (!this.conceptIdCache.containsKey(key)) {
+                this.conceptIdCache.put(key, conceptId);
+            } else {
+                throw new IllegalArgumentException("concept id already added!");
+            }
         }
     }
 
     public ConceptId getFromConceptIdCache(List<Object> key) {
-        return this.conceptIdCache.get(key);
+        synchronized (this.conceptIdCache) {
+            return this.conceptIdCache.get(key);
+        }
     }
 
     public String[] extractDerived()
