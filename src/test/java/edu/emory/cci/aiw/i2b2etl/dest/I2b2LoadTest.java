@@ -170,7 +170,7 @@ public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
 
         getProtempaFactory().execute(q);
         
-        setExpectedDataSet("/i2b2LoadTestData.xml");
+        setExpectedDataSet("/truth/i2b2LoadTestData.xml");
     }
 
 }

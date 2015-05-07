@@ -17,11 +17,8 @@
  * limitations under the License.
  * #L%
  */
-package edu.emory.cci.aiw.i2b2etl.dest;
+package edu.emory.cci.aiw.i2b2etl;
 
-import edu.emory.cci.aiw.i2b2etl.ConfigurationFactory;
-import edu.emory.cci.aiw.i2b2etl.DatabasePopulator;
-import edu.emory.cci.aiw.i2b2etl.I2b2DestinationFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;

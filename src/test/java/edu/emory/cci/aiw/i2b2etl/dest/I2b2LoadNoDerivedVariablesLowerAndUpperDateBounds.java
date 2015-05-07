@@ -22,12 +22,18 @@ package edu.emory.cci.aiw.i2b2etl.dest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.junit.BeforeClass;
 import org.protempa.FinderException;
 import org.protempa.ProtempaStartupException;
+import org.protempa.backend.dsb.filter.DateTimeFilter;
+import org.protempa.proposition.interval.Interval.Side;
+import org.protempa.proposition.value.AbsoluteTimeGranularity;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.QueryBuildException;
+import org.protempa.query.QueryMode;
 
 /**
  * Integration tests for the i2b2 ETL. This assumes that there is an i2b2
@@ -36,7 +42,7 @@ import org.protempa.query.QueryBuildException;
  *
  * @author Andrew Post
  */
-public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
+public class I2b2LoadNoDerivedVariablesLowerAndUpperDateBounds extends AbstractI2b2DestLoadTest {
 
     /**
      * Executes the i2b2 ETL load.
@@ -50,16 +56,25 @@ public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
     @BeforeClass
     public static void setUp() throws Exception {
         DefaultQueryBuilder q = new DefaultQueryBuilder();
-        q.setId("i2b2 ETL Test Query No Derived Variables");
+        q.setId("i2b2 ETL Test Query No Derived Variables With Lower and Upper Date Bounds");
+        Calendar c = Calendar.getInstance();
+        c.clear();
+        c.set(2007, Calendar.JANUARY, 1);
+        Date first = c.getTime();
+        c.clear();
+        c.set(2009, Calendar.DECEMBER, 31);
+        Date second = c.getTime();
+        q.setFilters(new DateTimeFilter(new String[]{"Encounter"}, first, AbsoluteTimeGranularity.DAY, second, AbsoluteTimeGranularity.DAY, Side.FINISH, Side.FINISH));
+        q.setQueryMode(QueryMode.UPDATE);
         getProtempaFactory().execute(q);
         
-        File file = File.createTempFile("i2b2LoadTest", ".xml");
+        File file = File.createTempFile("i2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTest", ".xml");
         try (FileOutputStream out = new FileOutputStream(file)) {
             getProtempaFactory().exportI2b2DataSchema(out);
             System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
         }
         
-        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesTestData.xml");
+        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTestData.xml");
     }
 
 }

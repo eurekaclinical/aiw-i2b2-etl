@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  * #L%
  */
 import edu.emory.cci.aiw.i2b2etl.AbstractTest;
+import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
