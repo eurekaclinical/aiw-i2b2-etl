@@ -238,10 +238,12 @@ public final class Metadata {
                 });
                 synchronized (this.conceptCache) {
                     for (Concept concept : this.conceptCache.values()) {
-                        List<String> get = result.get(concept.getSymbol());
-                        if (get != null) {
-                            for (String path : get) {
-                                concept.addHierarchyPath(path);
+                        if (concept.isAlreadyLoaded()) {
+                            List<String> get = result.get(concept.getSymbol());
+                            if (get != null) {
+                                for (String path : get) {
+                                    concept.addHierarchyPath(path);
+                                }
                             }
                         }
                     }
