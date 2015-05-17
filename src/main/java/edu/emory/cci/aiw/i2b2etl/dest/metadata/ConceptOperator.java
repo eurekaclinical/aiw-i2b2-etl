@@ -28,7 +28,8 @@ public enum ConceptOperator {
     EQUAL("="),
     GREATER_THAN(">"),
     BETWEEN("BETWEEN"),
-    IN("IN");
+    IN("IN"),
+    NOT_EQUAL("<>");
     
     private final String operator;
     

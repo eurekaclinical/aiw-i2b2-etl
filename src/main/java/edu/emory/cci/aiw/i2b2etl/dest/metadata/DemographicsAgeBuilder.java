@@ -59,7 +59,7 @@ class DemographicsAgeBuilder implements OntologyBuilder {
     }
 
     private Concept buildAge(Concept parent, String displayName) throws OntologyBuildException {
-        Concept age = this.metadata.newContainerConcept(displayName, MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics|Age");
+        Concept age = this.metadata.newContainerConcept(displayName, MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|DEM|Age");
         age.setAlreadyLoaded(parent.isAlreadyLoaded());
         String ageConceptCodePrefix =
                 this.settings.getAgeConceptCodePrefix();

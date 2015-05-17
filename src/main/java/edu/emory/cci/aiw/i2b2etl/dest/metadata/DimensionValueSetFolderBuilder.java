@@ -101,23 +101,17 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
             ConceptId conceptId = SimpleConceptId.getInstance(childName, metadata);
             Concept concept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
             concept.setColumnName(columnName);
-            concept.setOperator(ConceptOperator.IN);
+            concept.setOperator(ConceptOperator.NOT_EQUAL);
             concept.setDisplayName(childName);
             concept.setAlreadyLoaded(parent.isAlreadyLoaded());
-            List<String> inClause = new ArrayList<>();
             if (dataSpec.getReferenceName() != null) {
                 try {
                     addChildrenFromValueSets(this.propDef, dataSpec, concept, columnName);
-                    Enumeration children = concept.children();
-                    while (children.hasMoreElements()) {
-                        Concept child = (Concept) children.nextElement();
-                        inClause.add(child.getDimCode());
-                    }
                 } catch (UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
                     throw new OntologyBuildException("Could not build descendants", ex);
                 }
             }
-            concept.setDimCode("'" + StringUtils.join(inClause, "','") + "'");
+            concept.setDimCode("''");
             parent.add(concept);
         }
     }

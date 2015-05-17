@@ -51,5 +51,5 @@ public class MetadataUtil {
         }
     }
     
-    public static final String DEFAULT_CONCEPT_ID_PREFIX_INTERNAL = "i2b2INTERNAL";
+    public static final String DEFAULT_CONCEPT_ID_PREFIX_INTERNAL = "AIW";
 }

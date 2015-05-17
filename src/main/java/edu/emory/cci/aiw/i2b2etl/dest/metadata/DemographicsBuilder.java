@@ -31,7 +31,7 @@ public class DemographicsBuilder extends ParentBuilder implements SubtreeBuilder
 
     public DemographicsBuilder(KnowledgeSourceCache cache, Metadata metadata) throws OntologyBuildException {
         super(metadata, "Demographics", 
-                MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Demographics", 
+                MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|DEM", 
                 metadata.getSettings().getSkipDemographicsHierarchy(),
                 new DemographicsAgeBuilder(metadata),
                 new DemographicsGenderBuilder(cache, metadata),

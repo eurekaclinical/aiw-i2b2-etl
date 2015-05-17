@@ -84,11 +84,13 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private static final char DEFAULT_DELIMITER = '\t';
     private static final ConceptProperty[] DEFAULT_CONCEPT_PROPERTIES_ARR = new ConceptProperty[0];
     private static final Properties visitPropositionProperties;
+    private static final Properties patientAliasPropositionProperties;
     private static final Properties patientPropositionProperties;
     private static final Properties patientDetailsPropositionProperties;
     private static final Properties providerPropositionProperties;
     private final static String[] VALUE_TYPE_CDS = {"LAB", "DOC"};
     private static final String defaultPatientPropositionId;
+    private static final String defaultPatientAliasPropositionId;
     private static final String defaultPatientDetailsPropositionId;
     private static final ValueSet defaultLanguagePropertyValueSet;
     private static final ValueSet defaultMaritalStatusPropertyValueSet;
@@ -110,6 +112,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         try {
             patientPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientProposition.properties");
             visitPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/visitProposition.properties");
+            patientAliasPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientAliasProposition.properties");
             patientDetailsPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientDetailsProposition.properties");
             providerPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/providerProposition.properties");
         } catch (IOException ex) {
@@ -143,7 +146,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 patientDetailsPropositionProperties.getProperty("religion.valueSet.resource.column.description"));
         defaultGenderPropertyValueSet = parseValueSet(patientDetailsPropositionProperties.getProperty("gender.valueSet.id"), patientDetailsPropositionProperties.getProperty("gender.valueSet.values"));
         defaultRacePropertyValueSet = parseValueSet(patientDetailsPropositionProperties.getProperty("race.valueSet.id"), patientDetailsPropositionProperties.getProperty("race.valueSet.values"));
-
+        defaultPatientAliasPropositionId = patientAliasPropositionProperties.getProperty("propositionId");
         defaultVisitPropositionId = visitPropositionProperties.getProperty("propositionId");
         defaultInoutPropertyValueSet = parseValueSet(visitPropositionProperties.getProperty("inout.valueSet.id"), visitPropositionProperties.getProperty("inout.valueSet.values"));
 
@@ -154,10 +157,10 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private final LevelReader levelReader;
     private final ConceptPropertyReader conceptPropertyReader;
     private String patientPropositionId;
+    private String patientAliasPropositionId;
     private String patientDetailsPropositionId;
     private String visitPropositionId;
     private String providerPropositionId;
-
     private String providerNamePropertyName;
     private String inoutPropertyName;
     private String inoutPropertySource;
@@ -219,6 +222,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private String dateOfDeathPropertyName;
     private String vitalStatusPropertyName;
     private String patientDisplayName;
+    private String patientAliasDisplayName;
     private String patientDetailsDisplayName;
     private String visitDisplayName;
     private String providerDisplayName;
@@ -226,6 +230,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private final Map<String, ValueSet> valueSets;
     private final BackendSourceIdFactory sourceIdFactory;
     private String patientPatientIdPropertyName;
+    private String patientAliasPatientIdPropertyName;
+    private String patientAliasFieldNamePropertyName;
     private String patientDetailsPatientIdPropertyName;
     private Map<String, Map<String, ModInterp>> modInterpCached;
     private final String modInterpCachedSyncVariable = "MOD_INTERP_CACHED_SYNC";
@@ -241,10 +247,13 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
          * Patient
          */
         this.patientPropositionId = defaultPatientPropositionId;
-
         this.patientDisplayName = patientPropositionProperties.getProperty("displayName");
-
         this.patientPatientIdPropertyName = patientPropositionProperties.getProperty("patientId.propertyName");
+        
+        this.patientAliasPropositionId = defaultPatientAliasPropositionId;
+        this.patientAliasDisplayName = patientAliasPropositionProperties.getProperty("displayName");
+        this.patientAliasPatientIdPropertyName = patientAliasPropositionProperties.getProperty("patientId.propertyName");
+        this.patientAliasFieldNamePropertyName = patientAliasPropositionProperties.getProperty("fieldName.propertyName");
 
         this.patientDetailsPropositionId = defaultPatientDetailsPropositionId;
         this.patientDetailsDisplayName = patientDetailsPropositionProperties.getProperty("displayName");
@@ -1221,6 +1230,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 result = newVisitPropositionDefinition();
             } else if (id.equals(this.providerPropositionId)) {
                 result = newProviderPropositionDefinition();
+            } else if (id.equals(this.patientAliasPropositionId)) {
+                result = newPatientAliasPropositionDefinition();
             } else {
                 result = readPropDef(id);
             }
@@ -1256,6 +1267,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 results.add(newVisitPropositionDefinition());
             } else if (id.equals(this.providerPropositionId)) {
                 results.add(newProviderPropositionDefinition());
+            } else if (id.equals(this.patientAliasPropositionId)) {
+                results.add(newPatientAliasPropositionDefinition());
             } else {
                 propIdsToFind.add(id);
             }
@@ -1431,7 +1444,23 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 new PropertyDefinition(this.patientPropositionId, this.patientPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientPropositionId)
         );
         patientDim.setReferenceDefinitions(
-                new ReferenceDefinition("patientDetails", "Patient Details", new String[]{this.patientDetailsPropositionId})
+                new ReferenceDefinition("patientDetails", "Patient Details", new String[]{this.patientDetailsPropositionId}),
+                new ReferenceDefinition("patientAliases", "Patient Aliases", new String[]{this.patientAliasPropositionId})
+        );
+        return patientDim;
+    }
+    
+    private ConstantDefinition newPatientAliasPropositionDefinition() {
+        Date now = new Date();
+        ConstantDefinition patientDim = new ConstantDefinition(this.patientAliasPropositionId);
+        patientDim.setAccessed(now);
+        patientDim.setSourceId(this.sourceIdFactory.getInstance());
+        patientDim.setCreated(DIMENSION_PROP_DEFS_CREATED_DATE);
+        patientDim.setDisplayName(this.patientAliasDisplayName);
+        patientDim.setInDataSource(true);
+        patientDim.setPropertyDefinitions(
+                new PropertyDefinition(this.patientAliasPropositionId, this.patientAliasPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientAliasPropositionId),
+                new PropertyDefinition(this.patientAliasPropositionId, this.patientAliasFieldNamePropertyName, null, ValueType.NOMINALVALUE, null, this.patientAliasPropositionId)
         );
         return patientDim;
     }
@@ -1719,6 +1748,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             } else if (providerPropositionId.equals(propId)) {
                 result.add(newProviderPropositionDefinition());
                 itr.remove();
+            } else if (patientAliasPropositionId.equals(propId)) {
+                result.add(newPatientAliasPropositionDefinition());
             }
         }
         return propIdsAsSet;
