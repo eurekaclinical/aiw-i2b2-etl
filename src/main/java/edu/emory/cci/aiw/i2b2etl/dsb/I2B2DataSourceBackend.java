@@ -78,7 +78,7 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
     private final static Logger LOGGER
             = Logger.getLogger(I2B2DataSourceBackend.class.getPackage().getName());
 
-    private Long queryMasterId;
+    private Long resultInstanceId;
 
     public I2B2DataSourceBackend() {
         setDefaultKeyIdTable(PATIENT_DIMENSION);
@@ -98,9 +98,9 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
 
     @Override
     protected EntitySpec[] constantSpecs(String keyIdSchema, String keyIdTable, String keyIdColumn, String keyIdJoinKey) throws IOException {
-        Mappings qmId = new DefaultMappings(new HashMap<Object, String>() {
+        Mappings riId = new DefaultMappings(new HashMap<Object, String>() {
             {
-                put(queryMasterId, "" + queryMasterId);
+                put(resultInstanceId, "" + resultInstanceId);
             }
         });
         Mappings hive = new DefaultMappings(new HashMap<Object, String>() {
@@ -134,7 +134,8 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
             null, null,
             isInKeySetMode()
             ? new ColumnSpec[]{
-                new ColumnSpec(keyIdSchema, keyIdTable, new JoinSpec("RESULT_INSTANCE_ID", "RESULT_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_RESULT_INSTANCE", new JoinSpec("QUERY_INSTANCE_ID", "QUERY_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_INSTANCE", "QUERY_MASTER_ID", Operator.EQUAL_TO, qmId))))),}
+                new ColumnSpec(keyIdSchema, keyIdTable, "RESULT_INSTANCE_ID", Operator.EQUAL_TO, riId)
+            }
             : null,
             null, null, null, null, null),
             new EntitySpec("Patient Aliases",
@@ -156,7 +157,7 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
             null, null,
             isInKeySetMode()
             ? new ColumnSpec[]{
-                new ColumnSpec(schemaName, "PATIENT_MAPPING", new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, new JoinSpec("RESULT_INSTANCE_ID", "RESULT_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_RESULT_INSTANCE", new JoinSpec("QUERY_INSTANCE_ID", "QUERY_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_INSTANCE", "QUERY_MASTER_ID", Operator.EQUAL_TO, qmId))))))),
+                new ColumnSpec(schemaName, "PATIENT_MAPPING", new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, "RESULT_INSTANCE_ID", Operator.EQUAL_TO, riId))),
                 new ColumnSpec(schemaName, "PATIENT_MAPPING", "PATIENT_IDE_SOURCE", Operator.NOT_EQUAL_TO, hive)
             }
             : new ColumnSpec[]{new ColumnSpec(schemaName, "PATIENT_MAPPING", "PATIENT_IDE_SOURCE", Operator.NOT_EQUAL_TO, hive)},
@@ -191,7 +192,7 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
             null, null,
             isInKeySetMode()
             ? new ColumnSpec[]{
-                new ColumnSpec(schemaName, PATIENT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, new JoinSpec("RESULT_INSTANCE_ID", "RESULT_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_RESULT_INSTANCE", new JoinSpec("QUERY_INSTANCE_ID", "QUERY_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_INSTANCE", "QUERY_MASTER_ID", Operator.EQUAL_TO, qmId)))))))}
+                new ColumnSpec(schemaName, PATIENT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, "RESULT_INSTANCE_ID", Operator.EQUAL_TO, riId)))}
             : null,
             null, null, null, null, null),
             new EntitySpec("Providers", null,
@@ -210,9 +211,9 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
 
     @Override
     protected EntitySpec[] eventSpecs(String keyIdSchema, String keyIdTable, String keyIdColumn, String keyIdJoinKey) throws IOException {
-        Mappings qmId = new DefaultMappings(new HashMap<Object, String>() {
+        Mappings riId = new DefaultMappings(new HashMap<Object, String>() {
             {
-                put(queryMasterId, "" + queryMasterId);
+                put(resultInstanceId, "" + resultInstanceId);
             }
         });
         String schemaName = getSchemaName();
@@ -292,7 +293,7 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
             },
             null, null, isInKeySetMode()
             ? new ColumnSpec[]{
-                new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, new JoinSpec("RESULT_INSTANCE_ID", "RESULT_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_RESULT_INSTANCE", new JoinSpec("QUERY_INSTANCE_ID", "QUERY_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_INSTANCE", "QUERY_MASTER_ID", Operator.EQUAL_TO, qmId))))))),}
+                new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, "RESULT_INSTANCE_ID", Operator.EQUAL_TO, riId)))}
             : null, null, null, AbsoluteTimeGranularity.DAY, POSITION_PARSER, null),
             new EntitySpec("Diagnosis Codes",
             null,
@@ -315,7 +316,7 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
             new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd", Operator.EQUAL_TO, icd9DxMappings, false),
             isInKeySetMode()
             ? new ColumnSpec[]{
-                new ColumnSpec(schemaName, OBSERVATION_FACT, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, new JoinSpec("RESULT_INSTANCE_ID", "RESULT_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_RESULT_INSTANCE", new JoinSpec("QUERY_INSTANCE_ID", "QUERY_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_INSTANCE", "QUERY_MASTER_ID", Operator.EQUAL_TO, qmId)))))))))}
+                new ColumnSpec(schemaName, OBSERVATION_FACT, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, "RESULT_INSTANCE_ID", Operator.EQUAL_TO, riId)))))}
             : null, null, null,
             AbsoluteTimeGranularity.DAY,
             POSITION_PARSER,
@@ -338,7 +339,7 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
             new ColumnSpec(schemaName, OBSERVATION_FACT, "concept_cd", Operator.EQUAL_TO, icd9PxMappings, false),
             isInKeySetMode()
             ? new ColumnSpec[]{
-                new ColumnSpec(schemaName, OBSERVATION_FACT, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, new JoinSpec("RESULT_INSTANCE_ID", "RESULT_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_RESULT_INSTANCE", new JoinSpec("QUERY_INSTANCE_ID", "QUERY_INSTANCE_ID", new ColumnSpec(keyIdSchema, "QT_QUERY_INSTANCE", "QUERY_MASTER_ID", Operator.EQUAL_TO, qmId)))))))))}
+                new ColumnSpec(schemaName, OBSERVATION_FACT, new JoinSpec("encounter_num", "encounter_num", new ColumnSpec(schemaName, VISIT_DIMENSION, new JoinSpec("patient_num", keyIdJoinKey, new ColumnSpec(keyIdSchema, keyIdTable, "RESULT_INSTANCE_ID", Operator.EQUAL_TO, riId)))))}
             : null, null, null,
             AbsoluteTimeGranularity.DAY,
             POSITION_PARSER,
@@ -367,28 +368,28 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
     }
 
     @BackendProperty(displayName = "Query Master ID")
-    public void setQueryMasterId(Long queryMasterId) {
-        this.queryMasterId = queryMasterId;
+    public void setResultInstanceId(Long resultInstanceId) {
+        this.resultInstanceId = resultInstanceId;
         setKeyLoaderKeyIdSchema(getSchemaName());
         setKeyLoaderKeyIdTable("QT_PATIENT_SET_COLLECTION");
         setKeyLoaderKeyIdColumn("PATIENT_NUM");
         setKeyLoaderKeyIdJoinKey("PATIENT_NUM");
     }
 
-    public Long getQueryMasterId() {
-        return this.queryMasterId;
+    public Long getResultInstanceId() {
+        return this.resultInstanceId;
     }
 
     @Override
     public KeySetSpec[] getSelectedKeySetSpecs() throws DataSourceReadException {
         List<KeySetSpec> result = new ArrayList<>();
-        if (this.queryMasterId != null) {
+        if (this.resultInstanceId != null) {
             try (Connection con = this.getConnectionSpecInstance().getOrCreate();
-                    PreparedStatement stmt = con.prepareStatement("SELECT A1.NAME, A1.USER_ID, A3.DESCRIPTION FROM QT_QUERY_MASTER A1 JOIN QT_QUERY_INSTANCE A2 ON (A1.QUERY_MASTER_ID=A2.QUERY_MASTER_ID) JOIN QT_QUERY_RESULT_INSTANCE A3 ON (A2.QUERY_INSTANCE_ID=A3.QUERY_INSTANCE_ID) WHERE A1.QUERY_MASTER_ID = ? AND A1.DELETE_FLAG = 'N' AND A2.DELETE_FLAG = 'N' AND A3.RESULT_TYPE_ID = 1")) {
-                stmt.setLong(1, this.queryMasterId);
+                    PreparedStatement stmt = con.prepareStatement("SELECT A1.NAME, A1.USER_ID, A3.DESCRIPTION FROM QT_QUERY_MASTER A1 JOIN QT_QUERY_INSTANCE A2 ON (A1.QUERY_MASTER_ID=A2.QUERY_MASTER_ID) JOIN QT_QUERY_RESULT_INSTANCE A3 ON (A2.QUERY_INSTANCE_ID=A3.QUERY_INSTANCE_ID) WHERE A3.RESULT_INSTANCE_ID = ? AND A1.DELETE_FLAG = 'N' AND A2.DELETE_FLAG = 'N' AND A3.RESULT_TYPE_ID = 1")) {
+                stmt.setLong(1, this.resultInstanceId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        result.add(new KeySetSpec(getSourceSystem(), "" + this.queryMasterId, rs.getString(1) + " (" + rs.getString(2) + ")", rs.getString(3)));
+                        result.add(new KeySetSpec(getSourceSystem(), "" + this.resultInstanceId, rs.getString(1) + " (" + rs.getString(2) + ")", rs.getString(3)));
                     }
                 }
             } catch (SQLException | InvalidConnectionSpecArguments ex) {
