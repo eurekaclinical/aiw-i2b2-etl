@@ -25,7 +25,7 @@ package edu.emory.cci.aiw.neo4jetl;
 import edu.emory.cci.aiw.neo4jetl.config.Configuration;
 import org.protempa.DataSource;
 import org.protempa.KnowledgeSource;
-import org.protempa.dest.Destination;
+import org.protempa.dest.AbstractDestination;
 import org.protempa.dest.QueryResultsHandler;
 import org.protempa.dest.QueryResultsHandlerInitException;
 import org.protempa.dest.Statistics;
@@ -35,7 +35,7 @@ import org.protempa.query.Query;
 /**
  * @author hrathod
  */
-public class Neo4jDestination implements Destination {
+public class Neo4jDestination extends AbstractDestination {
 
 	private final Configuration configuration;
 
@@ -49,6 +49,11 @@ public class Neo4jDestination implements Destination {
 	@Override
 	public QueryResultsHandler getQueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource) throws QueryResultsHandlerInitException {
 		return new Neo4jQueryResultsHandler(query, dataSource, this.configuration);
+	}
+
+	@Override
+	public boolean isGetStatisticsSupported() {
+		return true;
 	}
 
 	@Override

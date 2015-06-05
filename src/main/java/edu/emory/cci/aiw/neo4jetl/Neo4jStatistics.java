@@ -25,6 +25,8 @@ package edu.emory.cci.aiw.neo4jetl;
 import edu.emory.cci.aiw.neo4jetl.config.Configuration;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -77,4 +79,26 @@ public class Neo4jStatistics implements Statistics {
 		}
 		return numberOfKeys;
 	}
+
+	@Override
+	public Map<String, Integer> getCounts() {
+		return Collections.emptyMap();
+	}
+
+	@Override
+	public Map<String, Integer> getCounts(String[] propIds) {
+		return Collections.emptyMap();
+	}
+
+	@Override
+	public Map<String, String> getChildrenToParents() {
+		return Collections.emptyMap();
+	}
+
+	@Override
+	public Map<String, String> getChildrenToParents(String[] propIds) {
+		return Collections.emptyMap();
+	}
+	
+	
 }
