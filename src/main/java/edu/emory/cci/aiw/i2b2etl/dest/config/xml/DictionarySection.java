@@ -213,4 +213,14 @@ final class DictionarySection extends ConfigurationSection implements Settings {
         return this.dictionary.get("patientDimensionDeathDate");
     }
 
+    @Override
+    public boolean getManageCTotalNum() {
+        String manageCTotalNum = this.dictionary.get("manageCTotalNum");
+        if (manageCTotalNum != null) {
+            return Boolean.parseBoolean(manageCTotalNum);
+        } else {
+            return false;
+        }
+    }
+    
 }

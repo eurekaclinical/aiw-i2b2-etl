@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  *
- * @author arpost
+ * @author Andrew Post
  */
 public interface Settings {
     String getProviderFullName();
@@ -60,4 +60,5 @@ public interface Settings {
     String getAgeConceptCodePrefix();
     String getMetaTableName();
     Set<String> getDimensionDataTypes();
+    boolean getManageCTotalNum();
 }

@@ -73,6 +73,7 @@ import org.protempa.query.Query;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -98,6 +99,9 @@ import org.protempa.dest.QueryResultsHandlerCloseException;
 public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private static final String[] OBX_FACT_IDXS = new String[]{"FACT_NOLOB", "FACT_PATCON_DATE_PRVD_IDX", "FACT_CNPT_PAT_ENCT_IDX"};
+
+    // upload_id for all the dimension table stored procedures
+    private final static int UPLOAD_ID = 0;
 
     private final Query query;
     private final KnowledgeSource knowledgeSource;
@@ -272,6 +276,23 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             // create i2b2 temporary tables using stored procedures
             truncateTempTables();
             this.dataSchemaConnection = openDataDatabaseConnection();
+
+            if (this.settings.getManageCTotalNum()) {
+                try (Connection conn = openMetadataDatabaseConnection()) {
+                    try (Statement stmt = conn.createStatement();
+                            ResultSet rs = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS")) {
+                        while (rs.next()) {
+                            String tableName = rs.getString(1);
+                            try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_CLEAR_C_TOTALNUM(?) }")) {
+                                logger.log(Level.INFO, "Clearing C_TOTALNUM for query {0}", this.query.getId());
+                                mappingCall.setString(1, tableName);
+                                mappingCall.execute();
+                                //commit and rollback are called by stored procedure.
+                            }
+                        }
+                    }
+                }
+            }
             logger.log(Level.INFO, "Populating observation facts table for query {0}", this.query.getId());
         } catch (KnowledgeSourceReadException | SQLException | OntologyBuildException ex) {
             throw new QueryResultsHandlerProcessingException("Error during i2b2 load", ex);
@@ -309,7 +330,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private String tempObservationFactTableName() {
         return PropositionFactHandler.TEMP_OBSERVATION_TABLE;
     }
-    
+
     private String tempObservationFactCompleteTableName() {
         return PropositionFactHandler.TEMP_OBSERVATION_COMPLETE_TABLE;
     }
@@ -370,8 +391,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     @Override
     public void finish() throws QueryResultsHandlerProcessingException {
-        // upload_id for all the dimension table stored procedures
-        final int UPLOAD_ID = 0;
 
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.FINE, "Beginning finish for query {0}", this.query.getId());
@@ -410,7 +429,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
         }
-        
+
         logger.log(Level.INFO, "Populating dimensions for query {0}", queryId);
 
         if (exception == null) {
@@ -611,6 +630,25 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     }
                 } else {
                     logger.log(Level.INFO, "Skipping metadata tables for query {0}", queryId);
+                }
+            } catch (SQLException ex) {
+                exception = ex;
+            }
+        }
+
+        if (exception == null && this.settings.getManageCTotalNum()) {
+            try (Connection conn = openMetadataDatabaseConnection()) {
+                try (Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS")) {
+                    while (rs.next()) {
+                        String tableName = rs.getString(1);
+                        try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_UPDATE_C_TOTALNUM(?) }")) {
+                            logger.log(Level.INFO, "Updating C_TOTALNUM for query {0}", this.query.getId());
+                            mappingCall.setString(1, tableName);
+                            mappingCall.execute();
+                            //commit and rollback are called by stored procedure.
+                        }
+                    }
                 }
             } catch (SQLException ex) {
                 exception = ex;
