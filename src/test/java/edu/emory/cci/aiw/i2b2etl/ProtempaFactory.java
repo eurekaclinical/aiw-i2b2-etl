@@ -110,7 +110,7 @@ public class ProtempaFactory implements AutoCloseable {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet actualDataSet = dbUnitConn.createDataSet();
-                Assertion.assertEqualsIgnoreCols(new SortedDataSet(expectedDataSet), new SortedDataSet(actualDataSet), tableName, new String[]{"IMPORT_DATE", "DOWNLOAD_DATE"});
+                Assertion.assertEqualsIgnoreCols(new SortedDataSet(expectedDataSet), new SortedDataSet(actualDataSet), tableName, new String[]{"IMPORT_DATE", "DOWNLOAD_DATE", "AGE_IN_YEARS_NUM"});
                 dbUnitConn.close();
                 dbUnitConn = null;
             } finally {

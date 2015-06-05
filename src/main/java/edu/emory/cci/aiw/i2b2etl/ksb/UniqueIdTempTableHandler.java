@@ -29,13 +29,13 @@ import java.sql.SQLException;
  *
  * @author Andrew Post
  */
-class UniqueIdTempTableHandler extends RecordHandler<String> {
+public class UniqueIdTempTableHandler extends RecordHandler<String> {
 
-    UniqueIdTempTableHandler(Connection connection) throws SQLException {
+    public UniqueIdTempTableHandler(Connection connection) throws SQLException {
         super(connection, "INSERT INTO EK_TEMP_UNIQUE_IDS VALUES (?)");
     }
     
-    UniqueIdTempTableHandler(Connection connection, boolean commit) throws SQLException {
+    public UniqueIdTempTableHandler(Connection connection, boolean commit) throws SQLException {
         super(connection, "INSERT INTO EK_TEMP_UNIQUE_IDS VALUES (?)", commit);
     }
 

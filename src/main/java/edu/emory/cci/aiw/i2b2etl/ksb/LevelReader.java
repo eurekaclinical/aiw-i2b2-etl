@@ -64,7 +64,7 @@ class LevelReader {
                         childTempTableHandler.insert(child);
                     }
                 }
-                
+
                 try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, new QueryConstructor() {
 
                     @Override
@@ -84,8 +84,10 @@ class LevelReader {
             } catch (SQLException ex) {
                 try {
                     connection.rollback();
-                } catch (SQLException ignore) {}
-                throw ex;
+                } catch (SQLException ignore) {
+                } finally {
+                    throw ex;
+                }
             }
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);

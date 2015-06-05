@@ -47,7 +47,7 @@ class PhenotypesBuilder extends PropositionConceptTreeBuilder implements Subtree
         if (getMetadata().getPhenotypeDefinitions().length > 0) {
             Metadata metadata = getMetadata();
             ConceptId conceptId
-                    = SimpleConceptId.getInstance("Phenotypes", metadata);
+                    = SimpleConceptId.getInstance("AIW|Phenotypes", metadata);
             concept = metadata.getFromIdCache(conceptId);
             if (concept == null) {
                 try {

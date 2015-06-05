@@ -81,8 +81,13 @@ public final class I2b2Destination extends AbstractDestination {
     }
 
     @Override
+    public boolean isGetStatisticsSupported() {
+        return true;
+    }
+
+    @Override
     public Statistics getStatistics() throws StatisticsException {
-        return new I2b2StatisticsCollector(this.config).collectStatistics();
+        return new I2b2Statistics(this.config);
     }
     
 }
