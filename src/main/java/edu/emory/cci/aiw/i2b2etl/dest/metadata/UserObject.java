@@ -375,11 +375,7 @@ public class UserObject {
     }
 
     int getHLevel() {
-        if (this.level >= 0) {
-            return this.level;
-        } else {
-            return StringUtils.countMatches(getFullName(), "\\") - 1;
-        }
+        return this.level;
     }
 
     void setSynonymCode(SynonymCode synonymCode) {

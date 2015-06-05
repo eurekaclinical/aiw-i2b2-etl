@@ -200,7 +200,7 @@ public class I2b2Statistics implements Statistics {
                 @Override
                 public void appendStatement(StringBuilder sql, String table) {
                     if (I2b2Statistics.this.currentPropIds.isEmpty()) {
-                        sql.append("SELECT A1.EK_UNIQUE_ID EK_UNIQUE_ID, A2.EK_UNIQUE_ID PARENT_EK_UNIQUE_ID, A1.C_TOTALNUM FROM ").append(table).append(" A1 LEFT OUTER JOIN ").append(table).append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) WHERE A1.C_HLEVEL=(SELECT MIN(C_HLEVEL) FROM ").append(table).append(") AND A1.M_APPLIED_PATH='@' AND A1.EK_UNIQUE_ID NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'");
+                        sql.append("SELECT A1.EK_UNIQUE_ID EK_UNIQUE_ID, A2.EK_UNIQUE_ID PARENT_EK_UNIQUE_ID, A1.C_TOTALNUM FROM ").append(table).append(" A1 LEFT OUTER JOIN ").append(table).append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) WHERE A1.C_HLEVEL=(SELECT MIN(C_HLEVEL) FROM TABLE_ACCESS WHERE C_TABLE_NAME='").append(table).append("') AND A1.M_APPLIED_PATH='@' AND A1.EK_UNIQUE_ID NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'");
                     } else {
                         sql.append("SELECT A1.EK_UNIQUE_ID EK_UNIQUE_ID, A2.EK_UNIQUE_ID PARENT_EK_UNIQUE_ID, A1.C_TOTALNUM FROM ").append(table).append(" A1 LEFT OUTER JOIN ").append(table).append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A2.EK_UNIQUE_ID=A3.UNIQUE_ID) WHERE A2.M_APPLIED_PATH='@' AND A2.EK_UNIQUE_ID NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'");
                     }
@@ -223,7 +223,7 @@ public class I2b2Statistics implements Statistics {
         try (Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(
                         I2b2Statistics.this.currentPropIds.isEmpty()
-                                ? "SELECT A1.C_BASECODE C_BASECODE, A2.C_BASECODE PARENT_C_BASECODE, A1.C_TOTALNUM FROM " + this.metaTableName + " A1 LEFT OUTER JOIN " + this.metaTableName + " A2 ON (A1.C_PATH=A2.C_FULLNAME) WHERE (A1.C_HLEVEL=(SELECT MIN(C_HLEVEL) FROM " + this.metaTableName + ") OR A1.C_PATH=(SELECT C_FULLNAME FROM " + this.metaTableName + " WHERE C_BASECODE='AIW|Phenotypes')) AND A1.M_APPLIED_PATH='@' AND A1.C_BASECODE NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'"
+                                ? "SELECT A1.C_BASECODE C_BASECODE, A2.C_BASECODE PARENT_C_BASECODE, A1.C_TOTALNUM FROM " + this.metaTableName + " A1 LEFT OUTER JOIN " + this.metaTableName + " A2 ON (A1.C_PATH=A2.C_FULLNAME) WHERE (A1.C_HLEVEL=(SELECT MIN(C_HLEVEL) FROM TABLE_ACCESS WHERE C_TABLE_NAME='" + this.metaTableName + "') OR A1.C_PATH=(SELECT C_FULLNAME FROM " + this.metaTableName + " WHERE C_BASECODE='AIW|Phenotypes')) AND A1.M_APPLIED_PATH='@' AND A1.C_BASECODE NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'"
                                 : "SELECT A1.C_BASECODE C_BASECODE, A2.C_BASECODE PARENT_C_BASECODE, A1.C_TOTALNUM FROM " + this.metaTableName + " A1 LEFT OUTER JOIN " + this.metaTableName + " A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A2.C_BASECODE=A3.UNIQUE_ID) WHERE A2.M_APPLIED_PATH='@' AND A2.C_BASECODE NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'")) {
             IntStatisticsBuilder c = doProcess(rs);
             counts.putAll(c.counts);
