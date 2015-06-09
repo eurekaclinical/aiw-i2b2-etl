@@ -28,27 +28,31 @@ This project includes:
   Drools :: Rete-OO Core under The Apache Software License, Version 2.0
   JavaUtil under Apache License, Version 2.0
   je under Sleepycat License
-  JTA 1.1 under The Apache Software License, Version 2.0
   kXML 2 is a small XML pull parser based on the common XML pull API under BSD style or Public Domain
   Lucene Core under Apache 2
   mvel under The Apache Software License, Version 2.0
+  Neo4j - Community under GNU General Public License, Version 3
+  Neo4j - Consistency Checker under GNU General Public License, Version 3
+  Neo4j - CSV reading and parsing under GNU General Public License, Version 3
   Neo4j - Cypher under GNU General Public License, Version 3
-  Neo4j - Cypher Commons under GNU General Public License, Version 3
   Neo4j - Cypher Compiler 1.9 under GNU General Public License, Version 3
   Neo4j - Cypher Compiler 2.0 under GNU General Public License, Version 3
   Neo4j - Cypher Compiler 2.1 under GNU General Public License, Version 3
+  Neo4j - Cypher Compiler 2.2 under GNU General Public License, Version 3
   Neo4j - Graph Algorithms under GNU General Public License, Version 3
   Neo4j - Graph Database Kernel under GNU General Public License, Version 3
   Neo4j - Graph Matching under GNU General Public License, Version 3
+  Neo4j - IO under GNU General Public License, Version 3
   Neo4j - JMX support under GNU General Public License, Version 3
   Neo4j - Lucene Index under GNU General Public License, Version 3
   Neo4j - Primitive Collections under GNU General Public License, Version 3
+  Neo4j - Unsafe Access under GNU General Public License, Version 3
   Neo4j - Usage Data Collection under GNU General Public License, Version 3
-  Neo4j Community under GNU General Public License, Version 3
   opencsv under Apache 2
   parboiled-core under Apache 2
   parboiled-scala under Apache 2
   Protempa Framework under Apache License, Version 2.0
+  Scala Compiler under BSD-like
   Scala Library under BSD-like
   SLF4J API Module under MIT License
 
