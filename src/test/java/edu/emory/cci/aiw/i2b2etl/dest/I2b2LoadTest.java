@@ -42,7 +42,7 @@ import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.ValueComparator;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.QueryBuildException;
-import org.protempa.FinderException;
+import org.protempa.QueryException;
 import org.protempa.ProtempaStartupException;
 
 
@@ -60,7 +60,7 @@ public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
      * @throws IOException if there was a problem reading the Protempa
      * configuration file or the i2b2 query results handler configuration file.
      * @throws QueryBuildException if constructing the Protempa query failed.
-     * @throws FinderException if executing the Protempa query failed.
+     * @throws QueryException if executing the Protempa query failed.
      */
     @BeforeClass
     public static void setUp() throws Exception {

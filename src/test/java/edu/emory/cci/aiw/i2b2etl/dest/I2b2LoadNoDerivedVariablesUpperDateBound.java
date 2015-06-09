@@ -26,7 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.BeforeClass;
-import org.protempa.FinderException;
+import org.protempa.QueryException;
 import org.protempa.ProtempaStartupException;
 import org.protempa.backend.dsb.filter.DateTimeFilter;
 import org.protempa.proposition.interval.Interval.Side;
@@ -51,7 +51,7 @@ public class I2b2LoadNoDerivedVariablesUpperDateBound extends AbstractI2b2DestLo
      * @throws IOException if there was a problem reading the Protempa
      * configuration file or the i2b2 query results handler configuration file.
      * @throws QueryBuildException if constructing the Protempa query failed.
-     * @throws FinderException if executing the Protempa query failed.
+     * @throws QueryException if executing the Protempa query failed.
      */
     @BeforeClass
     public static void setUp() throws Exception {

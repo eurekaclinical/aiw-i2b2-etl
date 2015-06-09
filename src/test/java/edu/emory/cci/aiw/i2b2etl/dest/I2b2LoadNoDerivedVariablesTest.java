@@ -24,7 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.junit.BeforeClass;
-import org.protempa.FinderException;
+import org.protempa.QueryException;
 import org.protempa.ProtempaStartupException;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.QueryBuildException;
@@ -45,7 +45,7 @@ public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
      * @throws IOException if there was a problem reading the Protempa
      * configuration file or the i2b2 query results handler configuration file.
      * @throws QueryBuildException if constructing the Protempa query failed.
-     * @throws FinderException if executing the Protempa query failed.
+     * @throws QueryException if executing the Protempa query failed.
      */
     @BeforeClass
     public static void setUp() throws Exception {
