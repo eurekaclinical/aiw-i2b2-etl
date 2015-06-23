@@ -26,25 +26,29 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
+import org.drools.util.StringUtils;
 import org.neo4j.graphdb.DynamicLabel;
 
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.MultipleFoundException;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.graphdb.index.IndexHits;
-import org.neo4j.graphdb.index.ReadableIndex;
+import org.neo4j.graphdb.schema.Schema;
+import org.neo4j.helpers.collection.IteratorUtil;
 import org.protempa.DataSource;
 import org.protempa.DataSourceReadException;
 import org.protempa.KnowledgeSourceReadException;
@@ -87,6 +91,8 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 	private final String keyType;
 	private Transaction transaction;
 	private int count;
+	private Set<String> missingPropIds;
+	private Set<String> keyTypes;
 
 	Neo4jQueryResultsHandlerWrapped(Query inQuery, DataSource dataSource, Configuration configuration) throws QueryResultsHandlerInitException {
 		this.nodes = new HashMap<>();
@@ -105,6 +111,7 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 		} catch (DataSourceReadException ex) {
 			throw new QueryResultsHandlerInitException(ex);
 		}
+		this.missingPropIds = new HashSet<>();
 	}
 
 	@Override
@@ -118,16 +125,24 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 			this.home.stopServer();
 			File dbPath = this.home.getDbPath();
 			LOGGER.info("Database path is {}", dbPath);
+			GraphDatabaseFactory factory = new GraphDatabaseFactory();
+			GraphDatabaseBuilder dbBuilder = factory.newEmbeddedDatabaseBuilder(dbPath.getAbsolutePath());
 			if (this.query.getQueryMode() == QueryMode.REPLACE) {
 				deleteAll();
 			}
-			GraphDatabaseFactory factory = new GraphDatabaseFactory();
-			GraphDatabaseBuilder dbBuilder = factory.newEmbeddedDatabaseBuilder(dbPath.getAbsolutePath());
-			this.db = dbBuilder.setConfig(GraphDatabaseSettings.node_keys_indexable, "__type,__uid").
-					setConfig(GraphDatabaseSettings.node_auto_indexing, "true").
-					setConfig(GraphDatabaseSettings.relationship_keys_indexable, "name").
-					setConfig(GraphDatabaseSettings.relationship_auto_indexing, "true").
-					newGraphDatabase();
+			this.db = dbBuilder.newGraphDatabase();
+			if (this.query.getQueryMode() != QueryMode.REPLACE) {
+				LOGGER.error("Grabbing proposition ids already loaded");
+				this.keyTypes = new HashSet<>();
+				try (Result distinctTypesResult = this.db.execute("MATCH (node:" + NODE_LABEL.name() + ") RETURN DISTINCT node.__type AS node_type");
+						ResourceIterator<Object> columnAs = distinctTypesResult.columnAs("node_type")) {
+					while (columnAs.hasNext()) {
+						Object next = columnAs.next();
+						this.keyTypes.add((String) next);
+					}
+				}
+				LOGGER.error("Found proposition ids {}", this.keyTypes);
+			}
 		} catch (IOException | InterruptedException | CommandFailedException ex) {
 			throw new QueryResultsHandlerProcessingException(ex);
 		}
@@ -177,25 +192,44 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 			this.transaction.success();
 			this.transaction.close();
 			this.transaction = null;
-			
+
 			try (Transaction tx = this.db.beginTx()) {
-				ResourceIterable<Node> findNodesByLabelAndProperty = this.db.findNodesByLabelAndProperty(Neo4jStatistics.NODE_LABEL, null, null);
-				Node node;
-				try (ResourceIterator<Node> iterator = findNodesByLabelAndProperty.iterator()) {
-					if (iterator.hasNext()) {
-						node = iterator.next();
-					} else {
-						node = this.db.createNode(Neo4jStatistics.NODE_LABEL);
-					}
-				}
-				ReadableIndex<Node> autoIndex = this.db.index().getNodeAutoIndexer().getAutoIndex();
-				try (IndexHits<Node> hits = autoIndex.get("__type", this.keyType)) {
-					node.setProperty(Neo4jStatistics.TOTAL_KEYS,
-							hits.size());
+				if (this.query.getQueryMode() == QueryMode.REPLACE) {
+					Schema schema = this.db.schema();
+					schema.indexFor(NODE_LABEL).on("__uid").create();
+					schema.indexFor(NODE_LABEL).on("__type").create();
 				}
 
 				tx.success();
 			}
+
+			if (this.query.getQueryMode() == QueryMode.REPLACE) {
+				try (Transaction tx = this.db.beginTx()) {
+					Schema schema = this.db.schema();
+					schema.awaitIndexesOnline(4, TimeUnit.HOURS);
+					tx.success();
+				}
+			}
+
+			try (Transaction tx = this.db.beginTx()) {
+				Node node;
+				try {
+					node = this.db.findNode(Neo4jStatistics.NODE_LABEL, null, null);
+				} catch (MultipleFoundException ex) {
+					throw new QueryResultsHandlerProcessingException("duplicate statistics node");
+				}
+				if (node == null) {
+					node = this.db.createNode(Neo4jStatistics.NODE_LABEL);
+				}
+				
+				ResourceIterator<Node> findNodes = this.db.findNodes(NODE_LABEL, keyType, null);
+				int countKeys = IteratorUtil.count(findNodes);
+				
+				node.setProperty(Neo4jStatistics.TOTAL_KEYS, countKeys);
+
+				tx.success();
+			}
+
 		}
 	}
 
@@ -211,6 +245,7 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 
 	@Override
 	public void close() throws QueryResultsHandlerCloseException {
+		this.keyTypes = null;
 		if (this.db != null) {
 			if (this.transaction != null) {
 				this.transaction.close();
@@ -226,40 +261,45 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 
 	@Override
 	public void cancel() {
-		
+
 	}
 
 	private Node node(Proposition inProposition) throws QueryResultsHandlerProcessingException {
 		String uid = inProposition.getUniqueId().getStringRepresentation();
-		MapPropositionVisitor visitor = new MapPropositionVisitor();
+		MapPropositionVisitor visitor = new MapPropositionVisitor(this.configuration, this.cache);
 		Node node = null;
-		if (this.query.getQueryMode() == QueryMode.REPLACE) {
+		if (this.query.getQueryMode() == QueryMode.REPLACE || !this.keyTypes.contains(inProposition.getId())) {
 			node = this.db.createNode(NODE_LABEL);
 		} else {
-			int count = 0;
-			for (Node n : this.db.findNodesByLabelAndProperty(null, "__uid", uid)) {
-				if (count > 0) {
-					throw new QueryResultsHandlerProcessingException("duplicate uid " + uid);
-				}
-				node = n;
-				count++;
+			try {
+				node = this.db.findNode(NODE_LABEL, "__uid", uid);
+			} catch (MultipleFoundException ex) {
+				throw new QueryResultsHandlerProcessingException("duplicate uid " + uid);
 			}
-			if (count == 0) {
+
+			if (node == null) {
 				node = this.db.createNode(NODE_LABEL);
 			}
 		}
 		assert node != null : "node was never set";
 		String propId = inProposition.getId();
 		PropositionDefinition pd = this.cache.get(propId);
-		if (pd == null) {
+		if (pd == null && this.missingPropIds.add(propId)) {
 			LOGGER.warn("No proposition definition with id {}", propId);
 		}
 		node.setProperty("displayName", pd != null ? pd.getDisplayName() : propId);
 		node.setProperty("__type", inProposition.getId());
 		inProposition.accept(visitor);
 		for (Map.Entry<String, Object> entry : visitor.getMap().entrySet()) {
-			if (entry.getValue() != null) {
-				node.setProperty(entry.getKey(), entry.getValue());
+			Object value = entry.getValue();
+			try {
+				if (value != null) {
+					node.setProperty(entry.getKey(), value);
+				} else {
+					node.setProperty(entry.getKey(), this.configuration.getNullValue());
+				}
+			} catch (IllegalArgumentException ex) {
+				throw new AssertionError(ex);
 			}
 		}
 		node.setProperty("__uid", uid);

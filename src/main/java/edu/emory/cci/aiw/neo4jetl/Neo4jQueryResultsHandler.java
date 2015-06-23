@@ -88,14 +88,16 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 					endSynchronousQueue.put(handoffObject);
 
 					//Handle query result step
-					while (processing) {
+					while (true) {
 						startSynchronousQueue.take();
+						if (!processing) {
+							break;
+						}
 						doHandleQueryResult();
 						endSynchronousQueue.put(handoffObject);
 					}
 
 					//Finish step
-					startSynchronousQueue.take();
 					doFinish();
 					endSynchronousQueue.put(handoffObject);
 				} catch (QueryResultsHandlerProcessingException ex) {

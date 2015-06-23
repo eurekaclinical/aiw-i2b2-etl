@@ -21,10 +21,13 @@ package edu.emory.cci.aiw.neo4jetl;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import edu.emory.cci.aiw.neo4jetl.config.Configuration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.protempa.ParameterDefinition;
+import org.protempa.PropositionDefinition;
 
 import org.protempa.proposition.AbstractParameter;
 import org.protempa.proposition.Constant;
@@ -35,17 +38,24 @@ import org.protempa.proposition.PrimitiveParameter;
 import org.protempa.proposition.Proposition;
 import org.protempa.proposition.TemporalProposition;
 import org.protempa.proposition.interval.Interval;
-import org.protempa.proposition.value.Unit;
 import org.protempa.proposition.value.Value;
+import org.protempa.proposition.value.ValueType;
 import org.protempa.proposition.visitor.PropositionVisitor;
 
 /**
  * @author hrathod
  */
-public class MapPropositionVisitor implements PropositionVisitor {
+class MapPropositionVisitor implements PropositionVisitor {
 
 	private final Map<String, Object> map = new HashMap<>();
+	private final Configuration configuration;
+	private final Map<String, PropositionDefinition> cache;
 
+	MapPropositionVisitor(Configuration configuration, Map<String, PropositionDefinition> cache) {
+		this.configuration = configuration;
+		this.cache = cache;
+	}
+	
 	@Override
 	public void visit(Map<String, List<Proposition>> finderResult) {
 		throw new UnsupportedOperationException("Not supported yet");
@@ -99,6 +109,8 @@ public class MapPropositionVisitor implements PropositionVisitor {
 				RawValueVisitor visitor = new RawValueVisitor();
 				v.accept(visitor);
 				this.map.put(s, visitor.getValue());
+			} else {
+				this.map.put(s, this.configuration.getNullValue());
 			}
 		}
 	}
@@ -121,6 +133,10 @@ public class MapPropositionVisitor implements PropositionVisitor {
 			this.map.put("value", visitor.getValue());
 			this.map.put("value_tval", value.getFormatted());
 			this.map.put("valueType", value.getType().name());
+		} else {
+			this.map.put("value", this.configuration.getNullValue());
+			this.map.put("value_tval", this.configuration.getNullValue());
+			this.map.put("valueType", ((ParameterDefinition) this.cache.get(param.getId())).getValueType().name());
 		}
 	}
 }
