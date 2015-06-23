@@ -22,6 +22,7 @@ package edu.emory.cci.aiw.neo4jetl;
  * #L%
  */
 import edu.emory.cci.aiw.neo4jetl.config.Configuration;
+import edu.emory.cci.aiw.neo4jetl.config.IndexOnProperty;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -198,6 +199,9 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 					Schema schema = this.db.schema();
 					schema.indexFor(NODE_LABEL).on("__uid").create();
 					schema.indexFor(NODE_LABEL).on("__type").create();
+					for (IndexOnProperty indexOnProperty : this.configuration.getPropertiesToIndex()) {
+						schema.indexFor(NODE_LABEL).on(indexOnProperty.getPropertyName()).create();
+					}
 				}
 
 				tx.success();

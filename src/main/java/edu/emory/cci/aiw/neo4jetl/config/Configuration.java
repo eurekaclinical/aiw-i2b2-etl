@@ -33,4 +33,6 @@ public interface Configuration {
 
 	public Object getNullValue();
 	
+	public IndexOnProperty[] getPropertiesToIndex();
+	
 }
