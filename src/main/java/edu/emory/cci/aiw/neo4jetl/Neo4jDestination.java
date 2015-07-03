@@ -60,4 +60,9 @@ public class Neo4jDestination extends AbstractDestination {
 	public Statistics getStatistics() throws StatisticsException {
 		return new Neo4jStatistics(this.configuration);
 	}
+	
+	@Override
+	public String[] getSupportedPropositionIds(DataSource dataSource, KnowledgeSource knowledgeSource) {
+		return this.configuration.getPropositionIds();
+	}
 }

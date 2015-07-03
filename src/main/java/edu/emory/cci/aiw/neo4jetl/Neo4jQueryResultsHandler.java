@@ -129,11 +129,6 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 	}
 
 	@Override
-	public String[] getPropositionIdsNeeded() throws QueryResultsHandlerProcessingException {
-		return this.wrapped.getPropositionIdsNeeded();
-	}
-
-	@Override
 	public void start(final Collection<PropositionDefinition> cache) throws QueryResultsHandlerProcessingException {
 		this.cache = cache;
 		this.processing = true;
