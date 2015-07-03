@@ -19,13 +19,18 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-
+import static edu.emory.cci.aiw.i2b2etl.AbstractTest.getConfigFactory;
+import edu.emory.cci.aiw.i2b2etl.I2b2DestinationFactory;
+import org.apache.commons.lang3.ArrayUtils;
+import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
 import org.protempa.Protempa;
+import org.protempa.SourceFactory;
+import org.protempa.dest.Destination;
+import org.protempa.dest.QueryResultsHandler;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuilder;
-import org.protempa.dest.QueryResultsHandler;
 
 /**
  *
@@ -35,14 +40,23 @@ public class GetPropositionIdsNeededTest extends AbstractI2b2DestTest {
 
     @Test
     public void testPropositionIds() throws Exception {
-        QueryBuilder queryBuilder = new DefaultQueryBuilder();
         try (Protempa protempa = getProtempaFactory().newInstance()) {
-            Query query = protempa.buildQuery(queryBuilder);
-            I2b2Destination destination = getI2b2DestFactory().getInstance();
-            try (QueryResultsHandler qrh = 
-                    destination.getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource())) {
-                assertEqualsStrings("/truth/get-proposition-ids-needed-test-file", qrh.getPropositionIdsNeeded());
-            }
+            assertEqualsStrings("/truth/get-proposition-ids-needed-test-file", protempa.getSupportedPropositionIds(new I2b2DestinationFactory().getInstance(true)));
         }
     }
+    
+    @Test
+    public void testPropositionIdsDestControlsPropIdsRetained() throws Exception {
+        SourceFactory sourceFactory = new SourceFactory(getConfigFactory().getProtempaConfiguration());
+        try (Protempa protempa = Protempa.newInstance(sourceFactory)) {
+            Destination dest = new I2b2DestinationFactory().getInstance();
+            QueryBuilder queryBuilder = new DefaultQueryBuilder();
+            Query query = protempa.buildQuery(queryBuilder);
+            try (QueryResultsHandler qrh = dest.getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource())) {
+                assertArrayEquals(ArrayUtils.EMPTY_STRING_ARRAY, protempa.getSupportedPropositionIds(dest));
+            }
+        }
+
+    }
+
 }

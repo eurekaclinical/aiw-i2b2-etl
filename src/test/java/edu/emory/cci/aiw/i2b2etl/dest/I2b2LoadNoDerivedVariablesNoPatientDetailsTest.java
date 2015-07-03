@@ -36,7 +36,7 @@ import org.protempa.query.QueryBuildException;
  *
  * @author Andrew Post
  */
-public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
+public class I2b2LoadNoDerivedVariablesNoPatientDetailsTest extends AbstractI2b2DestLoadTest {
 
     /**
      * Executes the i2b2 ETL load.
@@ -50,17 +50,17 @@ public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
     @BeforeClass
     public static void setUp() throws Exception {
         DefaultQueryBuilder q = new DefaultQueryBuilder();
-        q.setId("i2b2 ETL Test Query No Derived Variables");
-        q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
+        q.setId("i2b2 ETL Test Query No Derived Variables No PatientDetails");
+        q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign"});
         getProtempaFactory().execute(q);
         
-        File file = File.createTempFile("i2b2LoadNoDerivedVariablesTest", ".xml");
+        File file = File.createTempFile("i2b2LoadNoDerivedVariablesNoPatientDetailsTest", ".xml");
         try (FileOutputStream out = new FileOutputStream(file)) {
             getProtempaFactory().exportI2b2DataSchema(out);
             System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
         }
         
-        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesTestData.xml");
+        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesNoPatientDetailsTest.xml");
     }
 
 }

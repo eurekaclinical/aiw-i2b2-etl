@@ -19,7 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
 
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import org.w3c.dom.*;
 
 /**
@@ -30,9 +30,9 @@ abstract class ConfigurationSection {
     
     abstract String getNodeName();
     
-    abstract void put(Node elm) throws ConfigurationReadException;
+    abstract void put(Node elm) throws ConfigurationInitException;
     
-    void load(Element elm) throws ConfigurationReadException {
+    void load(Element elm) throws ConfigurationInitException {
         NodeList nL = elm.getChildNodes();
         for (int i = 0; i < nL.getLength(); i++) {
             Node section = nL.item(i);
@@ -44,7 +44,7 @@ abstract class ConfigurationSection {
         }
     }
     
-    static String readAttribute(NamedNodeMap nnm, String namedItem, boolean required) throws ConfigurationReadException {
+    static String readAttribute(NamedNodeMap nnm, String namedItem, boolean required) throws ConfigurationInitException {
         Attr attr = (Attr) nnm.getNamedItem(namedItem);
         String val;
         if (attr == null) {
@@ -53,7 +53,7 @@ abstract class ConfigurationSection {
             val = attr.getValue();
         }
         if (required && (val == null)) {
-            throw new ConfigurationReadException("bad " + namedItem + " definition in configuration file");
+            throw new ConfigurationInitException("bad " + namedItem + " definition in configuration file");
         }
         return val;
     }

@@ -30,19 +30,20 @@ import org.junit.BeforeClass;
  */
 public abstract class AbstractI2b2DestTest extends AbstractTest {
 
-    
     private static ProtempaFactory protempaFactory;
-    
+
     @BeforeClass
     public static void setUpClsCreateProtempaFactory() throws Exception {
         protempaFactory = new ProtempaFactory(getConfigFactory());
     }
-    
+
     @AfterClass
     public static void tearDownClsCloseProtempaFactory() throws Exception {
-        protempaFactory.close();
+        if (protempaFactory != null) {
+            protempaFactory.close();
+        }
     }
-    
+
     public static ProtempaFactory getProtempaFactory() {
         return protempaFactory;
     }

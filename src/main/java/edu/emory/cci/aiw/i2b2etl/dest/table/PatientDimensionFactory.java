@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
@@ -47,6 +46,7 @@ import org.protempa.proposition.value.Value;
  * @author arpost
  */
 public class PatientDimensionFactory extends DimensionFactory {
+
     private final Metadata metadata;
     private final PatientDimension patientDimension;
     private final PatientDimensionHandler patientDimensionHandler;
@@ -62,7 +62,7 @@ public class PatientDimensionFactory extends DimensionFactory {
         this.patientDimensionHandler = new PatientDimensionHandler(dataConnectionSpec);
         this.patientMappingHandler = new PatientMappingHandler(dataConnectionSpec);
     }
-    
+
     public PatientDimension getInstance(String keyId, Proposition encounterProp,
             Map<UniqueId, Proposition> references) throws InvalidPatientRecordException, SQLException {
         String obxSectionStr = this.settings.getPatientDimensionMRN();
@@ -70,6 +70,8 @@ public class PatientDimensionFactory extends DimensionFactory {
         List<UniqueId> uids = encounterProp.getReferences(dataSpec.getReferenceName());
         int size = uids.size();
         Logger logger = TableUtil.logger();
+        patientDimension.setEncryptedPatientId(keyId);
+        patientDimension.setEncryptedPatientIdSource(metadata.getSourceSystemCode());
         if (size > 0) {
             if (size > 1) {
                 logger.log(Level.WARNING,
@@ -127,8 +129,6 @@ public class PatientDimensionFactory extends DimensionFactory {
 
                 Long ageInYears = computeAgeInYears(birthdate);
 
-                patientDimension.setEncryptedPatientId(keyId);
-                patientDimension.setEncryptedPatientIdSource(metadata.getSourceSystemCode());
                 patientDimension.setZip(zipCode != null ? zipCode.getFormatted() : null);
                 patientDimension.setAgeInYears(ageInYears);
                 patientDimension.setGender(gender != null ? gender.getFormatted() : null);
@@ -140,28 +140,22 @@ public class PatientDimensionFactory extends DimensionFactory {
                 patientDimension.setRace(race != null ? race.getFormatted() : null);
                 patientDimension.setSourceSystem(MetadataUtil.toSourceSystemCode(prop.getSourceSystem().getStringRepresentation()));
                 if (vitalStatus instanceof NominalValue) {
-                    patientDimension.setVital(VitalStatusCode.fromCode(vitalStatus.getFormatted()));
+                    patientDimension.setVital(VitalStatusCode.fromCode(vitalStatus.getFormatted()).getCode());
                 } else if (vitalStatus instanceof BooleanValue) {
-                    patientDimension.setVital(VitalStatusCode.getInstance(((BooleanValue) vitalStatus).booleanValue()));
+                    patientDimension.setVital(VitalStatusCode.getInstance(((BooleanValue) vitalStatus).booleanValue()).getCode());
                 } else {
-                    patientDimension.setVital(VitalStatusCode.getInstance(null));
+                    patientDimension.setVital(VitalStatusCode.getInstance(null).getCode());
                 }
                 Date updateDate = prop.getUpdateDate();
                 patientDimension.setUpdated(TableUtil.setTimestampAttribute(updateDate != null ? updateDate : prop.getCreateDate()));
                 patientDimension.setDownloaded(TableUtil.setTimestampAttribute(prop.getDownloadDate()));
-                this.patientDimensionHandler.insert(patientDimension);
-                this.patientMappingHandler.insert(patientDimension);
-                return patientDimension;
-            } else {
-                throw new InvalidPatientRecordException("Null patient MRN for encounter "
-                        + encounterProp);
             }
-        } else {
-            throw new InvalidPatientRecordException("No patient dimension information for "
-                    + encounterProp);
         }
+        this.patientDimensionHandler.insert(patientDimension);
+        this.patientMappingHandler.insert(patientDimension);
+        return patientDimension;
     }
-    
+
     public void close() throws SQLException {
         this.patientDimensionHandler.close();
         this.patientMappingHandler.close();

@@ -21,9 +21,11 @@ package edu.emory.cci.aiw.i2b2etl;
  */
 
 import edu.emory.cci.aiw.i2b2etl.dest.I2b2Destination;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.xml.XmlFileConfiguration;
 import java.io.File;
 import java.io.IOException;
+import org.protempa.dest.DestinationInitException;
 
 /**
  *
@@ -37,8 +39,16 @@ public class I2b2DestinationFactory {
         this.confXML = new I2b2ETLConfAsFile().getFile();
     }
     
-    public I2b2Destination getInstance() {
-        return new I2b2Destination(new XmlFileConfiguration(this.confXML));
+    public I2b2Destination getInstance() throws DestinationInitException {
+        return getInstance(false);
+    }
+    
+    public I2b2Destination getInstance(boolean inferSupportedPropositionIds) throws DestinationInitException {
+        try {
+            return new I2b2Destination(new XmlFileConfiguration(this.confXML), inferSupportedPropositionIds);
+        } catch (ConfigurationInitException ex) {
+            throw new DestinationInitException(ex);
+        }
     }
     
 }

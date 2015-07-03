@@ -32,7 +32,6 @@ import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.protempa.Attribute;
-import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ParameterDefinition;
@@ -90,16 +89,18 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
         try {
             for (String childPropId : this.propIds) {
                 PropositionDefinition childPropDef
-                        = readPropositionDefinition(childPropId);
-                Concept child = addNode(childPropDef);
-                if (concept != null) {
-                    concept.add(child);
+                        = this.knowledgeSourceCache.get(childPropId);
+                if (childPropDef != null) {
+                    Concept child = addNode(childPropDef);
+                    if (concept != null) {
+                        concept.add(child);
+                    }
+                    this.roots.add(child);
+                    addModifierConcepts(childPropDef, child);
+                    buildHelper(childPropDef.getInverseIsA(), child);
                 }
-                this.roots.add(child);
-                addModifierConcepts(childPropDef, child);
-                buildHelper(childPropDef.getInverseIsA(), child);
             }
-        } catch (UnknownPropositionDefinitionException | InvalidConceptCodeException | KnowledgeSourceReadException ex) {
+        } catch (InvalidConceptCodeException | KnowledgeSourceReadException ex) {
             throw new OntologyBuildException(
                     "Could not build proposition concept tree", ex);
         }
@@ -111,15 +112,16 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
     }
 
     private void buildHelper(String[] childPropIds, Concept parent)
-            throws UnknownPropositionDefinitionException,
-            KnowledgeSourceReadException, InvalidConceptCodeException, OntologyBuildException {
+            throws KnowledgeSourceReadException, InvalidConceptCodeException, OntologyBuildException {
         for (String childPropId : childPropIds) {
             PropositionDefinition childPropDef
-                    = readPropositionDefinition(childPropId);
-            Concept child = addNode(childPropDef);
-            parent.add(child);
-            addModifierConcepts(childPropDef, child);
-            buildHelper(childPropDef.getInverseIsA(), child);
+                    = this.knowledgeSourceCache.get(childPropId);
+            if (childPropDef != null) {
+                Concept child = addNode(childPropDef);
+                parent.add(child);
+                addModifierConcepts(childPropDef, child);
+                buildHelper(childPropDef.getInverseIsA(), child);
+            }
         }
     }
 
@@ -261,14 +263,4 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
         }
     }
 
-    private PropositionDefinition readPropositionDefinition(String propId)
-            throws UnknownPropositionDefinitionException,
-            KnowledgeSourceReadException {
-        PropositionDefinition result = knowledgeSourceCache.get(propId);
-        if (result != null) {
-            return result;
-        } else {
-            throw new UnknownPropositionDefinitionException(propId);
-        }
-    }
 }

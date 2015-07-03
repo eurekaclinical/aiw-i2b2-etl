@@ -44,7 +44,7 @@ public class MetadataUtil {
     }
 
     public static String toSourceSystemCode(String sourceIdString) {
-        if (sourceIdString.length() > CodeUtil.CODE_LENGTH) {
+        if (sourceIdString != null && sourceIdString.length() > CodeUtil.CODE_LENGTH) {
             return sourceIdString.substring(0, CodeUtil.CODE_LENGTH);
         } else {
             return sourceIdString;

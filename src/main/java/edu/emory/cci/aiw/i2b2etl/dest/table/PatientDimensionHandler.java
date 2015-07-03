@@ -45,7 +45,7 @@ public class PatientDimensionHandler extends ConnectionSpecRecordHandler<Patient
     protected void setParameters(PreparedStatement ps, PatientDimension patient) throws SQLException {
         ps.setString(1, patient.getEncryptedPatientId());
         ps.setString(2, MetadataUtil.toSourceSystemCode(patient.getEncryptedPatientIdSource()));
-        ps.setString(3, patient.getVital().getCode());
+        ps.setString(3, patient.getVital());
         ps.setDate(4, patient.getBirthDate());
         ps.setDate(5, patient.getDeathDate());
         ps.setString(6, patient.getGender());

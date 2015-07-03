@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.naming.NamingException;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.dbunit.Assertion;
@@ -38,6 +37,7 @@ import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.protempa.Protempa;
 import org.protempa.ProtempaException;
 import org.protempa.SourceFactory;
+import org.protempa.dest.QueryResultsHandler;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuilder;
 
@@ -48,22 +48,31 @@ import org.protempa.query.QueryBuilder;
 public class ProtempaFactory implements AutoCloseable {
     private final ConfigurationFactory configurationFactory;
     private final DatabasePopulator databasePopulator;
+    private final I2b2DestinationFactory dest;
 
-    public ProtempaFactory(ConfigurationFactory configurationFactory) throws DatabaseUnitException, SQLException, IOException {
+    public ProtempaFactory(ConfigurationFactory configurationFactory) throws IOException, SQLException, DatabaseUnitException {
         this.configurationFactory = configurationFactory;
         this.databasePopulator = new DatabasePopulator();
         this.databasePopulator.doPopulate();
+        this.dest = new I2b2DestinationFactory();
     }
 
     public Protempa newInstance() throws ProtempaException {
         SourceFactory sourceFactory = new SourceFactory(this.configurationFactory.getProtempaConfiguration());
         return Protempa.newInstance(sourceFactory);
     }
-
-    public void execute(QueryBuilder queryBuilder) throws IOException, ProtempaException, NamingException, SQLException {
+    
+    public QueryResultsHandler getQueryResultsHandler(QueryBuilder queryBuilder) throws ProtempaException {
         try (Protempa protempa = newInstance()) {
             Query query = protempa.buildQuery(queryBuilder);
-            protempa.execute(query, new I2b2DestinationFactory().getInstance());
+            return this.dest.getInstance().getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource());
+        }
+    }
+
+    public void execute(QueryBuilder queryBuilder) throws ProtempaException {
+        try (Protempa protempa = newInstance()) {
+            Query query = protempa.buildQuery(queryBuilder);
+            protempa.execute(query, dest.getInstance());
         }
     }
 

@@ -19,6 +19,9 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
+import static edu.emory.cci.aiw.i2b2etl.dest.AbstractI2b2DestTest.getProtempaFactory;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.junit.BeforeClass;
@@ -165,10 +168,16 @@ public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
 
         q.setPropositionDefinitions(
                 new PropositionDefinition[]{ed, hd, ld, ldWrapper, ld2, clad, clad2, ld2, sd});
-        q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId()});
+        q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId(), "ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
         q.setId("i2b2 ETL Test Query");
 
         getProtempaFactory().execute(q);
+        
+        File file = File.createTempFile("i2b2LoadTest", ".xml");
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            getProtempaFactory().exportI2b2DataSchema(out);
+            System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
+        }
         
         setExpectedDataSet("/truth/i2b2LoadTestData.xml");
     }

@@ -64,7 +64,7 @@ public class PatientDimension extends AbstractRecord {
     private String language;
     private String maritalStatus;
     private String religion;
-    private VitalStatusCode vital;
+    private String vital;
     private Date birthDate;
     private Date deathDate;
     private String sourceSystem;
@@ -111,7 +111,7 @@ public class PatientDimension extends AbstractRecord {
         this.religion = religion;
     }
 
-    public void setVital(VitalStatusCode vital) {
+    public void setVital(String vital) {
         this.vital = vital;
     }
 
@@ -163,7 +163,7 @@ public class PatientDimension extends AbstractRecord {
         return religion;
     }
 
-    public VitalStatusCode getVital() {
+    public String getVital() {
         return vital;
     }
 

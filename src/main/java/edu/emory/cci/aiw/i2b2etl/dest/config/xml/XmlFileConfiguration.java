@@ -22,7 +22,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
 
 import edu.emory.cci.aiw.i2b2etl.dest.config.Concepts;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Configuration;
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Database;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
@@ -36,16 +36,12 @@ public class XmlFileConfiguration implements Configuration {
     private final ConfigurationReader configurationReader;
     private final String name;
     
-    public XmlFileConfiguration(File xmlFile) {
+    public XmlFileConfiguration(File xmlFile) throws ConfigurationInitException {
         this.name = xmlFile.getName();
         this.configurationReader = new ConfigurationReader(xmlFile);
-    }
-    
-    @Override
-    public void init() throws ConfigurationReadException {
         this.configurationReader.read();
     }
-
+    
     @Override
     public Concepts getConcepts() {
         return this.configurationReader.getConceptsSection();

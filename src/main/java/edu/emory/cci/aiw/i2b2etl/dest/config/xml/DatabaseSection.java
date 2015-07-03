@@ -19,7 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
 
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSourceDatabaseSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Database;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DatabaseSpec;
@@ -48,7 +48,7 @@ final class DatabaseSection extends ConfigurationSection implements Database {
     }
 
     @Override
-    protected void put(Node node) throws ConfigurationReadException {
+    protected void put(Node node) throws ConfigurationInitException {
         NamedNodeMap nnm = node.getAttributes();
         String keyAttribute = readAttribute(nnm, "key", true);
         DatabaseSpec databaseSpec;
@@ -64,7 +64,7 @@ final class DatabaseSection extends ConfigurationSection implements Database {
                     readAttribute(nnm, "passwd", false)
                     );
         } else {
-            throw new ConfigurationReadException("Invalid dbschema key: " + keyAttribute);
+            throw new ConfigurationInitException("Invalid dbschema key: " + keyAttribute);
         }
         this.dbs.put(keyAttribute, databaseSpec);
     }

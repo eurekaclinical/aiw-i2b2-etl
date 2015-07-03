@@ -23,21 +23,21 @@ package edu.emory.cci.aiw.i2b2etl.dest.config;
  *
  * @author Andrew Post
  */
-public class ConfigurationReadException extends Exception {
+public class ConfigurationInitException extends Exception {
 
-    public ConfigurationReadException(Throwable thrwbl) {
+    public ConfigurationInitException(Throwable thrwbl) {
         super(thrwbl);
     }
 
-    public ConfigurationReadException(String string, Throwable thrwbl) {
+    public ConfigurationInitException(String string, Throwable thrwbl) {
         super(string, thrwbl);
     }
 
-    public ConfigurationReadException(String string) {
+    public ConfigurationInitException(String string) {
         super(string);
     }
 
-    public ConfigurationReadException() {
+    public ConfigurationInitException() {
     }
     
 }

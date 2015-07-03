@@ -20,7 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
 
 import edu.emory.cci.aiw.i2b2etl.dest.RemoveMethod;
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.config.SettingsSupport;
 import java.util.Set;
@@ -46,7 +46,7 @@ final class DictionarySection extends ConfigurationSection implements Settings {
     }
 
     @Override
-    protected void put(Node node) throws ConfigurationReadException {
+    protected void put(Node node) throws ConfigurationInitException {
         NamedNodeMap nnm = node.getAttributes();
         String key = readAttribute(nnm, "key", true);
         String value = readAttribute(nnm, "value", true);

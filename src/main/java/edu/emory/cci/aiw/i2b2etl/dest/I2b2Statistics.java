@@ -19,9 +19,7 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  * limitations under the License.
  * #L%
  */
-
 import edu.emory.cci.aiw.i2b2etl.dest.config.Configuration;
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Database;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DatabaseSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
@@ -63,17 +61,12 @@ public class I2b2Statistics implements Statistics {
     private Map<String, String> childrenToParents;
 
     public I2b2Statistics(Configuration config) throws StatisticsException {
-        try {
-            config.init();
-            Database databaseSection = config.getDatabase();
-            DatabaseSpec dataSchemaSpec = databaseSection.getDataSpec();
-            this.dataConnectionSpec = dataSchemaSpec.toConnectionSpec();
-            DatabaseSpec metaSchemaSpec = databaseSection.getMetadataSpec();
-            this.metaConnectionSpec = metaSchemaSpec.toConnectionSpec();
-            this.metaTableName = config.getSettings().getMetaTableName();
-        } catch (ConfigurationReadException ex) {
-            throw new StatisticsException("Could not initialize statistics gathering", ex);
-        }
+        Database databaseSection = config.getDatabase();
+        DatabaseSpec dataSchemaSpec = databaseSection.getDataSpec();
+        this.dataConnectionSpec = dataSchemaSpec.toConnectionSpec();
+        DatabaseSpec metaSchemaSpec = databaseSection.getMetadataSpec();
+        this.metaConnectionSpec = metaSchemaSpec.toConnectionSpec();
+        this.metaTableName = config.getSettings().getMetaTableName();
         this.currentPropIds = new HashSet<>();
     }
 
@@ -193,20 +186,20 @@ public class I2b2Statistics implements Statistics {
             }
         }
     }
-    
+
     private void collectParentsAndCountsFromEurekafiedTables(final Connection conn) throws KnowledgeSourceReadException {
         QueryExecutor queryExecutor = new QueryExecutor(conn, new QueryConstructor() {
 
-                @Override
-                public void appendStatement(StringBuilder sql, String table) {
-                    if (I2b2Statistics.this.currentPropIds.isEmpty()) {
-                        sql.append("SELECT A1.EK_UNIQUE_ID EK_UNIQUE_ID, A2.EK_UNIQUE_ID PARENT_EK_UNIQUE_ID, A1.C_TOTALNUM FROM ").append(table).append(" A1 LEFT OUTER JOIN ").append(table).append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) WHERE A1.C_HLEVEL=(SELECT MIN(C_HLEVEL) FROM TABLE_ACCESS WHERE C_TABLE_NAME='").append(table).append("') AND A1.M_APPLIED_PATH='@' AND A1.EK_UNIQUE_ID NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'");
-                    } else {
-                        sql.append("SELECT A1.EK_UNIQUE_ID EK_UNIQUE_ID, A2.EK_UNIQUE_ID PARENT_EK_UNIQUE_ID, A1.C_TOTALNUM FROM ").append(table).append(" A1 LEFT OUTER JOIN ").append(table).append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A2.EK_UNIQUE_ID=A3.UNIQUE_ID) WHERE A2.M_APPLIED_PATH='@' AND A2.EK_UNIQUE_ID NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'");
-                    }
+            @Override
+            public void appendStatement(StringBuilder sql, String table) {
+                if (I2b2Statistics.this.currentPropIds.isEmpty()) {
+                    sql.append("SELECT A1.EK_UNIQUE_ID EK_UNIQUE_ID, A2.EK_UNIQUE_ID PARENT_EK_UNIQUE_ID, A1.C_TOTALNUM FROM ").append(table).append(" A1 LEFT OUTER JOIN ").append(table).append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) WHERE A1.C_HLEVEL=(SELECT MIN(C_HLEVEL) FROM TABLE_ACCESS WHERE C_TABLE_NAME='").append(table).append("') AND A1.M_APPLIED_PATH='@' AND A1.EK_UNIQUE_ID NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'");
+                } else {
+                    sql.append("SELECT A1.EK_UNIQUE_ID EK_UNIQUE_ID, A2.EK_UNIQUE_ID PARENT_EK_UNIQUE_ID, A1.C_TOTALNUM FROM ").append(table).append(" A1 LEFT OUTER JOIN ").append(table).append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A2.EK_UNIQUE_ID=A3.UNIQUE_ID) WHERE A2.M_APPLIED_PATH='@' AND A2.EK_UNIQUE_ID NOT LIKE '" + MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "%'");
                 }
-            },
-            new TableAccessReader(this.metaTableName));
+            }
+        },
+                new TableAccessReader(this.metaTableName));
         IntStatisticsBuilder b = queryExecutor.execute(new ResultSetReader<IntStatisticsBuilder>() {
 
             @Override

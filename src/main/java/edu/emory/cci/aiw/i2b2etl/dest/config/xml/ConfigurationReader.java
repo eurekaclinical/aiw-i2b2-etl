@@ -19,7 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
 
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import java.io.File;
 import java.io.IOException;
 import javax.xml.parsers.DocumentBuilder;
@@ -50,7 +50,7 @@ final class ConfigurationReader {
         this.data = new DataSection();
     }
     
-    void read() throws ConfigurationReadException {
+    void read() throws ConfigurationInitException {
         try {
             DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document doc = db.parse(conf);
@@ -72,7 +72,7 @@ final class ConfigurationReader {
                 }
             }
         } catch (SAXException | ParserConfigurationException | IOException ex) {
-            throw new ConfigurationReadException("Could not read configuration file " + this.conf.getAbsolutePath(), ex);
+            throw new ConfigurationInitException("Could not read configuration file " + this.conf.getAbsolutePath(), ex);
         }
 	}
     

@@ -107,7 +107,7 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
             if (dataSpec.getReferenceName() != null) {
                 try {
                     addChildrenFromValueSets(this.propDef, dataSpec, concept, columnName);
-                } catch (UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
+                } catch (KnowledgeSourceReadException | InvalidConceptCodeException ex) {
                     throw new OntologyBuildException("Could not build descendants", ex);
                 }
             }
@@ -127,31 +127,30 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
     private void addChildrenFromValueSets(PropositionDefinition propDef,
             DataSpec dataSpec, Concept concept, String columnName) throws OntologyBuildException,
             UnsupportedOperationException, KnowledgeSourceReadException,
-            InvalidConceptCodeException, UnknownPropositionDefinitionException {
+            InvalidConceptCodeException {
         ReferenceDefinition refDef = propDef.referenceDefinition(dataSpec.getReferenceName());
         String[] propIds = refDef.getPropositionIds();
         for (String propId : propIds) {
             PropositionDefinition propositionDef = this.cache.get(propId);
-            if (propositionDef == null) {
-                throw new UnknownPropositionDefinitionException(propId);
-            }
-            PropertyDefinition propertyDef = propositionDef.propertyDefinition(dataSpec.getPropertyName());
-            if (propertyDef != null) {
-                String valueSetId = propertyDef.getValueSetId();
-                if (valueSetId != null) {
-                    ValueSet valueSet
-                            = this.cache.getValueSet(valueSetId);
-                    ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
-                    for (ValueSetElement valueSetElement : valueSetElements) {
-                        Value valueSetElementVal = valueSetElement.getValue();
-                        PropDefConceptId conceptId = PropDefConceptId.getInstance(propId, dataSpec.getPropertyName(), valueSetElementVal, metadata);
-                        Concept childConcept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
-                        childConcept.setDisplayName(valueSetElement.getDisplayName());
-                        childConcept.setColumnName(columnName);
-                        childConcept.setDimCode(valueSetElementVal != null ? valueSetElementVal.getFormatted() : "");
-                        childConcept.setOperator(ConceptOperator.EQUAL);
-                        childConcept.setAlreadyLoaded(concept.isAlreadyLoaded());
-                        concept.add(childConcept);
+            if (propositionDef != null) {
+                PropertyDefinition propertyDef = propositionDef.propertyDefinition(dataSpec.getPropertyName());
+                if (propertyDef != null) {
+                    String valueSetId = propertyDef.getValueSetId();
+                    if (valueSetId != null) {
+                        ValueSet valueSet
+                                = this.cache.getValueSet(valueSetId);
+                        ValueSetElement[] valueSetElements = valueSet.getValueSetElements();
+                        for (ValueSetElement valueSetElement : valueSetElements) {
+                            Value valueSetElementVal = valueSetElement.getValue();
+                            PropDefConceptId conceptId = PropDefConceptId.getInstance(propId, dataSpec.getPropertyName(), valueSetElementVal, metadata);
+                            Concept childConcept = newQueryableConcept(conceptId, dataSpec.getConceptCodePrefix());
+                            childConcept.setDisplayName(valueSetElement.getDisplayName());
+                            childConcept.setColumnName(columnName);
+                            childConcept.setDimCode(valueSetElementVal != null ? valueSetElementVal.getFormatted() : "");
+                            childConcept.setOperator(ConceptOperator.EQUAL);
+                            childConcept.setAlreadyLoaded(concept.isAlreadyLoaded());
+                            concept.add(childConcept);
+                        }
                     }
                 }
             }

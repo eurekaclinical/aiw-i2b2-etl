@@ -19,7 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
 
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSpec;
 import java.util.*;
@@ -50,7 +50,7 @@ final class DataSection extends ConfigurationSection implements Data {
     }
 
     @Override
-    protected void put(Node node) throws ConfigurationReadException {
+    protected void put(Node node) throws ConfigurationInitException {
         NamedNodeMap nnm = node.getAttributes();
         DataSpec dataSpec = new DataSpec(
                 readAttribute(nnm, "key", true),
@@ -62,13 +62,13 @@ final class DataSection extends ConfigurationSection implements Data {
                 readAttribute(nnm, "units", false)
         );
         if (dataSpec.getStart() != null && !dataSpec.getStart().equals("start") && !dataSpec.getStart().equals("finish")) {
-            throw new ConfigurationReadException("The start attribute must have a value of 'start' or 'finish'");
+            throw new ConfigurationInitException("The start attribute must have a value of 'start' or 'finish'");
         }
         if (dataSpec.getFinish() != null && !dataSpec.getFinish().equals("start") && !dataSpec.getFinish().equals("finish")) {
-            throw new ConfigurationReadException("The finish attribute must have a value of 'start' or 'finish'");
+            throw new ConfigurationInitException("The finish attribute must have a value of 'start' or 'finish'");
         }
         if (dataSpec.getReferenceName() == null && dataSpec.getPropertyName() == null) {
-            throw new ConfigurationReadException("Either referenceName or propertyName must be defined in dataType");
+            throw new ConfigurationInitException("Either referenceName or propertyName must be defined in dataType");
         }
         this.obxSpecs.put(dataSpec.getKey(), dataSpec);
     }

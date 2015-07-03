@@ -25,7 +25,6 @@ package edu.emory.cci.aiw.i2b2etl.dest.config;
  * @author Andrew Post
  */
 public interface Configuration {
-    void init() throws ConfigurationReadException;
     Concepts getConcepts();
     Data getData();
     Database getDatabase();

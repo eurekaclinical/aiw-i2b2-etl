@@ -20,7 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
  * #L%
  */
 import edu.emory.cci.aiw.i2b2etl.dest.config.Concepts;
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
+import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.ModifierSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.ValueTypeCode;
@@ -48,7 +48,7 @@ final class ConceptsSection extends ConfigurationSection implements Concepts {
     }
 
     @Override
-    protected void put(Node node) throws ConfigurationReadException {
+    protected void put(Node node) throws ConfigurationInitException {
         List<ModifierSpec> msList = new ArrayList<>();
         NodeList nL = node.getChildNodes();
         for (int i = 0; i < nL.getLength(); i++) {

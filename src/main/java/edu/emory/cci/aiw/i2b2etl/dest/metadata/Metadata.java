@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.tree.TreeNode;
 
 import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.lang3.StringUtils;
@@ -236,18 +237,6 @@ public final class Metadata {
                         return result;
                     }
                 });
-                synchronized (this.conceptCache) {
-                    for (Concept concept : this.conceptCache.values()) {
-                        if (concept.isAlreadyLoaded()) {
-                            List<String> get = result.get(concept.getSymbol());
-                            if (get != null) {
-                                for (String path : get) {
-                                    concept.addHierarchyPath(path);
-                                }
-                            }
-                        }
-                    }
-                }
             } catch (KnowledgeSourceReadException | SQLException ex) {
                 throw new OntologyBuildException(ex);
             }
@@ -255,12 +244,28 @@ public final class Metadata {
             result = new HashMap<>();
         }
         for (Concept c : getAllRoots()) {
-            Enumeration<Concept> emu = c.breadthFirstEnumeration();
+            Enumeration<Concept> emu = c.preorderEnumeration();
+            boolean isInPhenotypes = false;
             while (emu.hasMoreElements()) {
                 Concept concept = emu.nextElement();
+                TreeNode parent = concept.getParent();
+                if (parent != null && parent.equals(c)) {
+                    isInPhenotypes = false;
+                }
+                if (concept.getSymbol().equals("AIW|Phenotypes")) {
+                    isInPhenotypes = true;
+                }
                 Concept conceptFromCache = getFromIdCache(concept.getId());
-                if (conceptFromCache != null && !result.containsKey(conceptFromCache.getSymbol())) {
+                if (conceptFromCache != null && (isInPhenotypes || !result.containsKey(conceptFromCache.getSymbol()))) {
                     conceptFromCache.addHierarchyPath(concept.getFullName());
+                }
+                if (conceptFromCache != null) {
+                    List<String> get = result.get(concept.getSymbol());
+                    if (get != null) {
+                        for (String hp : get) {
+                            conceptFromCache.addHierarchyPath(hp);
+                        }
+                    }
                 }
             }
         }

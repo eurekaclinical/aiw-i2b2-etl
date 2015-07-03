@@ -22,12 +22,10 @@ package edu.emory.cci.aiw.i2b2etl.dest;
 import org.protempa.query.QueryMode;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Concepts;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Configuration;
-import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationReadException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Database;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DatabaseSpec;
-import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.table.InvalidPatientRecordException;
@@ -55,12 +53,10 @@ import edu.emory.cci.aiw.i2b2etl.dest.table.RejectedFactHandlerFactory;
 import edu.emory.cci.aiw.i2b2etl.dest.table.VisitDimension;
 import edu.emory.cci.aiw.i2b2etl.dest.table.VisitDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.dest.table.VisitDimensionFactory;
-import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
-import org.protempa.ReferenceDefinition;
 import org.protempa.dest.AbstractQueryResultsHandler;
 import org.protempa.dest.QueryResultsHandlerInitException;
 import org.protempa.dest.QueryResultsHandlerProcessingException;
@@ -105,7 +101,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private final Query query;
     private final KnowledgeSource knowledgeSource;
-    private final boolean inferPropositionIdsNeeded;
     private final Settings settings;
     private final Data data;
     private final Database database;
@@ -115,7 +110,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private ConceptDimensionHandler conceptDimensionHandler;
     private ModifierDimensionHandler modifierDimensionHandler;
     private Metadata ontologyModel;
-    private HashSet<Object> propIdsFromKnowledgeSource;
     private final DataSpec providerFullNameSpec;
     private final DataSpec providerFirstNameSpec;
     private final DataSpec providerMiddleNameSpec;
@@ -150,8 +144,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * {@link Query}.
      * @param dataInsertMode whether to truncate existing data or append to it
      */
-    I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, Configuration configuration,
-            boolean inferPropositionIdsNeeded)
+    I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, Configuration configuration)
             throws QueryResultsHandlerInitException {
         if (dataSource == null) {
             throw new IllegalArgumentException("dataSource cannot be null");
@@ -163,14 +156,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.query = query;
         this.knowledgeSource = knowledgeSource;
         this.configuration = configuration;
-        try {
-            this.configuration.init();
-        } catch (ConfigurationReadException ex) {
-            throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
-        }
         logger.log(Level.FINE, String.format("Using configuration: %s",
                 this.configuration.getName()));
-        this.inferPropositionIdsNeeded = inferPropositionIdsNeeded;
         logger.log(Level.FINER, "STEP: read conf.xml");
         this.settings = this.configuration.getSettings();
 
@@ -196,14 +183,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.providerMiddleNameSpec = this.data.get(this.settings.getProviderMiddleName());
         this.providerLastNameSpec = this.data.get(this.settings.getProviderLastName());
         this.visitPropId = this.settings.getVisitDimension();
-
-        if (this.inferPropositionIdsNeeded) {
-            try {
-                readPropIdsFromKnowledgeSource();
-            } catch (KnowledgeSourceReadException ex) {
-                throw new QueryResultsHandlerInitException("Could not initialize query results handler", ex);
-            }
-        }
 
         RemoveMethod removeMethod = this.settings.getDataRemoveMethod();
         if (removeMethod != null) {
@@ -364,29 +343,34 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             PatientDimension pd = null;
             for (Proposition prop : propositions) {
                 if (prop.getId().equals(this.visitPropId)) {
-                    if (pd == null) {
-                        pd = this.patientDimensionFactory.getInstance(keyId, prop, references);
-                    }
-                    ProviderDimension providerDimension = this.providerDimensionFactory.getInstance(
-                            prop,
-                            this.providerFullNameSpec != null ? this.providerFullNameSpec.getReferenceName() : null,
-                            this.providerFullNameSpec != null ? this.providerFullNameSpec.getPropertyName() : null,
-                            this.providerFirstNameSpec != null ? this.providerFirstNameSpec.getReferenceName() : null,
-                            this.providerFirstNameSpec != null ? this.providerFirstNameSpec.getPropertyName() : null,
-                            this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.getReferenceName() : null,
-                            this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.getPropertyName() : null,
-                            this.providerLastNameSpec != null ? this.providerLastNameSpec.getReferenceName() : null,
-                            this.providerLastNameSpec != null ? this.providerLastNameSpec.getPropertyName() : null,
-                            references);
-                    VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSource(), (TemporalProposition) prop, references);
-                    for (FactHandler factHandler : this.factHandlers) {
-                        factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, derivedPropositions);
-                    }
+                    pd = handlePatient(pd, keyId, prop, references, forwardDerivations, backwardDerivations, derivedPropositions);
                 }
             }
         } catch (InvalidConceptCodeException | InvalidFactException | InvalidPatientRecordException | SQLException ex) {
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + this.query.getId(), ex);
         }
+    }
+
+    private PatientDimension handlePatient(PatientDimension pd, String keyId, Proposition prop, Map<UniqueId, Proposition> references, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Set<Proposition> derivedPropositions) throws SQLException, InvalidConceptCodeException, InvalidFactException, InvalidPatientRecordException {
+        if (pd == null) {
+            pd = this.patientDimensionFactory.getInstance(keyId, prop, references);
+        }
+        ProviderDimension providerDimension = this.providerDimensionFactory.getInstance(
+                prop,
+                this.providerFullNameSpec != null ? this.providerFullNameSpec.getReferenceName() : null,
+                this.providerFullNameSpec != null ? this.providerFullNameSpec.getPropertyName() : null,
+                this.providerFirstNameSpec != null ? this.providerFirstNameSpec.getReferenceName() : null,
+                this.providerFirstNameSpec != null ? this.providerFirstNameSpec.getPropertyName() : null,
+                this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.getReferenceName() : null,
+                this.providerMiddleNameSpec != null ? this.providerMiddleNameSpec.getPropertyName() : null,
+                this.providerLastNameSpec != null ? this.providerLastNameSpec.getReferenceName() : null,
+                this.providerLastNameSpec != null ? this.providerLastNameSpec.getPropertyName() : null,
+                references);
+        VisitDimension vd = this.visitDimensionFactory.getInstance(pd.getEncryptedPatientId(), pd.getEncryptedPatientIdSource(), (TemporalProposition) prop, references);
+        for (FactHandler factHandler : this.factHandlers) {
+            factHandler.handleRecord(pd, vd, providerDimension, prop, forwardDerivations, backwardDerivations, references, derivedPropositions);
+        }
+        return pd;
     }
 
     @Override
@@ -695,18 +679,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
     }
 
-    @Override
-    public String[] getPropositionIdsNeeded() {
-        if (!inferPropositionIdsNeeded) {
-            return ArrayUtils.EMPTY_STRING_ARRAY;
-        } else {
-            for (PropositionDefinition pd : this.query.getPropositionDefinitions()) {
-                this.propIdsFromKnowledgeSource.add(pd.getId());
-            }
-            return this.propIdsFromKnowledgeSource.toArray(new String[this.propIdsFromKnowledgeSource.size()]);
-        }
-    }
-
     private PropositionDefinition[] collectUserPropositionDefinitions() {
         PropositionDefinition[] allUserPropDefs = this.query.getPropositionDefinitions();
         List<PropositionDefinition> result = new ArrayList<>();
@@ -717,31 +689,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
         return result.toArray(new PropositionDefinition[result.size()]);
-    }
-
-    private void readPropIdsFromKnowledgeSource() throws KnowledgeSourceReadException {
-        this.propIdsFromKnowledgeSource = new HashSet<>();
-        if (this.visitPropId != null) {
-            this.propIdsFromKnowledgeSource.add(this.visitPropId);
-            PropositionDefinition visitProp = this.knowledgeSource.readPropositionDefinition(this.visitPropId);
-            if (visitProp == null) {
-                throw new KnowledgeSourceReadException("Invalid visit proposition id: " + this.visitPropId);
-            }
-            for (DataSpec dataSpec : this.data.getAll()) {
-                if (dataSpec.getReferenceName() != null) {
-                    ReferenceDefinition refDef = visitProp.referenceDefinition(dataSpec.getReferenceName());
-                    if (refDef == null) {
-                        throw new KnowledgeSourceReadException("missing reference " + dataSpec.getReferenceName() + " for proposition definition " + visitPropId + " for query " + this.query.getId());
-                    }
-                    org.arp.javautil.arrays.Arrays.addAll(this.propIdsFromKnowledgeSource, refDef.getPropositionIds());
-                }
-            }
-            for (FolderSpec folderSpec : this.conceptsSection.getFolderSpecs()) {
-                for (String proposition : folderSpec.getPropositions()) {
-                    this.propIdsFromKnowledgeSource.add(proposition);
-                }
-            }
-        }
     }
 
     private void addPropositionFactHandlers() throws KnowledgeSourceReadException, SQLException {
