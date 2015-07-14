@@ -58,13 +58,20 @@ public class ConfigurationFactory implements AutoCloseable {
     public ConfigurationFactory() throws NamingException, IOException, SQLException {
         this.initialContextBinder = new DataSourceInitialContextBinder();
 
-        File ksbDb = new I2b2MetadataSchemaPopulator().populate();
-        this.metaDS = newBasicDataSource("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql'");
-        this.initialContextBinder.bind("I2b2Meta", this.metaDS);
+        try {
+            File ksbDb = new I2b2MetadataSchemaPopulator().populate();
+            this.metaDS = newBasicDataSource("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql'");
+            this.initialContextBinder.bind("I2b2Meta", this.metaDS);
 
-        File dsbDb = new I2b2DataSchemaPopulator().populate();
-        this.dataDS = newBasicDataSource("jdbc:h2:" + dsbDb.getAbsolutePath());
-        this.initialContextBinder.bind("I2b2Data", this.dataDS);
+            File dsbDb = new I2b2DataSchemaPopulator().populate();
+            this.dataDS = newBasicDataSource("jdbc:h2:" + dsbDb.getAbsolutePath());
+            this.initialContextBinder.bind("I2b2Data", this.dataDS);
+        } catch (IOException | SQLException ex) {
+            try {
+                this.initialContextBinder.close();
+            } catch (Exception ignore) {}
+            throw ex;
+        }
     }
 
     public Configuration getProtempaConfiguration() throws ConfigurationsLoadException, ConfigurationsNotFoundException {
@@ -74,9 +81,7 @@ public class ConfigurationFactory implements AutoCloseable {
     @Override
     public void close() throws Exception {
         try {
-            if (this.initialContextBinder != null) {
-                this.initialContextBinder.close();
-            }
+            this.initialContextBinder.close();
         } finally {
             try {
                 this.metaDS.close();

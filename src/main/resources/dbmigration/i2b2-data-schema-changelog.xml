@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  #%L
+  AIW i2b2 ETL
+  %%
+  Copyright (C) 2012 - 2015 Emory University
+  %%
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+#L%
+-->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" 
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+    <property name="date.type" value="DATE" dbms="oracle"/>
+    <property name="date.type" value="DATETIME" dbms="h2"/>
+    <property name="date.type" value="DATETIME" dbms="sqlserver"/>
+    <property name="date.type" value="DATETIME" dbms="postgresql"/>
+
+    <property name="int.type" value="NUMBER(18, 0)" dbms="oracle"/>
+    <property name="int.type" value="NUMBER(18, 0)" dbms="h2"/>
+    <property name="int.type" value="INT" dbms="sqlserver"/>
+    <property name="int.type" value="INT" dbms="postgresql"/>
+
+    <property name="float.type" value="NUMBER(18, 5)" dbms="oracle"/>
+    <property name="float.type" value="NUMBER(18, 5)" dbms="h2"/>
+    <property name="float.type" value="DECIMAL(18, 5)" dbms="sqlserver"/>
+    <property name="float.type" value="DECIMAL(18, 5)" dbms="postgresql"/>
+	
+    <changeSet author="arpost" id="1">
+        <createTable tableName="EK_REJECTED_OBSERVATION_FACT">
+            <column name="ENCOUNTER_NUM" type="BIGINT"/>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONCEPT_CD" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_NUM" type="BIGINT"/>
+            <column name="PATIENT_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROVIDER_ID" type="VARCHAR(50)"/>
+            <column name="START_DATE" type="${date.type}"/>
+            <column name="MODIFIER_CD" type="VARCHAR(100)"/>
+            <column name="INSTANCE_NUM" type="${int.type}"/>
+            <column name="VALTYPE_CD" type="VARCHAR(50)"/>
+            <column name="TVAL_CHAR" type="VARCHAR(255)"/>
+            <column name="NVAL_NUM" type="${float.type}"/>
+            <column name="VALUEFLAG_CD" type="CHAR(50)"/>
+            <column name="QUANTITY_NUM" type="${float.type}"/>
+            <column name="CONFIDENCE_NUM" type="${int.type}"/>
+            <column name="OBSERVATION_BLOB" type="CLOB"/>
+            <column name="UNITS_CD" type="VARCHAR(50)"/>
+            <column name="END_DATE" type="${date.type}"/>
+            <column name="LOCATION_CD" type="VARCHAR(50)"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="UPLOAD_ID" type="BIGINT"/>
+            <column name="REASON" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="2">
+        <createTable tableName="EK_TEMP_CONCEPT">
+            <column name="CONCEPT_CD" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONCEPT_PATH" type="VARCHAR(700)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME_CHAR" type="VARCHAR(2000)"/>
+            <column name="CONCEPT_BLOB" type="CLOB"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="3">
+        <createTable tableName="EK_TEMP_ENCOUNTER_MAPPING">
+            <column name="ENCOUNTER_MAP_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCOUNTER_MAP_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_MAP_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_MAP_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="ENCOUNTER_NUM" type="BIGINT"/>
+            <column name="ENCOUNTER_MAP_ID_STATUS" type="VARCHAR(50)"/>
+            <column name="PROCESS_STATUS_FLAG" type="CHAR(1)"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="4">
+        <createTable tableName="EK_TEMP_MODIFIER">
+            <column name="MODIFIER_CD" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MODIFIER_PATH" type="VARCHAR(900)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME_CHAR" type="VARCHAR(2000)"/>
+            <column name="MODIFIER_BLOB" type="CLOB"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="5">
+        <createTable tableName="EK_TEMP_OBSERVATION">
+            <column name="ENCOUNTER_NUM" type="BIGINT"/>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONCEPT_CD" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_NUM" type="BIGINT"/>
+            <column name="PATIENT_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROVIDER_ID" type="VARCHAR(50)"/>
+            <column name="START_DATE" type="${date.type}"/>
+            <column name="MODIFIER_CD" type="VARCHAR(100)"/>
+            <column name="INSTANCE_NUM" type="${int.type}"/>
+            <column name="VALTYPE_CD" type="VARCHAR(50)"/>
+            <column name="TVAL_CHAR" type="VARCHAR(255)"/>
+            <column name="NVAL_NUM" type="${float.type}"/>
+            <column name="VALUEFLAG_CD" type="VARCHAR(50)"/>
+            <column name="QUANTITY_NUM" type="${float.type}"/>
+            <column name="CONFIDENCE_NUM" type="${int.type}"/>
+            <column name="OBSERVATION_BLOB" type="CLOB"/>
+            <column name="UNITS_CD" type="VARCHAR(50)"/>
+            <column name="END_DATE" type="${date.type}"/>
+            <column name="LOCATION_CD" type="VARCHAR(50)"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="UPLOAD_ID" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="6">
+        <createTable tableName="EK_TEMP_OBSERVATION_COMPLETE">
+            <column name="ENCOUNTER_NUM" type="BIGINT"/>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONCEPT_CD" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_NUM" type="BIGINT"/>
+            <column name="PATIENT_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROVIDER_ID" type="VARCHAR(50)"/>
+            <column name="START_DATE" type="${date.type}"/>
+            <column name="MODIFIER_CD" type="VARCHAR(100)"/>
+            <column name="INSTANCE_NUM" type="${int.type}"/>
+            <column name="VALTYPE_CD" type="VARCHAR(50)"/>
+            <column name="TVAL_CHAR" type="VARCHAR(255)"/>
+            <column name="NVAL_NUM" type="${float.type}"/>
+            <column name="VALUEFLAG_CD" type="CHAR(50)"/>
+            <column name="QUANTITY_NUM" type="${float.type}"/>
+            <column name="CONFIDENCE_NUM" type="${int.type}"/>
+            <column name="OBSERVATION_BLOB" type="CLOB"/>
+            <column name="UNITS_CD" type="VARCHAR(50)"/>
+            <column name="END_DATE" type="${date.type}"/>
+            <column name="LOCATION_CD" type="VARCHAR(50)"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="UPLOAD_ID" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="7">
+        <createTable tableName="EK_TEMP_PATIENT">
+            <column name="PATIENT_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="PATIENT_NUM" type="BIGINT"/>
+            <column name="VITAL_STATUS_CD" type="VARCHAR(50)"/>
+            <column name="BIRTH_DATE" type="${date.type}"/>
+            <column name="DEATH_DATE" type="${date.type}"/>
+            <column name="SEX_CD" type="VARCHAR(50)"/>
+            <column name="AGE_IN_YEARS_NUM" type="BIGINT"/>
+            <column name="LANGUAGE_CD" type="VARCHAR(50)"/>
+            <column name="RACE_CD" type="VARCHAR(50)"/>
+            <column name="MARITAL_STATUS_CD" type="VARCHAR(50)"/>
+            <column name="RELIGION_CD" type="VARCHAR(50)"/>
+            <column name="ZIP_CD" type="VARCHAR(50)"/>
+            <column name="STATECITYZIP_PATH" type="VARCHAR(700)"/>
+            <column name="PATIENT_BLOB" type="CLOB"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="8">
+        <createTable tableName="EK_TEMP_PATIENT_MAPPING">
+            <column name="PATIENT_MAP_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_MAP_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="PATIENT_ID_STATUS" type="VARCHAR(50)"/>
+            <column name="PATIENT_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="PATIENT_NUM" type="BIGINT"/>
+            <column name="PATIENT_MAP_ID_STATUS" type="VARCHAR(50)"/>
+            <column name="PROCESS_STATUS_FLAG" type="CHAR(1)"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="9">
+        <createTable tableName="EK_TEMP_PROVIDER">
+            <column name="PROVIDER_ID" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROVIDER_PATH" type="VARCHAR(700)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NAME_CHAR" type="VARCHAR(2000)"/>
+            <column name="PROVIDER_BLOB" type="CLOB"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="UPLOAD_ID" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="10">
+        <createTable tableName="EK_TEMP_VISIT">
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_ID" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCOUNTER_NUM" type="BIGINT"/>
+            <column name="INOUT_CD" type="VARCHAR(50)"/>
+            <column name="LOCATION_CD" type="VARCHAR(50)"/>
+            <column name="LOCATION_PATH" type="VARCHAR(900)"/>
+            <column name="START_DATE" type="${date.type}"/>
+            <column name="END_DATE" type="${date.type}"/>
+            <column name="VISIT_BLOB" type="CLOB"/>
+            <column name="UPDATE_DATE" type="${date.type}"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="ACTIVE_STATUS_CD" type="VARCHAR(50)"/>
+            <column name="LENGTH_OF_STAY" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="arpost" id="11">
+        <createIndex indexName="EK_IDX_TEMP_CONCEPT_PAT_ID" tableName="EK_TEMP_CONCEPT" unique="false">
+            <column name="CONCEPT_PATH"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="12">
+        <createIndex indexName="EK_IDX_TEMP_ENCMAP_EID_ID" tableName="EK_TEMP_ENCOUNTER_MAPPING" unique="false">
+            <column name="ENCOUNTER_ID"/>
+            <column name="ENCOUNTER_ID_SOURCE"/>
+            <column name="ENCOUNTER_MAP_ID"/>
+            <column name="ENCOUNTER_MAP_ID_SOURCE"/>
+            <column name="ENCOUNTER_NUM"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="13">
+        <createIndex indexName="EK_IDX_TEMP_ENCMAP_STAT_EID_ID" tableName="EK_TEMP_ENCOUNTER_MAPPING" unique="false">
+            <column name="PROCESS_STATUS_FLAG"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="14">
+        <createIndex indexName="EK_IDX_TEMP_MODIFIER_PAT_ID" tableName="EK_TEMP_MODIFIER" unique="false">
+            <column name="MODIFIER_PATH"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="15">
+        <createIndex indexName="EK_IDX_TEMP_OBX_COM_ENC_PAT_ID" tableName="EK_TEMP_OBSERVATION_COMPLETE" unique="false">
+            <column name="ENCOUNTER_ID"/>
+            <column name="ENCOUNTER_ID_SOURCE"/>
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="16">
+        <createIndex indexName="EK_IDX_TEMP_OBX_COM_PK" tableName="EK_TEMP_OBSERVATION_COMPLETE" unique="false">
+            <column name="ENCOUNTER_NUM"/>
+            <column name="PATIENT_NUM"/>
+            <column name="CONCEPT_CD"/>
+            <column name="PROVIDER_ID"/>
+            <column name="START_DATE"/>
+            <column name="MODIFIER_CD"/>
+            <column name="INSTANCE_NUM"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="17">
+        <createIndex indexName="EK_IDX_TEMP_PATIENT_PAT_ID" tableName="EK_TEMP_PATIENT" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+            <column name="PATIENT_NUM"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="18">
+        <createIndex indexName="EK_IDX_TEMP_PATMAP_MAP_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+            <column name="PATIENT_MAP_ID"/>
+            <column name="PATIENT_MAP_ID_SOURCE"/>
+            <column name="PATIENT_NUM"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="19">
+        <createIndex indexName="EK_IDX_TEMP_PATMAP_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="20">
+        <createIndex indexName="EK_IDX_TEMP_PATMAP_STAT_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
+            <column name="PROCESS_STATUS_FLAG"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="21">
+        <createIndex indexName="EK_IDX_TEMP_PROVIDER_PPATH_ID" tableName="EK_TEMP_PROVIDER" unique="false">
+            <column name="PROVIDER_PATH"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="22">
+        <createIndex indexName="EK_IDX_TEMP_VISIT_ENC_ID" tableName="EK_TEMP_VISIT" unique="false">
+            <column name="ENCOUNTER_ID"/>
+            <column name="ENCOUNTER_ID_SOURCE"/>
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="arpost" id="23">
+        <createIndex indexName="EK_IDX_TEMP_VISIT_PATIENT_ID" tableName="EK_TEMP_VISIT" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

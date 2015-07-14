@@ -22,10 +22,19 @@ package edu.emory.cci.aiw.i2b2etl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import liquibase.Contexts;
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.DatabaseException;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.FileSystemResourceAccessor;
 
 /**
  *
@@ -38,5 +47,43 @@ public abstract class AbstractH2Populator {
             stmt.execute("SHUTDOWN DEFRAG");
         }
         return dbFile;
+    }
+    
+    protected void outputSqlFromLiquibaseChangeLog(File dbFile, String changeLogResource, Writer writer) throws SQLException, IOException {
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:" + dbFile.getAbsolutePath())) {
+            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+            try {
+                Liquibase liquibase = new Liquibase(changeLogResource, new FileSystemResourceAccessor(), database);
+                liquibase.update((Contexts) null, writer);
+                database.close();
+                database = null;
+            } catch (DatabaseException ex) {
+                if (database != null) {
+                    database.close();
+                }
+                throw new IOException(ex);
+            }
+        } catch (LiquibaseException ex) {
+            throw new IOException(ex);
+        }
+    }
+    
+    protected void updateLiquibaseChangeLog(File dbFile, String changeLog) throws SQLException, IOException {
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:" + dbFile.getAbsolutePath())) {
+            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+            try {
+                Liquibase liquibase = new Liquibase(changeLog, new FileSystemResourceAccessor(), database);
+                liquibase.update((Contexts) null);
+                database.close();
+                database = null;
+            } catch (DatabaseException ex) {
+                if (database != null) {
+                    database.close();
+                }
+                throw new IOException(ex);
+            }
+        } catch (LiquibaseException ex) {
+            throw new IOException(ex);
+        }
     }
 }

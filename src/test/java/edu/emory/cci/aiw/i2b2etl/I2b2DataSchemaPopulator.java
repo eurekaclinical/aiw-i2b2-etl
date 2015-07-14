@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl;
  * limitations under the License.
  * #L%
  */
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -29,7 +28,11 @@ import java.sql.SQLException;
  * @author Andrew Post
  */
 public class I2b2DataSchemaPopulator extends AbstractH2Populator {
+
     public File populate() throws IOException, SQLException {
-        return populate(File.createTempFile("i2b2-data", ".db"), "INIT=RUNSCRIPT FROM 'src/main/resources/i2b2_data_tables_1_7_h2.sql'\\;RUNSCRIPT FROM 'src/main/resources/eureka_data_tables_h2.sql'\\;RUNSCRIPT FROM 'src/main/resources/mock_stored_procedures_h2.sql'");
+        File dbFile = populate(File.createTempFile("i2b2-data", ".db"), "INIT=RUNSCRIPT FROM 'src/main/resources/sql/i2b2_data_tables_1_7_h2.sql'\\;RUNSCRIPT FROM 'src/main/resources/sql/mock_stored_procedures_h2.sql'");
+        updateLiquibaseChangeLog(dbFile, "src/main/resources/dbmigration/i2b2-data-schema-changelog.xml");
+        return dbFile;
     }
+
 }

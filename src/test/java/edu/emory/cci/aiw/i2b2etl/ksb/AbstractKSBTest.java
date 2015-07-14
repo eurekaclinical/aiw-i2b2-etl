@@ -54,10 +54,12 @@ public abstract class AbstractKSBTest extends AbstractTest {
         ksb = new I2b2KnowledgeSourceBackend();
         ksb.initialize(config.getKnowledgeSourceBackendSections().get(0));
     }
-    
+
     @AfterClass
     public static void tearDownClsAbstractKSBTest() {
-        ksb.close();
+        if (ksb != null) {
+            ksb.close();
+        }
     }
 
     public static I2b2KnowledgeSourceBackend getKnowledgeSourceBackend() {
