@@ -1002,3 +1002,4 @@ AS
             raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
     END EK_ENABLE_INDEXES;
 END EUREKA ;
+/

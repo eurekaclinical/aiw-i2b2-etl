@@ -27,4 +27,4 @@ PROCEDURE EK_UPDATE_C_TOTALNUM(
     tableName IN VARCHAR) ;
     
 END EUREKA ;
-
+/

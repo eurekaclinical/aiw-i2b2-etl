@@ -54,3 +54,4 @@ AS
             raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);       
     END EK_UPDATE_C_TOTALNUM;
 END EUREKA ;
+/

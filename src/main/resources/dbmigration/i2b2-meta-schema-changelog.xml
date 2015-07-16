@@ -20,7 +20,7 @@ limitations under the License.
 -->
 
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
-    <changeSet author="arpost" id="1">
+    <changeSet author="arpost" id="META-1">
         <createTable tableName="EK_MODIFIER_INTERP">
             <column name="DECLARING_CONCEPT" type="VARCHAR(50)">
                 <constraints nullable="false"/>
@@ -34,34 +34,34 @@ limitations under the License.
             <column name="DISPLAYNAME" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="arpost" id="2" dbms="oracle, postgresql">
-        <sql dbms="oracle, postgresql">
-            CREATE LOCAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR2(700)) ON COMMIT DELETE ROWS;
+    <changeSet author="arpost" id="META-2" dbms="oracle, postgresql">
+        <sql dbms="oracle">
+            CREATE GLOBAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR2(700)) ON COMMIT DELETE ROWS
         </sql>
         <sql dbms="postgresql">
-            CREATE LOCAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS;
+            CREATE GLOBAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS
         </sql>
         <rollback>
             DROP TABLE EK_TEMP_UNIQUE_IDS
         </rollback>
     </changeSet>
-    <changeSet author="arpost" id="3" dbms="sqlserver">
+    <changeSet author="arpost" id="META-3" dbms="sqlserver">
         <sql>
-            CREATE TABLE #EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700))
+            CREATE TABLE ##EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700))
         </sql>
         <rollback>
-            DROP TABLE #EK_TEMP_UNIQUE_IDS
+            DROP TABLE ##EK_TEMP_UNIQUE_IDS
         </rollback>
     </changeSet>
-    <changeSet author="arpost" id="4">
+    <changeSet author="arpost" id="META-4" dbms="oracle, h2">
         <createTable tableName="EUREKAPHENOTYPEONTOLOGY">
             <column name="C_HLEVEL" type="NUMBER(22, 0)">
                 <constraints nullable="false"/>
             </column>
-            <column name="C_FULLNAME" type="VARCHAR2(700)">
+            <column name="C_FULLNAME" type="VARCHAR(700)">
                 <constraints nullable="false"/>
             </column>
-            <column name="C_NAME" type="VARCHAR2(2000)">
+            <column name="C_NAME" type="VARCHAR(2000)">
                 <constraints nullable="false"/>
             </column>
             <column name="C_SYNONYM_CD" type="CHAR(1)">
@@ -71,29 +71,29 @@ limitations under the License.
                 <constraints nullable="false"/>
             </column>
             <column name="C_TOTALNUM" type="NUMBER(22, 0)"/>
-            <column name="C_BASECODE" type="VARCHAR2(50)"/>
+            <column name="C_BASECODE" type="VARCHAR(50)"/>
             <column name="C_METADATAXML" type="CLOB"/>
-            <column name="C_FACTTABLECOLUMN" type="VARCHAR2(50)">
+            <column name="C_FACTTABLECOLUMN" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="C_TABLENAME" type="VARCHAR2(50)">
+            <column name="C_TABLENAME" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="C_COLUMNNAME" type="VARCHAR2(50)">
+            <column name="C_COLUMNNAME" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="C_COLUMNDATATYPE" type="VARCHAR2(50)">
+            <column name="C_COLUMNDATATYPE" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="C_OPERATOR" type="VARCHAR2(10)">
+            <column name="C_OPERATOR" type="VARCHAR(10)">
                 <constraints nullable="false"/>
             </column>
-            <column name="C_DIMCODE" type="VARCHAR2(700)">
+            <column name="C_DIMCODE" type="VARCHAR(700)">
                 <constraints nullable="false"/>
             </column>
             <column name="C_COMMENT" type="CLOB"/>
-            <column name="C_TOOLTIP" type="VARCHAR2(900)"/>
-            <column name="M_APPLIED_PATH" type="VARCHAR2(700)">
+            <column name="C_TOOLTIP" type="VARCHAR(900)"/>
+            <column name="M_APPLIED_PATH" type="VARCHAR(700)">
                 <constraints nullable="false"/>
             </column>
             <column name="UPDATE_DATE" type="date">
@@ -101,40 +101,40 @@ limitations under the License.
             </column>
             <column name="DOWNLOAD_DATE" type="date"/>
             <column name="IMPORT_DATE" type="date"/>
-            <column name="SOURCESYSTEM_CD" type="VARCHAR2(50)"/>
-            <column name="VALUETYPE_CD" type="VARCHAR2(50)"/>
-            <column name="M_EXCLUSION_CD" type="VARCHAR2(25)"/>
-            <column name="C_PATH" type="VARCHAR2(700)"/>
-            <column name="C_SYMBOL" type="VARCHAR2(50)"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="VALUETYPE_CD" type="VARCHAR(50)"/>
+            <column name="M_EXCLUSION_CD" type="VARCHAR(25)"/>
+            <column name="C_PATH" type="VARCHAR(700)"/>
+            <column name="C_SYMBOL" type="VARCHAR(50)"/>
         </createTable>
     </changeSet>    
-    <changeSet author="arpost" id="5">
+    <changeSet author="arpost" id="META-5">
         <createIndex indexName="META_APPLIED_PATH_EKPHE_IDX" tableName="EUREKAPHENOTYPEONTOLOGY" unique="false">
             <column name="M_APPLIED_PATH"/>
         </createIndex>
     </changeSet>
-    <changeSet author="arpost" id="6">
+    <changeSet author="arpost" id="META-6">
         <createIndex indexName="META_FULLNAME_EKPHE_IDX" tableName="EUREKAPHENOTYPEONTOLOGY" unique="false">
             <column name="C_FULLNAME"/>
         </createIndex>
     </changeSet>
-    <changeSet author="arpost" id="7">
+    <changeSet author="arpost" id="META-7">
         <createIndex indexName="META_SYMBOL_EKPHE_IDX" tableName="EUREKAPHENOTYPEONTOLOGY" unique="false">
             <column name="C_SYMBOL"/>
         </createIndex>
     </changeSet>
-    <changeSet author="arpost" id="8">
+    <changeSet author="arpost" id="META-8">
         <createIndex indexName="META_PATH_EKPHE_IDX" tableName="EUREKAPHENOTYPEONTOLOGY" unique="false">
             <column name="C_PATH"/>
         </createIndex>
     </changeSet>
-    <changeSet author="arpost" id="9">
+    <changeSet author="arpost" id="META-9">
         <insert tableName="TABLE_ACCESS">
             <column name="C_TABLE_CD" value="EUREKAPHENOTYPEONTOLOGY"/>
             <column name="C_TABLE_NAME" value="EUREKAPHENOTYPEONTOLOGY"/>
             <column name="C_PROTECTED_ACCESS" value="N"/>
             <column name="C_HLEVEL" valueNumeric="1"/>
-            <column name="C_FULLNAME" value="\\EK\\Phenotypes\\"/>
+            <column name="C_FULLNAME" value="\EK\Phenotypes\"/>
             <column name="C_NAME" value="Phenotypes"/>
             <column name="C_SYNONYM_CD" value="N"/>
             <column name="C_VISUALATTRIBUTES" value="CA"/>
@@ -143,7 +143,7 @@ limitations under the License.
             <column name="C_COLUMNNAME" value="concept_path"/>
             <column name="C_COLUMNDATATYPE" value="T"/>
             <column name="C_OPERATOR" value="LIKE"/>
-            <column name="C_DIMCODE" value="\\EK\\Phenotypes\\"/>
+            <column name="C_DIMCODE" value="\EK\Phenotypes\"/>
             <column name="C_TOOLTIP" value="Phenotypes"/>
             <column name="C_STATUS_CD" value="A"/>
         </insert>
