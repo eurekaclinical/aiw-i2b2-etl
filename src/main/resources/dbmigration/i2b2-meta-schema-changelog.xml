@@ -20,6 +20,12 @@ limitations under the License.
 -->
 
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+    
+    <property name="date.type" value="DATE" dbms="oracle"/>
+    <property name="date.type" value="DATETIME" dbms="h2"/>
+    <property name="date.type" value="DATETIME" dbms="sqlserver"/>
+    <property name="date.type" value="DATETIME" dbms="postgresql"/>
+    
     <changeSet author="arpost" id="META-1">
         <createTable tableName="EK_MODIFIER_INTERP">
             <column name="DECLARING_CONCEPT" type="VARCHAR(50)">
@@ -96,11 +102,11 @@ limitations under the License.
             <column name="M_APPLIED_PATH" type="VARCHAR(700)">
                 <constraints nullable="false"/>
             </column>
-            <column name="UPDATE_DATE" type="date">
+            <column name="UPDATE_DATE" type="${date.type}">
                 <constraints nullable="false"/>
             </column>
-            <column name="DOWNLOAD_DATE" type="date"/>
-            <column name="IMPORT_DATE" type="date"/>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="VALUETYPE_CD" type="VARCHAR(50)"/>
             <column name="M_EXCLUSION_CD" type="VARCHAR(25)"/>

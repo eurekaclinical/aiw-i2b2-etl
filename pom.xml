@@ -409,11 +409,11 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.5</version>
+                <version>1.8</version>
                 <configuration>
                     <licenseName>apache_v2</licenseName>
                     <roots>
-                        <root>src/main</root>
+                        <root>src/main/java</root>
                         <root>src/test/java/</root>
                     </roots>
                     <extraExtensions>

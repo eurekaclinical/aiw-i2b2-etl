@@ -20,9 +20,7 @@ package edu.emory.cci.aiw.i2b2etl;
  * #L%
  */
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.sql.SQLException;
 
 /**
@@ -32,11 +30,9 @@ import java.sql.SQLException;
 public class I2b2MetadataSchemaPopulator extends AbstractH2Populator {
 
     public File populate() throws IOException, SQLException {
-        File createTempFile = File.createTempFile("i2b2metaschemapopulator", ".sql");
         File dbFile = File.createTempFile("i2b2-ksb", ".db");
-        try (Writer w = new FileWriter(createTempFile)) {
-            outputSqlFromLiquibaseChangeLog(dbFile, "src/main/resources/dbmigration/i2b2-meta-schema-changelog.xml", w);
-        }
-        return populate(dbFile, "INIT=RUNSCRIPT FROM 'src/main/resources/sql/i2b2_meta_eureka_table_1_7_h2.sql'\\;RUNSCRIPT FROM '" + createTempFile.getAbsolutePath() + "'\\;RUNSCRIPT FROM 'src/test/resources/i2b2.sql'");
+        updateLiquibaseChangeLog(dbFile, "src/main/resources/dbmigration/create-table-access-changelog.xml");
+        updateLiquibaseChangeLog(dbFile, "src/main/resources/dbmigration/i2b2-meta-schema-changelog.xml");
+        return populate(dbFile, "INIT=RUNSCRIPT FROM 'src/test/resources/i2b2.sql'");
     }
 }

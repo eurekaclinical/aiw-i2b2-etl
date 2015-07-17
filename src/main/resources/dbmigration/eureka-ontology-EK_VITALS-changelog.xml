@@ -1,0 +1,580 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+	<property name="date.type" value="DATE" dbms="oracle"/>
+	<property name="date.type" value="DATETIME" dbms="h2"/>
+	<property name="date.type" value="DATETIME" dbms="sqlserver"/>
+	<property name="date.type" value="DATETIME" dbms="postgresql"/>
+		
+	<changeSet author="arpost" id="EK_VITALS-1">
+		<createTable tableName="EK_VITALS">
+			<column name="C_HLEVEL" type="NUMBER(22, 0)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_FULLNAME" type="VARCHAR(700)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_NAME" type="VARCHAR(2000)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_SYNONYM_CD" type="CHAR(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_VISUALATTRIBUTES" type="CHAR(3)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_TOTALNUM" type="NUMBER(22, 0)"/>
+			<column name="C_BASECODE" type="VARCHAR(50)"/>
+			<column name="C_METADATAXML" type="CLOB"/>
+			<column name="C_FACTTABLECOLUMN" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_TABLENAME" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_COLUMNNAME" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_COLUMNDATATYPE" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_OPERATOR" type="VARCHAR(10)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_DIMCODE" type="VARCHAR(700)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="C_COMMENT" type="CLOB"/>
+			<column name="C_TOOLTIP" type="VARCHAR(900)"/>
+			<column name="M_APPLIED_PATH" type="VARCHAR(700)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="UPDATE_DATE" type="${date.type}">
+				<constraints nullable="false"/>
+			</column>
+			<column name="DOWNLOAD_DATE" type="${date.type}"/>
+			<column name="IMPORT_DATE" type="${date.type}"/>
+			<column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+			<column name="VALUETYPE_CD" type="VARCHAR(50)"/>
+			<column name="M_EXCLUSION_CD" type="VARCHAR(25)"/>
+			<column name="C_PATH" type="VARCHAR(700)"/>
+			<column name="C_SYMBOL" type="VARCHAR(50)"/>
+			<column name="EK_UNIQUE_ID" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	
+	<changeSet author="arpost" id="EK_VITALS-7">
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="1"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\"/>
+			<column name="C_NAME" value="Vital Sign"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="FAE"/>
+			<column name="C_BASECODE" value="VitalSign"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\"/>
+			<column name="C_SYMBOL" value="VitalSign"/>
+			<column name="EK_UNIQUE_ID" value="VitalSign"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\BodyMassIndex\"/>
+			<column name="C_NAME" value="Body mass index"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="BodyMassIndex"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\BodyMassIndex\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Body mass index"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="BodyMassIndex"/>
+			<column name="EK_UNIQUE_ID" value="BodyMassIndex"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\DiastolicBloodPressure\"/>
+			<column name="C_NAME" value="Diastolic Blood Pressure"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="DiastolicBloodPressure"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\DiastolicBloodPressure\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Diastolic Blood Pressure"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="DiastolicBloodPressure"/>
+			<column name="EK_UNIQUE_ID" value="DiastolicBloodPressure"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\HeartRate\"/>
+			<column name="C_NAME" value="Heart Rate"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="HeartRate"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\HeartRate\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Heart Rate"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="HeartRate"/>
+			<column name="EK_UNIQUE_ID" value="HeartRate"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Height\"/>
+			<column name="C_NAME" value="Height"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="Height"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Height\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Height"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="Height"/>
+			<column name="EK_UNIQUE_ID" value="Height"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\O2Saturation\"/>
+			<column name="C_NAME" value="Oxygen Saturation"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="O2Saturation"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\O2Saturation\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Oxygen Saturation"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="O2Saturation"/>
+			<column name="EK_UNIQUE_ID" value="O2Saturation"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\RespiratoryRate\"/>
+			<column name="C_NAME" value="Respiratory Rate"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="RespiratoryRate"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\RespiratoryRate\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Respiratory Rate"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="RespiratoryRate"/>
+			<column name="EK_UNIQUE_ID" value="RespiratoryRate"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\SystolicBloodPressure\"/>
+			<column name="C_NAME" value="Systolic Blood Pressure"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="SystolicBloodPressure"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\SystolicBloodPressure\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Systolic Blood Pressure"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="SystolicBloodPressure"/>
+			<column name="EK_UNIQUE_ID" value="SystolicBloodPressure"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_NAME" value="Temperature"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="FAE"/>
+			<column name="C_BASECODE" value="Temperature"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Temperature"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="Temperature"/>
+			<column name="EK_UNIQUE_ID" value="Temperature"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="3"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Temperature\TemperatureAxillary\"/>
+			<column name="C_NAME" value="Temperature (C) Axillary"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="TemperatureAxillary"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Temperature\TemperatureAxillary\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Temperature \ Temperature (C) Axillary"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_SYMBOL" value="TemperatureAxillary"/>
+			<column name="EK_UNIQUE_ID" value="TemperatureAxillary"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="3"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Temperature\TemperatureCore\"/>
+			<column name="C_NAME" value="Temperature (C) Core"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="TemperatureCore"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Temperature\TemperatureCore\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Temperature \ Temperature (C) Core"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_SYMBOL" value="TemperatureCore"/>
+			<column name="EK_UNIQUE_ID" value="TemperatureCore"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="3"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Temperature\TemperatureNOS\"/>
+			<column name="C_NAME" value="Temperature"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="TemperatureNOS"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Temperature\TemperatureNOS\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Temperature \ Temperature"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_SYMBOL" value="TemperatureNOS"/>
+			<column name="EK_UNIQUE_ID" value="TemperatureNOS"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="3"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Temperature\TemperatureOral\"/>
+			<column name="C_NAME" value="Temperature (C) Oral"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="TemperatureOral"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Temperature\TemperatureOral\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Temperature \ Temperature (C) Oral"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_SYMBOL" value="TemperatureOral"/>
+			<column name="EK_UNIQUE_ID" value="TemperatureOral"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="3"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Temperature\TemperatureRectal\"/>
+			<column name="C_NAME" value="Temperature (C) Rectal"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="TemperatureRectal"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Temperature\TemperatureRectal\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Temperature \ Temperature (C) Rectal"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_SYMBOL" value="TemperatureRectal"/>
+			<column name="EK_UNIQUE_ID" value="TemperatureRectal"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="3"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Temperature\TemperatureTympanic\"/>
+			<column name="C_NAME" value="Temperature (C) Tympanic"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="TemperatureTympanic"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Temperature\TemperatureTympanic\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Temperature \ Temperature (C) Tympanic"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\Temperature\"/>
+			<column name="C_SYMBOL" value="TemperatureTympanic"/>
+			<column name="EK_UNIQUE_ID" value="TemperatureTympanic"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\VS:DescriptionMissing\"/>
+			<column name="C_NAME" value="Description Missing"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LHE"/>
+			<column name="C_BASECODE" value="VS:DescriptionMissing"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\VS:DescriptionMissing\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Description Missing"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-14 05:58:55.0"/>
+			<column name="DOWNLOAD_DATE"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-14 05:59:00.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="VS:DescriptionMissing"/>
+			<column name="EK_UNIQUE_ID" value="VS:DescriptionMissing"/>
+		</insert>
+		<insert tableName="EK_VITALS">
+			<column name="C_HLEVEL" valueNumeric="2"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\Weight\"/>
+			<column name="C_NAME" value="Weight"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="LAE"/>
+			<column name="C_BASECODE" value="Weight"/>
+			<column name="C_METADATAXML"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_TABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\Weight\"/>
+			<column name="C_COMMENT"/>
+			<column name="C_TOOLTIP" value=" \ Eureka \ Vital Signs \ Weight"/>
+			<column name="M_APPLIED_PATH" value="@"/>
+			<column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="DOWNLOAD_DATE" valueDate="2015-02-04 13:23:19.0"/>
+			<column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+			<column name="SOURCESYSTEM_CD" value="org.protempa.backend.ksb.protege.LocalKnowledgeSou"/>
+			<column name="VALUETYPE_CD" value="LAB"/>
+			<column name="M_EXCLUSION_CD"/>
+			<column name="C_PATH" value="\EK\VitalSign\"/>
+			<column name="C_SYMBOL" value="Weight"/>
+			<column name="EK_UNIQUE_ID" value="Weight"/>
+		</insert>
+		<rollback>
+			DELETE FROM EK_VITALS
+		</rollback>
+	</changeSet>
+	<changeSet author="arpost" id="EK_VITALS-8">
+		<insert tableName="TABLE_ACCESS">
+			<column name="C_TABLE_CD" value="EK_VITALS"/>
+			<column name="C_TABLE_NAME" value="EK_VITALS"/>
+			<column name="C_PROTECTED_ACCESS" value="N"/>
+			<column name="C_HLEVEL" valueNumeric="1"/>
+			<column name="C_FULLNAME" value="\EK\VitalSign\"/>
+			<column name="C_NAME" value="Vital Signs"/>
+			<column name="C_SYNONYM_CD" value="N"/>
+			<column name="C_VISUALATTRIBUTES" value="CA"/>
+			<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+			<column name="C_DIMTABLENAME" value="concept_dimension"/>
+			<column name="C_COLUMNNAME" value="concept_path"/>
+			<column name="C_COLUMNDATATYPE" value="T"/>
+			<column name="C_OPERATOR" value="LIKE"/>
+			<column name="C_DIMCODE" value="\EK\VitalSign\"/>
+			<column name="C_TOOLTIP" value="Vital Signs"/>
+			<column name="C_STATUS_CD" value="A"/>
+		</insert>
+		<rollback>
+			DELETE FROM TABLE_ACCESS WHERE C_TABLE_CD='EK_VITALS'
+		</rollback>
+	</changeSet>
+	<changeSet author="arpost" id="EK_VITALS-2">
+		<createIndex indexName="META_APPLIED_PATH_EK_VIT_IDX" tableName="EK_VITALS" unique="false">
+			<column name="M_APPLIED_PATH"/>
+		</createIndex>
+	</changeSet>
+	<changeSet author="arpost" id="EK_VITALS-3">
+		<createIndex indexName="META_EKUID_EK_VITALS_IDX" tableName="EK_VITALS" unique="false">
+			<column name="EK_UNIQUE_ID"/>
+		</createIndex>
+	</changeSet>
+	<changeSet author="arpost" id="EK_VITALS-4">
+		<createIndex indexName="META_FULLNAME_EK_VITALS_IDX" tableName="EK_VITALS" unique="false">
+			<column name="C_FULLNAME"/>
+		</createIndex>
+	</changeSet>
+	<changeSet author="arpost" id="EK_VITALS-5">
+		<createIndex indexName="META_PATH_EK_VITALS_IDX" tableName="EK_VITALS" unique="false">
+			<column name="C_PATH"/>
+		</createIndex>
+	</changeSet>
+	<changeSet author="arpost" id="EK_VITALS-6">
+		<createIndex indexName="META_SYMBOL_EK_VITALS_IDX" tableName="EK_VITALS" unique="false">
+			<column name="C_SYMBOL"/>
+		</createIndex>
+	</changeSet>
+</databaseChangeLog>
