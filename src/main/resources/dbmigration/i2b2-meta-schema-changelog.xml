@@ -140,7 +140,7 @@ limitations under the License.
             <column name="C_TABLE_NAME" value="EUREKAPHENOTYPEONTOLOGY"/>
             <column name="C_PROTECTED_ACCESS" value="N"/>
             <column name="C_HLEVEL" valueNumeric="1"/>
-            <column name="C_FULLNAME" value="\EK\Phenotypes\"/>
+            <column name="C_FULLNAME" value="\EK\AIW|Phenotypes\"/>
             <column name="C_NAME" value="Phenotypes"/>
             <column name="C_SYNONYM_CD" value="N"/>
             <column name="C_VISUALATTRIBUTES" value="CA"/>
