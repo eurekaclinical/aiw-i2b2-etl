@@ -59,6 +59,7 @@ import org.arp.javautil.collections.Collections;
 import org.arp.javautil.io.IOUtil;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.AbstractPropositionDefinition;
+import org.protempa.Attribute;
 import org.protempa.ConstantDefinition;
 import org.protempa.PrimitiveParameterDefinition;
 import org.protempa.PropertyDefinition;
@@ -68,6 +69,8 @@ import org.protempa.valueset.ValueSetElement;
 import org.protempa.backend.BackendInitializationException;
 import org.protempa.backend.BackendInstanceSpec;
 import org.protempa.backend.BackendSourceIdFactory;
+import org.protempa.dest.deid.DeidAttributes;
+import org.protempa.proposition.value.BooleanValue;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.ValueType;
 import org.xml.sax.SAXParseException;
@@ -249,7 +252,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         this.patientPropositionId = defaultPatientPropositionId;
         this.patientDisplayName = patientPropositionProperties.getProperty("displayName");
         this.patientPatientIdPropertyName = patientPropositionProperties.getProperty("patientId.propertyName");
-        
+
         this.patientAliasPropositionId = defaultPatientAliasPropositionId;
         this.patientAliasDisplayName = patientAliasPropositionProperties.getProperty("displayName");
         this.patientAliasPatientIdPropertyName = patientAliasPropositionProperties.getProperty("patientId.propertyName");
@@ -1449,7 +1452,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         );
         return patientDim;
     }
-    
+
     private ConstantDefinition newPatientAliasPropositionDefinition() {
         Date now = new Date();
         ConstantDefinition patientDim = new ConstantDefinition(this.patientAliasPropositionId);
@@ -1459,7 +1462,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         patientDim.setDisplayName(this.patientAliasDisplayName);
         patientDim.setInDataSource(true);
         patientDim.setPropertyDefinitions(
-                new PropertyDefinition(this.patientAliasPropositionId, this.patientAliasPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientAliasPropositionId),
+                new PropertyDefinition(this.patientAliasPropositionId, this.patientAliasPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientAliasPropositionId,
+                        new Attribute[]{
+                            new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                            new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.MRN)
+                        }),
                 new PropertyDefinition(this.patientAliasPropositionId, this.patientAliasFieldNamePropertyName, null, ValueType.NOMINALVALUE, null, this.patientAliasPropositionId)
         );
         return patientDim;
@@ -1474,15 +1481,28 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         patientDim.setDisplayName(this.patientDetailsDisplayName);
         patientDim.setInDataSource(true);
         patientDim.setPropertyDefinitions(
-                new PropertyDefinition(this.patientDetailsPropositionId, this.ageInYearsPropertyName, null, ValueType.NUMERICALVALUE, null, this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfBirthPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.ageInYearsPropertyName, null, ValueType.NUMERICALVALUE, null, this.patientDetailsPropositionId,
+                        new Attribute[]{
+                            new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                            new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.AGE_IN_YEARS)
+                        }),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfBirthPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId,
+                        new Attribute[]{
+                            new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                            new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.BIRTHDATE)
+                        }),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfDeathPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.genderPropertyName, null, ValueType.NOMINALVALUE, this.genderPropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.languagePropertyName, null, ValueType.NOMINALVALUE, this.languagePropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.maritalStatusPropertyName, null, ValueType.NOMINALVALUE, this.maritalStatusPropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.racePropertyName, null, ValueType.NOMINALVALUE, this.racePropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.vitalStatusPropertyName, null, ValueType.BOOLEANVALUE, null, this.patientDetailsPropositionId),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.patientDetailsPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientDetailsPropositionId)
+                new PropertyDefinition(this.patientDetailsPropositionId, this.patientDetailsPatientIdPropertyName, null, ValueType.NOMINALVALUE, null, this.patientDetailsPropositionId,
+                        new Attribute[]{
+                            new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                            new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.MRN)
+                        }
+                )
         );
         patientDim.setReferenceDefinitions(
                 new ReferenceDefinition("encounters", "Encounters", new String[]{this.visitPropositionId})

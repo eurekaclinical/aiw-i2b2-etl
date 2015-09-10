@@ -209,7 +209,7 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                     mod.setTableName("MODIFIER_DIMENSION");
                     mod.setColumnName("MODIFIER_PATH");
                     mod.setAlreadyLoaded(this.alreadyLoaded);
-                    Attribute attribute = propertyDef.attribute(Util.C_FULLNAME_ATTRIBUTE_NAME);
+                    Attribute attribute = propertyDef.getAttribute(Util.C_FULLNAME_ATTRIBUTE_NAME);
                     if (attribute != null) {
                         Value value = attribute.getValue();
                         if (value != null) {
