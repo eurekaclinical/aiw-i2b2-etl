@@ -395,6 +395,8 @@ BEGIN
                             and pm.patient_ide_source = temp.patient_id_source
                             and pm.project_id=''@''))';
         COMMIT;
+
+        EXECUTE 'TRUNCATE TABLE ' || upload_temptable_name;
         
         -- if the append is true, then do the update else do insert all
         IF ( appendFlag = 0 ) THEN
