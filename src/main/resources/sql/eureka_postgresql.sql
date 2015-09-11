@@ -17,6 +17,9 @@
 -- limitations under the License.
 -- #L%
 ---
+
+CREATE SCHEMA IF NOT EXISTS EUREKA;
+
 CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableName text, upload_id bigint)  RETURNS VOID AS $body$
     BEGIN
         EXECUTE '
