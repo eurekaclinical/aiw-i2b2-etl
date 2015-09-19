@@ -6215,11 +6215,11 @@ limitations under the License.
     </changeSet>
     <changeSet author="arpost" id="EK_DEMOG-9">
         <insert tableName="EK_DEMOG">
-            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_HLEVEL" valueNumeric="2"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|VitalStatus\"/>
-            <column name="C_NAME" value="Known Deceased"/>
+            <column name="C_NAME" value="Vital Status"/>
             <column name="C_SYNONYM_CD" value="N"/>
-            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_VISUALATTRIBUTES" value="FAE"/>
             <column name="C_METADATAXML"/>
             <column name="C_FACTTABLECOLUMN" value="patient_num"/>
             <column name="C_TABLENAME" value="patient_dimension"/>
@@ -6241,7 +6241,7 @@ limitations under the License.
             <column name="EK_UNIQUE_ID" value="DEM|VITAL STATUS"/>
         </insert>
         <insert tableName="EK_DEMOG">
-            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_HLEVEL" valueNumeric="3"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|VitalStatus\DEM|VITAL STATUS:D\"/>
             <column name="C_NAME" value="Known Deceased"/>
             <column name="C_SYNONYM_CD" value="N"/>
