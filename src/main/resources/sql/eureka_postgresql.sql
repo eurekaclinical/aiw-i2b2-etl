@@ -31,7 +31,9 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
                                 import_date = now(),
                                 sourcesystem_cd = temp.sourcesystem_cd,
                                 upload_id = ' || upload_id || ' 
-                 FROM ' || tempProviderTableName || ' temp WHERE temp.provider_path = provider_dimension.provider_path AND temp.update_date >= provider_dimension.update_date';
+            FROM ' || tempProviderTableName || ' temp 
+            WHERE temp.provider_path = provider_dimension.provider_path 
+                AND coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(provider_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))';
         EXECUTE '
              INSERT INTO provider_dimension (
                                 provider_id,
@@ -43,7 +45,7 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
                                 import_date,
                                 sourcesystem_cd,
                                 upload_id) 
-             SELECT 
+            SELECT 
                     temp2.provider_id,
                     temp2.provider_path,
                     temp2.name_char,
@@ -52,7 +54,9 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
                     temp2.download_date,
                     now(),
                     temp2.sourcesystem_cd, 
-                    '|| upload_id ||' FROM ' || tempProviderTableName || ' temp2 WHERE temp2.provider_path NOT IN (SELECT provider_dimension.provider_path from provider_dimension);
+                    '|| upload_id ||' 
+            FROM ' || tempProviderTableName || ' temp2 
+            WHERE temp2.provider_path NOT IN (SELECT provider_dimension.provider_path from provider_dimension);
                  ';
         ANALYZE provider_dimension;
     EXCEPTION
@@ -75,7 +79,9 @@ BEGIN
                     import_date = now(),
                     sourcesystem_cd = temp.SOURCESYSTEM_CD,
                     upload_id = ' || upload_id || '
-            FROM ' || tempConceptTableName || ' temp WHERE temp.update_date >= concept_dimension.update_date AND temp.concept_path = concept_dimension.concept_path';
+            FROM ' || tempConceptTableName || ' temp 
+            WHERE coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(concept_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
+                AND temp.concept_path = concept_dimension.concept_path';
         EXECUTE '
             INSERT INTO concept_dimension (                  
                 concept_cd,
@@ -95,7 +101,9 @@ BEGIN
                 temp2.download_date,
                 now(),
                 temp2.sourcesystem_cd, 
-                '|| UPLOAD_ID ||' FROM ' || tempConceptTableName || ' temp2 WHERE temp2.concept_path NOT IN (SELECT concept_dimension.concept_path from concept_dimension);
+                '|| UPLOAD_ID ||' 
+            FROM ' || tempConceptTableName || ' temp2 
+            WHERE temp2.concept_path NOT IN (SELECT concept_dimension.concept_path from concept_dimension);
             ';
         ANALYZE concept_dimension;
     EXCEPTION
@@ -117,7 +125,9 @@ BEGIN
                     import_date = now(),
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
-            FROM ' || tempModifierTableName || ' temp WHERE temp.update_date >= modifier_dimension.update_date AND temp.modifier_path = modifier_dimension.modifier_path';
+            FROM ' || tempModifierTableName || ' temp 
+            WHERE temp.update_date >= modifier_dimension.update_date 
+                AND temp.modifier_path = modifier_dimension.modifier_path';
         EXECUTE '
             INSERT INTO modifier_dimension (
                 modifier_cd,
@@ -137,7 +147,9 @@ BEGIN
                 temp2.download_date,
                 now(),
                 temp2.sourcesystem_cd, 
-                '|| upload_id ||' FROM ' || tempModifierTableName || ' temp2 WHERE temp2.modifier_path NOT IN (SELECT modifier_dimension.modifier_path from modifier_dimension)
+                '|| upload_id ||' 
+            FROM ' || tempModifierTableName || ' temp2 
+            WHERE temp2.modifier_path NOT IN (SELECT modifier_dimension.modifier_path from modifier_dimension)
         ';
         ANALYZE modifier_dimension;
     EXCEPTION
@@ -203,7 +215,9 @@ BEGIN
                 sourcesystem_cd = temp.sourcesystem_cd,
                 upload_id = ' || upload_id || ',
                 length_of_stay = temp.length_of_stay
-                FROM ' || tempTableName || ' temp WHERE temp.update_date >= visit_dimension.update_date AND temp.encounter_num = visit_dimension.encounter_num'; 
+            FROM ' || tempTableName || ' temp 
+            WHERE coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(visit_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
+                AND temp.encounter_num = visit_dimension.encounter_num'; 
         
         -- jk: added project_id='@' to WHERE clause... need to support projects...
         EXECUTE '
@@ -306,7 +320,9 @@ BEGIN
                     import_date = now(),
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || ' 
-                    FROM ' || tempTableName || ' temp WHERE temp.update_date >= patient_dimension.update_date AND temp.patient_num = patient_dimension.patient_num';
+            FROM ' || tempTableName || ' temp 
+            WHERE coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(patient_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
+                AND temp.patient_num = patient_dimension.patient_num';
         EXECUTE '
             INSERT INTO patient_dimension (
                     PATIENT_NUM,
@@ -344,7 +360,9 @@ BEGIN
                     temp2.download_date,
                     now(), 
                     temp2.sourcesystem_cd,
-                    '|| UPLOAD_ID || ') FROM ' || tempTableName || ' temp2 WHERE temp2.patient_num NOT IN (SELECT patient_dimension.patient_num from patient_dimension) 
+                    '|| UPLOAD_ID || ') 
+                FROM ' || tempTableName || ' temp2 
+                WHERE temp2.patient_num NOT IN (SELECT patient_dimension.patient_num from patient_dimension) 
                     AND temp.patient_num IS NOT NULL
                     AND temp.patient_num::text <> ''';
         ANALYZE patient_dimension;

@@ -39,7 +39,7 @@ AS
                     import_date = sysdate,
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
-                WHERE temp.update_date >= provider_dimension.update_date
+                WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(provider_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
             WHEN NOT MATCHED THEN
                 INSERT (
                     provider_id,
@@ -136,7 +136,7 @@ AS
                     import_date = sysdate,
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
-                WHERE temp.update_date >= patient_dimension.update_date
+                WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(patient_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
             WHEN NOT MATCHED THEN 
                 INSERT (
                     PATIENT_NUM,
@@ -203,7 +203,7 @@ AS
                     import_date = sysdate,
                     sourcesystem_cd = temp.SOURCESYSTEM_CD,
                     upload_id = ' || upload_id || '
-                WHERE temp.update_date >= concept_dimension.update_date
+                WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(concept_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
             WHEN NOT MATCHED THEN
                 INSERT (
                     concept_cd,
@@ -253,7 +253,7 @@ AS
                     import_date = sysdate,
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
-                WHERE temp.update_date >= modifier_dimension.update_date
+                WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(modifier_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
             WHEN NOT MATCHED THEN 
                 INSERT (
                     modifier_cd,
@@ -349,7 +349,7 @@ AS
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || ',
                     length_of_stay = temp.length_of_stay
-                    WHERE temp.update_date >= visit_dimension.update_date';
+                    WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(visit_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))';
             
         -- jk: added project_id='@' to WHERE clause... need to support projects...
         EXECUTE immediate '
@@ -481,7 +481,7 @@ AS
                         import_date=temp.import_date, 
                         sourcesystem_cd =temp.sourcesystem_cd, 
                         upload_id = temp.upload_id 
-                    where nvl(observation_fact.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= nvl(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
+                    where nvl(observation_fact.update_date,to_date(''19000101'',''YYYYMMDD'')) <= nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) 
                 when not matched then 
                     insert (encounter_num, 
                         concept_cd, 
