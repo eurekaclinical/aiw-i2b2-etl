@@ -31,14 +31,19 @@ import java.util.Properties;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Andrew Post
  */
 class Neo4jHome {
+	private static final Logger LOGGER
+			= LoggerFactory.getLogger(Neo4jHome.class);
 	private static final String SERVER_PROPERTIES = new File("conf", "neo4j-server.properties").getPath();
 	private static final String SERVER_CONTROL_COMMAND = new File("bin", "neo4j").getPath();
 	private final String home;
@@ -67,6 +72,7 @@ class Neo4jHome {
 	}
 	
 	private void controlServer(String command) throws IOException, InterruptedException, CommandFailedException {
+		LOGGER.debug("Executing neo4j command {}...", command);
 		CommandLine serverControlCommand = new CommandLine(new File(this.home, SERVER_CONTROL_COMMAND));
 		serverControlCommand.addArgument("${command}");
 		Map<String,String> map = new HashMap<>();
@@ -80,12 +86,14 @@ class Neo4jHome {
 		executor.setExitValue(1);
 		executor.setWatchdog(watchdog);
 		executor.execute(serverControlCommand, resultHandler);
-
+		LOGGER.debug("Neo4j command {} is completed, checking exit value...", command);
 		resultHandler.waitFor();
 		int exitValue = resultHandler.getExitValue();
 		if (exitValue != 0) {
-			throw new CommandFailedException(exitValue);
+			ExecuteException exception = resultHandler.getException();
+			throw new CommandFailedException(exitValue, "Neo4j command '" + command + "' failed", exception);
 		}
+		LOGGER.debug("Neo4j command {} was successful", command);
 	}
 	
 }

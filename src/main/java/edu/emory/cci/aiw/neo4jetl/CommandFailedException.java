@@ -26,10 +26,16 @@ package edu.emory.cci.aiw.neo4jetl;
  *
  * @author Andrew Post
  */
-class CommandFailedException extends Exception {
+public final class CommandFailedException extends Exception {
 	private final int exitValue;
 
-	CommandFailedException(int exitValue) {
+	CommandFailedException(int exitValue, String message) {
+		super(message);
+		this.exitValue = exitValue;
+	}
+	
+	CommandFailedException(int exitValue, String message, Throwable throwable) {
+		super(message, throwable);
 		this.exitValue = exitValue;
 	}
 	

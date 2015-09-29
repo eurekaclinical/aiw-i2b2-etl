@@ -21,7 +21,6 @@ package edu.emory.cci.aiw.neo4jetl;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-
 import edu.emory.cci.aiw.neo4jetl.config.Configuration;
 import java.util.Collection;
 import java.util.List;
@@ -65,7 +64,9 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 	private volatile boolean hasPassedAfterStart;
 
 	private final Thread wrappedThread;
-	private QueryResultsHandlerProcessingException exception;
+	private volatile QueryResultsHandlerProcessingException exception;
+	private volatile boolean atEnd;
+	private final Query query;
 
 	Neo4jQueryResultsHandler(Query inQuery, DataSource dataSource, Configuration configuration) throws QueryResultsHandlerInitException {
 		this.wrapped = new Neo4jQueryResultsHandlerWrapped(inQuery, dataSource, configuration);
@@ -82,11 +83,9 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 					startSynchronousQueue.take();
 					doStart();
 					endSynchronousQueue.put(handoffObject);
-
 					//After-start step
 					startSynchronousQueue.take();
 					endSynchronousQueue.put(handoffObject);
-
 					//Handle query result step
 					while (true) {
 						startSynchronousQueue.take();
@@ -99,11 +98,22 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 
 					//Finish step
 					doFinish();
+					atEnd = true;
 					endSynchronousQueue.put(handoffObject);
 				} catch (QueryResultsHandlerProcessingException ex) {
 					exception = ex;
+					atEnd = true;
+					try {
+						endSynchronousQueue.put(handoffObject);
+					} catch (InterruptedException ignore) {
+					}
 				} catch (InterruptedException ex) {
-					LOGGER.log(Level.FINE, "Data processing interrupted", ex);
+					LOGGER.log(Level.FINE, "Result processing interrupted", ex);
+					atEnd = true;
+					try {
+						endSynchronousQueue.put(handoffObject);
+					} catch (InterruptedException ignore) {
+					}
 				}
 			}
 
@@ -121,6 +131,7 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 
 		};
 		this.wrappedThread.start();
+		this.query = inQuery;
 	}
 
 	@Override
@@ -136,6 +147,7 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 
 		try {
 			doExecuteStep();
+			doCheckForException();
 		} catch (InterruptedException ex) {
 			LOGGER.log(Level.FINE, "Data processing interrupted", ex);
 		}
@@ -144,13 +156,14 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 	@Override
 	public void handleQueryResult(String keyId, List<Proposition> propositions, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references) throws QueryResultsHandlerProcessingException {
 		try {
-			doPassAfterStart();
+			doPassAfterStartIfNeeded();
 			this.keyId = keyId;
 			this.propositions = propositions;
 			this.forwardDerivations = forwardDerivations;
 			this.backwardDerivations = backwardDerivations;
 			this.references = references;
 			doExecuteStep();
+			doCheckForException();
 		} catch (InterruptedException ex) {
 			LOGGER.log(Level.FINE, "Data processing interrupted", ex);
 		}
@@ -158,51 +171,81 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 
 	@Override
 	public void finish() throws QueryResultsHandlerProcessingException {
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler finishing up for query {0}...", this.query.getId());
 		try {
 			this.processing = false;
-			doPassAfterStart();
-			doExecuteStep();
+			doGoToEnd();
+			doCheckForException();
 		} catch (InterruptedException ex) {
 			LOGGER.log(Level.FINE, "Data processing interrupted", ex);
 		}
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler finished up for query {0}...", this.query.getId());
 	}
 
 	@Override
 	public void close() throws QueryResultsHandlerCloseException {
-		try {
-			this.processing = false;
-			doPassAfterStart();
-		} catch (InterruptedException ex) {
-			LOGGER.log(Level.FINE, "Data processing interrupted", ex);
-		} finally {
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler closing for query {0}...", this.query.getId());
+		this.processing = false;
+		if (!this.atEnd) {
 			try {
-				this.wrappedThread.join();
+				doGoToEnd();
 			} catch (InterruptedException ex) {
 				LOGGER.log(Level.FINE, "Data processing interrupted", ex);
 			}
-			this.wrapped.close();
 		}
+		try {
+			LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler waiting for results handling thread to end for query {0}", this.query.getId());
+			this.wrappedThread.join();
+			LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler results handling thread for query {0} is finished", this.query.getId());
+		} catch (InterruptedException ex) {
+			LOGGER.log(Level.FINE, "Data processing interrupted", ex);
+		}
+		boolean thrown = true;
+		try {
+			doCheckForException();
+			thrown = false;
+		} catch (QueryResultsHandlerProcessingException ex) {
+			throw new QueryResultsHandlerCloseException(ex);
+		} finally {
+			try {
+				this.wrapped.close();
+			} catch (QueryResultsHandlerCloseException ex) {
+				if (!thrown) {
+					throw ex;
+				}
+			}
+		}
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler closed for query {0}", this.query.getId());
 	}
 
 	@Override
 	public void cancel() {
 		this.wrappedThread.interrupt();
 	}
+	
+	private void doGoToEnd() throws InterruptedException {
+		doPassAfterStartIfNeeded(); //Needed if there are no results to handle.
+		doExecuteStep();
+	}
 
-	private void doExecuteStep() throws QueryResultsHandlerProcessingException, InterruptedException {
+	private void doExecuteStep() throws InterruptedException {
 		this.startSynchronousQueue.put(this.handoffObject);
 		this.endSynchronousQueue.take();
-		if (this.exception != null) {
-			throw this.exception;
 
+	}
+
+	private void doPassAfterStartIfNeeded() throws InterruptedException {
+		if (!this.hasPassedAfterStart) {
+			doExecuteStep();
+			this.hasPassedAfterStart = true;
 		}
 	}
 
-	private void doPassAfterStart() throws InterruptedException {
-		if (!this.hasPassedAfterStart) {
-			this.startSynchronousQueue.put(this.handoffObject);
-			this.endSynchronousQueue.take();
-			this.hasPassedAfterStart = true;
+	private void doCheckForException() throws QueryResultsHandlerProcessingException {
+		if (this.exception != null) {
+			QueryResultsHandlerProcessingException throwable = this.exception;
+			this.exception = null;
+			throw throwable;
 		}
 	}
 

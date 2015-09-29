@@ -15,6 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 This project includes:
   AIW Neo4j ETL under GNU General Public License, Version 3
+  Apache Commons Codec under Apache License, Version 2.0
   Apache Commons Collections under The Apache Software License, Version 2.0
   Apache Commons DBCP under The Apache Software License, Version 2.0
   Apache Commons Exec under Apache License, Version 2.0

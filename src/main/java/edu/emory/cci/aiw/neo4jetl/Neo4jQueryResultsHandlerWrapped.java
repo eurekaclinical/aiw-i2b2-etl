@@ -88,6 +88,7 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 	private final PropositionDefinitionRelationBackwardVisitor backwardVisitor;
 	private final Configuration configuration;
 	private Neo4jHome home;
+	private boolean neo4jStopped;
 	private final String keyType;
 	private Transaction transaction;
 	private int count;
@@ -123,6 +124,7 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 		try {
 			this.home = new Neo4jHome(this.configuration.getNeo4jHome());
 			this.home.stopServer();
+			this.neo4jStopped = true;
 			File dbPath = this.home.getDbPath();
 			LOGGER.info("Database path is {}", dbPath);
 			GraphDatabaseFactory factory = new GraphDatabaseFactory();
@@ -132,7 +134,7 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 			}
 			this.db = dbBuilder.newGraphDatabase();
 			if (this.query.getQueryMode() != QueryMode.REPLACE) {
-				LOGGER.error("Grabbing proposition ids already loaded");
+				LOGGER.debug("Grabbing proposition ids already loaded");
 				this.keyTypes = new HashSet<>();
 				try (Result distinctTypesResult = this.db.execute("MATCH (node:" + NODE_LABEL.name() + ") RETURN DISTINCT node.__type AS node_type");
 						ResourceIterator<Object> columnAs = distinctTypesResult.columnAs("node_type")) {
@@ -141,7 +143,7 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 						this.keyTypes.add((String) next);
 					}
 				}
-				LOGGER.error("Found proposition ids {}", this.keyTypes);
+				LOGGER.debug("Found proposition ids {}", this.keyTypes);
 			}
 		} catch (IOException | InterruptedException | CommandFailedException ex) {
 			throw new QueryResultsHandlerProcessingException(ex);
@@ -224,10 +226,10 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 				if (node == null) {
 					node = this.db.createNode(Neo4jStatistics.NODE_LABEL);
 				}
-				
+
 				ResourceIterator<Node> findNodes = this.db.findNodes(NODE_LABEL, keyType, null);
 				int countKeys = IteratorUtil.count(findNodes);
-				
+
 				node.setProperty(Neo4jStatistics.TOTAL_KEYS, countKeys);
 
 				tx.success();
@@ -250,10 +252,12 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 			}
 			this.db.shutdown();
 		}
-		try {
-			this.home.startServer();
-		} catch (IOException | InterruptedException | CommandFailedException ex) {
-			throw new QueryResultsHandlerCloseException(ex);
+		if (this.neo4jStopped) {
+			try {
+				this.home.startServer();
+			} catch (IOException | InterruptedException | CommandFailedException ex) {
+				throw new QueryResultsHandlerCloseException(ex);
+			}
 		}
 	}
 
@@ -313,10 +317,12 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 	}
 
 	private void relate(Node source, Node target,
-			RelationshipType inRelation) {
-		Relationship relationship
-				= source.createRelationshipTo(target, inRelation);
-		relationship.setProperty("name", relationship.getType().name());
+			RelationshipType type) {
+		if (!hasRelationshipBetween(type, source, target)) {
+			Relationship relationship
+					= source.createRelationshipTo(target, type);
+			relationship.setProperty("name", relationship.getType().name());
+		}
 	}
 
 	private RelationshipType getOrCreateRelation(String name) {
@@ -326,6 +332,19 @@ public class Neo4jQueryResultsHandlerWrapped implements QueryResultsHandler {
 			this.relations.put(name, relationshipType);
 		}
 		return this.relations.get(name);
+	}
+
+	private boolean hasRelationshipBetween(RelationshipType type, Node source, Node target) {
+		return getRelationshipBetween(type, source, target) != null;
+	}
+
+	private Relationship getRelationshipBetween(RelationshipType type, Node source, Node target) {
+		for (Relationship rel : source.getRelationships()) {
+			if (rel.getType().equals(type) && rel.getOtherNode(source).equals(target)) {
+				return rel;
+			}
+		}
+		return null;
 	}
 
 	private void handleDerivations(
