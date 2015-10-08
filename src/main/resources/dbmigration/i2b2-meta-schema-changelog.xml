@@ -59,7 +59,7 @@ limitations under the License.
             DROP TABLE ##EK_TEMP_UNIQUE_IDS
         </rollback>
     </changeSet>
-    <changeSet author="arpost" id="META-4" dbms="oracle, h2">
+    <changeSet author="arpost" id="META-4">
         <createTable tableName="EUREKAPHENOTYPEONTOLOGY">
             <column name="C_HLEVEL" type="NUMBER(22, 0)">
                 <constraints nullable="false"/>
