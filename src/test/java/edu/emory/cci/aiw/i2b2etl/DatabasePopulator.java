@@ -59,8 +59,8 @@ public final class DatabasePopulator implements AutoCloseable {
 
     public DatabasePopulator() {
         try {
-            this.connectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(JDBC_URL_POPULATE, null, null);
-            this.noPopulateConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(JDBC_URL_NO_POPULATE, null, null);
+            this.connectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(JDBC_URL_POPULATE, null, null, false);
+            this.noPopulateConnectionSpec = DatabaseAPI.DRIVERMANAGER.newConnectionSpecInstance(JDBC_URL_NO_POPULATE, null, null, false);
         } catch (InvalidConnectionSpecArguments ex) {
             throw new AssertionError(ex);
         }
@@ -74,8 +74,14 @@ public final class DatabasePopulator implements AutoCloseable {
                 IDataSet dataSet = new FlatXmlDataSetBuilder().build(getClass().getResource(SAMPLE_DATA_FILE));
                 DatabaseOperation.CLEAN_INSERT.execute(dbunitConn, dataSet);
                 logger.log(Level.INFO, "Database populated");
+                conn.commit();
                 dbunitConn.close();
                 dbunitConn = null;
+            } catch (SQLException | DatabaseUnitException ex) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignore) {}
+                throw ex;
             } finally {
                 if (dbunitConn != null) {
                     try {

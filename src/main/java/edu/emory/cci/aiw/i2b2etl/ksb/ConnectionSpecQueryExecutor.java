@@ -33,7 +33,7 @@ import org.protempa.KnowledgeSourceReadException;
 class ConnectionSpecQueryExecutor extends QueryExecutor {
 
     ConnectionSpecQueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor, TableAccessReader ontTableReader) throws InvalidConnectionSpecArguments, SQLException {
-        super(databaseApi.newConnectionSpecInstance(databaseId, username, password).getOrCreate(), queryConstructor, ontTableReader);
+        super(databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate(), queryConstructor, ontTableReader);
     }
 
     @Override

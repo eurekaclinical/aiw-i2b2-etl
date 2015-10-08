@@ -859,15 +859,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private Connection openDataDatabaseConnection() throws SQLException {
-        Connection con = this.dataConnectionSpec.getOrCreate();
-        con.setAutoCommit(false);
-        return con;
+        return this.dataConnectionSpec.getOrCreate();
     }
 
     private Connection openMetadataDatabaseConnection() throws SQLException {
-        Connection con = this.metadataConnectionSpec.getOrCreate();
-        con.setAutoCommit(false);
-        return con;
+        return this.metadataConnectionSpec.getOrCreate();
     }
 
 }

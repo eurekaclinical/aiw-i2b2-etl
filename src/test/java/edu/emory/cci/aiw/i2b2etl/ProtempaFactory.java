@@ -77,7 +77,7 @@ public class ProtempaFactory implements AutoCloseable {
     }
 
     public void exportI2b2DataSchema(OutputStream outputStream) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
-        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null).getOrCreate()) {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null, false).getOrCreate()) {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet dataSet = dbUnitConn.createDataSet();
@@ -96,7 +96,7 @@ public class ProtempaFactory implements AutoCloseable {
     }
     
     public void exportI2b2DataSchemaDtd(Writer writer) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
-        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null).getOrCreate()) {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null, false).getOrCreate()) {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet dataSet = dbUnitConn.createDataSet();
@@ -115,7 +115,7 @@ public class ProtempaFactory implements AutoCloseable {
     }
 
     public void testTable(String tableName, IDataSet expectedDataSet) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
-        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null).getOrCreate()) {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null, false).getOrCreate()) {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet actualDataSet = dbUnitConn.createDataSet();

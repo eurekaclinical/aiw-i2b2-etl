@@ -24,8 +24,6 @@ import org.arp.javautil.sql.InvalidConnectionSpecArguments;
  * #L%
  */
 
-// this is simply a place for database schema connect information.
-
 public abstract class DatabaseSpec {
     private final String user;
     private final String passwd;
@@ -51,9 +49,16 @@ public abstract class DatabaseSpec {
     
     public abstract DatabaseAPI getDatabaseAPI();
     
+    /**
+     * Gets a connection spec configured with the user, password and
+     * connection string specified. Connections created from this connection
+     * spec will have auto commit turned off.
+     * 
+     * @return a {@link ConnectionSpec}.
+     */
     public ConnectionSpec toConnectionSpec() {
         try {
-            return getDatabaseAPI().newConnectionSpecInstance(getConnect(), getUser(), getPasswd());
+            return getDatabaseAPI().newConnectionSpecInstance(getConnect(), getUser(), getPasswd(), false);
         } catch (InvalidConnectionSpecArguments ex) {
             throw new AssertionError(ex);
         }

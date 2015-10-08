@@ -57,7 +57,6 @@ class LevelReader {
     Map<String, Set<String>> readChildrenFromDatabase(final Collection<String> symbols) throws KnowledgeSourceReadException {
         Map<String, Set<String>> result = new HashMap<>();
         try (Connection connection = this.querySupport.getConnection()) {
-            connection.setAutoCommit(false);
             try {
                 try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
                     for (String child : symbols) {

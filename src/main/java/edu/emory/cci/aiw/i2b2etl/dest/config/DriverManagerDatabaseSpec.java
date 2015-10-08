@@ -20,6 +20,8 @@ package edu.emory.cci.aiw.i2b2etl.dest.config;
  * #L%
  */
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.arp.javautil.sql.DatabaseAPI;
 
 /**
@@ -27,14 +29,33 @@ import org.arp.javautil.sql.DatabaseAPI;
  * @author Andrew Post
  */
 public class DriverManagerDatabaseSpec extends DatabaseSpec {
+    private static final Logger LOGGER = Logger.getLogger(DriverManagerDatabaseSpec.class.getName());
+    
+    private static final String[] jdbcDriverClassNames = {
+        "oracle.jdbc.OracleDriver",
+        "org.postgresql.Driver",
+        "org.h2.Driver"
+    };
 
     public DriverManagerDatabaseSpec(String connect, String user, String passwd) {
         super(connect, user, passwd);
+        loadDrivers();
     }
 
     @Override
     public DatabaseAPI getDatabaseAPI() {
         return DatabaseAPI.DRIVERMANAGER;
+    }
+
+    private static void loadDrivers() {
+        for (String driverClassName : jdbcDriverClassNames) {
+            try {
+                Class.forName(driverClassName);
+                LOGGER.log(Level.FINE, "JDBC driver {0} found", driverClassName);
+            } catch (ClassNotFoundException ex) {
+                LOGGER.log(Level.FINE, "No JDBC driver {0} found", driverClassName);
+            }
+        }
     }
     
 }

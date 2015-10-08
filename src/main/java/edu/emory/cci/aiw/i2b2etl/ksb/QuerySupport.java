@@ -103,7 +103,7 @@ class QuerySupport {
     }
     
     Connection getConnection() throws InvalidConnectionSpecArguments, SQLException {
-        return this.databaseApi.newConnectionSpecInstance(databaseId, username, password).getOrCreate();
+        return this.databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate();
     }
     
     ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) throws KnowledgeSourceReadException {

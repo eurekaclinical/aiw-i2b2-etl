@@ -151,7 +151,6 @@ public class I2b2Statistics implements Statistics {
     private void populateCountsAndChildrenToParentsIfNeeded() throws StatisticsException {
         if (this.counts == null) {
             try (Connection conn = this.metaConnectionSpec.getOrCreate()) {
-                conn.setAutoCommit(false);
                 try {
                     if (!this.currentPropIds.isEmpty()) {
                         populateUniqueIdTempTable(conn);

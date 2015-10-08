@@ -1881,7 +1881,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
         Map<String, List<PropertyDefinition>> partials;
         try (Connection connection = this.querySupport.getConnection()) {
-            connection.setAutoCommit(false);
             try {
                 try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
                     for (String child : resultMap.keySet()) {
@@ -1910,7 +1909,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
 //        try (Connection connection = this.querySupport.getConnection()) {
-//            connection.setAutoCommit(false);
 //            try {
 //                final Map<String, List<PropertyDefinitionPartial>> partialMap = new HashMap<>();
 //                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
@@ -2232,7 +2230,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private List<TemporalPropositionDefinition> readPropDefs(final List<String> ids) throws KnowledgeSourceReadException {
         List<TemporalPropositionDefinition> result = new ArrayList<>();
         try (Connection connection = this.querySupport.getConnection()) {
-            connection.setAutoCommit(false);
             try {
                 try (UniqueIdTempTableHandler uniqIdTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
                     for (String id : ids) {
