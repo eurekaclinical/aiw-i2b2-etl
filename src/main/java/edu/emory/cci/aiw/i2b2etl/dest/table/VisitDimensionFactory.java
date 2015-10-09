@@ -43,7 +43,6 @@ import org.protempa.proposition.value.Value;
  */
 public class VisitDimensionFactory extends DimensionFactory {
 
-    private final Metadata metadata;
     private final VisitDimension visitDimension;
     private final VisitDimensionHandler visitDimensionHandler;
     private final EncounterMappingHandler encounterMappingHandler;
@@ -54,7 +53,6 @@ public class VisitDimensionFactory extends DimensionFactory {
             Data data, ConnectionSpec dataConnectionSpec) throws SQLException {
         super(data);
         this.settings = settings;
-        this.metadata = metadata;
         this.visitDimension = new VisitDimension();
         this.visitDimensionHandler = new VisitDimensionHandler(dataConnectionSpec);
         this.encounterMappingHandler = new EncounterMappingHandler(dataConnectionSpec);
@@ -102,7 +100,20 @@ public class VisitDimensionFactory extends DimensionFactory {
     }
 
     public void close() throws SQLException {
-        this.visitDimensionHandler.close();
-        this.encounterMappingHandler.close();
+        boolean firstClosed = false;
+        try {
+            this.visitDimensionHandler.close();
+            firstClosed = true;
+            this.encounterMappingHandler.close();
+        } catch (SQLException ex) {
+            if (!firstClosed) {
+                try {
+                    this.encounterMappingHandler.close();
+                } catch (SQLException ignore) {
+                    ex.addSuppressed(ignore);
+                }
+            }
+            throw ex;
+        }
     }
 }

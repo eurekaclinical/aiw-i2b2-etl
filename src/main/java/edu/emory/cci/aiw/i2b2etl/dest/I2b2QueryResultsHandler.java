@@ -75,6 +75,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -328,6 +329,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.INFO, "Truncating temp data tables for query {0}", this.query.getId());
         try (final Connection conn = openDataDatabaseConnection()) {
+            conn.setAutoCommit(true);
             String[] dataschemaTables = {tempPatientTableName(), tempPatientMappingTableName(), tempVisitTableName(), tempEncounterMappingTableName(), tempProviderTableName(), tempConceptTableName(), tempModifierTableName(), tempObservationFactTableName(), tempObservationFactCompleteTableName()};
             for (String tableName : dataschemaTables) {
                 truncateTable(conn, tableName);
@@ -384,13 +386,16 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         try {
             if (this.factHandlers != null) {
-                for (FactHandler factHandler : this.factHandlers) {
+                for (Iterator<FactHandler> itr = this.factHandlers.iterator(); itr.hasNext();) {
+                    FactHandler factHandler = itr.next();
                     factHandler.close();
+                    itr.remove();
                 }
             }
         } catch (SQLException ex) {
             exception = ex;
         }
+
         if (this.dataSchemaConnection != null) {
             try {
                 this.dataSchemaConnection.close();
@@ -419,11 +424,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection();
                     CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_PID_MAP_FROMTEMP(?, ?) }")) {
+                conn.setAutoCommit(true);
                 logger.log(Level.INFO, "Populating patient dimension for query {0}", queryId);
                 mappingCall.setString(1, tempPatientMappingTableName());
                 mappingCall.setInt(2, UPLOAD_ID);
                 mappingCall.execute();
-                //commit and rollback are called by stored procedure.
             } catch (SQLException ex) {
                 exception = ex;
             }
@@ -443,10 +448,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection();
                     CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?) }")) {
+                conn.setAutoCommit(true);
                 mappingCall.setString(1, tempEncounterMappingTableName());
                 mappingCall.setInt(2, UPLOAD_ID);
                 mappingCall.execute();
-                //commit and rollback are called by the stored procedure.
             } catch (SQLException ex) {
                 exception = ex;
             }
@@ -455,10 +460,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection()) {
                 try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PATIENT_FROMTEMP(?, ?) }")) {
+                    conn.setAutoCommit(true);
                     call.setString(1, tempPatientTableName());
                     call.setInt(2, UPLOAD_ID);
                     call.execute();
-                    //commit and rollback are called by the stored procedure.
                 }
             } catch (SQLException ex) {
                 exception = ex;
@@ -466,7 +471,9 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
 
         if (exception == null) {
-            try (Connection conn = openDataDatabaseConnection(); CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROMTEMP(?, ?) }")) {
+            try (Connection conn = openDataDatabaseConnection();
+                    CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_ENC_VISIT_FROMTEMP(?, ?) }")) {
+                conn.setAutoCommit(true);
                 logger.log(Level.INFO, "Populating visit dimension for query {0}", queryId);
                 call.setString(1, tempVisitTableName());
                 call.setInt(2, UPLOAD_ID);
@@ -493,11 +500,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try {
                 logger.log(Level.INFO, "Populating provider dimension for query {0}", queryId);
                 try (Connection conn = openDataDatabaseConnection()) {
+                    conn.setAutoCommit(true);
                     try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_PROVIDER_FROMTEMP(?, ?) }")) {
                         call.setString(1, tempProviderTableName());
                         call.setInt(2, UPLOAD_ID);
                         call.execute();
-                        //commit and rollback are called by the stored procedure.
                     }
                 }
             } catch (SQLException ex) {
@@ -528,11 +535,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try {
                 try (Connection conn = openDataDatabaseConnection()) {
+                    conn.setAutoCommit(true);
                     try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_CONCEPT_FROMTEMP(?, ?) }")) {
                         call.setString(1, tempConceptTableName());
                         call.setInt(2, UPLOAD_ID);
                         call.execute();
-                        //commit and rollback are called by the stored procedure.
                     }
                 }
             } catch (SQLException ex) {
@@ -561,11 +568,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null) {
             try (Connection conn = openDataDatabaseConnection()) {
+                conn.setAutoCommit(true);
                 try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_INS_MODIFIER_FROMTEMP(?, ?) }")) {
                     call.setString(1, tempModifierTableName());
                     call.setInt(2, UPLOAD_ID);
                     call.execute();
-                    //commit and rollback are called by the stored procedure.
                 }
             } catch (SQLException ex) {
                 exception = ex;
@@ -577,6 +584,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 logger.log(Level.INFO, "Done populating dimensions for query {0}", queryId);
 
                 try (Connection conn = openDataDatabaseConnection()) {
+                    conn.setAutoCommit(true);
                     logger.log(Level.INFO, "Populating observation_fact from temporary table");
                     try (CallableStatement call = conn.prepareCall("{ call EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?) }")) {
                         call.setString(1, tempObservationFactTableName());
@@ -584,7 +592,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         call.setLong(3, UPLOAD_ID);
                         call.setLong(4, (this.query.getQueryMode() == QueryMode.UPDATE && this.settings.getMergeOnUpdate()) ? 1 : 0); // appendFlag
                         call.execute();
-                        //commit and rollback are called by the stored procedure.
                     }
                 }
             } catch (SQLException ex) {
@@ -622,6 +629,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null && this.settings.getManageCTotalNum()) {
             try (Connection conn = openMetadataDatabaseConnection()) {
+                conn.setAutoCommit(true);
                 try (Statement stmt = conn.createStatement();
                         ResultSet rs = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS")) {
                     while (rs.next()) {
@@ -647,6 +655,17 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     @Override
     public void close() throws QueryResultsHandlerCloseException {
+
+        if (this.factHandlers != null) {
+            for (FactHandler factHandler : this.factHandlers) {
+                try {
+                    factHandler.close();
+                } catch (SQLException ignore) {
+                }
+            }
+            this.factHandlers = null;
+        }
+
         if (this.visitDimensionFactory != null) {
             try {
                 this.visitDimensionFactory.close();
@@ -748,6 +767,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             logger.log(Level.INFO, "Truncating data tables for query {0}", queryId);
             String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING", "MODIFIER_DIMENSION"};
             try (final Connection conn = openDataDatabaseConnection()) {
+                conn.setAutoCommit(true);
                 for (String tableName : dataschemaTables) {
                     truncateTable(conn, tableName);
                 }
@@ -764,6 +784,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 Logger logger = I2b2ETLUtil.logger();
                 logger.log(Level.INFO, "Truncating metadata tables for query {0}", queryId);
                 try (final Connection conn = openMetadataDatabaseConnection()) {
+                    conn.setAutoCommit(true);
                     truncateTable(conn, settings.getMetaTableName()); // metaTableName in conf.xml
                     logger.log(Level.INFO, "Done truncating metadata tables for query {0}", queryId);
                 }
@@ -797,6 +818,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             logger.log(Level.INFO, "Deleting data tables for query {0}", queryId);
             String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING", "MODIFIER_DIMENSION"};
             try (final Connection conn = openDataDatabaseConnection()) {
+                conn.setAutoCommit(true);
                 for (String tableName : dataschemaTables) {
                     deleteTable(conn, tableName, dataSourceBackendIds);
                 }
@@ -811,6 +833,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 Logger logger = I2b2ETLUtil.logger();
                 logger.log(Level.INFO, "Deleting metadata for query {0}", queryId);
                 try (final Connection conn = openMetadataDatabaseConnection()) {
+                    conn.setAutoCommit(true);
                     deleteTable(conn, settings.getMetaTableName(), knowledgeSourceBackendIds); // metaTableName in conf.xml
                     logger.log(Level.INFO, "Done deleting metadata for query {0}", queryId);
                 }

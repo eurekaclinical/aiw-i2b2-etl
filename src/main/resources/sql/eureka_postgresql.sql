@@ -178,7 +178,7 @@ BEGIN
                 upload_id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
             select temp.encounter_id, 
                 temp.encounter_id_source, 
-                temp.encounter_id,
+                cast(temp.encounter_id as bigint),
                 temp.patient_id,
                 temp.patient_id_source,
                 ''A'',
@@ -282,7 +282,7 @@ BEGIN
                 upload_id)
             select temp.patient_id, 
                 temp.patient_id_source, 
-                temp.patient_id, 
+                cast(temp.patient_id as bigint), 
                 ''A'',
                 '|| upload_id ||'
             from ' || tempTableName || ' temp 
@@ -292,15 +292,12 @@ BEGIN
                 where pm.patient_ide = temp.patient_id 
                     and pm.patient_ide_source = temp.patient_id_source)
             and temp.patient_id_source = ''HIVE'' ';
-        COMMIT;
         
         -- update patient_num for temp table
         EXECUTE '
             UPDATE ' || tempTableName || ' SET patient_num = patient_mapping.patient_num FROM patient_mapping 
                                     WHERE patient_mapping.patient_ide = '|| tempTableName ||'.patient_id
                                     AND patient_mapping.patient_ide_source = '|| tempTableName ||'.patient_id_source';
-            
-        COMMIT;
 
         EXECUTE '
             UPDATE patient_dimension SET vital_status_cd = temp.vital_status_cd, 
@@ -360,11 +357,11 @@ BEGIN
                     temp2.download_date,
                     now(), 
                     temp2.sourcesystem_cd,
-                    '|| UPLOAD_ID || ') 
+                    '|| UPLOAD_ID || '
                 FROM ' || tempTableName || ' temp2 
                 WHERE temp2.patient_num NOT IN (SELECT patient_dimension.patient_num from patient_dimension) 
-                    AND temp.patient_num IS NOT NULL
-                    AND temp.patient_num::text <> ''';
+                    AND temp2.patient_num IS NOT NULL
+                    AND temp2.patient_num::text <> ''''';
         ANALYZE patient_dimension;
     EXCEPTION
         WHEN OTHERS THEN
@@ -415,7 +412,6 @@ BEGIN
                 ON (pm.patient_ide = temp.patient_id
                             and pm.patient_ide_source = temp.patient_id_source
                             and pm.project_id=''@''))';
-        COMMIT;
 
         EXECUTE 'TRUNCATE TABLE ' || upload_temptable_name;
         
@@ -465,12 +461,11 @@ BEGIN
                     location_cd, 
                     update_date,
                     download_date,
-                    now(),
-                    import_date,
+                    now() import_date,
                     sourcesystem_cd,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
                     temp.upload_id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                 FROM ' || upload_temptable_name_c || ' temp
-                WHERE (temp.patient_num IS NOT NULL AND temp.patient_num::text <> '') and (temp.encounter_num IS NOT NULL AND temp.encounter_num::text <> '')
+                WHERE (temp.patient_num IS NOT NULL AND temp.patient_num::text <> '''') and (temp.encounter_num IS NOT NULL AND temp.encounter_num::text <> '''')
                 ';
         ELSE
             EXECUTE '
@@ -544,8 +539,8 @@ BEGIN
                     temp2.import_date, 
                     temp2.sourcesystem_cd, 
                     temp2.upload_id) 
-                FROM ' || upload_temptable_name_c || ' temp2 WHERE (temp2.patient_num IS NOT NULL AND temp2.patient_num::text <> '') 
-                                                                    and (temp2.encounter_num IS NOT NULL AND temp2.encounter_num::text <> '')
+                FROM ' || upload_temptable_name_c || ' temp2 WHERE (temp2.patient_num IS NOT NULL AND temp2.patient_num::text <> '''') 
+                                                                    and (temp2.encounter_num IS NOT NULL AND temp2.encounter_num::text <> '''')
                                                                     and (temp.encounter_num <> observation_fact.encounter_num 
                                                                     or temp.patient_num <> observation_fact.patient_num 
                                                                     or temp.concept_cd <> observation_fact.concept_cd 
@@ -566,7 +561,7 @@ LANGUAGE PLPGSQL
 
 CREATE OR REPLACE FUNCTION EUREKA.EK_INSERT_EID_MAP_FROMTEMP ( tempEidTableName text, upload_id bigint)  RETURNS VOID AS $body$
 DECLARE
-        existingEncounterNum varchar(32);
+        existingEncounterNum bigint;
         maxEncounterNum bigint;
         distinctEidCur REFCURSOR;
         sql_stmt  varchar(400);
@@ -591,7 +586,7 @@ BEGIN
                     --check if hive number exist, if so assign that number to reset of map_id's within that pid
                     select encounter_num into existingEncounterNum 
                         from encounter_mapping 
-                        where encounter_num = disEncounterId 
+                        where encounter_num = cast(disEncounterId as bigint)
                             and encounter_ide_source = 'HIVE';
                  EXCEPTION  
                     when NO_DATA_FOUND THEN
@@ -601,9 +596,9 @@ BEGIN
                 if (existingEncounterNum IS NOT NULL) then 
                     EXECUTE '
                         update ' || tempEidTableName ||' 
-                        set encounter_num = encounter_id, 
+                        set encounter_num = cast(encounter_id as bigint), 
                             process_status_flag = ''P''
-                        where encounter_id = x 
+                        where encounter_id = $1 
                             and encounter_id_source = ''HIVE'' 
                             and not exists (
                                 SELECT 1 
@@ -619,9 +614,9 @@ BEGIN
                     end if ;
                     EXECUTE '
                         update ' || tempEidTableName ||' 
-                        set encounter_num = encounter_id, 
+                        set encounter_num = cast(encounter_id as bigint), 
                             process_status_flag = ''P'' 
-                        where encounter_id =  x 
+                        where encounter_id =  $1 
                             and encounter_id_source = ''HIVE'' 
                             and not exists (
                                 SELECT 1 
@@ -645,10 +640,10 @@ BEGIN
                 if (existingEncounterNum IS NOT NULL) then 
                     EXECUTE '
                         update ' || tempEidTableName ||' 
-                        set encounter_num = x,
+                        set encounter_num = $1,
                             process_status_flag = ''P''
-                        where encounter_id = y 
-                            and encounter_id_source = z 
+                        where encounter_id = $2 
+                            and encounter_id_source = $3 
                             and not exists (
                                 SELECT 1 
                                 from encounter_mapping em 
@@ -677,13 +672,13 @@ BEGIN
                             import_date,
                             sourcesystem_cd) 
                         values(
-                            x,
+                            $1,
                             ''HIVE'',
-                            y,
+                            $2,
                             ''HIVE'',
-                            z,
-                            w,
-                            v,
+                            $3,
+                            $4,
+                            $5,
                             ''P'',
                             ''A'',
                             now(),
@@ -698,10 +693,10 @@ BEGIN
                         patientMapIdSource; 
                     EXECUTE '
                         update ' || tempEidTableName ||' 
-                        set encounter_num =  x , 
+                        set encounter_num =  $1 , 
                             process_status_flag = ''P'' 
-                        where encounter_id = y 
-                            and encounter_id_source = z 
+                        where encounter_id = $2 
+                            and encounter_id_source = $3 
                             and not exists (
                                 SELECT 1 
                                 from encounter_mapping em 
@@ -713,11 +708,10 @@ BEGIN
             end if; 
         END LOOP;
         CLOSE distinctEidCur ;
-        COMMIT;
         
         -- do the mapping update if the update date is old
         EXECUTE '
-            UPDATE encounter_mapping SET ENCOUNTER_NUM = temp.encounter_id,
+            UPDATE encounter_mapping SET ENCOUNTER_NUM = cast(temp.encounter_id as bigint),
                 patient_ide = temp.patient_map_id,
                 patient_ide_source = temp.patient_map_id_source,
                 encounter_ide_status = temp.encounter_map_id_status,
@@ -725,11 +719,12 @@ BEGIN
                 download_date = temp.download_date,
                 import_date = now(),
                 sourcesystem_cd  = temp.sourcesystem_cd, 
-                upload_id = ' || upload_id ||'  FROM ' || tempEidTableName ||' temp WHERE temp.encounter_map_id = encounter_mapping.ENCOUNTER_IDE 
-                															and temp.encounter_map_id_source = encounter_mapping.ENCOUNTER_IDE_SOURCE
-                															and temp.encounter_id_source = ''HIVE'' 
-                    														and temp.process_status_flag is null 
-                    														and coalesce(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))';
+                upload_id = ' || upload_id ||'  FROM ' || tempEidTableName ||' temp 
+            WHERE temp.encounter_map_id = encounter_mapping.ENCOUNTER_IDE 
+                and temp.encounter_map_id_source = encounter_mapping.ENCOUNTER_IDE_SOURCE
+                and temp.encounter_id_source = ''HIVE'' 
+                and temp.process_status_flag is null 
+                and coalesce(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))';
         -- insert new mapping records i.e flagged P -- jk: added project_id
         EXECUTE '
             insert into encounter_mapping (
@@ -773,7 +768,7 @@ LANGUAGE PLPGSQL
 
 CREATE OR REPLACE FUNCTION EUREKA.EK_INSERT_PID_MAP_FROMTEMP ( tempPidTableName text, upload_id bigint)  RETURNS VOID AS $body$
 DECLARE
-        existingPatientNum varchar(32);
+        existingPatientNum bigint;
         maxPatientNum bigint;
         distinctPidCur REFCURSOR;
         sql_stmt  varchar(400);
@@ -806,9 +801,9 @@ BEGIN
                 if (existingPatientNum IS NOT NULL) then 
                     EXECUTE '
                         update ' || tempPidTableName ||' 
-                        set patient_num = patient_id, 
+                        set patient_num = cast(patient_id as bigint), 
                             process_status_flag = ''P''
-                        where patient_id = x 
+                        where patient_id = $1
                             and patient_id_source = ''HIVE'' 
                             and not exists (
                                 SELECT 1 
@@ -824,9 +819,9 @@ BEGIN
                     end if ;
                     EXECUTE ' 
                         update ' || tempPidTableName ||' 
-                        set patient_num = patient_id, 
+                        set patient_num = cast(patient_id as bigint), 
                             process_status_flag = ''P'' 
-                        where patient_id = x 
+                        where patient_id = $1 
                             and patient_id_source = ''HIVE'' 
                             and not exists (
                                 SELECT 1 
@@ -850,10 +845,10 @@ BEGIN
                 if (existingPatientNum IS NOT NULL) then 
                     EXECUTE ' 
                         update ' || tempPidTableName ||' 
-                        set patient_num = x, 
+                        set patient_num = $1, 
                             process_status_flag = ''P''
-                        where patient_id = y 
-                            and patient_id_source = z 
+                        where patient_id = $2 
+                            and patient_id_source = $3 
                             and not exists (
                                 SELECT 1 
                                 from patient_mapping pm 
@@ -877,11 +872,11 @@ BEGIN
                             import_date,
                             sourcesystem_cd) 
                         values (
-                            x,
+                            $1,
                             ''HIVE'',
-                            y,
+                            $2,
                             ''HIVE'',
-                            z,
+                            $3,
                             ''P'',
                             ''A'',
                             now(),
@@ -892,10 +887,10 @@ BEGIN
                     using maxPatientNum,maxPatientNum,maxPatientNum; 
                     EXECUTE '
                         update ' || tempPidTableName ||' 
-                        set patient_num =  x,
+                        set patient_num =  $1,
                             process_status_flag = ''P'' 
-                        where patient_id = y 
-                            and patient_id_source = z 
+                        where patient_id = $2 
+                            and patient_id_source = $3 
                             and not exists (
                                 SELECT 1 
                                 from patient_mapping pm 
@@ -907,19 +902,19 @@ BEGIN
             end if; 
         END LOOP;
         CLOSE distinctPidCur ;
-        COMMIT;
+        
         -- do the mapping update if the update date is old
         EXECUTE '
-        	UPDATE patient_mapping SET patient_num = temp.patient_id,
+        	UPDATE patient_mapping SET patient_num = cast(temp.patient_id as bigint),
                 patient_ide_status = temp.patient_map_id_status,
                 update_date = temp.update_date,
                 download_date  = temp.download_date,
                 import_date = now(),
                 sourcesystem_cd  = temp.sourcesystem_cd,
                 upload_id = ' || upload_id ||'  FROM ' || tempPidTableName ||' temp WHERE temp.patient_map_id = patient_mapping.patient_IDE 
-                    												and temp.patient_map_id_source = patient_mapping.patient_IDE_SOURCE
-                    												and temp.process_status_flag is null  
-                            										and coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
+                and temp.patient_map_id_source = patient_mapping.patient_IDE_SOURCE
+                and temp.process_status_flag is null  
+                and coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
           ';
            -- insert new mapping records i.e flagged P - jk: added project id
         EXECUTE '

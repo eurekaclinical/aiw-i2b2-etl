@@ -85,7 +85,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     private static final Logger LOGGER = Logger.getLogger(I2b2KnowledgeSourceBackend.class.getName());
     private static final char DEFAULT_DELIMITER = '\t';
-    private static final ConceptProperty[] DEFAULT_CONCEPT_PROPERTIES_ARR = new ConceptProperty[0];
     private static final Properties visitPropositionProperties;
     private static final Properties patientAliasPropositionProperties;
     private static final Properties patientPropositionProperties;
@@ -158,7 +157,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private ValueMetadataSupport valueMetadataSupport;
     private final QuerySupport querySupport;
     private final LevelReader levelReader;
-    private final ConceptPropertyReader conceptPropertyReader;
     private String patientPropositionId;
     private String patientAliasPropositionId;
     private String patientDetailsPropositionId;
@@ -224,17 +222,17 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private String ageInYearsPropertyName;
     private String dateOfDeathPropertyName;
     private String vitalStatusPropertyName;
-    private String patientDisplayName;
-    private String patientAliasDisplayName;
+    private final String patientDisplayName;
+    private final String patientAliasDisplayName;
     private String patientDetailsDisplayName;
     private String visitDisplayName;
+    private String visitIdPropertyName;
     private String providerDisplayName;
-    private ConceptProperty[] conceptProperties;
     private final Map<String, ValueSet> valueSets;
     private final BackendSourceIdFactory sourceIdFactory;
     private String patientPatientIdPropertyName;
-    private String patientAliasPatientIdPropertyName;
-    private String patientAliasFieldNamePropertyName;
+    private final String patientAliasPatientIdPropertyName;
+    private final String patientAliasFieldNamePropertyName;
     private String patientDetailsPatientIdPropertyName;
     private Map<String, Map<String, ModInterp>> modInterpCached;
     private final String modInterpCachedSyncVariable = "MOD_INTERP_CACHED_SYNC";
@@ -242,8 +240,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public I2b2KnowledgeSourceBackend() {
         this.querySupport = new QuerySupport();
         this.levelReader = new LevelReader(this.querySupport);
-        this.conceptPropertyReader = new ConceptPropertyReader(this.querySupport);
-        this.conceptProperties = DEFAULT_CONCEPT_PROPERTIES_ARR;
         this.valueSets = new HashMap<>();
 
         /**
@@ -320,6 +316,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         this.inoutPropertySource = visitPropositionProperties.getProperty("inout.valueSet.source");
 
         this.visitAgePropertyName = visitPropositionProperties.getProperty("age.propertyName");
+        this.visitIdPropertyName = visitPropositionProperties.getProperty("id.propertyName");
 
         /**
          * Provider
@@ -1181,42 +1178,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         this.vitalStatusPropertyName = vitalStatusPropertyName;
     }
 
-    public ConceptProperty[] getConceptProperties() {
-        return conceptProperties.clone();
-    }
-
-    public void setConceptProperties(ConceptProperty[] conceptProperties) {
-        if (conceptProperties == null) {
-            this.conceptProperties = DEFAULT_CONCEPT_PROPERTIES_ARR;
-        } else {
-            this.conceptProperties = conceptProperties.clone();
-        }
-    }
-
-    @BackendProperty(propertyName = "conceptProperties")
-    public void parseConceptProperties(String conceptProperties) {
-        if (conceptProperties != null) {
-            List<ConceptProperty> cps = new ArrayList<>();
-            try (Reader reader = new StringReader(conceptProperties);
-                    CSVReader r = new CSVReader(reader, ',')) {
-                String[] cols = r.readNext();
-                for (String col : cols) {
-                    try (Reader reader2 = new StringReader(col);
-                            CSVReader r2 = new CSVReader(reader2, '|')) {
-                        String[] cols2 = r2.readNext();
-                        if (cols2.length == 2) {
-                            cps.add(new ConceptProperty(cols2[0], cols2[1]));
-                        } else {
-                            throw new IllegalArgumentException("conceptProperties must be a comma-separated list of fullName|propositionId pairs");
-                        }
-                    }
-                }
-            } catch (IOException ioe) {
-                throw new IllegalArgumentException("conceptProperties must be a comma-separated list of fullName|propositionId pairs");
-            }
-        }
-    }
-
     @Override
     public PropositionDefinition readPropositionDefinition(String id) throws KnowledgeSourceReadException {
         if (LOGGER.isLoggable(Level.FINEST)) {
@@ -1414,14 +1375,17 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         visitDim.setSourceId(this.sourceIdFactory.getInstance());
         visitDim.setInDataSource(true);
         List<PropertyDefinition> visitDimPropertyDefs = new ArrayList<>();
-        visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.visitAgePropertyName, null, ValueType.NUMERICALVALUE, null, this.visitPropositionId));
+        visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.visitAgePropertyName, null, ValueType.NUMERICALVALUE, null, this.visitPropositionId,
+            new Attribute[]{
+                new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.AGE)
+            }));
         visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.inoutPropertyName, null, ValueType.NOMINALVALUE, this.inoutPropertyValueSet.getId(), this.visitPropositionId));
-        for (ConceptProperty cp : this.conceptProperties) {
-            if (visitDim.getId().equals(cp.getPropositionId())) {
-                PropertyDefinition pd = new PropertyDefinition(this.visitPropositionId, cp.getPropertyBaseCode(), null, ValueType.NOMINALVALUE, cp.getPropertyBaseCode(), this.visitPropositionId);
-                visitDimPropertyDefs.add(pd);
-            }
-        }
+        visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.visitIdPropertyName, null, ValueType.NOMINALVALUE, null, this.visitPropositionId,
+                new Attribute[]{
+                new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.OTHER)
+            }));
         visitDim.setPropertyDefinitions(visitDimPropertyDefs.toArray(new PropertyDefinition[visitDimPropertyDefs.size()]));
         List<ReferenceDefinition> refDefs = new ArrayList<>();
         refDefs.add(new ReferenceDefinition("provider", "Provider", new String[]{this.providerPropositionId}));
@@ -1484,7 +1448,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 new PropertyDefinition(this.patientDetailsPropositionId, this.ageInYearsPropertyName, null, ValueType.NUMERICALVALUE, null, this.patientDetailsPropositionId,
                         new Attribute[]{
                             new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
-                            new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.AGE_IN_YEARS)
+                            new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.AGE)
                         }),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfBirthPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId,
                         new Attribute[]{
@@ -1613,11 +1577,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         ValueSet result = this.valueSets.get(id);
         if (result != null) {
             return result;
-        }
-        for (ConceptProperty cp : this.conceptProperties) {
-            if (cp.getPropositionId().equals(id)) {
-                return this.conceptPropertyReader.readFromDatabase(cp.getPropertyBaseCode());
-            }
         }
         try (Connection connection = this.querySupport.getConnection()) {
             final ValueSetSupport vsSupport = new ValueSetSupport();

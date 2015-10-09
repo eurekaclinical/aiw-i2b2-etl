@@ -690,18 +690,6 @@ public abstract class AbstractKSBTest extends AbstractTest {
         ksb.setVitalStatusPropertyName(vitalStatusPropertyName);
     }
 
-    public ConceptProperty[] getConceptProperties() {
-        return ksb.getConceptProperties();
-    }
-
-    public void setConceptProperties(ConceptProperty[] conceptProperties) {
-        ksb.setConceptProperties(conceptProperties);
-    }
-
-    public void parseConceptProperties(String conceptProperties) {
-        ksb.parseConceptProperties(conceptProperties);
-    }
-
     public List<PropositionDefinition> readPropositionDefinitions(String[] ids) throws KnowledgeSourceReadException {
         return ksb.readPropositionDefinitions(ids);
     }

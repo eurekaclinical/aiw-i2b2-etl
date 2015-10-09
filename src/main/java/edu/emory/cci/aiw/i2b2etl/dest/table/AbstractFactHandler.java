@@ -71,7 +71,7 @@ public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<Ob
         if (value == null) {
             ps.setString(10, ValTypeCode.NO_VALUE.getCode());
             ps.setString(11, null);
-            ps.setString(12, null);
+            ps.setObject(12, null);
         } else if (value instanceof NumericalValue) {
             ps.setString(10, ValTypeCode.NUMERIC.getCode());
             if (value instanceof NumberValue) {
@@ -92,7 +92,7 @@ public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<Ob
             } else {
                 ps.setString(11, tval);
             }
-            ps.setString(12, null);
+            ps.setObject(12, null);
         }
 
         ps.setString(13, record.getValueFlagCode().getCode());

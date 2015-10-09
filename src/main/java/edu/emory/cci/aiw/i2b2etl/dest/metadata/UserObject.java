@@ -29,7 +29,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class UserObject {
@@ -38,6 +37,8 @@ public class UserObject {
     private static final String DEFAULT_TABLE_NAME = "concept_dimension";
     private static final String DEFAULT_COLUMN_NAME = "concept_path";
     private static final DataType DEFAULT_DATA_TYPE = DataType.TEXT;
+    private static final int TOOL_TIP_MAX_LENGTH = 900;
+    private static final int DISPLAY_NAME_MAX_LENGTH = 2000;
 
     private final ConceptId id;
     private final Concept concept;
@@ -102,8 +103,10 @@ public class UserObject {
     public String getDisplayName() {
         if (displayName == null || displayName.trim().length() == 0) {
             return getConceptCode();
-        } else {
+        } else if (displayName.length() <= DISPLAY_NAME_MAX_LENGTH) {
             return displayName;
+        } else {
+            return displayName.substring(0, DISPLAY_NAME_MAX_LENGTH);
         }
     }
 
@@ -239,11 +242,26 @@ public class UserObject {
         }
     }
     
-    public String getToolTip() {
+    public String getToolTipInt() {
         if (this.toolTip != null) {
             return this.toolTip;
         } else {
             return this.pathSupport.getToolTip();
+        }
+    }
+    
+    public String getToolTip() {
+        String toolTip = getToolTipInt();
+        
+        if (toolTip == null || toolTip.length() > TOOL_TIP_MAX_LENGTH) {
+            toolTip = getDisplayName();
+            if (toolTip != null && toolTip.length() > TOOL_TIP_MAX_LENGTH) {
+                return toolTip.substring(0, TOOL_TIP_MAX_LENGTH);
+            } else {
+                return null;
+            }
+        } else {
+            return toolTip;
         }
     }
     

@@ -157,8 +157,21 @@ public class PatientDimensionFactory extends DimensionFactory {
     }
 
     public void close() throws SQLException {
-        this.patientDimensionHandler.close();
-        this.patientMappingHandler.close();
+        boolean firstClosed = false;
+        try {
+            this.patientDimensionHandler.close();
+            firstClosed = true;
+            this.patientMappingHandler.close();
+        } catch (SQLException ex) {
+            if (!firstClosed) {
+                try {
+                    this.patientMappingHandler.close();
+                } catch (SQLException ignore) {
+                    ex.addSuppressed(ignore);
+                }
+            }
+            throw ex;
+        }
     }
 
     private Long computeAgeInYears(Date birthdate) {
