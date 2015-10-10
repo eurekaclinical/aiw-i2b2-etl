@@ -179,10 +179,8 @@ public final class Metadata {
         if (rootNodeDisplayName != null) {
             this.allRoots.add(this.conceptRoot);
         }
-        Logger logger = MetadataUtil.logger();
         this.providerConceptTreeBuilder = new ProviderConceptTreeBuilder(this);
         try {
-            logger.log(Level.FINE, "STEP: construct tree");
             constructTreePre();
 
             SubtreeBuilder[] builders = {
