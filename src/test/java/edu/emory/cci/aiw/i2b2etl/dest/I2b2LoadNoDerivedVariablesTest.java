@@ -50,7 +50,7 @@ public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
     @BeforeClass
     public static void setUp() throws Exception {
         DefaultQueryBuilder q = new DefaultQueryBuilder();
-        q.setId("i2b2 ETL Test Query No Derived Variables");
+        q.setName("i2b2 ETL Test Query No Derived Variables");
         q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
         getProtempaFactory().execute(q);
         

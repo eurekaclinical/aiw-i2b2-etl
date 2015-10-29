@@ -264,7 +264,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         while (rs.next()) {
                             String tableName = rs.getString(1);
                             try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_CLEAR_C_TOTALNUM(?) }")) {
-                                logger.log(Level.INFO, "Clearing C_TOTALNUM for query {0}", this.query.getId());
+                                logger.log(Level.INFO, "Clearing C_TOTALNUM for query {0}", this.query.getName());
                                 mappingCall.setString(1, tableName);
                                 mappingCall.execute();
                                 //commit and rollback are called by stored procedure.
@@ -273,7 +273,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     }
                 }
             }
-            logger.log(Level.INFO, "Populating observation facts table for query {0}", this.query.getId());
+            logger.log(Level.INFO, "Populating observation facts table for query {0}", this.query.getName());
         } catch (KnowledgeSourceReadException | SQLException | OntologyBuildException ex) {
             throw new QueryResultsHandlerProcessingException("Error during i2b2 load", ex);
         }
@@ -327,14 +327,14 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      */
     private void truncateTempTables() throws SQLException {
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, "Truncating temp data tables for query {0}", this.query.getId());
+        logger.log(Level.INFO, "Truncating temp data tables for query {0}", this.query.getName());
         try (final Connection conn = openDataDatabaseConnection()) {
             conn.setAutoCommit(true);
             String[] dataschemaTables = {tempPatientTableName(), tempPatientMappingTableName(), tempVisitTableName(), tempEncounterMappingTableName(), tempProviderTableName(), tempConceptTableName(), tempModifierTableName(), tempObservationFactTableName(), tempObservationFactCompleteTableName()};
             for (String tableName : dataschemaTables) {
                 truncateTable(conn, tableName);
             }
-            logger.log(Level.INFO, "Done truncating temp data tables for query {0}", this.query.getId());
+            logger.log(Level.INFO, "Done truncating temp data tables for query {0}", this.query.getName());
         }
     }
 
@@ -349,7 +349,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
         } catch (InvalidConceptCodeException | InvalidFactException | InvalidPatientRecordException | SQLException ex) {
-            throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + this.query.getId(), ex);
+            throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + this.query.getName(), ex);
         }
     }
 
@@ -379,8 +379,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     public void finish() throws QueryResultsHandlerProcessingException {
 
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.FINE, "Beginning finish for query {0}", this.query.getId());
-        String queryId = this.query.getId();
+        logger.log(Level.FINE, "Beginning finish for query {0}", this.query.getName());
+        String queryId = this.query.getName();
 
         SQLException exception = null;
 
@@ -515,7 +515,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try {
                 // flush hot concepts out of the tree. persist Concepts.
-                logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getId());
+                logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getName());
                 new ConceptDimensionLoader(this.conceptDimensionHandler).execute(this.ontologyModel.getAllRoots());
             } catch (SQLException ex) {
                 exception = ex;
@@ -549,7 +549,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null) {
             try {
-                logger.log(Level.INFO, "Populating modifier dimension for query {0}", this.query.getId());
+                logger.log(Level.INFO, "Populating modifier dimension for query {0}", this.query.getName());
                 new ModifierDimensionLoader(this.modifierDimensionHandler).execute(this.ontologyModel.getModifierRoots());
             } catch (SQLException ex) {
                 exception = ex;
@@ -635,7 +635,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     while (rs.next()) {
                         String tableName = rs.getString(1);
                         try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_UPDATE_C_TOTALNUM(?) }")) {
-                            logger.log(Level.INFO, "Updating C_TOTALNUM for query {0}", this.query.getId());
+                            logger.log(Level.INFO, "Updating C_TOTALNUM for query {0}", this.query.getName());
                             mappingCall.setString(1, tableName);
                             mappingCall.execute();
                             //commit and rollback are called by stored procedure.
@@ -762,7 +762,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         void doRemoveData() throws SQLException {
             // Truncate the data tables
             // To do: table names should be parameterized in conf.xml and related to other data
-            String queryId = query.getId();
+            String queryId = query.getName();
             Logger logger = I2b2ETLUtil.logger();
             logger.log(Level.INFO, "Truncating data tables for query {0}", queryId);
             String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING", "MODIFIER_DIMENSION"};
@@ -780,7 +780,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             // Truncate the data tables
             // To do: table names should be parameterized in conf.xml and related to other data
             if (metadataConnectionSpec != null) {
-                String queryId = query.getId();
+                String queryId = query.getName();
                 Logger logger = I2b2ETLUtil.logger();
                 logger.log(Level.INFO, "Truncating metadata tables for query {0}", queryId);
                 try (final Connection conn = openMetadataDatabaseConnection()) {
@@ -795,7 +795,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     private void truncateTable(Connection conn, String tableName) throws SQLException {
         Logger logger = I2b2ETLUtil.logger();
-        String queryId = query.getId();
+        String queryId = query.getName();
         String sql = "TRUNCATE TABLE " + tableName;
         if (logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, "Executing the following SQL for query {0}: {1}", new Object[]{queryId, sql});
@@ -813,7 +813,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         @Override
         void doRemoveData() throws SQLException {
-            String queryId = query.getId();
+            String queryId = query.getName();
             Logger logger = I2b2ETLUtil.logger();
             logger.log(Level.INFO, "Deleting data tables for query {0}", queryId);
             String[] dataschemaTables = {"OBSERVATION_FACT", "CONCEPT_DIMENSION", "PATIENT_DIMENSION", "PATIENT_MAPPING", "PROVIDER_DIMENSION", "VISIT_DIMENSION", "ENCOUNTER_MAPPING", "MODIFIER_DIMENSION"};
@@ -829,7 +829,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         @Override
         void doRemoveMetadata() throws SQLException {
             if (metadataConnectionSpec != null) {
-                String queryId = query.getId();
+                String queryId = query.getName();
                 Logger logger = I2b2ETLUtil.logger();
                 logger.log(Level.INFO, "Deleting metadata for query {0}", queryId);
                 try (final Connection conn = openMetadataDatabaseConnection()) {
@@ -842,7 +842,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         private void deleteTable(Connection conn, String tableName, Set<String> sourceSystemCodes) throws SQLException {
             Logger logger = I2b2ETLUtil.logger();
-            String queryId = query.getId();
+            String queryId = query.getName();
             String sql = "DELETE FROM " + tableName;
             if (sourceSystemCodes != null && !sourceSystemCodes.isEmpty()) {
                 sql += " WHERE SOURCESYSTEM_CD IN ('" + StringUtils.join(sourceSystemCodes, "','") + "')";

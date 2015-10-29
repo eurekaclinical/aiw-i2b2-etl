@@ -56,7 +56,7 @@ public class I2b2LoadNoDerivedVariablesLowerAndUpperDateBounds extends AbstractI
     @BeforeClass
     public static void setUp() throws Exception {
         DefaultQueryBuilder q = new DefaultQueryBuilder();
-        q.setId("i2b2 ETL Test Query No Derived Variables With Lower and Upper Date Bounds");
+        q.setName("i2b2 ETL Test Query No Derived Variables With Lower and Upper Date Bounds");
         Calendar c = Calendar.getInstance();
         c.clear();
         c.set(2007, Calendar.JANUARY, 1);
