@@ -171,7 +171,7 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 
 	@Override
 	public void finish() throws QueryResultsHandlerProcessingException {
-		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler finishing up for query {0}...", this.query.getId());
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler finishing up for query {0}...", this.query.getName());
 		try {
 			this.processing = false;
 			doGoToEnd();
@@ -179,12 +179,12 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 		} catch (InterruptedException ex) {
 			LOGGER.log(Level.FINE, "Data processing interrupted", ex);
 		}
-		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler finished up for query {0}...", this.query.getId());
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler finished up for query {0}...", this.query.getName());
 	}
 
 	@Override
 	public void close() throws QueryResultsHandlerCloseException {
-		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler closing for query {0}...", this.query.getId());
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler closing for query {0}...", this.query.getName());
 		this.processing = false;
 		if (!this.atEnd) {
 			try {
@@ -194,9 +194,9 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 			}
 		}
 		try {
-			LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler waiting for results handling thread to end for query {0}", this.query.getId());
+			LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler waiting for results handling thread to end for query {0}", this.query.getName());
 			this.wrappedThread.join();
-			LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler results handling thread for query {0} is finished", this.query.getId());
+			LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler results handling thread for query {0} is finished", this.query.getName());
 		} catch (InterruptedException ex) {
 			LOGGER.log(Level.FINE, "Data processing interrupted", ex);
 		}
@@ -215,7 +215,7 @@ public class Neo4jQueryResultsHandler implements QueryResultsHandler {
 				}
 			}
 		}
-		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler closed for query {0}", this.query.getId());
+		LOGGER.log(Level.FINE, "Neo4jQueryResultsHandler closed for query {0}", this.query.getName());
 	}
 
 	@Override
