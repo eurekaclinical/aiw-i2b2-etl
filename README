@@ -1,12 +1,10 @@
-AIW i2b2 ETL ${project.version} -- A Query Results Handler for Protempa for Loading
+${project.name} ${project.version} -- A Query Results Handler for Protempa for Loading
 Data and Abstractions into i2b2 
-Department of Biomedical Informatics, Emory University
+Department of Biomedical Informatics, ${project.organization.name}
 
 OVERVIEW
 
-Welcome to the AIW i2b2 ETL query results handler. It implements
-support for loading data and abstractions retrieved and computed by
-Protempa into i2b2.
+${project.description}
 
 WHAT'S NEW
 
@@ -27,34 +25,38 @@ This package uses the Maven build system, available from
 http://maven.apache.org. You must install maven, if you do not already
 have it, to work with the source code. We use Maven 3.
 
-AIW i2b2 ETL is a "plugin" to the Protempa temporal query system,
+${project.name} is a plugin to the Protempa temporal query system,
 which is available from the same site where you got this software.
 
 INSTALLATION
 
-The easiest way to get AIW i2b2 ETL is using Maven. It is available from
-the http://maven.cci.emory.edu/nexus/content/repositories/aiw/ repository. 
+The easiest way to get ${project.name} is using Maven. It is available from
+the ${project.distributionManagement.repository.url} repository. 
 Use the following dependency declaration:
 
 <dependency>
-    <groupId>edu.emory.cci</groupId>
-    <artifactId>aiw-i2b2-etl</artifactId>
+    <groupId>${project.groupId}</groupId>
+    <artifactId>${project.artifactId}</artifactId> 
     <version>${project.version}</version>
 </dependency>
 
 It is also available in tarball and zip file formats from
-http://aiw.sourceforge.net/dev/aiw-i2b2-etl-${project.version}. Put
-aiw-i2b2-etl-${project.version}.jar on your classpath to use.
+${project.url}. Put
+${project.name}-${project.version}.jar on your classpath to use.
+
+CONTACTING US
+
+Please send an email to help@eurekaclinical.org for support or questions.
 
 LICENSING
 
-AIW i2b2 ETL is freely available as open source under the Apache
-License, Version 2.0. A copy of the license is in the LICENSE file
-provided in this distribution.
+${project.name} is freely available as open source under the Apache License,
+Version 2.0. A copy of the license is in the LICENSE file provided in
+this distribution.
 
-AIW i2b2 ETL is Copyright (C) 2012-2013 Emory University.
+${project.name} is Copyright (C) ${project.inceptionYear}-2015 ${project.organization.name}.
 
 FOR MORE INFORMATION
 
-Please see http://aiw.sourceforge.net/dev/aiw-i2b2-etl-${project.version} for
-technical documentation and more information.
+Please see ${project.url} for technical
+documentation and more information.
