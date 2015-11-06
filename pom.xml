@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.emory.cci.aiw</groupId>
     <artifactId>aiw-i2b2-etl</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>2.0-Alpha-1</version>
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>AIW i2b2 ETL is a Protempa query results handler for loading data and 
@@ -23,7 +23,7 @@ abstractions into i2b2.</description>
     
     <scm>
         <developerConnection>scm:git:ssh://git.cci.emory.edu/opt/git/aiw/aiw-i2b2-etl.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>aiw-i2b2-etl-2.0-Alpha-1</tag>
     </scm>
 
     <issueManagement>
