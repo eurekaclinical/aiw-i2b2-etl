@@ -6,7 +6,8 @@
     <version>1.0.7-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
-    <description>AIW i2b2 ETL is a Protempa query results handler for loading data and abstractions into i2b2.</description>
+    <description>AIW i2b2 ETL is a Protempa query results handler for loading data and 
+abstractions into i2b2.</description>
     <inceptionYear>2012</inceptionYear>
     <organization>
         <name>Emory University</name>
@@ -17,7 +18,7 @@
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protempa.version>2.4-SNAPSHOT</protempa.version>
+        <protempa.version>3.0-Alpha-1</protempa.version>
     </properties>
     
     <scm>
