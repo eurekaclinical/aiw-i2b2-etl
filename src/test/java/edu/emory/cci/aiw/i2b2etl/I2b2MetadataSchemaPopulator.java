@@ -33,6 +33,6 @@ public class I2b2MetadataSchemaPopulator extends AbstractH2Populator {
         File dbFile = File.createTempFile("i2b2-ksb", ".db");
         updateLiquibaseChangeLog(dbFile, "src/main/resources/dbmigration/create-table-access-changelog.xml");
         updateLiquibaseChangeLog(dbFile, "src/main/resources/dbmigration/i2b2-meta-schema-changelog.xml");
-        return populate(dbFile, "INIT=RUNSCRIPT FROM 'src/test/resources/i2b2.sql'");
+        return populate(dbFile, "INIT=RUNSCRIPT FROM 'src/test/resources/i2b2-1.sql'\\;RUNSCRIPT FROM 'src/test/resources/i2b2-2.sql'");
     }
 }
