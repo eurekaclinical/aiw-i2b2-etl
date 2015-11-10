@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+    <include file="eureka-ontology-EK_MED_ORDERS-DDL-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.0.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.1.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.2.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.3.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.4.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.5.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.6.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.7.xml" relativeToChangelogFile="true"/>
+</databaseChangeLog>
