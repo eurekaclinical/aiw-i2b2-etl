@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+
+		<property name="date.type" value="DATE" dbms="oracle"/>
+    <property name="date.type" value="DATETIME" dbms="h2"/>
+    <property name="date.type" value="DATETIME" dbms="sqlserver"/>
+    <property name="date.type" value="DATETIME" dbms="postgresql"/>
+		
+    <changeSet author="arpost" id="EK_MED_ORDERS-1">
+        <createTable tableName="EK_MED_ORDERS">
+            <column name="C_HLEVEL" type="NUMBER(22, 0)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_FULLNAME" type="VARCHAR(700)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_NAME" type="VARCHAR(2000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_SYNONYM_CD" type="CHAR(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_VISUALATTRIBUTES" type="CHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_TOTALNUM" type="NUMBER(22, 0)"/>
+						<column name="C_BASECODE" type="VARCHAR(50)"/>
+            <column name="C_METADATAXML" type="CLOB"/>
+            <column name="C_FACTTABLECOLUMN" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_TABLENAME" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_COLUMNNAME" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_COLUMNDATATYPE" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_OPERATOR" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_DIMCODE" type="VARCHAR(700)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_COMMENT" type="CLOB"/>
+            <column name="C_TOOLTIP" type="VARCHAR(900)"/>
+            <column name="M_APPLIED_PATH" type="VARCHAR(700)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UPDATE_DATE" type="${date.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DOWNLOAD_DATE" type="${date.type}"/>
+            <column name="IMPORT_DATE" type="${date.type}"/>
+            <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="VALUETYPE_CD" type="VARCHAR(50)"/>
+            <column name="M_EXCLUSION_CD" type="VARCHAR(25)"/>
+            <column name="C_PATH" type="VARCHAR(700)"/>
+            <column name="C_SYMBOL" type="VARCHAR(50)"/>
+            <column name="EK_UNIQUE_ID" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+		<changeSet author="arpost" id="EK_MED_ORDERS-8">
+					<insert tableName="TABLE_ACCESS">
+					<column name="C_TABLE_CD" value="EK_MED_ORDERS"/>
+					<column name="C_TABLE_NAME" value="EK_MED_ORDERS"/>
+					<column name="C_PROTECTED_ACCESS" value="N"/>
+					<column name="C_HLEVEL" valueNumeric="1"/>
+					<column name="C_FULLNAME" value="\ACT\Medications\"/>
+					<column name="C_NAME" value="Medication Orders"/>
+					<column name="C_SYNONYM_CD" value="N"/>
+					<column name="C_VISUALATTRIBUTES" value="CA"/>
+					<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
+					<column name="C_DIMTABLENAME" value="concept_dimension"/>
+					<column name="C_COLUMNNAME" value="concept_path"/>
+					<column name="C_COLUMNDATATYPE" value="T"/>
+					<column name="C_OPERATOR" value="LIKE"/>
+					<column name="C_DIMCODE" value="\ACT\Medications\"/>
+					<column name="C_TOOLTIP" value="Medication Orders"/>
+					<column name="C_STATUS_CD" value="A"/>
+				</insert>
+				<rollback>
+					DELETE FROM TABLE_ACCESS WHERE C_TABLE_NAME='EK_MED_ORDERS'
+				</rollback>
+		</changeSet>
+		<changeSet author="arpost" id="EK_MED_ORDERS-2">
+        <createIndex indexName="META_APPLIED_PATH_EK_MED_O_IDX" tableName="EK_MED_ORDERS" unique="false">
+            <column name="M_APPLIED_PATH"/>
+        </createIndex>
+    </changeSet>
+		<changeSet author="arpost" id="EK_MED_ORDERS-3">
+        <createIndex indexName="META_EKUID_EK_MED_ORDERS_IDX" tableName="EK_MED_ORDERS" unique="false">
+            <column name="EK_UNIQUE_ID"/>
+        </createIndex>
+    </changeSet>
+		<changeSet author="arpost" id="EK_MED_ORDERS-4">
+        <createIndex indexName="META_FULLNAME_EK_MED_O_IDX" tableName="EK_MED_ORDERS" unique="false">
+            <column name="C_FULLNAME"/>
+        </createIndex>
+    </changeSet>
+		<changeSet author="arpost" id="EK_MED_ORDERS-5">
+        <createIndex indexName="META_PATH_EK_MED_O_IDX" tableName="EK_MED_ORDERS" unique="false">
+            <column name="C_PATH"/>
+        </createIndex>
+    </changeSet>
+		<changeSet author="arpost" id="EK_MED_ORDERS-6">
+        <createIndex indexName="META_SYMBOL_EK_MED_ORDERS_IDX" tableName="EK_MED_ORDERS" unique="false">
+            <column name="C_SYMBOL"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
