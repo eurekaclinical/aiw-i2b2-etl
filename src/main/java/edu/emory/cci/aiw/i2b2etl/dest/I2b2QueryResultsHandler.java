@@ -225,6 +225,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         this.knowledgeSourceBackendIds.add(this.qrhId);
     }
 
+    @Override
+    public String getId() {
+        return this.qrhId;
+    }
+
     /**
      * Builds most of the concept tree, truncates the data tables, opens a
      * connection to the i2b2 project database, and does some other prep. This
@@ -340,6 +345,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
     @Override
     public void handleQueryResult(String keyId, List<Proposition> propositions, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references) throws QueryResultsHandlerProcessingException {
+        Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.FINER, "Loading patient into i2b2");
         try {
             Set<Proposition> derivedPropositions = new HashSet<>();
             PatientDimension pd = null;
@@ -351,6 +358,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         } catch (InvalidConceptCodeException | InvalidFactException | InvalidPatientRecordException | SQLException ex) {
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + this.query.getName(), ex);
         }
+        logger.log(Level.FINER, "Done loading patient into i2b2");
     }
 
     private PatientDimension handlePatient(PatientDimension pd, String keyId, Proposition prop, Map<UniqueId, Proposition> references, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Set<Proposition> derivedPropositions) throws SQLException, InvalidConceptCodeException, InvalidFactException, InvalidPatientRecordException {

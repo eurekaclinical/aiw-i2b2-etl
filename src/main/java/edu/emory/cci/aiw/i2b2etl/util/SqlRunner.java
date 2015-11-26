@@ -31,8 +31,12 @@ import java.util.logging.Logger;
 class SqlRunner extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(SqlRunner.class.getName());
-    private final int batchSize = 1000;
-    private final int commitSize = 10000;
+    
+    private static final String SQL_RUNNER_BATCH_SIZE_PROPERTY = "aiw.i2b2Etl.sqlRunner.batchSize";
+    private static final String SQL_RUNNER_COMMIT_SIZE_PROPERTY = "aiw.i2b2Etl.sqlRunner.commitSize";
+    
+    private final int batchSize = Integer.getInteger(SQL_RUNNER_BATCH_SIZE_PROPERTY, 1000);
+    private final int commitSize = Integer.getInteger(SQL_RUNNER_COMMIT_SIZE_PROPERTY, 10000);
     private boolean stop;
     private SQLException exception;
     private int commitCounter = 0;
@@ -52,7 +56,13 @@ class SqlRunner extends Thread {
                 while (!isInterrupted() && !stop) {
                     wait();
                     if (!stop) {
+                        if (LOGGER.isLoggable(Level.FINER)) {
+                            LOGGER.log(Level.FINER, "Executing batch");
+                        }
                         ps.executeBatch();
+                        if (LOGGER.isLoggable(Level.FINER)) {
+                            LOGGER.log(Level.FINER, "Batch executed successfully");
+                        }
                         ps.clearBatch();
                         if (commitCounter >= commitSize) {
                             if (commit) {
