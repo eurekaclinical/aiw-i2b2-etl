@@ -18,7 +18,7 @@ abstractions into i2b2.</description>
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protempa.version>3.0-Alpha-2</protempa.version>
+        <protempa.version>3.0-Alpha-3</protempa.version>
     </properties>
     
     <scm>
