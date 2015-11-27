@@ -7,7 +7,7 @@
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
             http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
-    <include file="eureka-ontology-EK_MED_ORDERS-DDL-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_MED_ORDERS-changelog.DDL.xml" relativeToChangelogFile="true"/>
     <include file="eureka-ontology-EK_MED_ORDERS-changelog.0.xml" relativeToChangelogFile="true"/>
     <include file="eureka-ontology-EK_MED_ORDERS-changelog.1.xml" relativeToChangelogFile="true"/>
     <include file="eureka-ontology-EK_MED_ORDERS-changelog.2.xml" relativeToChangelogFile="true"/>
