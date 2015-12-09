@@ -1,52 +1,37 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>edu.emory.cci.aiw</groupId>
+    <groupId>org.eurekaclinical</groupId>
     <artifactId>aiw-i2b2-etl</artifactId>
     <version>2.0-Alpha-5-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>AIW i2b2 ETL is a Protempa query results handler for loading data and 
-abstractions into i2b2.</description>
+        abstractions into i2b2.</description>
     <inceptionYear>2012</inceptionYear>
-    <organization>
-        <name>Emory University</name>
-        <url>http://www.emory.edu</url>
-    </organization>
+    <parent>
+        <groupId>org.eurekaclinical</groupId>
+        <artifactId>eurekaclinical-parent</artifactId>
+        <version>1-SNAPSHOT</version>
+    </parent>
     
-    <url>http://aiw.sourceforge.net/dev/${project.build.finalName}</url>
+    <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protempa.version>3.0-Alpha-3</protempa.version>
+        <protempa.version>3.0-Alpha-5-SNAPSHOT</protempa.version>
     </properties>
     
     <scm>
+        <connection>scm:git:https://github.com/eurekaclinical/aiw-i2b2-etl.git</connection>
         <developerConnection>scm:git:https://github.com/eurekaclinical/aiw-i2b2-etl.git</developerConnection>
+        <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
         <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
-        <system>JIRA</system>
-        <url>http://jira.cci.emory.edu:8080/jira/secure/Dashboard.jspa</url>
+        <system>GitHub</system>
+        <url>https://github.com/eurekaclinical/aiw-i2b2-etl/issues</url>
     </issueManagement>
-    
-    <distributionManagement>
-        <site>
-            <id>aiw.sourceforge.net</id>
-            <url>scp://shell.sourceforge.net/home/project-web/aiw/htdocs/dev/${project.build.finalName}</url>
-        </site>
-        <repository>
-            <id>aiw</id>
-            <name>AIW Repo</name>
-            <url>http://maven.cci.emory.edu/nexus/content/repositories/aiw/</url>
-        </repository>
-        <snapshotRepository>
-            <id>aiw-snapshots</id>
-            <name>AIW Snapshots Repo</name>
-            <url>http://maven.cci.emory.edu/nexus/content/repositories/aiw-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
     
     <licenses>
         <license>
@@ -58,16 +43,6 @@ abstractions into i2b2.</description>
     
     <repositories>
         <repository>
-            <id>maven.cci</id>
-            <name>BMI Maven Repository</name>
-            <url>http://maven.cci.emory.edu/nexus/content/repositories/public</url>
-        </repository>
-        <repository>
-            <id>aiw.repo</id>
-            <name>AIW Release Repository</name>
-            <url>http://maven.cci.emory.edu/nexus/content/repositories/aiw/</url>
-        </repository>
-        <repository>
             <id>oracleReleases</id>
             <name>Oracle Released Java Packages</name>
             <url>http://download.oracle.com/maven</url>
@@ -75,122 +50,9 @@ abstractions into i2b2.</description>
         </repository>
     </repositories>
     
-    <developers>
-        <developer>
-            <id>arpost</id>
-            <name>Andrew Post</name>
-            <email>arpost@emory.edu</email>
-            <roles>
-                <role>Faculty Project Lead</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>hrathod</id>
-            <name>Himanshu Rathod</name>
-            <email>himanshu.rathod@emory.edu</email>
-            <roles>
-                <role>Software Developer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>mmansour</id>
-            <name>Michel Mansour</name>
-            <email>michel.mansour@emory.edu</email>
-            <roles>
-                <role>Software Developer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>wtorian</id>
-            <name>Mike Torian</name>
-            <email>william.m.torian@emory.edu</email>
-            <roles>
-                <role>Data Warehouse Engineer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>mbrow2</id>
-            <name>Michael Brown</name>
-            <email>mbrow2@emory.edu</email>
-            <roles>
-                <role>Software Engineer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>sagravat</id>
-            <name>Sanjay Agravat</name>
-            <email>sagrava@emory.edu</email>
-            <roles>
-                <role>Software Developer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>gsmilto</id>
-            <name>Geoff Milton</name>
-            <email>gsmilto@emory.edu</email>
-            <roles>
-                <role>Software Developer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>ssturm2</id>
-            <name>Zanna Sturm</name>
-            <email>ssturm2@emory.edu</email>
-            <roles>
-                <role>User Interface Designer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>akalsan</id>
-            <name>Akshatha Kalsanka Pai</name>
-            <email>akalsan@emory.edu</email>
-            <roles>
-                <role>Software Developer</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-        <developer>
-            <id>richard.willard</id>
-            <name>Richie Willard</name>
-            <email>richard.willard@emoryhealthcare.org</email>
-            <roles>
-                <role>Project Manager</role>
-            </roles>
-            <organization>Department of Biomedical Informatics, Emory
-                University
-            </organization>
-        </developer>
-    </developers>
-    
     <dependencies>
         <dependency>
-            <groupId>org.protempa</groupId>
+            <groupId>org.eurekaclinical</groupId>
             <artifactId>protempa-framework</artifactId>
             <version>${protempa.version}</version>
             <scope>compile</scope>
@@ -198,29 +60,26 @@ abstractions into i2b2.</description>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.3.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.dbunit</groupId>
             <artifactId>dbunit</artifactId>
-            <version>2.5.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.protempa</groupId>
+            <groupId>org.eurekaclinical</groupId>
             <artifactId>protempa-dsb-relationaldb</artifactId>
             <version>${protempa.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.protempa</groupId>
+            <groupId>org.eurekaclinical</groupId>
             <artifactId>protempa-bconfigs-ini4j-ini</artifactId>
             <scope>test</scope>
             <version>${protempa.version}</version>
@@ -228,81 +87,35 @@ abstractions into i2b2.</description>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-dbcp2</artifactId>
-            <version>2.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-catalina</artifactId>
-            <version>8.0.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.1</version>
             <scope>compile</scope>
         </dependency>
-        <!-- Don't upgrade h2 yet. There is a bug causing ORDER BY to be 
-	ignored in SELECT queries with a WHERE clause. -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.185</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-            <version>3.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin
-                </artifactId>
-                <version>2.7</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>2.3</version>
-                <configuration>
-                    <aggregate>true</aggregate>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin
-                </artifactId>
-                <version>2.16</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.11</version>
-                <configuration>
-                    <configLocation>http://aiw.sourceforge.net/dev/aiw-checkstyle-1.0/protempa-checkstyle.xml</configLocation>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.6</version>
                 <configuration>
                     <repositoryLayout>flat</repositoryLayout>
                     <repositoryName>lib</repositoryName>
@@ -333,10 +146,7 @@ abstractions into i2b2.</description>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.18.1</version>
                 <configuration>
-                    <!--<parallel>classes</parallel>
-                    <threadCountClasses>2</threadCountClasses>-->
                     <systemProperties>
                         <java.awt.headless>true</java.awt.headless>
                         <argLine>-Xms512m -Xmx2g</argLine>
@@ -346,7 +156,6 @@ abstractions into i2b2.</description>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
                 <configuration>
                     <delimiters>
                         <delimiter>${*}</delimiter>
@@ -355,62 +164,8 @@ abstractions into i2b2.</description>
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.3</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.wagon</groupId>
-                        <artifactId>wagon-ssh</artifactId>
-                        <version>2.5</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.8</version>
                 <configuration>
                     <licenseName>apache_v2</licenseName>
                     <roots>
@@ -423,55 +178,26 @@ abstractions into i2b2.</description>
                         <xsd>xml</xsd>
                     </extraExtensions>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>first</id>
-                        <goals>
-                            <goal>update-file-header</goal>
-                        </goals>
-                        <phase>process-sources</phase>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jasig.maven</groupId>
                 <artifactId>maven-notice-plugin</artifactId>
-                <version>1.0.5</version>
                 <configuration>
                     <noticeTemplate>etc/NOTICE.template</noticeTemplate>
                     <licenseMapping>
                         <param>etc/license-mappings.xml</param>
                     </licenseMapping>
                 </configuration>
-                <executions>
-                    <execution>	
-                        <id>checkontest</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <phase>test</phase>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
                 <configuration>
                     <descriptors>
                         <descriptor>assembly/src.xml</descriptor>
                         <descriptor>assembly/bin.xml</descriptor>
                     </descriptors>
-                    <tarLongFileMode>gnu</tarLongFileMode>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
