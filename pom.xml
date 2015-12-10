@@ -12,13 +12,13 @@
     <parent>
         <groupId>org.eurekaclinical</groupId>
         <artifactId>eurekaclinical-parent</artifactId>
-        <version>1-SNAPSHOT</version>
+        <version>1-Alpha-4</version>
     </parent>
     
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-        <protempa.version>3.0-Alpha-5-SNAPSHOT</protempa.version>
+        <protempa.version>3.0-Alpha-5</protempa.version>
     </properties>
     
     <scm>
@@ -40,15 +40,6 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    
-    <repositories>
-        <repository>
-            <id>oracleReleases</id>
-            <name>Oracle Released Java Packages</name>
-            <url>http://download.oracle.com/maven</url>
-            <layout>default</layout>
-        </repository>
-    </repositories>
     
     <dependencies>
         <dependency>
