@@ -94,6 +94,7 @@ limitations under the License.
             <column name="DOWNLOAD_DATE" type="${date.type}"/>
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-3">
@@ -117,6 +118,7 @@ limitations under the License.
             <column name="DOWNLOAD_DATE" type="${date.type}"/>
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-4">
@@ -133,6 +135,7 @@ limitations under the License.
             <column name="DOWNLOAD_DATE" type="${date.type}"/>
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-5">
@@ -173,6 +176,7 @@ limitations under the License.
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="UPLOAD_ID" type="BIGINT"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-6">
@@ -213,6 +217,7 @@ limitations under the License.
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="UPLOAD_ID" type="BIGINT"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-7">
@@ -236,6 +241,7 @@ limitations under the License.
             <column name="DOWNLOAD_DATE" type="${date.type}"/>
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-8">
@@ -252,6 +258,7 @@ limitations under the License.
             <column name="DOWNLOAD_DATE" type="${date.type}"/>
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-9">
@@ -269,6 +276,7 @@ limitations under the License.
             <column name="IMPORT_DATE" type="${date.type}"/>
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="UPLOAD_ID" type="BIGINT"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-10">
@@ -298,6 +306,7 @@ limitations under the License.
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="ACTIVE_STATUS_CD" type="VARCHAR(50)"/>
             <column name="LENGTH_OF_STAY" type="BIGINT"/>
+            <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="arpost" id="DATA-EK-11">
