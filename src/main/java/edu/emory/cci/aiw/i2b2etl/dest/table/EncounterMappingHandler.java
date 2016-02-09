@@ -35,8 +35,8 @@ public class EncounterMappingHandler extends ConnectionSpecRecordHandler<VisitDi
     public EncounterMappingHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
                 "insert into " + TEMP_ENC_MAPPING_TABLE + "(encounter_id, encounter_id_source, encounter_map_id, encounter_map_id_source, " +
-                    "encounter_map_id_status, patient_map_id, patient_map_id_source, update_date, download_date, import_date, sourcesystem_cd)" +
-                    " values (?,?,?,?,?,?,?,?,?,?,?)");
+                    "encounter_map_id_status, patient_map_id, patient_map_id_source, update_date, download_date, import_date, sourcesystem_cd, delete_date)" +
+                    " values (?,?,?,?,?,?,?,?,?,?,?,?)");
     }
 
     @Override
@@ -52,6 +52,7 @@ public class EncounterMappingHandler extends ConnectionSpecRecordHandler<VisitDi
         ps2.setTimestamp(9, visit.getDownloaded());
         ps2.setTimestamp(10, importTimestamp());
         ps2.setString(11, visit.getVisitSourceSystem());
+        ps2.setTimestamp(12,visit.getDeletedDate());
     }
 
 }

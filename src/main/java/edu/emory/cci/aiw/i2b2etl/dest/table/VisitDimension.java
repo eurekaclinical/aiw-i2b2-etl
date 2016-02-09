@@ -36,6 +36,7 @@ public class VisitDimension extends AbstractRecord {
     private Timestamp downloaded;
     private Timestamp updated;
     private String inOut;
+    private Timestamp deletedDate;
 
     private String visitIdSource;
     private Long lengthOfStayInDays;
@@ -143,5 +144,13 @@ public class VisitDimension extends AbstractRecord {
     public Long getLengthOfStayInDays() {
         return lengthOfStayInDays;
     }
-    
+
+    public Timestamp getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(Timestamp deletedDate) {
+        this.deletedDate = deletedDate;
+    }
+
 }

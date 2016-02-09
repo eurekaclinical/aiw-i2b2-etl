@@ -110,6 +110,7 @@ public abstract class AbstractFactHandler extends ConnectionSpecRecordHandler<Ob
         ps.setTimestamp(22, this.importTimestamp);
         ps.setString(23, record.getSourceSystem());
         ps.setInt(24, 0);
+        ps.setTimestamp(25, record.getDeletedDate());
     }
     
 }

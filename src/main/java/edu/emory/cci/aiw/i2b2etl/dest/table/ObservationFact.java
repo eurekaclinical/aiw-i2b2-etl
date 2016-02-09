@@ -41,6 +41,7 @@ public class ObservationFact extends AbstractRecord {
     private String modifierCd;
     private Timestamp updateDate;
     private Timestamp downloadDate;
+    private Timestamp deletedDate;
 
     public ObservationFact() {
         this.modifierCd = "@";  //using the default value since we do not use this i2b2 feature currently
@@ -64,6 +65,7 @@ public class ObservationFact extends AbstractRecord {
         this.modifierCd = "@";
         this.updateDate = null;
         this.downloadDate = null;
+        this.deletedDate = null;
     }
 
     public void setDisplayName(String displayName) {
@@ -186,6 +188,13 @@ public class ObservationFact extends AbstractRecord {
         return updateDate;
     }
 
+    public Timestamp getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(Timestamp deletedDate) {
+        this.deletedDate = deletedDate;
+    }
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
