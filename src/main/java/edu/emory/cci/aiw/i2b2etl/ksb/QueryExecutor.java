@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSourceReadException;
 
@@ -53,12 +54,19 @@ public class QueryExecutor implements AutoCloseable {
     private PreparedStatement preparedStatement;
     private String[] ontTables;
     private final QueryConstructor queryConstructor;
-    private final TableAccessReader ontTableReader;
+    private TableAccessReader ontTableReader;
+    private String[] tables;
 
     public QueryExecutor(Connection connection, QueryConstructor queryConstructor, TableAccessReader ontTableReader) {
         this.connection = connection;
         this.queryConstructor = queryConstructor;
         this.ontTableReader = ontTableReader;
+    }
+
+    public QueryExecutor(Connection connection, QueryConstructor queryConstructor, String... tables) {
+        this.connection = connection;
+        this.queryConstructor = queryConstructor;
+        this.tables = tables;
     }
 
     public <E extends Object> E execute(ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
@@ -72,12 +80,12 @@ public class QueryExecutor implements AutoCloseable {
         return execute(
                 new ParameterSetter() {
 
-                    @Override
-                    public int set(PreparedStatement stmt, int j) throws SQLException {
-                        stmt.setString(j++, bindArgument);
-                        return j;
-                    }
-                },
+            @Override
+            public int set(PreparedStatement stmt, int j) throws SQLException {
+                stmt.setString(j++, bindArgument);
+                return j;
+            }
+        },
                 resultSetReader
         );
     }
@@ -154,6 +162,12 @@ public class QueryExecutor implements AutoCloseable {
     }
 
     private void readOntologyTables() throws KnowledgeSourceReadException {
-        this.ontTables = this.ontTableReader.read(this.connection);
+        if (this.ontTableReader != null) {
+            this.ontTables = this.ontTableReader.read(this.connection);
+        } else if (this.tables != null) {
+            this.ontTables = tables;
+        } else {
+            this.ontTables = ArrayUtils.EMPTY_STRING_ARRAY;
+        }
     }
 }

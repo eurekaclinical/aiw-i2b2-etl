@@ -32,7 +32,7 @@ import org.protempa.proposition.value.Value;
 
 /**
  *
- * @author arpost
+ * @author Andrew Post
  */
 public class DimensionFactory {
     private final Data data;
@@ -47,9 +47,8 @@ public class DimensionFactory {
     
     protected Value getField(String field, Proposition encounterProp, Map<UniqueId, Proposition> references) {
         Value val;
-        String obxSectionStr = field;
-        if (obxSectionStr != null) {
-            DataSpec obxSpec = data.get(obxSectionStr);
+        if (field != null) {
+            DataSpec obxSpec = data.get(field);
             assert obxSpec.getPropertyName() != null : "propertyName cannot be null";
             if (obxSpec != null) {
                 if (obxSpec.getReferenceName() != null) {
@@ -71,7 +70,7 @@ public class DimensionFactory {
                     val = encounterProp.getProperty(obxSpec.getPropertyName());
                 }
             } else {
-                throw new AssertionError("Invalid key referred to in " + field + ": " + obxSectionStr);
+                throw new AssertionError("Invalid key: " + field);
             }
         } else {
             val = null;

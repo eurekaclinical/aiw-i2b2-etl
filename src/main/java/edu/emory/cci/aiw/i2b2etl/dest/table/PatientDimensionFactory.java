@@ -43,7 +43,7 @@ import org.protempa.proposition.value.Value;
 
 /**
  *
- * @author arpost
+ * @author Andrew Post
  */
 public class PatientDimensionFactory extends DimensionFactory {
 
@@ -67,8 +67,15 @@ public class PatientDimensionFactory extends DimensionFactory {
             Map<UniqueId, Proposition> references) throws InvalidPatientRecordException, SQLException {
         String obxSectionStr = this.settings.getPatientDimensionMRN();
         DataSpec dataSpec = getData().get(obxSectionStr);
-        List<UniqueId> uids = encounterProp.getReferences(dataSpec.getReferenceName());
-        int size = uids.size();
+        int size;
+        List<UniqueId> uids;
+        if (dataSpec != null) {
+            uids = encounterProp.getReferences(dataSpec.getReferenceName());
+            size = uids.size();
+        } else {
+            uids = null;
+            size = 0;
+        }
         Logger logger = TableUtil.logger();
         patientDimension.setEncryptedPatientId(keyId);
         patientDimension.setEncryptedPatientIdSource(metadata.getSourceSystemCode());

@@ -1376,16 +1376,16 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         visitDim.setInDataSource(true);
         List<PropertyDefinition> visitDimPropertyDefs = new ArrayList<>();
         visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.visitAgePropertyName, null, ValueType.NUMERICALVALUE, null, this.visitPropositionId,
-            new Attribute[]{
-                new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
-                new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.AGE)
-            }));
+                new Attribute[]{
+                    new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                    new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.AGE)
+                }));
         visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.inoutPropertyName, null, ValueType.NOMINALVALUE, this.inoutPropertyValueSet.getId(), this.visitPropositionId));
         visitDimPropertyDefs.add(new PropertyDefinition(this.visitPropositionId, this.visitIdPropertyName, null, ValueType.NOMINALVALUE, null, this.visitPropositionId,
                 new Attribute[]{
-                new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
-                new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.OTHER)
-            }));
+                    new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                    new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.OTHER)
+                }));
         visitDim.setPropertyDefinitions(visitDimPropertyDefs.toArray(new PropertyDefinition[visitDimPropertyDefs.size()]));
         List<ReferenceDefinition> refDefs = new ArrayList<>();
         refDefs.add(new ReferenceDefinition("provider", "Provider", new String[]{this.providerPropositionId}));
@@ -1588,41 +1588,41 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 return queryExecutor.execute(vsSupport.getPropertyName(),
                         new ResultSetReader<ValueSet>() {
 
-                            @Override
-                            public ValueSet read(ResultSet rs) throws KnowledgeSourceReadException {
-                                try {
-                                    if (rs != null && rs.next()) {
-                                        Clob clob = rs.getClob(2);
-                                        if (clob != null) {
-                                            CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                                            valueMetadataParser.setDeclaringPropId(vsSupport.getDeclaringPropId());
-                                            valueMetadataParser.setConceptBaseCode(vsSupport.getPropertyName());
-                                            XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                                            valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
-                                            SAXParseException exception = valueMetadataParser.getException();
-                                            if (exception != null) {
-                                                throw exception;
-                                            }
-                                            return valueMetadataParser.getValueSet();
-                                        }
+                    @Override
+                    public ValueSet read(ResultSet rs) throws KnowledgeSourceReadException {
+                        try {
+                            if (rs != null && rs.next()) {
+                                Clob clob = rs.getClob(2);
+                                if (clob != null) {
+                                    CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
+                                    valueMetadataParser.setDeclaringPropId(vsSupport.getDeclaringPropId());
+                                    valueMetadataParser.setConceptBaseCode(vsSupport.getPropertyName());
+                                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
+                                    valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
+                                    SAXParseException exception = valueMetadataParser.getException();
+                                    if (exception != null) {
+                                        throw exception;
                                     }
-                                    Map<String, Map<String, ModInterp>> modInterp = readModInterp(connection);
-                                    Map<String, ModInterp> get = modInterp.get(vsSupport.getDeclaringPropId());
-                                    if (get != null && !get.isEmpty()) {
-                                        ValueSetElement[] elts = new ValueSetElement[get.size()];
-                                        int i = 0;
-                                        for (Map.Entry<String, ModInterp> me : get.entrySet()) {
-                                            elts[i++] = new ValueSetElement(NominalValue.getInstance(me.getKey()), me.getKey());
-                                        }
-                                        return new ValueSet(id, null, elts, null);
-                                    }
-                                    return null;
-                                } catch (SQLException | SAXParseException ex) {
-                                    throw new KnowledgeSourceReadException(ex);
+                                    return valueMetadataParser.getValueSet();
                                 }
-
                             }
+                            Map<String, Map<String, ModInterp>> modInterp = readModInterp(connection);
+                            Map<String, ModInterp> get = modInterp.get(vsSupport.getDeclaringPropId());
+                            if (get != null && !get.isEmpty()) {
+                                ValueSetElement[] elts = new ValueSetElement[get.size()];
+                                int i = 0;
+                                for (Map.Entry<String, ModInterp> me : get.entrySet()) {
+                                    elts[i++] = new ValueSetElement(NominalValue.getInstance(me.getKey()), me.getKey());
+                                }
+                                return new ValueSet(id, null, elts, null);
+                            }
+                            return null;
+                        } catch (SQLException | SAXParseException ex) {
+                            throw new KnowledgeSourceReadException(ex);
                         }
+
+                    }
+                }
                 );
             }
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
@@ -1846,8 +1846,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         childTempTableHandler.insert(child);
                     }
                 }
-                try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, READ_ALL_PROPERTIES_CONSTRUCTOR)) {
-                    partials = queryExecutor.execute(ALL_PROPERTIES_RSR);
+                partials = new HashMap<>();
+                /*
+                 * Getting temp space full errors with one query, so split it into one query per metadata table.
+                 */
+                for (String table : this.querySupport.getTableAccessReader().read(connection)) {
+                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, READ_ALL_PROPERTIES_CONSTRUCTOR, table)) {
+                        partials.putAll(queryExecutor.execute(ALL_PROPERTIES_RSR));
+                    }
                 }
                 connection.commit();
             } catch (SQLException ex) {
@@ -2233,72 +2239,72 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             return queryExecutor.execute(fullName,
                     new ResultSetReader<List<PropertyDefinition>>() {
 
-                        @Override
-                        public List<PropertyDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
-                            try {
-                                List<PropertyDefinition> result = new ArrayList<>();
-                                if (rs != null && rs.isBeforeFirst()) {
-                                    CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                                    Set<List<String>> propertyDefUids = new HashSet<>();
-                                    while (rs.next()) {
-                                        String propertySymbol = rs.getString(1);
-                                        String propertyDisplayName = rs.getString(2);
-                                        if (propertySymbol == null) {
-                                            throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
-                                        }
-                                        String declaringSymbol = rs.getString(4);
-                                        valueMetadataParser.setDeclaringPropId(declaringSymbol);
-                                        valueMetadataParser.setConceptBaseCode(propertySymbol);
-                                        Clob clob = rs.getClob(3);
-                                        valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
-                                        SAXParseException exception = valueMetadataParser.getException();
-                                        if (exception != null) {
-                                            throw exception;
-                                        }
-                                        ValueType valueType = valueMetadataParser.getValueType();
-                                        ValueSet valueSet = valueMetadataParser.getValueSet();
-                                        String valueSetId = valueSet != null ? valueSet.getId() : null;
-                                        Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
-                                        ModInterp modInterpValPropertySym;
-                                        if (modInterpVal != null) {
-                                            modInterpValPropertySym = modInterpVal.get(propertySymbol);
-                                            if (modInterpValPropertySym != null) {
-                                                propertySymbol = modInterpValPropertySym.getPropertyName();
-                                                valueType = ValueType.NOMINALVALUE;
-                                                propertyDisplayName = modInterpValPropertySym.getDisplayName();
-                                                ValueSetSupport vsSupport = new ValueSetSupport();
-                                                vsSupport.setPropertyName(propertySymbol);
-                                                vsSupport.setDeclaringPropId(declaringSymbol);
-                                                valueSetId = vsSupport.getId();
-                                            }
-                                        } else {
-                                            modInterpValPropertySym = null;
-                                        }
-                                        if (clob != null || modInterpValPropertySym != null) {
-                                            List<String> l = new ArrayList<>(2);
-                                            l.add(symbol);
-                                            l.add(propertySymbol);
-                                            if (propertyDefUids.add(l)) {
-                                                result.add(
-                                                        new PropertyDefinition(
-                                                                symbol,
-                                                                propertySymbol,
-                                                                propertyDisplayName,
-                                                                valueType,
-                                                                valueSetId,
-                                                                declaringSymbol));
-                                            }
-                                        }
+                @Override
+                public List<PropertyDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
+                    try {
+                        List<PropertyDefinition> result = new ArrayList<>();
+                        if (rs != null && rs.isBeforeFirst()) {
+                            CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
+                            XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
+                            Set<List<String>> propertyDefUids = new HashSet<>();
+                            while (rs.next()) {
+                                String propertySymbol = rs.getString(1);
+                                String propertyDisplayName = rs.getString(2);
+                                if (propertySymbol == null) {
+                                    throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
+                                }
+                                String declaringSymbol = rs.getString(4);
+                                valueMetadataParser.setDeclaringPropId(declaringSymbol);
+                                valueMetadataParser.setConceptBaseCode(propertySymbol);
+                                Clob clob = rs.getClob(3);
+                                valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
+                                SAXParseException exception = valueMetadataParser.getException();
+                                if (exception != null) {
+                                    throw exception;
+                                }
+                                ValueType valueType = valueMetadataParser.getValueType();
+                                ValueSet valueSet = valueMetadataParser.getValueSet();
+                                String valueSetId = valueSet != null ? valueSet.getId() : null;
+                                Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
+                                ModInterp modInterpValPropertySym;
+                                if (modInterpVal != null) {
+                                    modInterpValPropertySym = modInterpVal.get(propertySymbol);
+                                    if (modInterpValPropertySym != null) {
+                                        propertySymbol = modInterpValPropertySym.getPropertyName();
+                                        valueType = ValueType.NOMINALVALUE;
+                                        propertyDisplayName = modInterpValPropertySym.getDisplayName();
+                                        ValueSetSupport vsSupport = new ValueSetSupport();
+                                        vsSupport.setPropertyName(propertySymbol);
+                                        vsSupport.setDeclaringPropId(declaringSymbol);
+                                        valueSetId = vsSupport.getId();
+                                    }
+                                } else {
+                                    modInterpValPropertySym = null;
+                                }
+                                if (clob != null || modInterpValPropertySym != null) {
+                                    List<String> l = new ArrayList<>(2);
+                                    l.add(symbol);
+                                    l.add(propertySymbol);
+                                    if (propertyDefUids.add(l)) {
+                                        result.add(
+                                                new PropertyDefinition(
+                                                        symbol,
+                                                        propertySymbol,
+                                                        propertyDisplayName,
+                                                        valueType,
+                                                        valueSetId,
+                                                        declaringSymbol));
                                     }
                                 }
-                                return result;
-                            } catch (SQLException | SAXParseException ex) {
-                                throw new KnowledgeSourceReadException(ex);
                             }
                         }
+                        return result;
+                    } catch (SQLException | SAXParseException ex) {
+                        throw new KnowledgeSourceReadException(ex);
+                    }
+                }
 
-                    });
+            });
         }
     }
 

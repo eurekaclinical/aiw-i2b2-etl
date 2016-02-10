@@ -102,8 +102,20 @@ class QuerySupport {
         this.ontTableReader = new TableAccessReader(excludeTableName);
     }
     
+    TableAccessReader getTableAccessReader() {
+        return this.ontTableReader;
+    }
+    
     Connection getConnection() throws InvalidConnectionSpecArguments, SQLException {
         return this.databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate();
+    }
+    
+    ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
+        try {
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, tables);
+        } catch (InvalidConnectionSpecArguments | SQLException ex) {
+            throw new KnowledgeSourceReadException(ex);
+        }
     }
     
     ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
@@ -111,6 +123,14 @@ class QuerySupport {
             return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, this.ontTableReader);
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
+        }
+    }
+    
+    QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
+        if (connection != null) {
+            return new QueryExecutor(connection, queryConstructor, tables);
+        } else {
+            return getQueryExecutorInstance(queryConstructor, tables);
         }
     }
     

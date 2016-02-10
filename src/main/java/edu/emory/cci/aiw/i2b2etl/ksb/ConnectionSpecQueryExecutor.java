@@ -35,6 +35,10 @@ class ConnectionSpecQueryExecutor extends QueryExecutor {
     ConnectionSpecQueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor, TableAccessReader ontTableReader) throws InvalidConnectionSpecArguments, SQLException {
         super(databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate(), queryConstructor, ontTableReader);
     }
+    
+    ConnectionSpecQueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor, String... tables) throws InvalidConnectionSpecArguments, SQLException {
+        super(databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate(), queryConstructor, tables);
+    }
 
     @Override
     public void close() throws KnowledgeSourceReadException {
