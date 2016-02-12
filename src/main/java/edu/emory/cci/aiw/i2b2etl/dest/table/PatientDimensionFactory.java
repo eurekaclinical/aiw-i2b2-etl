@@ -156,6 +156,7 @@ public class PatientDimensionFactory extends DimensionFactory {
                 Date updateDate = prop.getUpdateDate();
                 patientDimension.setUpdated(TableUtil.setTimestampAttribute(updateDate != null ? updateDate : prop.getCreateDate()));
                 patientDimension.setDownloaded(TableUtil.setTimestampAttribute(prop.getDownloadDate()));
+                patientDimension.setDeletedDate(TableUtil.setTimestampAttribute(prop.getDeleteDate()));
             }
         }
         this.patientDimensionHandler.insert(patientDimension);

@@ -94,6 +94,7 @@ public class VisitDimensionFactory extends DimensionFactory {
         }
         visitDimension.setUpdated(TableUtil.setTimestampAttribute(updated));
         visitDimension.setDownloaded(TableUtil.setTimestampAttribute(encounterProp.getDownloadDate()));
+        visitDimension.setDeletedDate(TableUtil.setTimestampAttribute(encounterProp.getDeleteDate()));
         this.visitDimensionHandler.insert(visitDimension);
         this.encounterMappingHandler.insert(visitDimension);
         return visitDimension;

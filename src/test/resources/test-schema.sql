@@ -55,6 +55,7 @@ CREATE TABLE "PATIENT" (
 "MARITAL_STATUS" VARCHAR2(32) ,
 "RACE"           VARCHAR2(50) ,
 "GENDER"         VARCHAR2(16) ,
+"DELETE_DATE" TIMESTAMP(4) ,
 
 CONSTRAINT patient_pk PRIMARY KEY (patient_key)
 );
@@ -68,6 +69,7 @@ CREATE TABLE "PROVIDER" (
 "PROVIDER_KEY"  NUMBER(22,0) NOT NULL ,
 "FIRST_NAME"    VARCHAR2(32) ,
 "LAST_NAME"     VARCHAR2(32) ,
+"DELETE_DATE" TIMESTAMP(4) ,
 
 CONSTRAINT provider_pk PRIMARY KEY (provider_key)
 );
@@ -84,7 +86,8 @@ CREATE TABLE "ENCOUNTER" (
 "TS_END"          TIMESTAMP(4) ,
 "ENCOUNTER_TYPE"  VARCHAR2(64) ,
 "DISCHARGE_DISP"  VARCHAR2(64) ,
- 
+"DELETE_DATE" TIMESTAMP(4) ,
+
 CONSTRAINT encounter_pk PRIMARY KEY (encounter_key)
 );
 --tablespace users
@@ -100,7 +103,8 @@ CREATE TABLE "CPT_EVENT" (
 "ENCOUNTER_KEY" NUMBER(22,0) NOT NULL ,
 "TS_OBX"        TIMESTAMP(4) ,
 "ENTITY_ID"     VARCHAR2(128) NOT NULL ,
- 
+"DELETE_DATE" TIMESTAMP(4) ,
+
 CONSTRAINT cpt_event_pk PRIMARY KEY (event_key)
 );
 --tablespace users
@@ -116,7 +120,8 @@ CREATE TABLE "ICD9D_EVENT" (
 "ENTITY_ID"     VARCHAR2(128) NOT NULL ,
 "RANK"          NUMBER(22,0) NOT NULL,
 "SOURCE"        VARCHAR2(1) NOT NULL,
- 
+"DELETE_DATE" TIMESTAMP(4) ,
+
 CONSTRAINT icd9d_event_pk PRIMARY KEY (event_key)
 );
 --tablespace users
@@ -130,7 +135,8 @@ CREATE TABLE "ICD9P_EVENT" (
 "ENCOUNTER_KEY" NUMBER(22,0) NOT NULL ,
 "TS_OBX"        TIMESTAMP(4) ,
 "ENTITY_ID"     VARCHAR2(128) NOT NULL ,
- 
+"DELETE_DATE" TIMESTAMP(4) ,
+
 CONSTRAINT icd9p_event_pk PRIMARY KEY (event_key)
 );
 --tablespace users
@@ -145,7 +151,8 @@ CREATE TABLE "MEDS_EVENT" (
 "ENCOUNTER_KEY" NUMBER(22,0) NOT NULL ,
 "TS_OBX"        TIMESTAMP(4) ,
 "ENTITY_ID"     VARCHAR2(128) NOT NULL ,
- 
+"DELETE_DATE" TIMESTAMP(4) ,
+
 CONSTRAINT meds_event_pk PRIMARY KEY (event_key)
 );
 --tablespace users
@@ -164,7 +171,8 @@ CREATE TABLE "LABS_EVENT" (
 "RESULT_NUM"    NUMBER(18,4) ,
 "UNITS"         VARCHAR2(16) ,
 "FLAG"          VARCHAR2(8) ,
- 
+"DELETE_DATE" TIMESTAMP(4) ,
+
 CONSTRAINT labs_event_pk PRIMARY KEY (event_key)
 );
 --tablespace users
@@ -183,7 +191,8 @@ CREATE TABLE "VITALS_EVENT" (
 "RESULT_NUM"    NUMBER(18,4) ,
 "UNITS"         VARCHAR2(16) ,
 "FLAG"          VARCHAR2(8) ,
- 
+"DELETE_DATE" TIMESTAMP(4) ,
+
 CONSTRAINT vitals_event_pk PRIMARY KEY (event_key)
 );
 --tablespace users

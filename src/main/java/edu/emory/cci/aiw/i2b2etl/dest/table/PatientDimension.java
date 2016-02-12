@@ -70,7 +70,8 @@ public class PatientDimension extends AbstractRecord {
     private String sourceSystem;
     private Timestamp downloaded;
     private Timestamp updated;
-    
+    private Timestamp deletedDate;
+
     public PatientDimension() {
         
     }
@@ -200,5 +201,12 @@ public class PatientDimension extends AbstractRecord {
         return ToStringBuilder.reflectionToString(this);
     }
 
+    public Timestamp getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(Timestamp deletedDate) {
+        this.deletedDate = deletedDate;
+    }
 
 }
