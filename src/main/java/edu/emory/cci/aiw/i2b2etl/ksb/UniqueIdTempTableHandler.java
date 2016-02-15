@@ -54,7 +54,7 @@ public class UniqueIdTempTableHandler extends RecordHandler<String> {
         switch (DatabaseProduct.fromMetaData(cn.getMetaData())) {
             case POSTGRESQL:
                 try (Statement stmt = cn.createStatement()) {
-                    stmt.execute("CREATE IF NOT EXISTS GLOBAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS");
+                    stmt.execute("CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS");
                 }
                 break;
             default:
