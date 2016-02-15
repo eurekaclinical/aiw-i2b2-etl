@@ -12,13 +12,13 @@
     <parent>
         <groupId>org.eurekaclinical</groupId>
         <artifactId>eurekaclinical-parent</artifactId>
-        <version>1-Alpha-4</version>
+        <version>1-Alpha-13</version>
     </parent>
     
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-        <protempa.version>3.0-Alpha-8</protempa.version>
+        <protempa.version>3.0-Alpha-9</protempa.version>
     </properties>
     
     <scm>
@@ -188,6 +188,13 @@
                         <descriptor>assembly/src.xml</descriptor>
                         <descriptor>assembly/bin.xml</descriptor>
                     </descriptors>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
             </plugin>
         </plugins>
