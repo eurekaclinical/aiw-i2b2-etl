@@ -48,7 +48,6 @@ import org.protempa.proposition.value.Value;
 public class PatientDimensionFactory extends DimensionFactory {
 
     private final Metadata metadata;
-    private final PatientDimension patientDimension;
     private final PatientDimensionHandler patientDimensionHandler;
     private final PatientMappingHandler patientMappingHandler;
     private final Settings settings;
@@ -58,7 +57,7 @@ public class PatientDimensionFactory extends DimensionFactory {
         super(obxSection);
         this.settings = settings;
         this.metadata = metadata;
-        this.patientDimension = new PatientDimension();
+        
         this.patientDimensionHandler = new PatientDimensionHandler(dataConnectionSpec);
         this.patientMappingHandler = new PatientMappingHandler(dataConnectionSpec);
     }
@@ -77,6 +76,7 @@ public class PatientDimensionFactory extends DimensionFactory {
             size = 0;
         }
         Logger logger = TableUtil.logger();
+        PatientDimension patientDimension = new PatientDimension();
         patientDimension.setEncryptedPatientId(keyId);
         patientDimension.setEncryptedPatientIdSource(metadata.getSourceSystemCode());
         if (size > 0) {

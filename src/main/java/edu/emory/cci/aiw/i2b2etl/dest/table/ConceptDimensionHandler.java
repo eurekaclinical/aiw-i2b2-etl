@@ -20,7 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
+import edu.emory.cci.aiw.i2b2etl.util.RecordHandler;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.arp.javautil.sql.ConnectionSpec;
@@ -29,7 +29,7 @@ import org.arp.javautil.sql.ConnectionSpec;
  *
  * @author Andrew Post
  */
-public class ConceptDimensionHandler extends ConnectionSpecRecordHandler<ConceptDimension> {
+public class ConceptDimensionHandler extends RecordHandler<ConceptDimension> {
 
     public static final String TEMP_CONCEPT_TABLE = "ek_temp_concept";
 

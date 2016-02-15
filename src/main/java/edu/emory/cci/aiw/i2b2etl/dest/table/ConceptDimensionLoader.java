@@ -34,24 +34,23 @@ import java.sql.SQLException;
 public final class ConceptDimensionLoader extends ConceptHierarchyLoader {
 
     private final ConceptDimensionHandler handler;
-    private final ConceptDimension conceptDimension;
 
     public ConceptDimensionLoader(ConceptDimensionHandler handler) {
         this.handler = handler;
-        this.conceptDimension = new ConceptDimension();
     }
 
     @Override
     protected void loadConcept(Concept concept) throws SQLException {
         if (concept.isInUse() && !concept.isModifier()) {
             for (String path : concept.getHierarchyPaths()) {
-                this.conceptDimension.setPath(path);
-                this.conceptDimension.setConceptCode(concept.getConceptCode());
-                this.conceptDimension.setDisplayName(concept.getDisplayName());
-                this.conceptDimension.setSourceSystemCode(concept.getSourceSystemCode());
-                this.conceptDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
-                this.conceptDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
-                this.handler.insert(this.conceptDimension);
+                ConceptDimension conceptDimension = new ConceptDimension();
+                conceptDimension.setPath(path);
+                conceptDimension.setConceptCode(concept.getConceptCode());
+                conceptDimension.setDisplayName(concept.getDisplayName());
+                conceptDimension.setSourceSystemCode(concept.getSourceSystemCode());
+                conceptDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
+                conceptDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
+                this.handler.insert(conceptDimension);
             }
         }
     }

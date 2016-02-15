@@ -43,7 +43,6 @@ import org.protempa.proposition.value.Value;
  */
 public class VisitDimensionFactory extends DimensionFactory {
 
-    private final VisitDimension visitDimension;
     private final VisitDimensionHandler visitDimensionHandler;
     private final EncounterMappingHandler encounterMappingHandler;
     private final Settings settings;
@@ -53,7 +52,6 @@ public class VisitDimensionFactory extends DimensionFactory {
             Data data, ConnectionSpec dataConnectionSpec) throws SQLException {
         super(data);
         this.settings = settings;
-        this.visitDimension = new VisitDimension();
         this.visitDimensionHandler = new VisitDimensionHandler(dataConnectionSpec);
         this.encounterMappingHandler = new EncounterMappingHandler(dataConnectionSpec);
     }
@@ -74,6 +72,7 @@ public class VisitDimensionFactory extends DimensionFactory {
         }
         Value inout = getField(this.settings.getVisitDimensionInOut(), encounterProp, references);
         String visitSourceSystem = MetadataUtil.toSourceSystemCode(encounterProp.getSourceSystem().getStringRepresentation());
+        VisitDimension visitDimension = new VisitDimension();
         visitDimension.setEncryptedPatientId(TableUtil.setStringAttribute(encryptedPatientId));
         visitDimension.setStartDate(TableUtil.setDateAttribute(visitStartDate));
         visitDimension.setEndDate(TableUtil.setDateAttribute(visitEndDate));

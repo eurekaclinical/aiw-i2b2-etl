@@ -52,12 +52,10 @@ public class ProviderDimensionFactory {
     private static final String NOT_RECORDED_PROVIDER_ID = PROVIDER_ID_PREFIX + "NotRecorded";
 
     private final Metadata metadata;
-    private final ProviderDimension providerDimension;
     private final ProviderDimensionHandler providerDimensionHandler;
 
     public ProviderDimensionFactory(Metadata metadata, Settings settings, ConnectionSpec dataConnectionSpec) throws SQLException {
         this.metadata = metadata;
-        this.providerDimension = new ProviderDimension();
         this.providerDimensionHandler = new ProviderDimensionHandler(dataConnectionSpec);
     }
 
@@ -100,6 +98,7 @@ public class ProviderDimensionFactory {
             concept.setColumnName("provider_path");
             this.metadata.addToIdCache(concept);
         }
+        ProviderDimension providerDimension = new ProviderDimension();
         providerDimension.setConcept(concept);
         providerDimension.setSourceSystem(source);
         if (!found) {

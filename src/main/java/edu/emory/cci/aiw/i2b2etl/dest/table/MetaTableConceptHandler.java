@@ -20,9 +20,9 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
+import edu.emory.cci.aiw.i2b2etl.util.RecordHandler;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -32,7 +32,7 @@ import org.arp.javautil.sql.ConnectionSpec;
  *
  * @author Andrew Post
  */
-public class MetaTableConceptHandler extends ConnectionSpecRecordHandler<Concept> {
+public class MetaTableConceptHandler extends RecordHandler<Concept> {
     private Timestamp importTimestamp;
 
     public MetaTableConceptHandler(ConnectionSpec connSpec, String tableName) throws SQLException {

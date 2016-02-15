@@ -20,7 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
+import edu.emory.cci.aiw.i2b2etl.util.RecordHandler;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.arp.javautil.sql.ConnectionSpec;
@@ -29,7 +29,7 @@ import org.arp.javautil.sql.ConnectionSpec;
  *
  * @author arpost
  */
-public class EncounterMappingHandler extends ConnectionSpecRecordHandler<VisitDimension> {
+public class EncounterMappingHandler extends RecordHandler<VisitDimension> {
     public static final String TEMP_ENC_MAPPING_TABLE = "ek_temp_encounter_mapping";
     
     public EncounterMappingHandler(ConnectionSpec connSpec) throws SQLException {

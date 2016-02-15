@@ -31,7 +31,6 @@ import java.util.Set;
 public class ModifierDimensionLoader extends ConceptHierarchyLoader {
 
     private final ModifierDimensionHandler handler;
-    private final ModifierDimension modifierDimension;
     /*
      * A cache of modifier paths so that we do not insert multiple records
      * with the same modifier path.
@@ -40,7 +39,6 @@ public class ModifierDimensionLoader extends ConceptHierarchyLoader {
 
     public ModifierDimensionLoader(ModifierDimensionHandler handler) {
         this.handler = handler;
-        this.modifierDimension = new ModifierDimension();
         this.modifierPaths = new HashSet<>();
     }
 
@@ -55,13 +53,14 @@ public class ModifierDimensionLoader extends ConceptHierarchyLoader {
                  * duplicates.
                  */
                 if (this.modifierPaths.add(path)) {
-                    this.modifierDimension.setPath(path);
-                    this.modifierDimension.setConceptCode(concept.getConceptCode());
-                    this.modifierDimension.setDisplayName(concept.getDisplayName());
-                    this.modifierDimension.setSourceSystemCode(concept.getSourceSystemCode());
-                    this.modifierDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
-                    this.modifierDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
-                    this.handler.insert(this.modifierDimension);
+                    ModifierDimension modifierDimension = new ModifierDimension();
+                    modifierDimension.setPath(path);
+                    modifierDimension.setConceptCode(concept.getConceptCode());
+                    modifierDimension.setDisplayName(concept.getDisplayName());
+                    modifierDimension.setSourceSystemCode(concept.getSourceSystemCode());
+                    modifierDimension.setUpdated(TableUtil.setTimestampAttribute(concept.getUpdated()));
+                    modifierDimension.setDownloaded(TableUtil.setTimestampAttribute(concept.getDownloaded()));
+                    this.handler.insert(modifierDimension);
                 }
             }
         }

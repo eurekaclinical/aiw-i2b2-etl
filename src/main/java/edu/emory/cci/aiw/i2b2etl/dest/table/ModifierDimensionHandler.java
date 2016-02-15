@@ -20,7 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.util.ConnectionSpecRecordHandler;
+import edu.emory.cci.aiw.i2b2etl.util.RecordHandler;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.arp.javautil.sql.ConnectionSpec;
@@ -29,7 +29,7 @@ import org.arp.javautil.sql.ConnectionSpec;
  *
  * @author Andrew Post
  */
-public class ModifierDimensionHandler extends ConnectionSpecRecordHandler<ModifierDimension> {
+public class ModifierDimensionHandler extends RecordHandler<ModifierDimension> {
 
     public static final String TEMP_MODIFIER_TABLE = "ek_temp_modifier";
 
