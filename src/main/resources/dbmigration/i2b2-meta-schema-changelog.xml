@@ -44,9 +44,6 @@ limitations under the License.
         <sql dbms="oracle">
             CREATE GLOBAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR2(700)) ON COMMIT DELETE ROWS
         </sql>
-        <sql dbms="postgresql">
-            CREATE GLOBAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS
-        </sql>
         <rollback>
             DROP TABLE EK_TEMP_UNIQUE_IDS
         </rollback>

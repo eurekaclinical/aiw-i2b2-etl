@@ -24,6 +24,8 @@ import edu.emory.cci.aiw.i2b2etl.util.RecordHandler;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import org.arp.javautil.sql.DatabaseProduct;
 
 /**
  *
@@ -33,15 +35,31 @@ public class UniqueIdTempTableHandler extends RecordHandler<String> {
 
     public UniqueIdTempTableHandler(Connection connection) throws SQLException {
         super(connection, "INSERT INTO EK_TEMP_UNIQUE_IDS VALUES (?)");
+        createTempTableIfNeeded();
     }
     
     public UniqueIdTempTableHandler(Connection connection, boolean commit) throws SQLException {
         super(connection, "INSERT INTO EK_TEMP_UNIQUE_IDS VALUES (?)", commit);
+        createTempTableIfNeeded();
     }
-
+    
     @Override
     protected void setParameters(PreparedStatement statement, String record) throws SQLException {
         statement.setString(1, record);
     }
     
+    private void createTempTableIfNeeded() throws SQLException {
+        Connection cn = getConnection();
+        
+        switch (DatabaseProduct.fromMetaData(cn.getMetaData())) {
+            case POSTGRESQL:
+                try (Statement stmt = cn.createStatement()) {
+                    stmt.execute("CREATE IF NOT EXISTS GLOBAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS");
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
 }
