@@ -33,14 +33,14 @@ import org.arp.javautil.sql.DatabaseProduct;
  */
 public class UniqueIdTempTableHandler extends RecordHandler<String> {
 
-    public UniqueIdTempTableHandler(Connection connection) throws SQLException {
+    public UniqueIdTempTableHandler(DatabaseProduct databaseProduct, Connection connection) throws SQLException {
         super(connection, "INSERT INTO EK_TEMP_UNIQUE_IDS VALUES (?)");
-        createTempTableIfNeeded();
+        createTempTableIfNeeded(databaseProduct);
     }
     
-    public UniqueIdTempTableHandler(Connection connection, boolean commit) throws SQLException {
+    public UniqueIdTempTableHandler(DatabaseProduct databaseProduct, Connection connection, boolean commit) throws SQLException {
         super(connection, "INSERT INTO EK_TEMP_UNIQUE_IDS VALUES (?)", commit);
-        createTempTableIfNeeded();
+        createTempTableIfNeeded(databaseProduct);
     }
     
     @Override
@@ -48,12 +48,11 @@ public class UniqueIdTempTableHandler extends RecordHandler<String> {
         statement.setString(1, record);
     }
     
-    private void createTempTableIfNeeded() throws SQLException {
-        Connection cn = getConnection();
+    private void createTempTableIfNeeded(DatabaseProduct databaseProduct) throws SQLException {
         
-        switch (DatabaseProduct.fromMetaData(cn.getMetaData())) {
+        switch (databaseProduct) {
             case POSTGRESQL:
-                try (Statement stmt = cn.createStatement()) {
+                try (Statement stmt = getConnection().createStatement()) {
                     stmt.execute("CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS");
                 }
                 break;

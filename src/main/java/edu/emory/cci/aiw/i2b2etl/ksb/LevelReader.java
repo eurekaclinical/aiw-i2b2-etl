@@ -58,7 +58,7 @@ class LevelReader {
         Map<String, Set<String>> result = new HashMap<>();
         try (Connection connection = this.querySupport.getConnection()) {
             try {
-                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
+                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
                     for (String child : symbols) {
                         childTempTableHandler.insert(child);
                     }

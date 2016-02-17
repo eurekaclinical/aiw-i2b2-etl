@@ -21,7 +21,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  */
 import java.sql.Connection;
 import java.sql.SQLException;
-import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSourceReadException;
@@ -32,11 +31,11 @@ import org.protempa.KnowledgeSourceReadException;
  */
 class ConnectionSpecQueryExecutor extends QueryExecutor {
 
-    ConnectionSpecQueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor, TableAccessReader ontTableReader) throws InvalidConnectionSpecArguments, SQLException {
+    ConnectionSpecQueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, QueryConstructor queryConstructor, TableAccessReader ontTableReader) throws InvalidConnectionSpecArguments, SQLException {
         super(databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate(), queryConstructor, ontTableReader);
     }
     
-    ConnectionSpecQueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, ConnectionSpec connectionSpecInstance, QueryConstructor queryConstructor, String... tables) throws InvalidConnectionSpecArguments, SQLException {
+    ConnectionSpecQueryExecutor(DatabaseAPI databaseApi, String databaseId, String username, String password, QueryConstructor queryConstructor, String... tables) throws InvalidConnectionSpecArguments, SQLException {
         super(databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate(), queryConstructor, tables);
     }
 

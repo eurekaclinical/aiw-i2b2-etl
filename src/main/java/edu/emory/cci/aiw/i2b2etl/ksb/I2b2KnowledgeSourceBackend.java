@@ -57,6 +57,7 @@ import java.util.logging.Logger;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.collections.Collections;
 import org.arp.javautil.io.IOUtil;
+import org.arp.javautil.sql.DatabaseProduct;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.AbstractPropositionDefinition;
 import org.protempa.Attribute;
@@ -1763,7 +1764,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         return result;
     }
 
-    private final QueryConstructor IDS_PROPDEF_QC = new QueryConstructor() {
+    private final QueryConstructor IDS_PROPDEF_QC_ROWNUM = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
@@ -1775,8 +1776,21 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
+    
+    private final QueryConstructor IDS_PROPDEF_QC_POSTGRESQL = new QueryConstructor() {
 
-    private final QueryConstructor N_PROPDEF_QC = new QueryConstructor() {
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, ").append(querySupport.getEurekaIdColumn()).append(", IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
+            sql.append(table);
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' FROM ");
+            sql.append(table);
+            sql.append(" WHERE ").append(querySupport.getEurekaIdColumn()).append(" = ? AND C_SYNONYM_CD='N' AND C_BASECODE IS NOT NULL LIMIT 1) ESCAPE ''");
+        }
+
+    };
+
+    private final QueryConstructor N_PROPDEF_QC_ROWNUM = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
@@ -1788,13 +1802,32 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
+    
+    private final QueryConstructor N_PROPDEF_QC_POSTGRESQL = new QueryConstructor() {
+
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, ").append(querySupport.getEurekaIdColumn()).append(", IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
+            sql.append(table);
+            sql.append(" WHERE C_FULLNAME LIKE (SELECT C_FULLNAME || '%' FROM ");
+            sql.append(table);
+            sql.append(" WHERE ").append(querySupport.getEurekaIdColumn()).append(" = ? AND C_SYNONYM_CD='N' LIMIT 1) ESCAPE ''");
+        }
+
+    };
 
     @Override
     public Collection<PropositionDefinition> collectPropDefDescendantsUsingAllNarrower(boolean inDataSourceOnly, final String[] propIds) throws KnowledgeSourceReadException {
-        return collectPropDefDescendantsCommon(propIds, inDataSourceOnly ? IDS_PROPDEF_QC : N_PROPDEF_QC);
+        DatabaseProduct databaseProduct = this.querySupport.getDatabaseProduct();
+        switch (databaseProduct) {
+            case POSTGRESQL:
+                return collectPropDefDescendantsCommon(propIds, inDataSourceOnly ? IDS_PROPDEF_QC_POSTGRESQL : N_PROPDEF_QC_POSTGRESQL);
+            default:
+                return collectPropDefDescendantsCommon(propIds, inDataSourceOnly ? IDS_PROPDEF_QC_ROWNUM : N_PROPDEF_QC_ROWNUM);
+        }
     }
 
-    private final QueryConstructor COLLECT_SUBTREE_PROPDEF_QC = new QueryConstructor() {
+    private final QueryConstructor COLLECT_SUBTREE_PROPDEF_QC_ROWNUM = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
@@ -1806,10 +1839,29 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
+    
+    private final QueryConstructor COLLECT_SUBTREE_PROPDEF_QC_POSTGRESQL = new QueryConstructor() {
+
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT A1.C_NAME, A1.C_FULLNAME, A1.VALUETYPE_CD, A1.C_COMMENT, A1.C_METADATAXML, CASE WHEN A1.C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, A1.").append(querySupport.getEurekaIdColumn()).append(", A1.IMPORT_DATE, A1.UPDATE_DATE, A1.DOWNLOAD_DATE FROM ");
+            sql.append(table);
+            sql.append(" A1 WHERE A1.C_FULLNAME LIKE (SELECT A2.C_FULLNAME || '%' FROM ");
+            sql.append(table);
+            sql.append(" A2 WHERE A2.").append(querySupport.getEurekaIdColumn()).append(" = ? AND A2.C_SYNONYM_CD='N' LIMIT 1) ESCAPE ''");
+        }
+
+    };
 
     @Override
     public Collection<PropositionDefinition> collectPropDefDescendantsUsingInverseIsA(final String[] propIds) throws KnowledgeSourceReadException {
-        return collectPropDefDescendantsCommon(propIds, COLLECT_SUBTREE_PROPDEF_QC);
+        DatabaseProduct databaseProduct = this.querySupport.getDatabaseProduct();
+        switch (databaseProduct) {
+            case POSTGRESQL:
+                return collectPropDefDescendantsCommon(propIds, COLLECT_SUBTREE_PROPDEF_QC_POSTGRESQL);
+            default:
+                return collectPropDefDescendantsCommon(propIds, COLLECT_SUBTREE_PROPDEF_QC_ROWNUM);
+        }
     }
 
     private List<PropositionDefinition> collectPropDefDescendantsCommon(final String[] propIds, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
@@ -1819,9 +1871,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 queryExecutor.prepare();
                 ListResultSetReader reader = new ListResultSetReader();
                 for (String propId : filterPropDef(propIds, result)) {
-                    result.addAll(queryExecutor.execute(
-                            propId,
-                            reader));
+                    result.addAll(queryExecutor.execute(propId, reader));
                 }
             }
 
@@ -1841,7 +1891,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         Map<String, List<PropertyDefinition>> partials;
         try (Connection connection = this.querySupport.getConnection()) {
             try {
-                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
+                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
                     for (String child : resultMap.keySet()) {
                         childTempTableHandler.insert(child);
                     }
@@ -2196,7 +2246,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         List<TemporalPropositionDefinition> result = new ArrayList<>();
         try (Connection connection = this.querySupport.getConnection()) {
             try {
-                try (UniqueIdTempTableHandler uniqIdTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
+                try (UniqueIdTempTableHandler uniqIdTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
                     for (String id : ids) {
                         uniqIdTempTableHandler.insert(id);
                     }

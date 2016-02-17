@@ -19,11 +19,10 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-
 import java.sql.Connection;
 import java.sql.SQLException;
-import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
+import org.arp.javautil.sql.DatabaseProduct;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSourceReadException;
 
@@ -32,21 +31,22 @@ import org.protempa.KnowledgeSourceReadException;
  * @author Andrew Post
  */
 class QuerySupport {
+
     private static final String DEFAULT_EUREKA_ID_COLUMN = "EK_UNIQUE_ID";
-    
+
     private DatabaseAPI databaseApi;
     private String databaseId;
     private String username;
     private String password;
-    private ConnectionSpec connectionSpecInstance;
     private String excludeTableName;
     private TableAccessReader ontTableReader;
     private String eurekaIdColumn;
+    private DatabaseProduct databaseProduct;
 
     QuerySupport() {
-         this.databaseApi = DatabaseAPI.DRIVERMANAGER;
-         this.eurekaIdColumn = DEFAULT_EUREKA_ID_COLUMN;
-         this.ontTableReader = new TableAccessReader(null);
+        this.databaseApi = DatabaseAPI.DRIVERMANAGER;
+        this.eurekaIdColumn = DEFAULT_EUREKA_ID_COLUMN;
+        this.ontTableReader = new TableAccessReader(null);
     }
 
     String getEurekaIdColumn() {
@@ -63,7 +63,6 @@ class QuerySupport {
 
     void setDatabaseApi(DatabaseAPI databaseApi) {
         this.databaseApi = databaseApi;
-        this.connectionSpecInstance = null;
     }
 
     String getDatabaseId() {
@@ -72,7 +71,7 @@ class QuerySupport {
 
     void setDatabaseId(String databaseId) {
         this.databaseId = databaseId;
-        this.connectionSpecInstance = null;
+        this.databaseProduct = null;
     }
 
     String getUsername() {
@@ -81,7 +80,6 @@ class QuerySupport {
 
     void setUsername(String username) {
         this.username = username;
-        this.connectionSpecInstance = null;
     }
 
     String getPassword() {
@@ -90,7 +88,6 @@ class QuerySupport {
 
     void setPassword(String password) {
         this.password = password;
-        this.connectionSpecInstance = null;
     }
 
     String getExcludeTableName() {
@@ -101,31 +98,42 @@ class QuerySupport {
         this.excludeTableName = excludeTableName;
         this.ontTableReader = new TableAccessReader(excludeTableName);
     }
-    
+
     TableAccessReader getTableAccessReader() {
         return this.ontTableReader;
     }
-    
+
     Connection getConnection() throws InvalidConnectionSpecArguments, SQLException {
         return this.databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate();
     }
-    
+
+    DatabaseProduct getDatabaseProduct() throws KnowledgeSourceReadException {
+        if (this.databaseProduct == null) {
+            try (Connection cn = getConnection()) {
+                this.databaseProduct = DatabaseProduct.fromMetaData(cn.getMetaData());
+            } catch (InvalidConnectionSpecArguments | SQLException ex) {
+                throw new KnowledgeSourceReadException(ex);
+            }
+        }
+        return this.databaseProduct;
+    }
+
     ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
         try {
-            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, tables);
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, tables);
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
     }
-    
+
     ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         try {
-            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, this.connectionSpecInstance, queryConstructor, this.ontTableReader);
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, this.ontTableReader);
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
     }
-    
+
     QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
         if (connection != null) {
             return new QueryExecutor(connection, queryConstructor, tables);
@@ -133,7 +141,7 @@ class QuerySupport {
             return getQueryExecutorInstance(queryConstructor, tables);
         }
     }
-    
+
     QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         if (connection != null) {
             return new QueryExecutor(connection, queryConstructor, this.ontTableReader);
@@ -141,5 +149,5 @@ class QuerySupport {
             return getQueryExecutorInstance(queryConstructor);
         }
     }
-    
+
 }

@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.sql.ConnectionSpec;
+import org.arp.javautil.sql.DatabaseProduct;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.ProtempaUtil;
 import org.protempa.dest.Statistics;
@@ -179,7 +180,10 @@ public class I2b2Statistics implements Statistics {
     }
 
     private void populateUniqueIdTempTable(final Connection conn) throws SQLException {
-        try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(conn, false)) {
+        try (UniqueIdTempTableHandler childTempTableHandler = 
+                new UniqueIdTempTableHandler(
+                        DatabaseProduct.fromMetaData(
+                                conn.getMetaData()), conn, false)) {
             for (String propId : this.currentPropIds) {
                 childTempTableHandler.insert(propId);
             }

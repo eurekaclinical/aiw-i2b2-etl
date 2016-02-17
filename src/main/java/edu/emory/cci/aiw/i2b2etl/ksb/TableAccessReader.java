@@ -25,18 +25,18 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Set;
 import org.protempa.KnowledgeSourceReadException;
 
 /**
  * Queries an i2b2 metadata schema for all of the tables in TABLE_ACCESS that
  * have a EK_UNIQUE_ID column (note case!) and thus are an Eureka metadata
- * table.
- * 
+ * table. The contents of TABLE_ACCESS are cached for the duration of a Protempa
+ * run. Thus, when structurally modifying TABLE_ACCESS it is critical to take
+ * Eureka off-line.
+ *
  * @author Andrew Post
  */
 public class TableAccessReader {
@@ -51,12 +51,12 @@ public class TableAccessReader {
     public String[] read(Connection connection) throws KnowledgeSourceReadException {
         synchronized (this) {
             if (this.ontTables == null) {
+                Set<String> tables = new HashSet<>();
                 StringBuilder query = new StringBuilder();
                 query.append("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS");
                 if (this.excludeTableName != null) {
                     query.append(" WHERE C_TABLE_NAME <> ?");
                 }
-                List<String> tables = new ArrayList<>();
                 try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
                     if (this.excludeTableName != null) {
                         stmt.setString(1, this.excludeTableName);
@@ -69,6 +69,7 @@ public class TableAccessReader {
                 } catch (SQLException ex) {
                     throw new KnowledgeSourceReadException(ex);
                 }
+
                 try {
                     for (Iterator<String> itr = tables.iterator(); itr.hasNext();) {
                         String tableName = itr.next();
@@ -77,7 +78,7 @@ public class TableAccessReader {
                             ResultSetMetaData metaData = resultSet.getMetaData();
                             boolean found = false;
                             for (int i = 1, n = metaData.getColumnCount(); i <= n; i++) {
-                                if ("EK_UNIQUE_ID".equals(metaData.getColumnLabel(i))) {
+                                if ("EK_UNIQUE_ID".equalsIgnoreCase(metaData.getColumnLabel(i))) {
                                     found = true;
                                     break;
                                 }
@@ -88,7 +89,7 @@ public class TableAccessReader {
                         }
                     }
                 } catch (SQLException ex) {
-                    Logger.getLogger(TableAccessReader.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new KnowledgeSourceReadException(ex);
                 }
                 this.ontTables = tables.toArray(new String[tables.size()]);
             }
