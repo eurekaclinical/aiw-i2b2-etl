@@ -2119,16 +2119,16 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         @Override
         public TemporalPropositionDefinition read(ResultSet rs) throws KnowledgeSourceReadException {
             try {
-                List<TemporalPropositionDefinition> r = new ArrayList<>();
                 if (rs != null && rs.next()) {
                     AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
                     Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
                     abd.setInverseIsA(children.toArray(new String[children.size()]));
                     List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2));
                     abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
-                    r.add((TemporalPropositionDefinition) abd);
+                    return (TemporalPropositionDefinition) abd;
+                } else {
+                    return null;
                 }
-                return r.isEmpty() ? null : r.get(0);
             } catch (SQLException | SAXParseException ex) {
                 throw new KnowledgeSourceReadException(ex);
             }
