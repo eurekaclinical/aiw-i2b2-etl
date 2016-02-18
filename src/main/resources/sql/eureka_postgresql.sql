@@ -538,16 +538,17 @@ BEGIN
                     temp2.download_date, 
                     temp2.import_date, 
                     temp2.sourcesystem_cd, 
-                    temp2.upload_id) 
+                    temp2.upload_id
                 FROM ' || upload_temptable_name_c || ' temp2 WHERE (temp2.patient_num IS NOT NULL AND temp2.patient_num::text <> '''') 
-                                                                    and (temp2.encounter_num IS NOT NULL AND temp2.encounter_num::text <> '''')
-                                                                    and (temp.encounter_num <> observation_fact.encounter_num 
-                                                                    or temp.patient_num <> observation_fact.patient_num 
-                                                                    or temp.concept_cd <> observation_fact.concept_cd 
-                                                                    or temp.start_date <> observation_fact.start_date 
-                                                                    or temp.provider_id <> observation_fact.provider_id 
-                                                                    or temp.modifier_cd <> observation_fact.modifier_cd 
-                                                                    or temp.instance_num <> observation_fact.instance_num)';
+                                                                    AND (temp2.encounter_num IS NOT NULL AND temp2.encounter_num::text <> '''')
+                                                                    AND NOT EXISTS (SELECT * from observation_fact temp WHERE 
+                                                                        temp2.encounter_num = temp.encounter_num 
+                                                                        AND temp2.patient_num = temp.patient_num 
+                                                                        AND temp2.concept_cd = temp.concept_cd 
+                                                                        AND temp2.start_date = temp.start_date 
+                                                                        AND temp2.provider_id = temp.provider_id 
+                                                                        AND temp2.modifier_cd = temp.modifier_cd 
+                                                                        AND temp2.instance_num = temp.instance_num)';
         END IF ;
         ANALYZE OBSERVATION_FACT;
     EXCEPTION

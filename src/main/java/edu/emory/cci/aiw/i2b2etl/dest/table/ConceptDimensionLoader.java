@@ -36,6 +36,9 @@ public final class ConceptDimensionLoader extends ConceptHierarchyLoader {
     private final ConceptDimensionHandler handler;
 
     public ConceptDimensionLoader(ConceptDimensionHandler handler) {
+        if (handler == null) {
+            throw new IllegalArgumentException("handler cannot be null");
+        }
         this.handler = handler;
     }
 
