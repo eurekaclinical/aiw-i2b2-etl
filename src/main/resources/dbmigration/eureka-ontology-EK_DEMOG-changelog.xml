@@ -2111,7 +2111,7 @@ limitations under the License.
             <column name="C_SYMBOL" value="i2b2INTERNAL|Demographics|Age"/>
             <column name="EK_UNIQUE_ID" value="i2b2INTERNAL|Demographics|Age"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="3"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\"/>
             <column name="C_NAME" value="0-9 years old"/>
@@ -2138,7 +2138,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:0-9 years old"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:0-9 years old"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="3"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\"/>
+            <column name="C_NAME" value="0-9 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="FAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:0-9 years old"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="&gt;"/>
+            <column name="C_DIMCODE" value="now() - ((365.25 * 10) || ' days')::interval"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 0-9 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:0-9 years old"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:0-9 years old"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\DEM|AGE:0\"/>
             <column name="C_NAME" value="0 years old"/>
@@ -2165,7 +2192,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:0"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:0"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\DEM|AGE:0\"/>
+            <column name="C_NAME" value="0 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:0"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 1) || ' days')::interval) AND (now() - ((365.25 * 0) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 0-9 years old \ 0 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:0"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:0"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\DEM|AGE:1\"/>
             <column name="C_NAME" value="1 year old"/>
@@ -2179,6 +2233,33 @@ limitations under the License.
             <column name="C_COLUMNDATATYPE" value="N"/>
             <column name="C_OPERATOR" value="BETWEEN"/>
             <column name="C_DIMCODE" value="sysdate - (365.25 * 2) AND sysdate - (365.25 * 1)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 0-9 years old \ 1 year old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:1"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:1"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:0-9 years old\DEM|AGE:1\"/>
+            <column name="C_NAME" value="1 year old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:1"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 2) || ' days')::interval) AND (now() - ((365.25 * 1) || ' days')::interval)"/>
             <column name="C_COMMENT"/>
             <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 0-9 years old \ 1 year old"/>
             <column name="M_APPLIED_PATH" value="@"/>
@@ -2678,7 +2759,7 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|LANGUAGE:Danish"/>
             <column name="EK_UNIQUE_ID" value="DEM|LANGUAGE:Danish"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:10-17 years old\DEM|AGE:16\"/>
             <column name="C_NAME" value="16 years old"/>
@@ -2705,7 +2786,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:16"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:16"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:10-17 years old\DEM|AGE:16\"/>
+            <column name="C_NAME" value="16 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:16"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 17) || ' days')::interval) AND (now() - ((365.25 * 16) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 10-17 years old \ 16 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:10-17 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:16"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:16"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:10-17 years old\DEM|AGE:17\"/>
             <column name="C_NAME" value="17 years old"/>
@@ -2732,7 +2840,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:17"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:17"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:10-17 years old\DEM|AGE:17\"/>
+            <column name="C_NAME" value="17 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:17"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 18) || ' days')::interval) AND (now() - ((365.25 * 17) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 10-17 years old \ 17 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:10-17 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:17"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:17"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="3"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
             <column name="C_NAME" value="105-120 years old"/>
@@ -2759,7 +2894,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:105-120 years old"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:105-120 years old"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="3"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_NAME" value="105-120 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="FAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:105-120 years old"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 121) || ' days')::interval) AND (now() - ((365.25 * 105) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:105-120 years old"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:105-120 years old"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:105\"/>
             <column name="C_NAME" value="105 years old"/>
@@ -2786,7 +2948,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:105"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:105"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:105\"/>
+            <column name="C_NAME" value="105 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:105"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 106) || ' days')::interval) AND (now() - ((365.25 * 105) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 105 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:105"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:105"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:106\"/>
             <column name="C_NAME" value="106 years old"/>
@@ -2813,7 +3002,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:106"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:106"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:106\"/>
+            <column name="C_NAME" value="106 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:106"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 107) || ' days')::interval) AND (now() - ((365.25 * 106) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 106 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:106"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:106"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:107\"/>
             <column name="C_NAME" value="107 years old"/>
@@ -2840,7 +3056,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:107"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:107"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:107\"/>
+            <column name="C_NAME" value="107 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:107"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 108) || ' days')::interval) AND (now() - ((365.25 * 107) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 107 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:107"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:107"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:108\"/>
             <column name="C_NAME" value="108 years old"/>
@@ -2867,7 +3110,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:108"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:108"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:108\"/>
+            <column name="C_NAME" value="108 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:108"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 109) || ' days')::interval) AND (now() - ((365.25 * 108) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 108 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:108"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:108"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:109\"/>
             <column name="C_NAME" value="109 years old"/>
@@ -2894,7 +3164,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:109"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:109"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:109\"/>
+            <column name="C_NAME" value="109 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:109"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 110) || ' days')::interval) AND (now() - ((365.25 * 109) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 109 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:109"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:109"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:110\"/>
             <column name="C_NAME" value="110 years old"/>
@@ -2921,7 +3218,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:110"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:110"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:110\"/>
+            <column name="C_NAME" value="110 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:110"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 111) || ' days')::interval) AND (now() - ((365.25 * 110) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 110 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:110"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:110"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:111\"/>
             <column name="C_NAME" value="111 years old"/>
@@ -2948,7 +3272,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:111"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:111"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:111\"/>
+            <column name="C_NAME" value="111 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:111"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 112) || ' days')::interval) AND (now() - ((365.25 * 111) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 111 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:111"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:111"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:112\"/>
             <column name="C_NAME" value="112 years old"/>
@@ -2975,7 +3326,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:112"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:112"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:112\"/>
+            <column name="C_NAME" value="112 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:112"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 113) || ' days')::interval) AND (now() - ((365.25 * 112) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 112 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:112"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:112"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:113\"/>
             <column name="C_NAME" value="113 years old"/>
@@ -3002,7 +3380,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:113"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:113"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:113\"/>
+            <column name="C_NAME" value="113 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:113"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 114) || ' days')::interval) AND (now() - ((365.25 * 113) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 113 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:113"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:113"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:114\"/>
             <column name="C_NAME" value="114 years old"/>
@@ -3029,7 +3434,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:114"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:114"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:114\"/>
+            <column name="C_NAME" value="114 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:114"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 115) || ' days')::interval) AND (now() - ((365.25 * 114) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 114 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:114"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:114"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:115\"/>
             <column name="C_NAME" value="115 years old"/>
@@ -3056,7 +3488,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:115"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:115"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\DEM|AGE:115\"/>
+            <column name="C_NAME" value="115 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:115"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 116) || ' days')::interval) AND (now() - ((365.25 * 115) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 105-120 years old \ 115 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:105-120 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:115"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:115"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:41\"/>
             <column name="C_NAME" value="41 years old"/>
@@ -3083,7 +3542,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:41"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:41"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:41\"/>
+            <column name="C_NAME" value="41 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:41"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 42) || ' days')::interval) AND (now() - ((365.25 * 41) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 35-44 years old \ 41 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:41"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:41"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:42\"/>
             <column name="C_NAME" value="42 years old"/>
@@ -3110,7 +3596,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:42"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:42"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:42\"/>
+            <column name="C_NAME" value="42 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:42"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 43) || ' days')::interval) AND (now() - ((365.25 * 42) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 35-44 years old \ 42 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:42"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:42"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:43\"/>
             <column name="C_NAME" value="43 years old"/>
@@ -3137,7 +3650,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:43"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:43"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:43\"/>
+            <column name="C_NAME" value="43 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:43"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 44) || ' days')::interval) AND (now() - ((365.25 * 43) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 35-44 years old \ 43 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:43"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:43"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:44\"/>
             <column name="C_NAME" value="44 years old"/>
@@ -3164,7 +3704,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:44"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:44"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\DEM|AGE:44\"/>
+            <column name="C_NAME" value="44 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:44"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 45) || ' days')::interval) AND (now() - ((365.25 * 44) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 35-44 years old \ 44 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:35-44 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:44"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:44"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="3"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
             <column name="C_NAME" value="45-54 years old"/>
@@ -3191,7 +3758,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:45-54 years old"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:45-54 years old"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="3"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_NAME" value="45-54 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="FAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:45-54 years old"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 55) || ' days')::interval) AND (now() - ((365.25 * 45) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:45-54 years old"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:45-54 years old"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:45\"/>
             <column name="C_NAME" value="45 years old"/>
@@ -3218,7 +3812,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:45"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:45"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:45\"/>
+            <column name="C_NAME" value="45 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:45"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 46) || ' days')::interval) AND (now() - ((365.25 * 45) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 45 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:45"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:45"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:46\"/>
             <column name="C_NAME" value="46 years old"/>
@@ -3245,7 +3866,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:46"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:46"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:46\"/>
+            <column name="C_NAME" value="46 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:46"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 47) || ' days')::interval) AND (now() - ((365.25 * 46) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 46 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:46"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:46"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:47\"/>
             <column name="C_NAME" value="47 years old"/>
@@ -3272,7 +3920,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:47"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:47"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:47\"/>
+            <column name="C_NAME" value="47 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:47"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 48) || ' days')::interval) AND (now() - ((365.25 * 47) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 47 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:47"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:47"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:48\"/>
             <column name="C_NAME" value="48 years old"/>
@@ -3299,7 +3974,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:48"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:48"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:48\"/>
+            <column name="C_NAME" value="48 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:48"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 49) || ' days')::interval) AND (now() - ((365.25 * 48) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 48 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:48"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:48"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:49\"/>
             <column name="C_NAME" value="49 years old"/>
@@ -3326,7 +4028,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:49"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:49"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:49\"/>
+            <column name="C_NAME" value="49 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:49"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 50) || ' days')::interval) AND (now() - ((365.25 * 49) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 49 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:49"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:49"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:50\"/>
             <column name="C_NAME" value="50 years old"/>
@@ -3353,7 +4082,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:50"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:50"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:50\"/>
+            <column name="C_NAME" value="50 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:50"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 51) || ' days')::interval) AND (now() - ((365.25 * 50) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 50 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:50"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:50"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:51\"/>
             <column name="C_NAME" value="51 years old"/>
@@ -3380,7 +4136,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:51"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:51"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:51\"/>
+            <column name="C_NAME" value="51 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:51"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 52) || ' days')::interval) AND (now() - ((365.25 * 51) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 51 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:51"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:51"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:52\"/>
             <column name="C_NAME" value="52 years old"/>
@@ -3407,7 +4190,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:52"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:52"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:52\"/>
+            <column name="C_NAME" value="52 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:52"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 53) || ' days')::interval) AND (now() - ((365.25 * 52) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 52 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:52"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:52"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:53\"/>
             <column name="C_NAME" value="53 years old"/>
@@ -3434,7 +4244,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:53"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:53"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:53\"/>
+            <column name="C_NAME" value="53 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:53"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 54) || ' days')::interval) AND (now() - ((365.25 * 53) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 53 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:53"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:53"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:54\"/>
             <column name="C_NAME" value="54 years old"/>
@@ -3461,7 +4298,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:54"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:54"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\DEM|AGE:54\"/>
+            <column name="C_NAME" value="54 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:54"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 55) || ' days')::interval) AND (now() - ((365.25 * 54) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 45-54 years old \ 54 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:45-54 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:54"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:54"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="3"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\"/>
             <column name="C_NAME" value="55-64 years old"/>
@@ -3488,7 +4352,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:55-64 years old"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:55-64 years old"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="3"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\"/>
+            <column name="C_NAME" value="55-64 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="FAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:55-64 years old"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 65) || ' days')::interval) AND (now() - ((365.25 * 55) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 55-64 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:55-64 years old"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:55-64 years old"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:55\"/>
             <column name="C_NAME" value="55 years old"/>
@@ -3515,7 +4406,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:55"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:55"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:55\"/>
+            <column name="C_NAME" value="55 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:55"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 56) || ' days')::interval) AND (now() - ((365.25 * 55) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 55-64 years old \ 55 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:55"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:55"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:56\"/>
             <column name="C_NAME" value="56 years old"/>
@@ -3542,7 +4460,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:56"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:56"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:56\"/>
+            <column name="C_NAME" value="56 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:56"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 57) || ' days')::interval) AND (now() - ((365.25 * 56) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 55-64 years old \ 56 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:56"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:56"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:57\"/>
             <column name="C_NAME" value="57 years old"/>
@@ -3569,7 +4514,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:57"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:57"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:57\"/>
+            <column name="C_NAME" value="57 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:57"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 58) || ' days')::interval) AND (now() - ((365.25 * 57) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 55-64 years old \ 57 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:57"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:57"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:58\"/>
             <column name="C_NAME" value="58 years old"/>
@@ -3596,7 +4568,34 @@ limitations under the License.
             <column name="C_SYMBOL" value="DEM|AGE:58"/>
             <column name="EK_UNIQUE_ID" value="DEM|AGE:58"/>
         </insert>
-        <insert tableName="EK_DEMOG">
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:58\"/>
+            <column name="C_NAME" value="58 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:58"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 59) || ' days')::interval) AND (now() - ((365.25 * 58) || ' days')::interval)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 55-64 years old \ 58 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:58"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:58"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="h2, oracle">
             <column name="C_HLEVEL" valueNumeric="4"/>
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:59\"/>
             <column name="C_NAME" value="59 years old"/>
@@ -3610,6 +4609,33 @@ limitations under the License.
             <column name="C_COLUMNDATATYPE" value="N"/>
             <column name="C_OPERATOR" value="BETWEEN"/>
             <column name="C_DIMCODE" value="sysdate - (365.25 * 60) AND sysdate - (365.25 * 59)"/>
+            <column name="C_COMMENT"/>
+            <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 55-64 years old \ 59 years old"/>
+            <column name="M_APPLIED_PATH" value="@"/>
+            <column name="UPDATE_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="DOWNLOAD_DATE"/>
+            <column name="IMPORT_DATE" valueDate="2015-02-04 13:26:50.0"/>
+            <column name="SOURCESYSTEM_CD" value="AIW I2B2 Loader"/>
+            <column name="VALUETYPE_CD"/>
+            <column name="M_EXCLUSION_CD"/>
+            <column name="C_PATH" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\"/>
+            <column name="C_SYMBOL" value="DEM|AGE:59"/>
+            <column name="EK_UNIQUE_ID" value="DEM|AGE:59"/>
+        </insert>
+        <insert tableName="EK_DEMOG" dbms="postgresql">
+            <column name="C_HLEVEL" valueNumeric="4"/>
+            <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\DEM|AGE:55-64 years old\DEM|AGE:59\"/>
+            <column name="C_NAME" value="59 years old"/>
+            <column name="C_SYNONYM_CD" value="N"/>
+            <column name="C_VISUALATTRIBUTES" value="LAE"/>
+            <column name="C_BASECODE" value="DEM|AGE:59"/>
+            <column name="C_METADATAXML"/>
+            <column name="C_FACTTABLECOLUMN" value="patient_num"/>
+            <column name="C_TABLENAME" value="patient_dimension"/>
+            <column name="C_COLUMNNAME" value="birth_date"/>
+            <column name="C_COLUMNDATATYPE" value="N"/>
+            <column name="C_OPERATOR" value="BETWEEN"/>
+            <column name="C_DIMCODE" value="(now() - ((365.25 * 60) || ' days')::interval) AND (now() - ((365.25 * 59) || ' days')::interval)"/>
             <column name="C_COMMENT"/>
             <column name="C_TOOLTIP" value=" \ Eureka \ Demographics \ Age \ 55-64 years old \ 59 years old"/>
             <column name="M_APPLIED_PATH" value="@"/>
