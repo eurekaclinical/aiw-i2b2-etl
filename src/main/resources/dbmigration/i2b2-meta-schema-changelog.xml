@@ -40,7 +40,7 @@ limitations under the License.
             <column name="DISPLAYNAME" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="arpost" id="META-2" dbms="oracle, postgresql">
+    <changeSet author="arpost" id="META-2" dbms="oracle">
         <sql dbms="oracle">
             CREATE GLOBAL TEMPORARY TABLE EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR2(700)) ON COMMIT DELETE ROWS
         </sql>
