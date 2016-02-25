@@ -168,7 +168,7 @@ public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
 
         q.setPropositionDefinitions(
                 new PropositionDefinition[]{ed, hd, ld, ldWrapper, ld2, clad, clad2, ld2, sd});
-        q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId(), "ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
+        q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId(), "ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails", "Provider"});
         q.setName("i2b2 ETL Test Query");
 
         getProtempaFactory().execute(q);

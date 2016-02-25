@@ -42,7 +42,7 @@ import org.protempa.query.QueryMode;
  *
  * @author Andrew Post
  */
-public class I2b2LoadNoDerivedVariablesUpperDateBound extends AbstractI2b2DestLoadTest {
+public class I2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTest extends AbstractI2b2DestLoadTest {
 
     /**
      * Executes the i2b2 ETL load.
@@ -56,22 +56,26 @@ public class I2b2LoadNoDerivedVariablesUpperDateBound extends AbstractI2b2DestLo
     @BeforeClass
     public static void setUp() throws Exception {
         DefaultQueryBuilder q = new DefaultQueryBuilder();
-        q.setName("i2b2 ETL Test Query No Derived Variables With Upper Date Bound");
+        q.setName("i2b2 ETL Test Query No Derived Variables With Lower and Upper Date Bounds");
+        q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
         Calendar c = Calendar.getInstance();
         c.clear();
-        c.set(2008, Calendar.DECEMBER, 31);
+        c.set(2007, Calendar.JANUARY, 1);
         Date first = c.getTime();
-        q.setFilters(new DateTimeFilter(new String[]{"Encounter"}, null, null, first, AbsoluteTimeGranularity.DAY, null, Side.FINISH));
-        q.setQueryMode(QueryMode.REPLACE);
+        c.clear();
+        c.set(2009, Calendar.DECEMBER, 31);
+        Date second = c.getTime();
+        q.setFilters(new DateTimeFilter(new String[]{"Encounter"}, first, AbsoluteTimeGranularity.DAY, second, AbsoluteTimeGranularity.DAY, Side.FINISH, Side.FINISH));
+        q.setQueryMode(QueryMode.UPDATE);
         getProtempaFactory().execute(q);
         
-        File file = File.createTempFile("i2b2LoadNoDerivedVariablesUpperDateBoundTest", ".xml");
+        File file = File.createTempFile("i2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTest", ".xml");
         try (FileOutputStream out = new FileOutputStream(file)) {
             getProtempaFactory().exportI2b2DataSchema(out);
             System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
         }
         
-        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesUpperDateBoundTestData.xml");
+        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTestData.xml");
     }
 
 }

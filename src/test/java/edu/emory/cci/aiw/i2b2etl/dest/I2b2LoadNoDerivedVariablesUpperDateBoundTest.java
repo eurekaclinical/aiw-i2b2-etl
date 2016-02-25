@@ -42,7 +42,7 @@ import org.protempa.query.QueryMode;
  *
  * @author Andrew Post
  */
-public class I2b2LoadNoDerivedVariablesLowerDateBound extends AbstractI2b2DestLoadTest {
+public class I2b2LoadNoDerivedVariablesUpperDateBoundTest extends AbstractI2b2DestLoadTest {
 
     /**
      * Executes the i2b2 ETL load.
@@ -56,22 +56,23 @@ public class I2b2LoadNoDerivedVariablesLowerDateBound extends AbstractI2b2DestLo
     @BeforeClass
     public static void setUp() throws Exception {
         DefaultQueryBuilder q = new DefaultQueryBuilder();
-        q.setName("i2b2 ETL Test Query No Derived Variables With Lower Date Bound");
+        q.setName("i2b2 ETL Test Query No Derived Variables With Upper Date Bound");
+        q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
         Calendar c = Calendar.getInstance();
         c.clear();
-        c.set(2009, Calendar.JANUARY, 1);
-        Date second = c.getTime();
-        q.setFilters(new DateTimeFilter(new String[]{"Encounter"}, second, AbsoluteTimeGranularity.DAY, null, null, Side.FINISH, null));
-        q.setQueryMode(QueryMode.UPDATE);
+        c.set(2008, Calendar.DECEMBER, 31);
+        Date first = c.getTime();
+        q.setFilters(new DateTimeFilter(new String[]{"Encounter"}, null, null, first, AbsoluteTimeGranularity.DAY, null, Side.FINISH));
+        q.setQueryMode(QueryMode.REPLACE);
         getProtempaFactory().execute(q);
         
-        File file = File.createTempFile("i2b2LoadNoDerivedVariablesLowerDateBoundTest", ".xml");
+        File file = File.createTempFile("i2b2LoadNoDerivedVariablesUpperDateBoundTest", ".xml");
         try (FileOutputStream out = new FileOutputStream(file)) {
             getProtempaFactory().exportI2b2DataSchema(out);
             System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
         }
         
-        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesLowerDateBoundTestData.xml");
+        setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesUpperDateBoundTestData.xml");
     }
 
 }
