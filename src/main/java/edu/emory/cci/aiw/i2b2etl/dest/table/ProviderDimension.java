@@ -20,6 +20,7 @@
 package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
+import java.sql.Timestamp;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
@@ -50,6 +51,9 @@ public class ProviderDimension extends AbstractRecord {
 
     private Concept concept;
     private String sourceSystem;
+    private Timestamp downloaded;
+    private Timestamp updated;
+    private Timestamp deleted;
 
     public ProviderDimension() {
     }
@@ -82,6 +86,30 @@ public class ProviderDimension extends AbstractRecord {
         return this.sourceSystem;
     }
 
+    public Timestamp getDownloaded() {
+        return downloaded;
+    }
+
+    public void setDownloaded(Timestamp downloaded) {
+        this.downloaded = downloaded;
+    }
+
+    public Timestamp getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Timestamp updated) {
+        this.updated = updated;
+    }
+
+    public Timestamp getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Timestamp deleted) {
+        this.deleted = deleted;
+    }
+    
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);

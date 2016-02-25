@@ -22,18 +22,19 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.metadata.ConceptOperator;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.DataType;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.SimpleConceptId;
 import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
@@ -50,6 +51,18 @@ public class ProviderDimensionFactory {
 
     private static final String PROVIDER_ID_PREFIX = MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|Provider:";
     private static final String NOT_RECORDED_PROVIDER_ID = PROVIDER_ID_PREFIX + "NotRecorded";
+    private static final Calendar CAL;
+    private static final Date PROVIDER_NOT_RECORDED_DATE;
+    static {
+        CAL = Calendar.getInstance();
+        CAL.clear();
+        CAL.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        /*
+         * Need to update every time the no-provider record is changed.
+         */
+        CAL.set(2016, Calendar.FEBRUARY, 24, 0, 0, 0);
+        PROVIDER_NOT_RECORDED_DATE = CAL.getTime();
+    }
 
     private final Metadata metadata;
     private final ProviderDimensionHandler providerDimensionHandler;
@@ -57,6 +70,13 @@ public class ProviderDimensionFactory {
     public ProviderDimensionFactory(Metadata metadata, Settings settings, ConnectionSpec dataConnectionSpec) throws SQLException {
         this.metadata = metadata;
         this.providerDimensionHandler = new ProviderDimensionHandler(dataConnectionSpec);
+    }
+
+    private static enum DateType {
+        CREATED,
+        UPDATED,
+        DELETED,
+        DOWNLOADED
     }
 
     public ProviderDimension getInstance(Proposition encounterProp, String fullNameReference, String fullNameProperty,
@@ -76,13 +96,25 @@ public class ProviderDimensionFactory {
 
         String id;
         String source;
+        Date updated;
+        Date downloaded;
+        Date deleted;
         if (!sources.isEmpty()) {
             id = PROVIDER_ID_PREFIX + fullName;
             source = MetadataUtil.toSourceSystemCode(StringUtils.join(sources, " & "));
+            updated = extract(DateType.UPDATED, fullNameReference, firstNameReference, middleNameReference, lastNameReference, encounterProp, references);
+            if (updated == null) {
+                updated = extract(DateType.CREATED, fullNameReference, firstNameReference, middleNameReference, lastNameReference, encounterProp, references);
+            }
+            downloaded = extract(DateType.DOWNLOADED, fullNameReference, firstNameReference, middleNameReference, lastNameReference, encounterProp, references);
+            deleted = extract(DateType.DELETED, fullNameReference, firstNameReference, middleNameReference, lastNameReference, encounterProp, references);
         } else {
             id = NOT_RECORDED_PROVIDER_ID;
             source = this.metadata.getSourceSystemCode();
             fullName = "Not Recorded";
+            updated = PROVIDER_NOT_RECORDED_DATE;
+            downloaded = null;
+            deleted = null;
         }
         ConceptId cid = SimpleConceptId.getInstance(id, this.metadata);
         Concept concept = this.metadata.getFromIdCache(cid);
@@ -98,9 +130,14 @@ public class ProviderDimensionFactory {
             concept.setColumnName("provider_path");
             this.metadata.addToIdCache(concept);
         }
+
         ProviderDimension providerDimension = new ProviderDimension();
         providerDimension.setConcept(concept);
         providerDimension.setSourceSystem(source);
+
+        providerDimension.setUpdated(TableUtil.setTimestampAttribute(updated));
+        providerDimension.setDownloaded(TableUtil.setTimestampAttribute(downloaded));
+        providerDimension.setDeleted(TableUtil.setTimestampAttribute(deleted));
         if (!found) {
             this.metadata.addProvider(providerDimension);
             providerDimensionHandler.insert(providerDimension);
@@ -111,6 +148,62 @@ public class ProviderDimensionFactory {
 
     public void close() throws SQLException {
         this.providerDimensionHandler.close();
+    }
+
+    private Date extract(DateType dateType, String fullNameReference, String firstNameReference, String middleNameReference, String lastNameReference, Proposition encounterProp, Map<UniqueId, Proposition> references) {
+        Date updated = null;
+        if (fullNameReference != null) {
+            updated = extract(dateType, fullNameReference, encounterProp, references);
+        }
+        if (firstNameReference != null) {
+            Date u = extract(dateType, firstNameReference, encounterProp, references);
+            if (u != null) {
+                if (updated == null || u.after(updated)) {
+                    updated = u;
+                }
+            }
+        }
+        if (middleNameReference != null) {
+            Date u = extract(dateType, middleNameReference, encounterProp, references);
+            if (u != null) {
+                if (updated == null || u.after(updated)) {
+                    updated = u;
+                }
+            }
+        }
+        if (lastNameReference != null) {
+            Date u = extract(dateType, lastNameReference, encounterProp, references);
+            if (u != null) {
+                if (updated == null || u.after(updated)) {
+                    updated = u;
+                }
+            }
+        }
+        return updated;
+    }
+
+    private Date extract(DateType dateType, String reference, Proposition encounterProp, Map<UniqueId, Proposition> references) {
+        if (reference != null) {
+            Proposition provider = resolveReference(encounterProp, reference, references);
+            if (provider != null) {
+                switch (dateType) {
+                    case CREATED:
+                        return provider.getCreateDate();
+                    case UPDATED:
+                        return provider.getUpdateDate();
+                    case DELETED:
+                        return provider.getDeleteDate();
+                    case DOWNLOADED:
+                        return provider.getDownloadDate();
+                    default:
+                        throw new AssertionError("unexpected dateType " + dateType);
+                }
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
     private String extractNamePart(String namePartReference, String namePartProperty, Proposition encounterProp, Map<UniqueId, Proposition> references, Set<String> sources) {

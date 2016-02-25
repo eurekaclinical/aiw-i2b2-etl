@@ -48,8 +48,8 @@ public class ProviderDimensionHandler extends RecordHandler<ProviderDimension> {
         ps.setString(2, concept.getFullName());
         ps.setString(3, concept.getDisplayName());
         ps.setObject(4, null);
-        ps.setTimestamp(5, null);
-        ps.setTimestamp(6, null);
+        ps.setTimestamp(5, provider.getUpdated());
+        ps.setTimestamp(6, provider.getDownloaded());
         ps.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
         ps.setString(8, MetadataUtil.toSourceSystemCode(provider.getSourceSystem()));
         ps.setObject(9, null);
