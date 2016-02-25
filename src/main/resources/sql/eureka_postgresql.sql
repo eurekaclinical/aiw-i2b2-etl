@@ -22,6 +22,7 @@ CREATE SCHEMA EUREKA;
 
 CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableName text, upload_id bigint)  RETURNS VOID AS $body$
     BEGIN
+        -- Update existing record(s) in provider_dimension according to temp table
         EXECUTE '
             UPDATE provider_dimension SET provider_id = temp.provider_id,
                                 name_char = temp.name_char,
@@ -31,9 +32,22 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
                                 import_date = now(),
                                 sourcesystem_cd = temp.sourcesystem_cd,
                                 upload_id = ' || upload_id || ' 
-            FROM ' || tempProviderTableName || ' temp 
+            FROM  ' || tempProviderTableName || ' temp 
             WHERE temp.provider_path = provider_dimension.provider_path 
-                AND coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(provider_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))';
+            AND   coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(provider_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
+            AND   (temp.delete_date is NULL OR temp.delete_date > now())
+            ';
+
+        -- Delete existing record(s) in provider_dimension if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM provider_dimension 
+            WHERE   provider_path IN
+            (SELECT provider_path 
+             FROM   ' || tempProviderTableName || ' 
+             WHERE  delete_date <= now()  
+            )';
+
+        -- Insert new record(s) into provider_dimension from temp table     
         EXECUTE '
              INSERT INTO provider_dimension (
                                 provider_id,
@@ -56,8 +70,13 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
                     temp2.sourcesystem_cd, 
                     '|| upload_id ||' 
             FROM ' || tempProviderTableName || ' temp2 
-            WHERE temp2.provider_path NOT IN (SELECT provider_dimension.provider_path from provider_dimension);
-                 ';
+            WHERE temp2.provider_path 
+            NOT IN (
+                SELECT provider_dimension.provider_path 
+                FROM   provider_dimension
+            )
+            AND   (temp2.delete_date is NULL OR temp2.delete_date > now())
+            ';
         ANALYZE provider_dimension;
     EXCEPTION
         WHEN OTHERS THEN
@@ -167,7 +186,7 @@ BEGIN
         --Create new encounter(encounter_mapping) if temp table encounter_ide does not exists
         -- in encounter_mapping table. -- jk added project id
         EXECUTE ' 
-            insert into encounter_mapping (
+            INSERT INTO encounter_mapping (
                 encounter_ide,
                 encounter_ide_source,
                 encounter_num,
@@ -176,7 +195,7 @@ BEGIN
                 encounter_ide_status,
                 project_id,
                 upload_id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-            select temp.encounter_id, 
+            SELECT temp.encounter_id, 
                 temp.encounter_id_source, 
                 cast(temp.encounter_id as bigint),
                 temp.patient_id,
@@ -184,7 +203,7 @@ BEGIN
                 ''A'',
                 ''@'' project_id, 
                 ' || upload_id || '                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
-            from ' || tempTableName || ' temp                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+            FROM ' || tempTableName || ' temp                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
             where not exists (
                 SELECT em.encounter_ide 
                 from encounter_mapping em 
@@ -192,9 +211,11 @@ BEGIN
                     and em.encounter_ide_source = temp.encounter_id_source
                     and em.patient_ide = temp.patient_id
                     and em.patient_ide_source = temp.patient_id_source)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-            and encounter_id_source = ''HIVE'' ';
+            AND encounter_id_source = ''HIVE'' 
+            AND (temp.delete_date is NULL OR temp.delete_date > now())
+            ';
             
-        -- update encounter_num for temp table
+        -- Update encounter_num for temp table
         EXECUTE '
             UPDATE ' || tempTableName || ' tempTableName SET encounter_num = em.encounter_num 
             FROM encounter_mapping em WHERE 
@@ -202,7 +223,8 @@ BEGIN
                 and em.encounter_ide_source = tempTableName.encounter_id_source                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
                 and coalesce(em.patient_ide_source,'''') = coalesce(tempTableName.patient_id_source,'''')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
                 and coalesce(em.patient_ide,'''') = coalesce(tempTableName.patient_id,'''') ';
-                
+
+        -- Update existing record(s) in visit_dimension according to temp table                
         EXECUTE '
             UPDATE visit_dimension SET start_date = temp.start_date,
                 end_date = temp.end_date,
@@ -217,8 +239,20 @@ BEGIN
                 length_of_stay = temp.length_of_stay
             FROM ' || tempTableName || ' temp 
             WHERE coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(visit_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-                AND temp.encounter_num = visit_dimension.encounter_num'; 
-        
+            AND temp.encounter_num = visit_dimension.encounter_num
+            AND (temp.delete_date is NULL OR temp.delete_date > now())
+            '; 
+
+        -- Delete existing record(s) in visit_dimension if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM visit_dimension 
+            WHERE   encounter_num IN
+            (SELECT encounter_num 
+             FROM   ' || tempTableName || ' 
+             WHERE  delete_date <= now() 
+            )';
+
+        -- Insert new record(s) into visit_dimension from temp table   
         -- jk: added project_id='@' to WHERE clause... need to support projects...
         EXECUTE '
             insert into visit_dimension (
@@ -248,14 +282,16 @@ BEGIN
                 temp.sourcesystem_cd, '
                 || upload_id || ',
                 temp.LENGTH_OF_STAY
-            from ' || tempTableName || '  temp, patient_mapping pm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-            where temp.encounter_num IS NOT NULL
-            and temp.encounter_num not in (
+            FROM ' || tempTableName || '  temp, patient_mapping pm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+            WHERE temp.encounter_num IS NOT NULL
+            AND temp.encounter_num NOT IN (
                 SELECT encounter_num 
                 from visit_dimension vd
             ) 
-            and pm.patient_ide = temp.patient_id 
-            and pm.patient_ide_source = temp.patient_id_source';
+            AND pm.patient_ide = temp.patient_id 
+            AND pm.patient_ide_source = temp.patient_id_source
+            AND (temp.delete_date is NULL OR temp.delete_date > now())
+            ';
         ANALYZE visit_dimension;
     EXCEPTION
         WHEN OTHERS THEN
@@ -271,36 +307,43 @@ DECLARE
         maxPatientNum bigint; 
 BEGIN 
         LOCK TABLE patient_mapping IN EXCLUSIVE MODE NOWAIT;
-        -- Create new patient(patient_mapping) if temp table patient_ide does not exists 
+        -- Create new patient(in patient_mapping) if patient_ide(in patient_mapping) does not exists 
         -- in patient_mapping table.
         EXECUTE '
-            insert into patient_mapping (
+            INSERT INTO patient_mapping (
                 patient_ide,
                 patient_ide_source,
                 patient_num,
                 patient_ide_status,
+                project_id,
                 upload_id)
-            select temp.patient_id, 
-                temp.patient_id_source, 
-                cast(temp.patient_id as bigint), 
-                ''A'',
-                '|| upload_id ||'
-            from ' || tempTableName || ' temp 
+            SELECT temp.patient_id, 
+                   temp.patient_id_source, 
+                   cast(temp.patient_id as bigint), 
+                   ''A'',
+                   ''@'' project_id,
+                   '|| upload_id ||'
+            FROM   ' || tempTableName || ' temp
+ 
             WHERE NOT EXISTS (
                 SELECT patient_ide 
-                from patient_mapping pm 
-                where pm.patient_ide = temp.patient_id 
-                    and pm.patient_ide_source = temp.patient_id_source)
-            and temp.patient_id_source = ''HIVE'' ';
+                FROM   patient_mapping pm 
+                WHERE  pm.patient_ide = temp.patient_id 
+                AND    pm.patient_ide_source = temp.patient_id_source
+            )
+            AND temp.patient_id_source = ''HIVE'' 
+            AND (temp.delete_date is NULL OR temp.delete_date > now())
+            ';
         
-        -- update patient_num for temp table
+        -- Update patient_num for temp table
         EXECUTE '
             UPDATE ' || tempTableName || ' SET patient_num = patient_mapping.patient_num FROM patient_mapping 
                                     WHERE patient_mapping.patient_ide = '|| tempTableName ||'.patient_id
                                     AND patient_mapping.patient_ide_source = '|| tempTableName ||'.patient_id_source';
 
+        -- Update existing record(s) in patient_dimension according to temp table
         EXECUTE '
-            UPDATE patient_dimension SET vital_status_cd = temp.vital_status_cd, 
+            UPDATE  patient_dimension SET vital_status_cd = temp.vital_status_cd, 
                     birth_date = temp.birth_date, 
                     death_date = temp.death_date,
                     sex_cd = temp.sex_cd,
@@ -317,9 +360,22 @@ BEGIN
                     import_date = now(),
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || ' 
-            FROM ' || tempTableName || ' temp 
-            WHERE coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(patient_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-                AND temp.patient_num = patient_dimension.patient_num';
+            FROM    ' || tempTableName || ' temp 
+            WHERE   coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(patient_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
+            AND     temp.patient_num = patient_dimension.patient_num
+            AND     (temp.delete_date is NULL OR temp.delete_date > now())
+            ';
+
+        -- Delete existing record(s) in patient_dimension if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM patient_dimension 
+            WHERE   patient_num IN
+            (SELECT patient_num 
+             FROM   ' || tempTableName || ' 
+             WHERE  delete_date <= now()  
+            )';
+
+        -- Insert new record(s) into patient_dimension from temp table   
         EXECUTE '
             INSERT INTO patient_dimension (
                     PATIENT_NUM,
@@ -340,7 +396,7 @@ BEGIN
                     IMPORT_DATE,
                     SOURCESYSTEM_CD,
                     UPLOAD_ID)
-                SELECT temp2.patient_num,
+            SELECT  temp2.patient_num,
                     temp2.VITAL_STATUS_CD, 
                     temp2.BIRTH_DATE, 
                     temp2.DEATH_DATE,
@@ -357,11 +413,14 @@ BEGIN
                     temp2.download_date,
                     now(), 
                     temp2.sourcesystem_cd,
-                    '|| UPLOAD_ID || '
-                FROM ' || tempTableName || ' temp2 
-                WHERE temp2.patient_num NOT IN (SELECT patient_dimension.patient_num from patient_dimension) 
-                    AND temp2.patient_num IS NOT NULL
-                    AND temp2.patient_num::text <> ''''';
+                    ' || UPLOAD_ID || '
+            FROM    ' || tempTableName || ' temp2 
+            WHERE   temp2.patient_num NOT IN (SELECT patient_dimension.patient_num from patient_dimension) 
+            AND     temp2.patient_num IS NOT NULL
+            AND     temp2.patient_num::text <> ''''
+            AND     (temp2.delete_date is NULL OR temp2.delete_date > now())
+            ';
+
         ANALYZE patient_dimension;
     EXCEPTION
         WHEN OTHERS THEN
@@ -402,7 +461,8 @@ BEGIN
                   temp.download_date,
                   temp.import_date,
                   temp.sourcesystem_cd,
-                  temp.upload_id
+                  temp.upload_id,
+                  temp.delete_date
                 FROM ' || upload_temptable_name || ' temp
                 LEFT OUTER JOIN encounter_mapping em
                 ON (em.encounter_ide = temp.encounter_id
@@ -411,7 +471,8 @@ BEGIN
                 LEFT OUTER JOIN patient_mapping pm
                 ON (pm.patient_ide = temp.patient_id
                             and pm.patient_ide_source = temp.patient_id_source
-                            and pm.project_id=''@''))';
+                            and pm.project_id=''@'')
+          )';
 
         EXECUTE 'TRUNCATE TABLE ' || upload_temptable_name;
         
@@ -465,9 +526,12 @@ BEGIN
                     sourcesystem_cd,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
                     temp.upload_id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                 FROM ' || upload_temptable_name_c || ' temp
-                WHERE (temp.patient_num IS NOT NULL AND temp.patient_num::text <> '''') and (temp.encounter_num IS NOT NULL AND temp.encounter_num::text <> '''')
+                WHERE (temp.patient_num IS NOT NULL AND temp.patient_num::text <> '''') 
+                AND   (temp.encounter_num IS NOT NULL AND temp.encounter_num::text <> '''')
+                AND   (temp.delete_date is NULL OR temp.delete_date > now())
                 ';
         ELSE
+            -- Update existing record(s) in observation_fact according to temp table
             EXECUTE '
                 UPDATE observation_fact SET valtype_cd = temp.valtype_cd, 
                     tval_char=temp.tval_char, 
@@ -484,15 +548,26 @@ BEGIN
                     import_date=temp.import_date, 
                     sourcesystem_cd =temp.sourcesystem_cd, 
                     upload_id = temp.upload_id 
-                    FROM ' || upload_temptable_name_c || ' temp WHERE coalesce(observation_fact.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
-                                                                    <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
-                                                                    and temp.encounter_num = observation_fact.encounter_num 
-                                                                    and temp.patient_num = observation_fact.patient_num 
-                                                                    and temp.concept_cd = observation_fact.concept_cd 
-                                                                    and temp.start_date = observation_fact.start_date 
-                                                                    and temp.provider_id = observation_fact.provider_id 
-                                                                    and temp.modifier_cd = observation_fact.modifier_cd 
-                                                                    and temp.instance_num = observation_fact.instance_num';
+                    FROM ' || upload_temptable_name_c || ' temp 
+                WHERE coalesce(observation_fact.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
+                AND temp.encounter_num = observation_fact.encounter_num 
+                AND temp.patient_num = observation_fact.patient_num 
+                AND temp.concept_cd = observation_fact.concept_cd 
+                AND temp.start_date = observation_fact.start_date 
+                AND temp.provider_id = observation_fact.provider_id 
+                AND temp.modifier_cd = observation_fact.modifier_cd 
+                AND temp.instance_num = observation_fact.instance_num
+                AND (temp.delete_date is NULL OR temp.delete_date > now())
+                ';
+            -- Delete existing record(s) in observation_fact if it is marked as delete in temp table
+            EXECUTE '
+                DELETE FROM observation_fact 
+                WHERE   encounter_num IN
+                (SELECT encounter_num 
+                 FROM   ' || upload_temptable_name_c || ' 
+                 WHERE  delete_date <= now() 
+                )';
+            -- Insert new record(s) into observation_fact from temp table 
             EXECUTE '
                 INSERT INTO observation_fact (
                     encounter_num, 
@@ -538,17 +613,24 @@ BEGIN
                     temp2.download_date, 
                     temp2.import_date, 
                     temp2.sourcesystem_cd, 
-                    temp2.upload_id
-                FROM ' || upload_temptable_name_c || ' temp2 WHERE (temp2.patient_num IS NOT NULL AND temp2.patient_num::text <> '''') 
-                                                                    AND (temp2.encounter_num IS NOT NULL AND temp2.encounter_num::text <> '''')
-                                                                    AND NOT EXISTS (SELECT * from observation_fact temp WHERE 
-                                                                        temp2.encounter_num = temp.encounter_num 
-                                                                        AND temp2.patient_num = temp.patient_num 
-                                                                        AND temp2.concept_cd = temp.concept_cd 
-                                                                        AND temp2.start_date = temp.start_date 
-                                                                        AND temp2.provider_id = temp.provider_id 
-                                                                        AND temp2.modifier_cd = temp.modifier_cd 
-                                                                        AND temp2.instance_num = temp.instance_num)';
+                    temp2.upload_id) 
+                FROM ' || upload_temptable_name_c || ' temp2 
+                WHERE (temp2.patient_num IS NOT NULL 
+                AND temp2.patient_num::text <> '''') 
+                AND (temp2.encounter_num IS NOT NULL 
+                AND temp2.encounter_num::text <> '''')
+                AND NOT EXISTS (
+                    SELECT * from observation_fact temp 
+                    WHERE temp2.encounter_num = temp.encounter_num 
+                    AND   temp2.patient_num = temp.patient_num 
+                    AND   temp2.concept_cd = temp.concept_cd 
+                    AND   temp2.start_date = temp.start_date 
+                    AND   temp2.provider_id = temp.provider_id 
+                    AND   temp2.modifier_cd = temp.modifier_cd 
+                    AND   temp2.instance_num = temp.instance_num
+                )
+                AND (temp2.delete_date is NULL OR temp2.delete_date > now())
+                ';
         END IF ;
         ANALYZE OBSERVATION_FACT;
     EXCEPTION
@@ -577,7 +659,9 @@ BEGIN
             maxEncounterNum := 0;
         end if;
         
-        sql_stmt := 'SELECT distinct encounter_id, encounter_id_source, patient_map_id, patient_map_id_source from ' || tempEidTableName;
+        sql_stmt := 'SELECT distinct encounter_id, encounter_id_source, patient_map_id, patient_map_id_source from ' || tempEidTableName'
+                     WHERE delete_date IS NULL or delete_date > now()
+                    ';
         OPEN distinctEidCur FOR EXECUTE sql_stmt ;
         LOOP
             FETCH distinctEidCur INTO disEncounterId, disEncounterIdSource, patientMapId, patientMapIdSource;
@@ -710,51 +794,65 @@ BEGIN
         END LOOP;
         CLOSE distinctEidCur ;
         
-        -- do the mapping update if the update date is old
+        -- Do the mapping update if the update date is old
         EXECUTE '
             UPDATE encounter_mapping SET ENCOUNTER_NUM = cast(temp.encounter_id as bigint),
-                patient_ide = temp.patient_map_id,
-                patient_ide_source = temp.patient_map_id_source,
-                encounter_ide_status = temp.encounter_map_id_status,
-                update_date = temp.update_date, 
-                download_date = temp.download_date,
-                import_date = now(),
-                sourcesystem_cd  = temp.sourcesystem_cd, 
-                upload_id = ' || upload_id ||'  FROM ' || tempEidTableName ||' temp 
-            WHERE temp.encounter_map_id = encounter_mapping.ENCOUNTER_IDE 
-                and temp.encounter_map_id_source = encounter_mapping.ENCOUNTER_IDE_SOURCE
-                and temp.encounter_id_source = ''HIVE'' 
-                and temp.process_status_flag is null 
-                and coalesce(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))';
-        -- insert new mapping records i.e flagged P -- jk: added project_id
+                   patient_ide = temp.patient_map_id,
+                   patient_ide_source = temp.patient_map_id_source,
+                   encounter_ide_status = temp.encounter_map_id_status,
+                   update_date = temp.update_date, 
+                   download_date = temp.download_date,
+                   import_date = now(),
+                   sourcesystem_cd  = temp.sourcesystem_cd, 
+                   upload_id = ' || upload_id ||'  FROM ' || tempEidTableName ||' temp 
+            WHERE  temp.encounter_map_id = encounter_mapping.ENCOUNTER_IDE 
+            AND    temp.encounter_map_id_source = encounter_mapping.ENCOUNTER_IDE_SOURCE
+            AND    temp.encounter_id_source = ''HIVE'' 
+            AND    temp.process_status_flag is null 
+            AND    coalesce(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))
+            AND    (temp.delete_date is NULL OR temp.delete_date > now())
+            ';
+        
+        -- Delete existing record(s) in encounter_mapping if it is marked as delete in temp table
         EXECUTE '
-            insert into encounter_mapping (
-                encounter_ide,
-                encounter_ide_source,
-                encounter_ide_status,
-                encounter_num,
-                patient_ide,
-                patient_ide_source,
-                update_date,
-                download_date,
-                import_date,
-                sourcesystem_cd,
-                project_id,
-                upload_id) 
+            DELETE FROM encounter_mapping 
+            WHERE   encounter_num IN
+            (SELECT encounter_num 
+             FROM   ' || tempEidTableName || ' 
+             WHERE  delete_date <= now()
+            )';
+
+        -- Insert new mapping records i.e flagged P -- jk: added project_id
+        EXECUTE '
+            INSERT INTO encounter_mapping (
+                   encounter_ide,
+                   encounter_ide_source,
+                   encounter_ide_status,
+                   encounter_num,
+                   patient_ide,
+                   patient_ide_source,
+                   update_date,
+                   download_date,
+                   import_date,
+                   sourcesystem_cd,
+                   project_id,
+                   upload_id) 
             SELECT encounter_map_id,
-                encounter_map_id_source,
-                encounter_map_id_status,
-                encounter_num,
-                patient_map_id,
-                patient_map_id_source,
-                update_date,
-                download_date,
-                now(),
-                sourcesystem_cd,
-                ''@'' project_id,' 
-                || upload_id || ' 
-            from ' || tempEidTableName || '  
-            where process_status_flag = ''P'' '; 
+                   encounter_map_id_source,
+                   encounter_map_id_status,
+                   encounter_num,
+                   patient_map_id,
+                   patient_map_id_source,
+                   update_date,
+                   download_date,
+                   now(),
+                   sourcesystem_cd,
+                   ''@'' project_id, 
+                   ' || upload_id || ' 
+            FROM   ' || tempEidTableName || '  
+            WHERE  process_status_flag = ''P''
+            AND   (delete_date is NULL OR delete_date > now())
+            '; 
        ANALYZE encounter_mapping;
     EXCEPTION
         WHEN OTHERS THEN
@@ -776,7 +874,9 @@ DECLARE
         disPatientId varchar(100); 
         disPatientIdSource varchar(100);
 BEGIN
-        sql_stmt := 'SELECT distinct patient_id,patient_id_source from ' || tempPidTableName ||' ';
+        sql_stmt := 'SELECT distinct patient_id,patient_id_source from ' || tempPidTableName ||'
+                     WHERE delete_date IS NULL or delete_date > now()
+                    ';
         
         LOCK TABLE  patient_mapping IN EXCLUSIVE MODE NOWAIT;
         select max(patient_num) into STRICT  maxPatientNum from patient_mapping ; 
@@ -904,44 +1004,59 @@ BEGIN
         END LOOP;
         CLOSE distinctPidCur ;
         
-        -- do the mapping update if the update date is old
+        -- Do the mapping update if the update date is old
         EXECUTE '
-        	UPDATE patient_mapping SET patient_num = cast(temp.patient_id as bigint),
-                patient_ide_status = temp.patient_map_id_status,
-                update_date = temp.update_date,
-                download_date  = temp.download_date,
-                import_date = now(),
-                sourcesystem_cd  = temp.sourcesystem_cd,
-                upload_id = ' || upload_id ||'  FROM ' || tempPidTableName ||' temp WHERE temp.patient_map_id = patient_mapping.patient_IDE 
-                and temp.patient_map_id_source = patient_mapping.patient_IDE_SOURCE
-                and temp.process_status_flag is null  
-                and coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
+        	UPDATE  patient_mapping SET patient_num = cast(temp.patient_id as bigint),
+                        patient_ide_status = temp.patient_map_id_status,
+                        update_date = temp.update_date,
+                        download_date  = temp.download_date,
+                        import_date = now(),
+                        sourcesystem_cd  = temp.sourcesystem_cd,
+                        upload_id = ' || upload_id ||'  
+        	FROM    ' || tempPidTableName ||' temp 
+        	WHERE   temp.patient_map_id = patient_mapping.patient_IDE 
+                AND     temp.patient_map_id_source = patient_mapping.patient_IDE_SOURCE
+                AND     temp.process_status_flag is null  
+                AND     coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
+                AND     (temp.delete_date is NULL OR temp.delete_date > now())      
           ';
-           -- insert new mapping records i.e flagged P - jk: added project id
+
+        -- Delete existing record(s) in patient_mapping if it is marked as delete in temp table
         EXECUTE '
-            insert into patient_mapping (
-                patient_ide,
-                patient_ide_source,
-                patient_ide_status,
-                patient_num,
-                update_date,
-                download_date,
-                import_date,
-                sourcesystem_cd,
-                project_id,
-                upload_id) 
+            DELETE FROM patient_mapping 
+            WHERE   patient_num IN
+            (SELECT patient_num 
+             FROM   ' || tempPidTableName || ' 
+             WHERE  delete_date <= now() 
+            )';
+
+        -- Insert new mapping records i.e flagged P - jk: added project id
+        EXECUTE '
+            INSERT INTO patient_mapping (
+                   patient_ide,
+                   patient_ide_source,
+                   patient_ide_status,
+                   patient_num,
+                   update_date,
+                   download_date,
+                   import_date,
+                   sourcesystem_cd,
+                   project_id,
+                   upload_id) 
             SELECT patient_map_id,
-                patient_map_id_source,
-                patient_map_id_status,
-                patient_num,
-                update_date,
-                download_date,
-                now(),
-                sourcesystem_cd,
-                ''@'' project_id,' 
-                || upload_id ||' 
-            from '|| tempPidTableName || ' 
-            where process_status_flag = ''P'' '; 
+                   patient_map_id_source,
+                   patient_map_id_status,
+                   patient_num,
+                   update_date,
+                   download_date,
+                   now(),
+                   sourcesystem_cd,
+                   ''@'' project_id, 
+                   ' || upload_id ||' 
+            FROM   '|| tempPidTableName || ' 
+            WHERE  process_status_flag = ''P'' 
+            AND   (delete_date is NULL OR delete_date > now())
+            '; 
         ANALYZE patient_mapping;
     EXCEPTION
         WHEN OTHERS THEN

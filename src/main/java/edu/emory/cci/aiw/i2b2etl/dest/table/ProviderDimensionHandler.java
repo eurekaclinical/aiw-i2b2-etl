@@ -38,7 +38,7 @@ public class ProviderDimensionHandler extends RecordHandler<ProviderDimension> {
     public ProviderDimensionHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
                 "insert into " + TEMP_PROVIDER_TABLE + " (provider_id,provider_path,name_char,"
-                + "provider_blob,update_date,download_date,import_date,sourcesystem_cd,upload_id) values (?,?,?,?,?,?,?,?,?)");
+                + "provider_blob,update_date,download_date,import_date,sourcesystem_cd,upload_id,delete_date) values (?,?,?,?,?,?,?,?,?,?)");
     }
 
     @Override
@@ -53,6 +53,7 @@ public class ProviderDimensionHandler extends RecordHandler<ProviderDimension> {
         ps.setTimestamp(7, new java.sql.Timestamp(System.currentTimeMillis()));
         ps.setString(8, MetadataUtil.toSourceSystemCode(provider.getSourceSystem()));
         ps.setObject(9, null);
+        ps.setTimestamp(10,provider.getDeleted());
     }
 
 }
