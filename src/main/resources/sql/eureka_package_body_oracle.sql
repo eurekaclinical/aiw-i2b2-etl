@@ -725,7 +725,7 @@ AS
                 where temp.encounter_id_source = ''HIVE''
                     and temp.process_status_flag is null
                     and nvl(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= nvl(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-                delete where temp.delete_date is null and temp.delete_date<=sysdate';
+                delete where temp.delete_date is not null and temp.delete_date<=sysdate';
         -- insert new mapping records i.e flagged P -- jk: added project_id
         execute immediate '
             insert into encounter_mapping (
