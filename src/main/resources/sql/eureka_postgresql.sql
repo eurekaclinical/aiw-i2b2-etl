@@ -22,6 +22,16 @@ CREATE SCHEMA EUREKA;
 
 CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableName text, upload_id bigint)  RETURNS VOID AS $body$
     BEGIN
+
+        -- Delete existing record(s) in provider_dimension if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM provider_dimension 
+            WHERE   provider_path IN
+            (SELECT provider_path 
+             FROM   ' || tempProviderTableName || ' 
+             WHERE  delete_date <= now()  
+            )';
+
         -- Update existing record(s) in provider_dimension according to temp table
         EXECUTE '
             UPDATE provider_dimension SET provider_id = temp.provider_id,
@@ -35,17 +45,7 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
             FROM  ' || tempProviderTableName || ' temp 
             WHERE temp.provider_path = provider_dimension.provider_path 
             AND   coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(provider_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-            AND   (temp.delete_date is NULL OR temp.delete_date > now())
             ';
-
-        -- Delete existing record(s) in provider_dimension if it is marked as delete in temp table
-        EXECUTE '
-            DELETE FROM provider_dimension 
-            WHERE   provider_path IN
-            (SELECT provider_path 
-             FROM   ' || tempProviderTableName || ' 
-             WHERE  delete_date <= now()  
-            )';
 
         -- Insert new record(s) into provider_dimension from temp table     
         EXECUTE '
@@ -224,6 +224,16 @@ BEGIN
                 and coalesce(em.patient_ide_source,'''') = coalesce(tempTableName.patient_id_source,'''')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
                 and coalesce(em.patient_ide,'''') = coalesce(tempTableName.patient_id,'''') ';
 
+
+        -- Delete existing record(s) in visit_dimension if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM visit_dimension 
+            WHERE   encounter_num IN
+            (SELECT encounter_num 
+             FROM   ' || tempTableName || ' 
+             WHERE  delete_date <= now() 
+            )';
+
         -- Update existing record(s) in visit_dimension according to temp table                
         EXECUTE '
             UPDATE visit_dimension SET start_date = temp.start_date,
@@ -240,17 +250,7 @@ BEGIN
             FROM ' || tempTableName || ' temp 
             WHERE coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(visit_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
             AND temp.encounter_num = visit_dimension.encounter_num
-            AND (temp.delete_date is NULL OR temp.delete_date > now())
             '; 
-
-        -- Delete existing record(s) in visit_dimension if it is marked as delete in temp table
-        EXECUTE '
-            DELETE FROM visit_dimension 
-            WHERE   encounter_num IN
-            (SELECT encounter_num 
-             FROM   ' || tempTableName || ' 
-             WHERE  delete_date <= now() 
-            )';
 
         -- Insert new record(s) into visit_dimension from temp table   
         -- jk: added project_id='@' to WHERE clause... need to support projects...
@@ -341,6 +341,15 @@ BEGIN
                                     WHERE patient_mapping.patient_ide = '|| tempTableName ||'.patient_id
                                     AND patient_mapping.patient_ide_source = '|| tempTableName ||'.patient_id_source';
 
+        -- Delete existing record(s) in patient_dimension if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM patient_dimension 
+            WHERE   patient_num IN
+            (SELECT patient_num 
+             FROM   ' || tempTableName || ' 
+             WHERE  delete_date <= now()  
+            )';
+
         -- Update existing record(s) in patient_dimension according to temp table
         EXECUTE '
             UPDATE  patient_dimension SET vital_status_cd = temp.vital_status_cd, 
@@ -363,17 +372,7 @@ BEGIN
             FROM    ' || tempTableName || ' temp 
             WHERE   coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) >= coalesce(patient_dimension.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
             AND     temp.patient_num = patient_dimension.patient_num
-            AND     (temp.delete_date is NULL OR temp.delete_date > now())
             ';
-
-        -- Delete existing record(s) in patient_dimension if it is marked as delete in temp table
-        EXECUTE '
-            DELETE FROM patient_dimension 
-            WHERE   patient_num IN
-            (SELECT patient_num 
-             FROM   ' || tempTableName || ' 
-             WHERE  delete_date <= now()  
-            )';
 
         -- Insert new record(s) into patient_dimension from temp table   
         EXECUTE '
@@ -531,6 +530,15 @@ BEGIN
                 AND   (temp.delete_date is NULL OR temp.delete_date > now())
                 ';
         ELSE
+            -- Delete existing record(s) in observation_fact if it is marked as delete in temp table
+            EXECUTE '
+                DELETE FROM observation_fact 
+                WHERE   encounter_num IN
+                (SELECT encounter_num 
+                 FROM   ' || upload_temptable_name_c || ' 
+                 WHERE  delete_date <= now() 
+                )';
+
             -- Update existing record(s) in observation_fact according to temp table
             EXECUTE '
                 UPDATE observation_fact SET valtype_cd = temp.valtype_cd, 
@@ -557,16 +565,8 @@ BEGIN
                 AND temp.provider_id = observation_fact.provider_id 
                 AND temp.modifier_cd = observation_fact.modifier_cd 
                 AND temp.instance_num = observation_fact.instance_num
-                AND (temp.delete_date is NULL OR temp.delete_date > now())
                 ';
-            -- Delete existing record(s) in observation_fact if it is marked as delete in temp table
-            EXECUTE '
-                DELETE FROM observation_fact 
-                WHERE   encounter_num IN
-                (SELECT encounter_num 
-                 FROM   ' || upload_temptable_name_c || ' 
-                 WHERE  delete_date <= now() 
-                )';
+
             -- Insert new record(s) into observation_fact from temp table 
             EXECUTE '
                 INSERT INTO observation_fact (
@@ -794,6 +794,15 @@ BEGIN
         END LOOP;
         CLOSE distinctEidCur ;
         
+        -- Delete existing record(s) in encounter_mapping if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM encounter_mapping 
+            WHERE   encounter_num IN
+            (SELECT encounter_num 
+             FROM   ' || tempEidTableName || ' 
+             WHERE  delete_date <= now()
+            )';
+
         -- Do the mapping update if the update date is old
         EXECUTE '
             UPDATE encounter_mapping SET ENCOUNTER_NUM = cast(temp.encounter_id as bigint),
@@ -810,17 +819,7 @@ BEGIN
             AND    temp.encounter_id_source = ''HIVE'' 
             AND    temp.process_status_flag is null 
             AND    coalesce(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-            AND    (temp.delete_date is NULL OR temp.delete_date > now())
-            ';
-        
-        -- Delete existing record(s) in encounter_mapping if it is marked as delete in temp table
-        EXECUTE '
-            DELETE FROM encounter_mapping 
-            WHERE   encounter_num IN
-            (SELECT encounter_num 
-             FROM   ' || tempEidTableName || ' 
-             WHERE  delete_date <= now()
-            )';
+            ';        
 
         -- Insert new mapping records i.e flagged P -- jk: added project_id
         EXECUTE '
@@ -1004,6 +1003,15 @@ BEGIN
         END LOOP;
         CLOSE distinctPidCur ;
         
+        -- Delete existing record(s) in patient_mapping if it is marked as delete in temp table
+        EXECUTE '
+            DELETE FROM patient_mapping 
+            WHERE   patient_num IN
+            (SELECT patient_num 
+             FROM   ' || tempPidTableName || ' 
+             WHERE  delete_date <= now() 
+            )';
+
         -- Do the mapping update if the update date is old
         EXECUTE '
         	UPDATE  patient_mapping SET patient_num = cast(temp.patient_id as bigint),
@@ -1017,18 +1025,8 @@ BEGIN
         	WHERE   temp.patient_map_id = patient_mapping.patient_IDE 
                 AND     temp.patient_map_id_source = patient_mapping.patient_IDE_SOURCE
                 AND     temp.process_status_flag is null  
-                AND     coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) 
-                AND     (temp.delete_date is NULL OR temp.delete_date > now())      
+                AND     coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))      
           ';
-
-        -- Delete existing record(s) in patient_mapping if it is marked as delete in temp table
-        EXECUTE '
-            DELETE FROM patient_mapping 
-            WHERE   patient_num IN
-            (SELECT patient_num 
-             FROM   ' || tempPidTableName || ' 
-             WHERE  delete_date <= now() 
-            )';
 
         -- Insert new mapping records i.e flagged P - jk: added project id
         EXECUTE '
