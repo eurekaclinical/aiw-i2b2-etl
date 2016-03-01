@@ -43,7 +43,7 @@ import org.protempa.proposition.value.UnitFactory;
 import org.protempa.proposition.value.ValueType;
 
 /**
- * Test data source backend (based on RegistryVM).
+ * Test data source backend (based on RegistryVM) .
  * 
  * @author Michel Mansour
  */
