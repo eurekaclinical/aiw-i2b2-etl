@@ -88,7 +88,7 @@
 				</rollback>
 		</changeSet>
 		<changeSet author="arpost" id="EK_ICD10PCS-DDL-2">
-        <createIndex indexName="META_APPLIED_PATH_EK_ICD10PCS_IDX" tableName="EK_ICD10PCS" unique="false">
+        <createIndex indexName="META_APPLIED_PATH_EK_I10PC_IDX" tableName="EK_ICD10PCS" unique="false">
             <column name="M_APPLIED_PATH"/>
         </createIndex>
     </changeSet>
