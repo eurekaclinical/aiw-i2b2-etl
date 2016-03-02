@@ -25,6 +25,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 /**
+ * Parent class to all test classes that creates a protempa instance.
  *
  * @author Andrew Post
  */
