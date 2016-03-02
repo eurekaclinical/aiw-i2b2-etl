@@ -69,8 +69,8 @@
 					<column name="C_TABLE_CD" value="EK_ICD10CM"/>
 					<column name="C_TABLE_NAME" value="EK_ICD10CM"/>
 					<column name="C_PROTECTED_ACCESS" value="N"/>
-					<column name="C_HLEVEL" valueNumeric="1"/>
-					<column name="C_FULLNAME" value="\ICD10CM_2015AA\"/>
+					<column name="C_HLEVEL" valueNumeric="0"/>
+					<column name="C_FULLNAME" value="\ICD10CM\"/>
 					<column name="C_NAME" value="ICD10 Diagnosis Codes"/>
 					<column name="C_SYNONYM_CD" value="N"/>
 					<column name="C_VISUALATTRIBUTES" value="CA"/>
@@ -79,7 +79,7 @@
 					<column name="C_COLUMNNAME" value="concept_path"/>
 					<column name="C_COLUMNDATATYPE" value="T"/>
 					<column name="C_OPERATOR" value="LIKE"/>
-					<column name="C_DIMCODE" value="\ICD10CM_2015AA\"/>
+					<column name="C_DIMCODE" value="\ICD10CM\"/>
 					<column name="C_TOOLTIP" value="ICD10 Diagnosis Codes"/>
 					<column name="C_STATUS_CD" value="A"/>
 				</insert>
