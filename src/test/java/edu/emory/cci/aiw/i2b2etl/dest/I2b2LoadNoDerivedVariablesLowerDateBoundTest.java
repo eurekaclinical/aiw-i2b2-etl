@@ -36,9 +36,9 @@ import org.protempa.query.QueryBuildException;
 import org.protempa.query.QueryMode;
 
 /**
- * Integration tests for the i2b2 ETL. This assumes that there is an i2b2
- * instance somewhere to use for testing. Specify where it is in your
- * settings.xml file (future).
+ * Data validation tests for the i2b2 ETL. The test initiates Protempa to access the
+ * test data and execute a query before AIW ETL loads the processed data into an H2 database.
+ * The new loaded data is compared to the one expected using DbUnit.
  *
  * @author Andrew Post
  */
@@ -47,11 +47,7 @@ public class I2b2LoadNoDerivedVariablesLowerDateBoundTest extends AbstractI2b2De
     /**
      * Executes the i2b2 ETL load.
      *
-     * @throws ProtempaStartupException if Protempa could not be initialized.
-     * @throws IOException if there was a problem reading the Protempa
-     * configuration file or the i2b2 query results handler configuration file.
-     * @throws QueryBuildException if constructing the Protempa query failed.
-     * @throws QueryException if executing the Protempa query failed.
+     * @throws Exception
      */
     @BeforeClass
     public static void setUp() throws Exception {
