@@ -50,20 +50,17 @@ import org.protempa.ProtempaStartupException;
 
 
 /**
- * Integration tests for the i2b2 ETL (future).
+ * Data validation tests for the i2b2 ETL. The test initiates Protempa to access the
+ * test data and execute a query before AIW ETL loads the processed data into an H2 database.
+ * The new loaded data is compared to the one expected using DbUnit.
  *
  * @author Andrew Post
  */
 public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
-
     /**
      * Executes the i2b2 ETL load.
      *
-     * @throws ProtempaStartupException if Protempa could not be initialized.
-     * @throws IOException if there was a problem reading the Protempa
-     * configuration file or the i2b2 query results handler configuration file.
-     * @throws QueryBuildException if constructing the Protempa query failed.
-     * @throws QueryException if executing the Protempa query failed.
+     * @throws Exception
      */
     @BeforeClass
     public static void setUp() throws Exception {
@@ -168,7 +165,7 @@ public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
 
         q.setPropositionDefinitions(
                 new PropositionDefinition[]{ed, hd, ld, ldWrapper, ld2, clad, clad2, ld2, sd});
-        q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId(), "ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
+        q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId(), "ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails", "Provider"});
         q.setName("i2b2 ETL Test Query");
 
         getProtempaFactory().execute(q);

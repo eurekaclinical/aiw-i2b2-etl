@@ -31,6 +31,8 @@ import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.junit.Test;
 
 /**
+ * Parent class that contains some of the common methods used in other test classes.
+ * Breaks down the test to test each table's data.
  *
  * @author Andrew Post
  */
