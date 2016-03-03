@@ -659,7 +659,7 @@ BEGIN
             maxEncounterNum := 0;
         end if;
         
-        sql_stmt := 'SELECT distinct encounter_id, encounter_id_source, patient_map_id, patient_map_id_source from ' || tempEidTableName'
+        sql_stmt := 'SELECT distinct encounter_id, encounter_id_source, patient_map_id, patient_map_id_source from ' || tempEidTableName  ||'
                      WHERE delete_date IS NULL or delete_date > now()
                     ';
         OPEN distinctEidCur FOR EXECUTE sql_stmt ;
@@ -873,7 +873,7 @@ DECLARE
         disPatientId varchar(100); 
         disPatientIdSource varchar(100);
 BEGIN
-        sql_stmt := 'SELECT distinct patient_id,patient_id_source from ' || tempPidTableName ||'
+        sql_stmt := 'SELECT distinct patient_id,patient_id_source from ' || tempPidTableName || '
                      WHERE delete_date IS NULL or delete_date > now()
                     ';
         
