@@ -80,7 +80,7 @@
 					<column name="C_COLUMNDATATYPE" value="T"/>
 					<column name="C_OPERATOR" value="LIKE"/>
 					<column name="C_DIMCODE" value="\ICD10PCS\"/>
-					<column name="C_TOOLTIP" value="ICD10 Diagnosis Codes"/>
+					<column name="C_TOOLTIP" value="ICD10 Procedure Codes"/>
 					<column name="C_STATUS_CD" value="A"/>
 				</insert>
 				<rollback>
