@@ -71,7 +71,7 @@
 					<column name="C_PROTECTED_ACCESS" value="N"/>
 					<column name="C_HLEVEL" valueNumeric="0"/>
 					<column name="C_FULLNAME" value="\ICD10PCS\"/>
-					<column name="C_NAME" value="ICD10 Diagnosis Codes"/>
+					<column name="C_NAME" value="ICD10 Procedure Codes"/>
 					<column name="C_SYNONYM_CD" value="N"/>
 					<column name="C_VISUALATTRIBUTES" value="CA"/>
 					<column name="C_FACTTABLECOLUMN" value="concept_cd"/>
