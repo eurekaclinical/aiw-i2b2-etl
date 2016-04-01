@@ -1,0 +1,1644 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+    <changeSet author="akalsan (generated)" id="EK_MODIFIER_INTERP-1">
+        <preConditions onFail="CONTINUE">
+            <tableExists tableName="EK_MODIFIER_INTERP"/>
+        </preConditions>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert><insert tableName="EK_MODIFIER_INTERP">
+        <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+        <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+        <column name="PROPERTYNAME" value="DXSOURCE"/>
+        <column name="DISPLAYNAME" value="Diagnosis Source"/>
+    </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+        <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+        <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+        <column name="PROPERTYNAME" value="DXSOURCE"/>
+        <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:F"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:A"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:D"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:I"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Source"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:D50-D89"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:K00-K95"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Q00-Q99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:N00-N99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:S00-T88"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H00-H59"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:F01-F99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:E00-E89"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:M00-M99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:G00-G99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:H60-H95"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:P00-P96"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:J00-J99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:I00-I99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:O00-O9A"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:Z00-Z99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:R00-R99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:L00-L99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:A00-B99"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:NI"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:P"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+        <insert tableName="EK_MODIFIER_INTERP">
+            <column name="DECLARING_CONCEPT" value="ICD10:C00-D49"/>
+            <column name="C_BASECODE" value="EK|DIAG_PRIORTY:S"/>
+            <column name="PROPERTYNAME" value="DXSOURCE"/>
+            <column name="DISPLAYNAME" value="Diagnosis Priority"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
