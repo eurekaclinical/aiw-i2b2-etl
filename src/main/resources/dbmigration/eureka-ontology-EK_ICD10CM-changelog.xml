@@ -14,4 +14,5 @@
     <include file="eureka-ontology-EK_ICD10CM-changelog.3.xml" relativeToChangelogFile="true"/>
     <include file="eureka-ontology-EK_ICD10CM-changelog.4.xml" relativeToChangelogFile="true"/>
     <include file="eureka-ontology-EK_ICD10CM-changelog.5.xml" relativeToChangelogFile="true"/>
+    <include file="eureka-ontology-EK_ICD10CM-changelog.6.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
