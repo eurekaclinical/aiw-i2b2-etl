@@ -11,14 +11,14 @@
     <inceptionYear>2012</inceptionYear>
     <parent>
         <groupId>org.eurekaclinical</groupId>
-        <artifactId>eurekaclinical-parent</artifactId>
-        <version>1-Alpha-13</version>
+        <artifactId>eurekaclinical-parent-standard-deps</artifactId>
+        <version>1-Alpha-1</version>
     </parent>
     
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-        <protempa.version>3.0-Alpha-11</protempa.version>
+        <protempa.version>3.0-Alpha-12</protempa.version>
     </properties>
     
     <scm>
