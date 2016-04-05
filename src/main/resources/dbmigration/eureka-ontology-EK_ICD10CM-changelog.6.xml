@@ -5886,7 +5886,7 @@
     </changeSet>
     <changeSet author="akalsan (generated)" id="EK_MODIFIER_INTERP-1">
     <insert tableName="EK_MODIFIER_INTERP">
-        <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>cd
+        <column name="DECLARING_CONCEPT" value="ICD10:V00-Y99"/>
         <column name="C_BASECODE" value="EK|DIAG_SOURCE:NI"/>
         <column name="PROPERTYNAME" value="DXSOURCE"/>
         <column name="DISPLAYNAME" value="Diagnosis Source"/>
