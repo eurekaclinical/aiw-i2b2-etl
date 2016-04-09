@@ -146,7 +146,7 @@ limitations under the License.
             <column name="C_COLUMNNAME" value="concept_path"/>
             <column name="C_COLUMNDATATYPE" value="T"/>
             <column name="C_OPERATOR" value="LIKE"/>
-            <column name="C_DIMCODE" value="\EK\Phenotypes\"/>
+            <column name="C_DIMCODE" value="\EK\AIW|Phenotypes\"/>
             <column name="C_TOOLTIP" value="Phenotypes"/>
             <column name="C_STATUS_CD" value="A"/>
         </insert>
