@@ -112,6 +112,7 @@ public final class PropositionFactHandler extends FactHandler {
             props = this.linkTraverser.traverseLinks(this.links, encounterProp,
                     forwardDerivations,
                     backwardDerivations, references, this.cache);
+            Set<Proposition> derivedPropCache = new HashSet<>();
             for (Proposition prop : props) {
                 String propertyName = getPropertyName();
                 Value propertyVal = propertyName != null
@@ -123,8 +124,10 @@ public final class PropositionFactHandler extends FactHandler {
                             backwardDerivations, references,
                             this.cache);
                 for (Proposition derivedProp : derivedProps) {
-                    PropDefConceptId derivedConceptId = PropDefConceptId.getInstance(derivedProp.getId(), null, null, getMetadata());
-                    doInsert(derivedConceptId, derivedProp, encounterProp, patient, visit, provider);
+                    if (derivedPropCache.add(derivedProp)) {
+                        PropDefConceptId derivedConceptId = PropDefConceptId.getInstance(derivedProp.getId(), null, null, getMetadata());
+                        doInsert(derivedConceptId, derivedProp, encounterProp, patient, visit, provider);
+                    }
                 }
             }
         } catch (UnknownPropositionDefinitionException ex) {
