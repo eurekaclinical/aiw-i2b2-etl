@@ -44,34 +44,31 @@ class PhenotypesBuilder extends PropositionConceptTreeBuilder implements Subtree
 
     @Override
     public void build(Concept parent) throws OntologyBuildException {
-        if (getMetadata().getPhenotypeDefinitions().length > 0) {
-            Metadata metadata = getMetadata();
-            ConceptId conceptId
-                    = SimpleConceptId.getInstance("AIW|Phenotypes", metadata);
-            concept = metadata.getFromIdCache(conceptId);
-            if (concept == null) {
-                try {
-                    concept
-                            = new Concept(conceptId, null, metadata);
-                } catch (InvalidConceptCodeException ex) {
-                    throw new OntologyBuildException(ex);
-                }
-                concept.setSourceSystemCode(this.sourceSystemCode);
-                concept.setDisplayName("Phenotypes");
-                concept.setDataType(DataType.TEXT);
-                concept.setAlreadyLoaded(false);
-                metadata.addToIdCache(concept);
-                if (parent != null) {
-                    parent.add(concept);
-                }
+        Metadata metadata = getMetadata();
+        ConceptId conceptId
+                = SimpleConceptId.getInstance("AIW|Phenotypes", metadata);
+        concept = metadata.getFromIdCache(conceptId);
+        if (concept == null) {
+            try {
+                concept = new Concept(conceptId, null, metadata);
+            } catch (InvalidConceptCodeException ex) {
+                throw new OntologyBuildException(ex);
             }
-            super.build(concept);
+            concept.setSourceSystemCode(this.sourceSystemCode);
+            concept.setDisplayName("Phenotypes");
+            concept.setDataType(DataType.TEXT);
+            concept.setAlreadyLoaded(false);
+            metadata.addToIdCache(concept);
+            if (parent != null) {
+                parent.add(concept);
+            }
         }
+        super.build(concept);
     }
 
     @Override
     public Concept[] getRoots() {
-       if (this.concept != null) {
+        if (this.concept != null) {
             return new Concept[]{this.concept};
         } else {
             return EMPTY_CONCEPT_ARRAY;
