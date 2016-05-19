@@ -2089,7 +2089,7 @@ limitations under the License.
             <column name="C_FULLNAME" value="\EK\i2b2INTERNAL|Demographics\i2b2INTERNAL|Demographics|Age\"/>
             <column name="C_NAME" value="Age"/>
             <column name="C_SYNONYM_CD" value="N"/>
-            <column name="C_VISUALATTRIBUTES" value="CAE"/>
+            <column name="C_VISUALATTRIBUTES" value="FAE"/>
             <column name="C_BASECODE" value="i2b2INTERNAL|Demographics|Age"/>
             <column name="C_METADATAXML"/>
             <column name="C_FACTTABLECOLUMN" value="concept_cd"/>
