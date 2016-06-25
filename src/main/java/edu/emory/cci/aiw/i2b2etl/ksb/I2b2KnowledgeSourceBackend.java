@@ -1901,7 +1901,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                  * Getting temp space full errors with one query, so split it into one query per metadata table.
                  */
                 for (String table : this.querySupport.getTableAccessReader().read(connection)) {
-                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, READ_ALL_PROPERTIES_CONSTRUCTOR, table)) {
+                    DatabaseProduct databaseProduct = this.querySupport.getDatabaseProduct();
+                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, databaseProduct == DatabaseProduct.ORACLE ? READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL : READ_ALL_PROPERTIES_CONSTRUCTOR, table)) {
                         partials.putAll(queryExecutor.execute(ALL_PROPERTIES_RSR));
                     }
                 }
@@ -1922,75 +1923,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 }
             }
         }
-
-//        try (Connection connection = this.querySupport.getConnection()) {
-//            try {
-//                final Map<String, List<PropertyDefinitionPartial>> partialMap = new HashMap<>();
-//                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(connection, false)) {
-//                    for (PropertyDefinitionPartial partial : partials) {
-//                        childTempTableHandler.insert(partial.getFullName());
-//                        Collections.putList(partialMap, partial.getFullName(), partial);
-//                    }
-//                }
-//                final Map<String, Map<String, ModInterp>> modInterp = readModInterp(connection);
-//                try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, READ_APPLICABLE_CONCEPTS_CONSTRUCTOR)) {
-//                    queryExecutor.prepare();
-//                    queryExecutor.execute(new ResultSetReader<Boolean>() {
-//
-//                        @Override
-//                        public Boolean read(ResultSet rs) throws KnowledgeSourceReadException {
-//                            Map<String, List<PropertyDefinition>> propDefMap = new HashMap<>();
-//                            try {
-//                                Set<List<String>> propertyDefUids = new HashSet<>();
-//                                while (rs.next()) {
-//                                    for (PropertyDefinitionPartial pdp : partialMap.get(rs.getString(1))) {
-//                                        String propSymbol = pdp.getSymbol();
-//                                        String symbol = rs.getString(2);
-//                                        String propDisplayName = null;
-//                                        Map<String, ModInterp> get = modInterp.get(pdp.getDeclaringPropId());
-//                                        if (get != null) {
-//                                            ModInterp get1 = get.get(propSymbol);
-//                                            if (get1 != null && get1.getPropertyName() != null) {
-//                                                propSymbol = get1.getPropertyName();
-//                                            }
-//                                            if (get1 != null && get1.getDisplayName() != null) {
-//                                                propDisplayName = get1.getDisplayName();
-//                                            }
-//                                        }
-//                                        if (get != null || pdp.getHasClob()) {
-//                                            List<String> l = new ArrayList<>(2);
-//                                            l.add(symbol);
-//                                            l.add(propSymbol);
-//                                            if (propertyDefUids.add(l)) {
-//                                                Collections.putList(propDefMap, symbol, pdp.getPropertyDefinition(symbol, propSymbol, propDisplayName));
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            } catch (SQLException ex) {
-//                                throw new KnowledgeSourceReadException(ex);
-//                            }
-//                            for (Map.Entry<String, List<PropertyDefinition>> me : propDefMap.entrySet()) {
-//                                PropositionDefinition pd = resultMap.get(me.getKey());
-//                                if (pd != null) {
-//                                    List<PropertyDefinition> value = me.getValue();
-//                                    if (value != null) {
-//                                        ((AbstractPropositionDefinition) pd).setPropertyDefinitions(value.toArray(new PropertyDefinition[value.size()]));
-//                                    }
-//                                }
-//                            }
-//                            return Boolean.TRUE;
-//                        }
-//                    });
-//                }
-//                connection.commit();
-//            } catch (SQLException ex) {
-//                connection.rollback();
-//                throw ex;
-//            }
-//        } catch (InvalidConnectionSpecArguments | SQLException ex) {
-//            throw new KnowledgeSourceReadException(ex);
-//        }
+        
         return result;
     }
 
@@ -2006,33 +1939,20 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(table);
             sql.append(" A2 ON (A2.C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND A2.C_SYNONYM_CD ='N' AND A2.M_APPLIED_PATH ='@')");
         }
-
+        
     };
-
-    private final QueryConstructor READ_ALL_PROPERTIES_CLOB_CONSTRUCTOR = new QueryConstructor() {
+    
+    private final QueryConstructor READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.C_FULLNAME, A1.").append(querySupport.getEurekaIdColumn()).append(", A3.").append(querySupport.getEurekaIdColumn()).append(", A2.").append(querySupport.getEurekaIdColumn()).append(", A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.").append(querySupport.getEurekaIdColumn()).append(", A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
+            sql.append(table);
+            sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID) AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@' JOIN ");
             sql.append(table);
-            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH AND A1.C_SYNONYM_CD ='N' AND A1.M_APPLIED_PATH<>'@' AND A1.C_BASECODE IS NOT NULL) JOIN ");
-            sql.append(table);
-            sql.append(" A2 ON (A2.C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND A2.C_SYNONYM_CD ='N' AND A2.M_APPLIED_PATH ='@') AND A2.").append(querySupport.getEurekaIdColumn()).append("=A3.").append(querySupport.getEurekaIdColumn()).append(")");
-        }
-
-    };
-
-    private final QueryConstructor READ_APPLICABLE_CONCEPTS_CONSTRUCTOR = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT DISTINCT A2.C_FULLNAME, A1.").append(querySupport.getEurekaIdColumn()).append(" FROM ");
-            sql.append(table);
-            sql.append(" A1 JOIN ");
-            sql.append(table);
-            sql.append(" A2 ON (A1.C_FULLNAME LIKE A2.M_APPLIED_PATH) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A2.C_FULLNAME=A3.UNIQUE_ID) WHERE A1.C_SYNONYM_CD='N' AND A1.M_APPLIED_PATH='@'");
+            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH AND A1.C_SYNONYM_CD ='N' AND A1.M_APPLIED_PATH<>'@' AND A1.C_BASECODE IS NOT NULL)");
         }
 
     };
