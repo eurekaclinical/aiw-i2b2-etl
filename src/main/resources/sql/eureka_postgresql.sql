@@ -870,7 +870,8 @@ DECLARE
         maxPatientNum bigint;
         distinctPidCur REFCURSOR;
         sql_stmt  varchar(400);
-        disPatientId varchar(100); 
+        disPatientId varchar(100);
+        disPatientIdAsNum bigint;
         disPatientIdSource varchar(100);
 BEGIN
         sql_stmt := 'SELECT distinct patient_id,patient_id_source from ' || tempPidTableName || '
@@ -889,10 +890,11 @@ BEGIN
             IF NOT FOUND THEN EXIT; END IF; -- apply on distinctPidCur
             if  disPatientIdSource = 'HIVE'  THEN 
                 begin
+                    disPatientIdAsNum := cast(disPatientId as bigint);
                     --check if hive number exist, if so assign that number to reset of map_id's within that pid
                     select patient_num into existingPatientNum 
                     from patient_mapping 
-                    where patient_num = disPatientId 
+                    where patient_num = disPatientIdAsNum
                         and patient_ide_source = 'HIVE';
                  EXCEPTION  
                     when NO_DATA_FOUND THEN
@@ -914,8 +916,8 @@ BEGIN
                     using disPatientId;
                 else 
                     -- generate new patient_num i.e. take max(patient_num) + 1 
-                    if maxPatientNum < disPatientId then 
-                        maxPatientNum := disPatientId;
+                    if maxPatientNum < disPatientIdAsNum then 
+                        maxPatientNum := disPatientIdAsNum;
                     end if ;
                     EXECUTE ' 
                         update ' || tempPidTableName ||' 
