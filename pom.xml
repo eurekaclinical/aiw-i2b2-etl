@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.eurekaclinical</groupId>
         <artifactId>eurekaclinical-parent-standard-deps</artifactId>
-        <version>1-Alpha-3</version>
+        <version>1-Alpha-4</version>
     </parent>
     
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
@@ -32,14 +32,6 @@
         <system>GitHub</system>
         <url>https://github.com/eurekaclinical/aiw-i2b2-etl/issues</url>
     </issueManagement>
-    
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
     
     <dependencies>
         <dependency>
@@ -169,6 +161,15 @@
                         <xsd>xml</xsd>
                     </extraExtensions>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>first</id>
+                        <goals>
+                            <goal>update-file-header</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jasig.maven</groupId>
