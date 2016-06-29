@@ -19,10 +19,9 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import static edu.emory.cci.aiw.i2b2etl.AbstractTest.getConfigFactory;
+import static edu.emory.cci.aiw.i2b2etl.AbstractDataTest.getConfigFactory;
 import edu.emory.cci.aiw.i2b2etl.I2b2DestinationFactory;
 import org.apache.commons.lang3.ArrayUtils;
-import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
 import org.protempa.Protempa;
 import org.protempa.SourceFactory;
@@ -31,6 +30,7 @@ import org.protempa.dest.QueryResultsHandler;
 import org.protempa.query.DefaultQueryBuilder;
 import org.protempa.query.Query;
 import org.protempa.query.QueryBuilder;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  *

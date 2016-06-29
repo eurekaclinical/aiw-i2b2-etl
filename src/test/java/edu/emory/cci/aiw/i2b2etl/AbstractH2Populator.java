@@ -19,7 +19,6 @@ package edu.emory.cci.aiw.i2b2etl;
  * limitations under the License.
  * #L%
  */
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -41,14 +40,14 @@ import liquibase.resource.FileSystemResourceAccessor;
  * @author Andrew Post
  */
 public abstract class AbstractH2Populator {
-    protected File populate(File dbFile, String args) throws IOException, SQLException {
+
+    protected void populate(File dbFile, String args) throws IOException, SQLException {
         try (Connection connection = DriverManager.getConnection("jdbc:h2:" + dbFile.getAbsolutePath() + ";LOG=0;CACHE_SIZE=262400;LOCK_MODE=0;UNDO_LOG=0" + (args != null ? ";" + args : ""));
                 Statement stmt = connection.createStatement()) {
             stmt.execute("SHUTDOWN DEFRAG");
         }
-        return dbFile;
     }
-    
+
     protected void outputSqlFromLiquibaseChangeLog(File dbFile, String changeLogResource, Writer writer) throws SQLException, IOException {
         try (Connection connection = DriverManager.getConnection("jdbc:h2:" + dbFile.getAbsolutePath())) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
@@ -67,7 +66,7 @@ public abstract class AbstractH2Populator {
             throw new IOException(ex);
         }
     }
-    
+
     protected void updateLiquibaseChangeLog(File dbFile, String changeLog) throws SQLException, IOException {
         try (Connection connection = DriverManager.getConnection("jdbc:h2:" + dbFile.getAbsolutePath())) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));

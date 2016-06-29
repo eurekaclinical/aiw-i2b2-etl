@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.test.ExpectedSetOfStringsReader;
-import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 
@@ -37,31 +36,17 @@ import org.junit.BeforeClass;
  */
 public abstract class AbstractTest {
 
-    private static ConfigurationFactory configFactory;
-
     private static I2b2DestinationFactory i2b2DestFactory;
 
     private final ExpectedSetOfStringsReader expectedSetOfStringsReader;
 
-    public AbstractTest() {
+    protected AbstractTest() {
         this.expectedSetOfStringsReader = new ExpectedSetOfStringsReader();
     }
-
+    
     @BeforeClass
     public static void setUpClsAbstractTest() throws Exception {
-        configFactory = new ConfigurationFactory();
         i2b2DestFactory = new I2b2DestinationFactory();
-    }
-
-    @AfterClass
-    public static void tearDownClsCloseConfigFactory() throws Exception {
-        if (configFactory != null) {
-            configFactory.close();
-        }
-    }
-
-    public static ConfigurationFactory getConfigFactory() {
-        return configFactory;
     }
 
     public static I2b2DestinationFactory getI2b2DestFactory() {

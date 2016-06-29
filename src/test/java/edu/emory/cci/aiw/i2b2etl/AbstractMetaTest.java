@@ -1,4 +1,4 @@
-package edu.emory.cci.aiw.i2b2etl.dest;
+package edu.emory.cci.aiw.i2b2etl;
 
 /*
  * #%L
@@ -19,34 +19,37 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  * limitations under the License.
  * #L%
  */
-import edu.emory.cci.aiw.i2b2etl.AbstractDataTest;
-import edu.emory.cci.aiw.i2b2etl.ProtempaFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 /**
- * Parent class to all test classes that creates a protempa instance.
  *
  * @author Andrew Post
  */
-public abstract class AbstractI2b2DestTest extends AbstractDataTest {
+public abstract class AbstractMetaTest extends AbstractTest {
 
-    private static ProtempaFactory protempaFactory;
+    private static ConfigurationFactory configFactory;
+
+    protected AbstractMetaTest() {
+    }
 
     @BeforeClass
-    public static void setUpClsCreateProtempaFactory() throws Exception {
-        protempaFactory = new ProtempaFactory(getConfigFactory());
+    public static void setUpClsAbstractDataTest() throws Exception {
+        configFactory = new ConfigurationFactory.Builder()
+                .populateMetaSchema(true)
+                .populateDataSchema(false)
+                .build();
     }
 
     @AfterClass
-    public static void tearDownClsCloseProtempaFactory() throws Exception {
-        if (protempaFactory != null) {
-            protempaFactory.close();
+    public static void tearDownClsCloseConfigFactory() throws Exception {
+        if (configFactory != null) {
+            configFactory.close();
         }
     }
 
-    public static ProtempaFactory getProtempaFactory() {
-        return protempaFactory;
+    public static ConfigurationFactory getConfigFactory() {
+        return configFactory;
     }
 
 }

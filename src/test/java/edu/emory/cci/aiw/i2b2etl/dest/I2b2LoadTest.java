@@ -22,7 +22,6 @@ package edu.emory.cci.aiw.i2b2etl.dest;
 import static edu.emory.cci.aiw.i2b2etl.dest.AbstractI2b2DestTest.getProtempaFactory;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 
 import org.junit.BeforeClass;
 
@@ -44,9 +43,6 @@ import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.ValueComparator;
 import org.protempa.query.DefaultQueryBuilder;
-import org.protempa.query.QueryBuildException;
-import org.protempa.QueryException;
-import org.protempa.ProtempaStartupException;
 
 
 /**

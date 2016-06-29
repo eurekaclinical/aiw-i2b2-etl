@@ -27,10 +27,11 @@ import java.sql.SQLException;
  *
  * @author Andrew Post
  */
-public class I2b2DataSchemaPopulator extends AbstractH2Populator {
+public final class I2b2DataSchemaPopulator extends AbstractH2Populator {
 
     public File populate() throws IOException, SQLException {
-        File dbFile = populate(File.createTempFile("i2b2-data", ".db"), "INIT=RUNSCRIPT FROM 'src/main/resources/sql/i2b2_data_tables_1_7_h2.sql'\\;RUNSCRIPT FROM 'src/main/resources/sql/mock_stored_procedures_h2.sql'");
+        File dbFile = File.createTempFile("i2b2-data", ".db");
+        populate(dbFile, "INIT=RUNSCRIPT FROM 'src/main/resources/sql/i2b2_data_tables_1_7_h2.sql'\\;RUNSCRIPT FROM 'src/main/resources/sql/mock_stored_procedures_h2.sql'");
         updateLiquibaseChangeLog(dbFile, "src/main/resources/dbmigration/i2b2-data-schema-changelog.xml");
         return dbFile;
     }

@@ -19,7 +19,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
-import edu.emory.cci.aiw.i2b2etl.AbstractTest;
+import edu.emory.cci.aiw.i2b2etl.AbstractMetaTest;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,7 +44,7 @@ import org.protempa.valueset.ValueSet;
  *
  * @author Andrew Post
  */
-public abstract class AbstractKSBTest extends AbstractTest {
+public abstract class AbstractKSBTest extends AbstractMetaTest {
 
     private static I2b2KnowledgeSourceBackend ksb;
 
