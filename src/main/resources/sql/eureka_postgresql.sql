@@ -613,7 +613,7 @@ BEGIN
                     temp2.download_date, 
                     temp2.import_date, 
                     temp2.sourcesystem_cd, 
-                    temp2.upload_id) 
+                    temp2.upload_id
                 FROM ' || upload_temptable_name_c || ' temp2 
                 WHERE (temp2.patient_num IS NOT NULL 
                 AND temp2.patient_num::text <> '''') 
@@ -1026,6 +1026,7 @@ BEGIN
         	FROM    ' || tempPidTableName ||' temp 
         	WHERE   temp.patient_map_id = patient_mapping.patient_IDE 
                 AND     temp.patient_map_id_source = patient_mapping.patient_IDE_SOURCE
+                AND     temp.patient_id_source = ''HIVE''
                 AND     temp.process_status_flag is null  
                 AND     coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))      
           ';
