@@ -22,7 +22,6 @@ package edu.emory.cci.aiw.i2b2etl.dest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.sql.SQLException;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.dbunit.DatabaseUnitException;
@@ -53,10 +52,7 @@ public abstract class AbstractI2b2DestMetadataLoadTest extends AbstractI2b2DestD
     protected static void dumpTruth(String prefix) throws IOException, InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
         File file = File.createTempFile(prefix, ".xml");
         try (FileOutputStream out = new FileOutputStream(file)) {
-            //getProtempaFactory().exportI2b2MetaSchema(out);
-            try (OutputStreamWriter w = new OutputStreamWriter(out)) {
-                getProtempaFactory().exportI2b2SchemaDtdForMetaSchema(w);
-            }
+            getProtempaFactory().exportI2b2MetaSchema(out);
             System.out.println("Dumped i2b2 meta schema to " + file.getAbsolutePath());
         }
     }
