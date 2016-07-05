@@ -42,7 +42,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.tree.TreeNode;
 
@@ -60,38 +59,40 @@ import org.protempa.proposition.value.Value;
 /**
  * Controls the etl process for extracting data from files and a
  * knowledgeSource(s) for transform and load into an i2b2 instance. It is
- * single-threaded and should be called only once per process.
- * <p/>
- * a data file has a corresponding edu.emory.cci.registry.i2b2datareader handler
+ * single-threaded and should be called only once per process. The 
+ * {@link #build() } method <em>must</em> be called after constructing an
+ * instance of this method before using any other methods.
+ * 
+ * A data file has a corresponding edu.emory.cci.registry.i2b2datareader handler
  * class. the meta information about the data files also have handlers in
  * edu.emory.cci.registry.i2b2metareader.
- * <p/>
- * currently, meta information is found in both the knowledgeSource AND in the
+ * 
+ * Currently, meta information is found in both the knowledgeSource AND in the
  * data files. the data is found in the data files created by PROTEMPA and a
  * file created by an SQL that fetches demographics data.
- * <p/>
- * there is a conf.xml file that declares how some of this process works. the
+ * 
+ * There is a conf.xml file that declares how some of this process works. the
  * database & filesystem nodes point to database and file resources. files, once
  * declared, can be grouped into sets of files. the concept dimensions used in
  * i2b2 are declared in the meta node. each branch under the meta node is
  * created from data from the knowledgeSource, file(s), or de novo (hard-coded
  * in a java class).
- * <p/>
- * the metadatatree node declares how to assemble branches into the final
+ * 
+ * The metadatatree node declares how to assemble branches into the final
  * product for i2b2 (the metadata schema).
- * <p/>
- * lastly, the observation node declares what to process into observation_fact
+ * 
+ * Lastly, the observation node declares what to process into observation_fact
  * entities in i2b2. this, along with the implicit Patient, Provider, Visit &
  * Concept dimensions are laoded into the data schema.
- * <p/>
- * the 'resources' folder in this project contains 'conf.xml' and 'demmeta.zip'.
+ * 
+ * The 'resources' folder in this project contains 'conf.xml' and 'demmeta.zip'.
  * the demmeta file needs pointing to from within the conf.xml file; it holds
  * information necessary to build out the demographics portion of the ontology
  * tree.
- * <p/>
+ * 
  * the method doETL() orchestrates the entire process. the steps are commented
  * within that method.
- * <p/>
+ * 
  * as little information as is possible is kept in memory so that the
  * observations get streamed from flat files, matched with in-memory data, and
  * batch-loaded into the database.
