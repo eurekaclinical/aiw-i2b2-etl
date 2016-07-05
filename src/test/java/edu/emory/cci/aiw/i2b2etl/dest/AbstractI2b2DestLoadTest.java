@@ -20,8 +20,6 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.ConfigurationFactory;
-import static edu.emory.cci.aiw.i2b2etl.dest.AbstractI2b2DestDataAndMetadataTest.getProtempaFactory;
 import static edu.emory.cci.aiw.i2b2etl.dest.AbstractI2b2DestTest.getProtempaFactory;
 import java.io.File;
 import java.io.FileOutputStream;
