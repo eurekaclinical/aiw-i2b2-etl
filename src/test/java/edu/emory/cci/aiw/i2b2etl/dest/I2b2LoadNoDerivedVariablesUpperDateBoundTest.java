@@ -19,20 +19,14 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.BeforeClass;
-import org.protempa.QueryException;
-import org.protempa.ProtempaStartupException;
 import org.protempa.backend.dsb.filter.DateTimeFilter;
 import org.protempa.proposition.interval.Interval.Side;
 import org.protempa.proposition.value.AbsoluteTimeGranularity;
 import org.protempa.query.DefaultQueryBuilder;
-import org.protempa.query.QueryBuildException;
 import org.protempa.query.QueryMode;
 
 /**
@@ -62,11 +56,7 @@ public class I2b2LoadNoDerivedVariablesUpperDateBoundTest extends AbstractI2b2De
         q.setQueryMode(QueryMode.REPLACE);
         getProtempaFactory().execute(q);
         
-        File file = File.createTempFile("i2b2LoadNoDerivedVariablesUpperDateBoundTest", ".xml");
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            getProtempaFactory().exportI2b2DataSchema(out);
-            System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
-        }
+        dumpTruth("i2b2LoadNoDerivedVariablesUpperDateBoundTest");
         
         setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesUpperDateBoundTestData.xml");
     }

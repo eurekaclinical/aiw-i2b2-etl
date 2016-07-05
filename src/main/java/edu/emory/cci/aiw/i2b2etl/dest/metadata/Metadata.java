@@ -204,73 +204,9 @@ public final class Metadata {
         setI2B2PathsToConcepts();
         assert !this.allRoots.contains(null) : "Null root concepts! " + this.allRoots;
     }
-
-    private static final QueryConstructor ALL_CONCEPTS_QUERY = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
-            sql.append(table);
-        }
-    };
-
-    private void setI2B2PathsToConcepts() throws OntologyBuildException {
-        Map<String, List<String>> result;
-        if (this.metaConnectionSpec != null) {
-            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, new TableAccessReader(this.settings.getMetaTableName()))) {
-                result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
-
-                    @Override
-                    public Map<String, List<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
-                        Map<String, List<String>> result = new HashMap<>();
-                        if (rs != null) {
-                            try {
-                                while (rs.next()) {
-                                    Collections.putList(result, rs.getString(1), rs.getString(2));
-                                }
-                            } catch (SQLException ex) {
-                                throw new KnowledgeSourceReadException(ex);
-                            }
-                        }
-                        return result;
-                    }
-                });
-            } catch (KnowledgeSourceReadException | SQLException ex) {
-                throw new OntologyBuildException(ex);
-            }
-        } else {
-            result = new HashMap<>();
-        }
-        for (Concept c : getAllRoots()) {
-            Enumeration<Concept> emu = c.preorderEnumeration();
-            boolean isInPhenotypes = false;
-            while (emu.hasMoreElements()) {
-                Concept concept = emu.nextElement();
-                TreeNode parent = concept.getParent();
-                if (parent != null && parent.equals(c)) {
-                    isInPhenotypes = false;
-                }
-                if (concept.getSymbol().equals("AIW|Phenotypes")) {
-                    isInPhenotypes = true;
-                }
-                Concept conceptFromCache = getFromIdCache(concept.getId());
-                if (conceptFromCache != null && (isInPhenotypes || !result.containsKey(conceptFromCache.getSymbol()))) {
-                    conceptFromCache.addHierarchyPath(concept.getFullName());
-                }
-                if (conceptFromCache != null) {
-                    List<String> get = result.get(concept.getSymbol());
-                    if (get != null) {
-                        for (String hp : get) {
-                            conceptFromCache.addHierarchyPath(hp);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private static void throwOntologyBuildException(Throwable ex) throws OntologyBuildException {
-        throw new OntologyBuildException("Error building ontology", ex);
+    
+    public ConnectionSpec getMetaConnectionSpec() {
+        return this.metaConnectionSpec;
     }
 
     public Settings getSettings() {
@@ -480,5 +416,73 @@ public final class Metadata {
                 vsProxy.build(concept);
             }
         }
+    }
+    
+    private static final QueryConstructor ALL_CONCEPTS_QUERY = new QueryConstructor() {
+
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
+            sql.append(table);
+        }
+    };
+
+    private void setI2B2PathsToConcepts() throws OntologyBuildException {
+        Map<String, List<String>> result;
+        if (this.metaConnectionSpec != null) {
+            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, new TableAccessReader(this.settings.getMetaTableName()))) {
+                result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
+
+                    @Override
+                    public Map<String, List<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
+                        Map<String, List<String>> result = new HashMap<>();
+                        if (rs != null) {
+                            try {
+                                while (rs.next()) {
+                                    Collections.putList(result, rs.getString(1), rs.getString(2));
+                                }
+                            } catch (SQLException ex) {
+                                throw new KnowledgeSourceReadException(ex);
+                            }
+                        }
+                        return result;
+                    }
+                });
+            } catch (KnowledgeSourceReadException | SQLException ex) {
+                throw new OntologyBuildException(ex);
+            }
+        } else {
+            result = new HashMap<>();
+        }
+        for (Concept c : getAllRoots()) {
+            Enumeration<Concept> emu = c.preorderEnumeration();
+            boolean isInPhenotypes = false;
+            while (emu.hasMoreElements()) {
+                Concept concept = emu.nextElement();
+                TreeNode parent = concept.getParent();
+                if (parent != null && parent.equals(c)) {
+                    isInPhenotypes = false;
+                }
+                if (concept.getSymbol().equals("AIW|Phenotypes")) {
+                    isInPhenotypes = true;
+                }
+                Concept conceptFromCache = getFromIdCache(concept.getId());
+                if (conceptFromCache != null && (isInPhenotypes || !result.containsKey(conceptFromCache.getSymbol()))) {
+                    conceptFromCache.addHierarchyPath(concept.getFullName());
+                }
+                if (conceptFromCache != null) {
+                    List<String> get = result.get(concept.getSymbol());
+                    if (get != null) {
+                        for (String hp : get) {
+                            conceptFromCache.addHierarchyPath(hp);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void throwOntologyBuildException(Throwable ex) throws OntologyBuildException {
+        throw new OntologyBuildException("Error building ontology", ex);
     }
 }

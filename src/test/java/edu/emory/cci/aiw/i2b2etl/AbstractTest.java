@@ -46,7 +46,7 @@ public abstract class AbstractTest {
     
     @BeforeClass
     public static void setUpClsAbstractTest() throws Exception {
-        i2b2DestFactory = new I2b2DestinationFactory();
+        i2b2DestFactory = new I2b2DestinationFactory("/conf.xml");
     }
 
     public static I2b2DestinationFactory getI2b2DestFactory() {

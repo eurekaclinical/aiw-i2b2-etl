@@ -19,15 +19,9 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 import org.junit.BeforeClass;
-import org.protempa.QueryException;
-import org.protempa.ProtempaStartupException;
 import org.protempa.query.DefaultQueryBuilder;
-import org.protempa.query.QueryBuildException;
 
 /**
  * Data validation tests for the i2b2 ETL. The test initiates Protempa to access the
@@ -49,11 +43,7 @@ public class I2b2LoadNoDerivedVariablesNoPatientDetailsTest extends AbstractI2b2
         q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign"});
         getProtempaFactory().execute(q);
         
-        File file = File.createTempFile("i2b2LoadNoDerivedVariablesNoPatientDetailsTest", ".xml");
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            getProtempaFactory().exportI2b2DataSchema(out);
-            System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
-        }
+        dumpTruth("i2b2LoadNoDerivedVariablesNoPatientDetailsTest");
         
         setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesNoPatientDetailsTest.xml");
     }

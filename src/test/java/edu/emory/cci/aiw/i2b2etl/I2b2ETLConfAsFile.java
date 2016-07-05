@@ -30,8 +30,8 @@ import org.arp.javautil.io.IOUtil;
 class I2b2ETLConfAsFile {
     private final File confXML;
 
-    public I2b2ETLConfAsFile() throws IOException {
-        this.confXML = IOUtil.resourceToFile("/conf.xml", "conf", null);
+    public I2b2ETLConfAsFile(String configResource) throws IOException {
+        this.confXML = IOUtil.resourceToFile(configResource, "conf", null);
     }
     
     File getFile() {

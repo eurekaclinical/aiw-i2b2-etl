@@ -35,8 +35,8 @@ public class I2b2DestinationFactory {
     
     private final File confXML;
 
-    public I2b2DestinationFactory() throws IOException {
-        this.confXML = new I2b2ETLConfAsFile().getFile();
+    public I2b2DestinationFactory(String configResource) throws IOException {
+        this.confXML = new I2b2ETLConfAsFile(configResource).getFile();
     }
     
     public I2b2Destination getInstance() throws DestinationInitException {

@@ -35,7 +35,7 @@ public abstract class AbstractDataTest extends AbstractTest {
 
     @BeforeClass
     public static void setUpClsAbstractDataTest() throws Exception {
-        configFactory = new ConfigurationFactory();
+        configFactory = new ConfigurationFactory("/conf.xml");
     }
 
     @AfterClass

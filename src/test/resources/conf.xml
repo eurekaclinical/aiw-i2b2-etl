@@ -78,7 +78,7 @@
         -->
         <entry key="patientDimensionBirthdate" value="demographics_dob" />
         
-        <entry key="skipDemographicsHierarchy" value="true"/>
+        <entry key="skipDemographicsHierarchy" value="false"/>
     </dictionary>
 
     <!-- JDBC database connection information for the data schema and the 
@@ -179,21 +179,21 @@
              starting at the second level of the subtree.
         -->
         <!--<folder displayName="CPT Codes"             skipGen="1" proposition="CPTCode"/>-->
-        <folder displayName="ICD9 Diagnostic Codes" skipGen="1" proposition="ICD9:Diagnoses" alreadyLoaded="true">
+        <folder displayName="ICD9 Diagnostic Codes" skipGen="1" proposition="ICD9:Diagnoses">
             <modifier displayName="Admitting" property="DXSOURCE" value="DXSOURCE:A"/>
             <modifier displayName="Discharge" property="DXSOURCE" value="DXSOURCE:D"/>
             <modifier displayName="Diagnosis Priority" codePrefix="DXPRIORITY" property="DXPRIORITY"/>
         </folder>
-        <folder displayName="ICD9 Procedure Codes"  skipGen="1" proposition="ICD9:Procedures" alreadyLoaded="true"/>
-        <folder displayName="Laboratory Tests"      skipGen="1" proposition="LAB:LabTest" valueType="LABORATORY_TESTS" alreadyLoaded="true" />
+        <folder displayName="ICD9 Procedure Codes"  skipGen="1" proposition="ICD9:Procedures"/>
+        <folder displayName="Laboratory Tests"      skipGen="1" proposition="LAB:LabTest" valueType="LABORATORY_TESTS"/>
         <!-- Creates a folder in the term browser named 
              "Discharge Disposition". Its contents will be the allowed values
              of the dischargeDisposition property of the ENcounter proposition
              definition.
         -->
-        <folder displayName="Visit Details" skipGen="1" proposition="Encounter" property="type" alreadyLoaded="true"/>
-        <folder displayName="Medication"            skipGen="3" proposition="MED:medications" alreadyLoaded="true"/>
-        <folder displayName="Vital Signs"           skipGen="1" proposition="VitalSign" alreadyLoaded="true"/>
+        <folder displayName="Visit Details" skipGen="1" proposition="Encounter" property="type"/>
+        <folder displayName="Medication"            skipGen="3" proposition="MED:medications"/>
+        <folder displayName="Vital Signs"           skipGen="1" proposition="VitalSign"/>
         <!--<folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:EncounterWithSubsequent30DayReadmission"/>
         <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:SecondReadmit"/>
         <folder displayName="Hospital Readmissions" skipGen="0" proposition="READMISSIONS:FrequentFlierEncounter"/>

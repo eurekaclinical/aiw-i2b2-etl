@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package edu.emory.cci.aiw.i2b2etl;
 
 /*
@@ -45,6 +40,7 @@ public class ConfigurationFactory implements AutoCloseable {
 
         private boolean populateMetaSchema;
         private boolean populateDataSchema;
+        private String destinationConfigResource;
 
         public Builder() {
             this.populateMetaSchema = true;
@@ -72,13 +68,21 @@ public class ConfigurationFactory implements AutoCloseable {
             this.populateDataSchema = populateDataSchema;
         }
 
+        public String getDestinationConfigResource() {
+            return destinationConfigResource;
+        }
+
+        public void setDestinationConfigResource(String destinationConfigResource) {
+            this.destinationConfigResource = destinationConfigResource;
+        }
+
         public Builder populateDataSchema(boolean populateDataSchema) {
             setPopulateDataSchema(populateDataSchema);
             return this;
         }
 
         public ConfigurationFactory build() throws NamingException, IOException, SQLException {
-            return new ConfigurationFactory(this.populateMetaSchema, this.populateDataSchema);
+            return new ConfigurationFactory(this.populateMetaSchema, this.populateDataSchema, this.destinationConfigResource);
         }
 
     }
@@ -86,35 +90,44 @@ public class ConfigurationFactory implements AutoCloseable {
     private static final String DRIVER_CLASS_NAME = "org.h2.Driver";
     private static final String I2B2_DATASOURCE = "I2b2Data";
     public static final String I2B2_DATA_JNDI_URI = "java:/comp/env/jdbc/" + I2B2_DATASOURCE;
+    private static final String I2B2_METASOURCE = "I2b2Meta";
+    public static final String I2B2_META_JNDI_URI = "java:/comp/env/jdbc/" + I2B2_METASOURCE;
     private static final int MIN_IDLE = 1;
     private static final int MAX_IDLE = 5;
     private static final int MAX_TOTAL = 30;
+    private static final String DEFAULT_DESTINATION_CONFIG_RESOURCE = "/conf.xml";
 
     private BasicDataSource metaDS;
     private BasicDataSource dataDS;
+    private final String destinationConfigResource;
     /*
      * Binding for the H2 database connection pool
      */
     private final DataSourceInitialContextBinder initialContextBinder;
 
-    public ConfigurationFactory() throws NamingException, IOException, SQLException {
-        this(true, true);
+    public ConfigurationFactory(String destinationConfigResource) throws NamingException, IOException, SQLException {
+        this(true, true, destinationConfigResource);
     }
 
-    public ConfigurationFactory(boolean populateMetaSchema, boolean populateDataSchema) throws NamingException, IOException, SQLException {
+    private ConfigurationFactory(boolean populateMetaSchema, boolean populateDataSchema, String destinationConfigResource) throws NamingException, IOException, SQLException {
         this.initialContextBinder = new DataSourceInitialContextBinder();
+        if (destinationConfigResource != null) {
+            this.destinationConfigResource = destinationConfigResource;
+        } else {
+            this.destinationConfigResource = DEFAULT_DESTINATION_CONFIG_RESOURCE;
+        }
 
         try {
             if (populateMetaSchema) {
                 File ksbDb = new I2b2MetadataSchemaPopulator().populate();
                 this.metaDS = newBasicDataSource("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql'");
-                this.initialContextBinder.bind("I2b2Meta", this.metaDS);
+                this.initialContextBinder.bind(I2B2_METASOURCE, this.metaDS);
             }
 
             if (populateDataSchema) {
                 File dsbDb = new I2b2DataSchemaPopulator().populate();
                 this.dataDS = newBasicDataSource("jdbc:h2:" + dsbDb.getAbsolutePath());
-                this.initialContextBinder.bind("I2b2Data", this.dataDS);
+                this.initialContextBinder.bind(I2B2_DATASOURCE, this.dataDS);
             }
         } catch (IOException | SQLException ex) {
             try {
@@ -124,9 +137,21 @@ public class ConfigurationFactory implements AutoCloseable {
             throw ex;
         }
     }
+    
+    public String getDataJndiUri() {
+        return I2B2_DATA_JNDI_URI;
+    }
+    
+    public String getMetaJndiUri() {
+        return I2B2_META_JNDI_URI;
+    }
 
     public Configuration getProtempaConfiguration() throws ConfigurationsLoadException, ConfigurationsNotFoundException {
         return new INIConfigurations(new File("src/test/resources")).load("i2b2-test-config");
+    }
+    
+    public String getDestinationConfigResource() {
+        return this.destinationConfigResource;
     }
 
     @Override

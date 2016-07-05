@@ -51,10 +51,13 @@ public class ProtempaFactory implements AutoCloseable {
     private final I2b2DestinationFactory dest;
 
     public ProtempaFactory(ConfigurationFactory configurationFactory) throws IOException, SQLException, DatabaseUnitException {
+        if (configurationFactory == null) {
+            throw new IllegalArgumentException("configurationFactory cannot be null");
+        }
         this.configurationFactory = configurationFactory;
         this.databasePopulator = new DatabasePopulator();
         this.databasePopulator.doPopulate();
-        this.dest = new I2b2DestinationFactory();
+        this.dest = new I2b2DestinationFactory(configurationFactory.getDestinationConfigResource());
     }
 
     public Protempa newInstance() throws ProtempaException {
@@ -75,9 +78,17 @@ public class ProtempaFactory implements AutoCloseable {
             protempa.execute(query, dest.getInstance());
         }
     }
-
+    
     public void exportI2b2DataSchema(OutputStream outputStream) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
-        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null, false).getOrCreate()) {
+        exportI2b2Schema(outputStream, this.configurationFactory.getDataJndiUri());
+    }
+    
+    public void exportI2b2MetaSchema(OutputStream outputStream) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
+        exportI2b2Schema(outputStream, this.configurationFactory.getMetaJndiUri());
+    }
+
+    private void exportI2b2Schema(OutputStream outputStream, String jndiUri) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(jndiUri, null, null, false).getOrCreate()) {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet dataSet = dbUnitConn.createDataSet();
@@ -95,8 +106,16 @@ public class ProtempaFactory implements AutoCloseable {
         }
     }
     
-    public void exportI2b2DataSchemaDtd(Writer writer) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
-        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null, false).getOrCreate()) {
+    public void exportI2b2SchemaDtdForDataSchema(Writer writer) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
+        exportI2b2SchemaDtd(writer, this.configurationFactory.getDataJndiUri());
+    }
+    
+    public void exportI2b2SchemaDtdForMetaSchema(Writer writer) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
+        exportI2b2SchemaDtd(writer, this.configurationFactory.getMetaJndiUri());
+    }
+    
+    private void exportI2b2SchemaDtd(Writer writer, String jndiUri) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(jndiUri, null, null, false).getOrCreate()) {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet dataSet = dbUnitConn.createDataSet();
@@ -113,13 +132,21 @@ public class ProtempaFactory implements AutoCloseable {
             }
         }
     }
+    
+    public void testDataTable(String tableName, IDataSet expectedDataSet) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
+        testTable(tableName, expectedDataSet, this.configurationFactory.getDataJndiUri());
+    }
+    
+    public void testMetaTable(String tableName, IDataSet expectedDataSet) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
+        testTable(tableName, expectedDataSet, this.configurationFactory.getMetaJndiUri());
+    }
 
-    public void testTable(String tableName, IDataSet expectedDataSet) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
-        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(ConfigurationFactory.I2B2_DATA_JNDI_URI, null, null, false).getOrCreate()) {
+    public void testTable(String tableName, IDataSet expectedDataSet, String jndiUri) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
+        try (Connection conn = DatabaseAPI.DATASOURCE.newConnectionSpecInstance(jndiUri, null, null, false).getOrCreate()) {
             IDatabaseConnection dbUnitConn = new DatabaseConnection(conn);
             try {
                 IDataSet actualDataSet = dbUnitConn.createDataSet();
-                Assertion.assertEqualsIgnoreCols(new SortedDataSet(expectedDataSet), new SortedDataSet(actualDataSet), tableName, new String[]{"IMPORT_DATE", "DOWNLOAD_DATE", "AGE_IN_YEARS_NUM", "INSTANCE_NUM"});
+                Assertion.assertEqualsIgnoreCols(new SortedDataSet(expectedDataSet), new SortedDataSet(actualDataSet), tableName, new String[]{"IMPORT_DATE", "DOWNLOAD_DATE", "AGE_IN_YEARS_NUM", "INSTANCE_NUM", "UPDATE_DATE"});
                 dbUnitConn.close();
                 dbUnitConn = null;
             } finally {

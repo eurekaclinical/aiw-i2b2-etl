@@ -20,7 +20,11 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  * #L%
  */
 
+import edu.emory.cci.aiw.i2b2etl.ConfigurationFactory;
+import static edu.emory.cci.aiw.i2b2etl.dest.AbstractI2b2DestDataAndMetadataTest.getProtempaFactory;
 import static edu.emory.cci.aiw.i2b2etl.dest.AbstractI2b2DestTest.getProtempaFactory;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
@@ -77,8 +81,16 @@ public abstract class AbstractI2b2DestLoadTest extends AbstractI2b2DestTest {
     public void testEKTempVisit() throws Exception {
         testTable("EK_TEMP_VISIT", expectedDataSet);
     }
+    
+    protected static void dumpTruth(String prefix) throws IOException, InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
+        File file = File.createTempFile(prefix, ".xml");
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            getProtempaFactory().exportI2b2MetaSchema(out);
+            System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
+        }
+    }
 
     private void testTable(String tableName, IDataSet expectedDataSet) throws InvalidConnectionSpecArguments, SQLException, DatabaseUnitException, IOException {
-        getProtempaFactory().testTable(tableName, expectedDataSet);
+        getProtempaFactory().testDataTable(tableName, expectedDataSet);
     }
 }

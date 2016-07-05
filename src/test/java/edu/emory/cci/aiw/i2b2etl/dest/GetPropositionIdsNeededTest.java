@@ -41,7 +41,7 @@ public class GetPropositionIdsNeededTest extends AbstractI2b2DestTest {
     @Test
     public void testPropositionIds() throws Exception {
         try (Protempa protempa = getProtempaFactory().newInstance()) {
-            assertEqualsStrings("/truth/get-proposition-ids-needed-test-file", protempa.getSupportedPropositionIds(new I2b2DestinationFactory().getInstance(true)));
+            assertEqualsStrings("/truth/get-proposition-ids-needed-test-file", protempa.getSupportedPropositionIds(new I2b2DestinationFactory("/conf.xml").getInstance(true)));
         }
     }
     
@@ -49,7 +49,7 @@ public class GetPropositionIdsNeededTest extends AbstractI2b2DestTest {
     public void testPropositionIdsDestControlsPropIdsRetained() throws Exception {
         SourceFactory sourceFactory = new SourceFactory(getConfigFactory().getProtempaConfiguration());
         try (Protempa protempa = Protempa.newInstance(sourceFactory)) {
-            Destination dest = new I2b2DestinationFactory().getInstance();
+            Destination dest = new I2b2DestinationFactory("/conf.xml").getInstance();
             QueryBuilder queryBuilder = new DefaultQueryBuilder();
             Query query = protempa.buildQuery(queryBuilder);
             try (QueryResultsHandler qrh = dest.getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource())) {
