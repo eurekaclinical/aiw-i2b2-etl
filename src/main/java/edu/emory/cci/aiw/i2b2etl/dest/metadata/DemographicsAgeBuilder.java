@@ -21,6 +21,9 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropDefConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
+import java.sql.SQLException;
+import java.text.MessageFormat;
+import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.NumberValue;
 
@@ -43,6 +46,8 @@ class DemographicsAgeBuilder implements OntologyBuilder {
         ageGroup(95, 104),
         ageGroup(105, 120)
     };
+    private static final MessageFormat POSTGRESQL_AGE_FORMAT = new MessageFormat("now() - (365.25 * {0} || ' days')::interval");
+    private static final MessageFormat ORACLE_AGE_FORMAT = new MessageFormat("sysdate - (365.25 * {0})");
     private final Settings settings;
     private final Metadata metadata;
 
@@ -60,8 +65,25 @@ class DemographicsAgeBuilder implements OntologyBuilder {
     private Concept buildAge(Concept parent, String displayName) throws OntologyBuildException {
         Concept age = this.metadata.newContainerConcept(displayName, MetadataUtil.DEFAULT_CONCEPT_ID_PREFIX_INTERNAL + "|DEM|Age");
         age.setAlreadyLoaded(parent.isAlreadyLoaded());
-        String ageConceptCodePrefix =
-                this.settings.getAgeConceptCodePrefix();
+        String ageConceptCodePrefix
+                = this.settings.getAgeConceptCodePrefix();
+        MessageFormat ageFormat;
+        ConnectionSpec metaConnectionSpec = this.metadata.getMetaConnectionSpec();
+        if (metaConnectionSpec != null) {
+            try {
+                switch (metaConnectionSpec.getDatabaseProduct()) {
+                    case POSTGRESQL:
+                        ageFormat = POSTGRESQL_AGE_FORMAT;
+                        break;
+                    default:
+                        ageFormat = ORACLE_AGE_FORMAT;
+                }
+            } catch (SQLException ex) {
+                throw new OntologyBuildException(ex);
+            }
+        } else {
+            ageFormat = ORACLE_AGE_FORMAT;
+        }
         for (int i = 0; i < ageCategories.length; i++) {
             int[] ages = ageCategories[i];
             String ageRangeDisplayName = String.valueOf(ages[0]) + '-'
@@ -73,7 +95,7 @@ class DemographicsAgeBuilder implements OntologyBuilder {
             ageCategory.setDisplayName(ageRangeDisplayName);
             if (i == 0) {
                 ageCategory.setOperator(ConceptOperator.GREATER_THAN);
-                ageCategory.setDimCode("sysdate - (365.25 * " + (ages[ages.length - 1] + 1) + ")");
+                ageCategory.setDimCode(ageFormat.format(new Object[]{ages[ages.length - 1] + 1}));
             } else {
                 ageCategory.setOperator(ConceptOperator.BETWEEN);
                 /*
@@ -83,7 +105,7 @@ class DemographicsAgeBuilder implements OntologyBuilder {
                  * sides of the range. Thus, if sysdate happens to be exactly midnight, the
                  * patient will end up in two adjacent age buckets.
                  */
-                ageCategory.setDimCode("sysdate - (365.25 * " + (ages[ages.length - 1] + 1) + ") AND sysdate - (365.25 * " + ages[0] + ")");
+                ageCategory.setDimCode(ageFormat.format(new Object[]{ages[ages.length - 1] + 1}) + " AND " + ageFormat.format(new Object[]{ages[0]}));
             }
             ageCategory.setAlreadyLoaded(age.isAlreadyLoaded());
             age.add(ageCategory);
@@ -110,15 +132,14 @@ class DemographicsAgeBuilder implements OntologyBuilder {
                  * sysdate happens to be exactly midnight, the patient
                  * will end up in two adjacent age buckets.
                  */
-                ageConcept.setDimCode("sysdate - (365.25 * " + (ages[j] + 1) + ") AND sysdate - (365.25 * " + ages[j] + ")");
+                ageConcept.setDimCode(ageFormat.format(new Object[]{ages[j] + 1}) + " AND " + ageFormat.format(new Object[]{ages[j]}));
                 ageConcept.setAlreadyLoaded(ageCategory.isAlreadyLoaded());
                 ageCategory.add(ageConcept);
             }
         }
-
         return age;
     }
-    
+
     private Concept newQueryableConcept(PropDefConceptId conceptId, String conceptCodePrefix) throws OntologyBuildException {
         Concept concept = this.metadata.newConcept(conceptId, conceptCodePrefix, metadata.getSourceSystemCode());
         concept.setFactTableColumn("patient_num");
