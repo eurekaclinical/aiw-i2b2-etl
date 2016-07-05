@@ -57,45 +57,9 @@ import org.protempa.PropositionDefinition;
 import org.protempa.proposition.value.Value;
 
 /**
- * Controls the etl process for extracting data from files and a
- * knowledgeSource(s) for transform and load into an i2b2 instance. It is
- * single-threaded and should be called only once per process. The 
- * {@link #build() } method <em>must</em> be called after constructing an
+ * Maintains the concepts for the data being loaded into i2b2. The 
+ * {@link #init() } method <em>must</em> be called after constructing an
  * instance of this method before using any other methods.
- * 
- * A data file has a corresponding edu.emory.cci.registry.i2b2datareader handler
- * class. the meta information about the data files also have handlers in
- * edu.emory.cci.registry.i2b2metareader.
- * 
- * Currently, meta information is found in both the knowledgeSource AND in the
- * data files. the data is found in the data files created by PROTEMPA and a
- * file created by an SQL that fetches demographics data.
- * 
- * There is a conf.xml file that declares how some of this process works. the
- * database & filesystem nodes point to database and file resources. files, once
- * declared, can be grouped into sets of files. the concept dimensions used in
- * i2b2 are declared in the meta node. each branch under the meta node is
- * created from data from the knowledgeSource, file(s), or de novo (hard-coded
- * in a java class).
- * 
- * The metadatatree node declares how to assemble branches into the final
- * product for i2b2 (the metadata schema).
- * 
- * Lastly, the observation node declares what to process into observation_fact
- * entities in i2b2. this, along with the implicit Patient, Provider, Visit &
- * Concept dimensions are laoded into the data schema.
- * 
- * The 'resources' folder in this project contains 'conf.xml' and 'demmeta.zip'.
- * the demmeta file needs pointing to from within the conf.xml file; it holds
- * information necessary to build out the demographics portion of the ontology
- * tree.
- * 
- * the method doETL() orchestrates the entire process. the steps are commented
- * within that method.
- * 
- * as little information as is possible is kept in memory so that the
- * observations get streamed from flat files, matched with in-memory data, and
- * batch-loaded into the database.
  */
 public final class Metadata {
 
@@ -132,7 +96,7 @@ public final class Metadata {
      * @param metaConnectionSpec connection information for the i2b2 metadata 
      * schema, or <code>null</code> to disable writing to the metadata schema.
      */
-    public Metadata(String sourceSystemCode, KnowledgeSourceCache cache, KnowledgeSource knowledgeSource,
+    Metadata(String sourceSystemCode, KnowledgeSourceCache cache, KnowledgeSource knowledgeSource,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
@@ -168,7 +132,7 @@ public final class Metadata {
         this.folderSpecs = folderSpecs.clone();
     }
     
-    public void build() throws OntologyBuildException {
+    void init() throws OntologyBuildException {
         this.allRoots = new ArrayList<>();
         String rootNodeDisplayName = settings.getRootNodeName();
         if (rootNodeDisplayName != null) {

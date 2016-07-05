@@ -30,6 +30,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.table.InvalidPatientRecordException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
+import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataFactory;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.OntologyBuildException;
 import edu.emory.cci.aiw.i2b2etl.dest.table.ConceptDimensionHandler;
 import edu.emory.cci.aiw.i2b2etl.dest.table.ConceptDimensionLoader;
@@ -110,7 +111,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private List<FactHandler> factHandlers;
     private ConceptDimensionHandler conceptDimensionHandler;
     private ModifierDimensionHandler modifierDimensionHandler;
-    private Metadata ontologyModel;
+    private Metadata metadata;
     private final DataSpec providerFullNameSpec;
     private final DataSpec providerFirstNameSpec;
     private final DataSpec providerMiddleNameSpec;
@@ -245,11 +246,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.conceptDimensionHandler = new ConceptDimensionHandler(dataConnectionSpec);
             this.modifierDimensionHandler = new ModifierDimensionHandler(dataConnectionSpec);
             this.cache = new KnowledgeSourceCacheFactory().getInstance(this.knowledgeSource, propDefs, true);
-            this.ontologyModel = new Metadata(this.qrhId, this.cache, knowledgeSource, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.metadataConnectionSpec);
-            this.ontologyModel.build();
-            this.providerDimensionFactory = new ProviderDimensionFactory(this.ontologyModel, this.settings, this.dataConnectionSpec);
-            this.patientDimensionFactory = new PatientDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
-            this.visitDimensionFactory = new VisitDimensionFactory(this.ontologyModel, this.settings, this.data, this.dataConnectionSpec);
+            this.metadata = new MetadataFactory().getInstance(this.qrhId, this.cache, knowledgeSource, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.metadataConnectionSpec);
+            this.providerDimensionFactory = new ProviderDimensionFactory(this.metadata, this.settings, this.dataConnectionSpec);
+            this.patientDimensionFactory = new PatientDimensionFactory(this.metadata, this.settings, this.data, this.dataConnectionSpec);
+            this.visitDimensionFactory = new VisitDimensionFactory(this.metadata, this.settings, this.data, this.dataConnectionSpec);
             if (this.query.getQueryMode() == QueryMode.REPLACE) {
                 DataRemoverFactory f = new DataRemoverFactory();
                 f.getInstance(this.dataRemoveMethod).doRemoveData();
@@ -525,7 +525,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             try {
                 // flush hot concepts out of the tree. persist Concepts.
                 logger.log(Level.INFO, "Populating concept dimension for query {0}", this.query.getName());
-                new ConceptDimensionLoader(this.conceptDimensionHandler).execute(this.ontologyModel.getAllRoots());
+                new ConceptDimensionLoader(this.conceptDimensionHandler).execute(this.metadata.getAllRoots());
             } catch (SQLException ex) {
                 exception = ex;
             }
@@ -559,7 +559,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null) {
             try {
                 logger.log(Level.INFO, "Populating modifier dimension for query {0}", this.query.getName());
-                new ModifierDimensionLoader(this.modifierDimensionHandler).execute(this.ontologyModel.getModifierRoots());
+                new ModifierDimensionLoader(this.modifierDimensionHandler).execute(this.metadata.getModifierRoots());
             } catch (SQLException ex) {
                 exception = ex;
             }
@@ -625,7 +625,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     String tableName = this.settings.getMetaTableName();
                     try (MetaTableConceptHandler metaTableHandler = new MetaTableConceptHandler(this.metadataConnectionSpec, tableName)) {
                         MetaTableConceptLoader metaTableConceptLoader = new MetaTableConceptLoader(metaTableHandler);
-                        metaTableConceptLoader.execute(this.ontologyModel.getAllRoots());
+                        metaTableConceptLoader.execute(this.metadata.getAllRoots());
                         logger.log(Level.INFO, "Done populating metadata tables for query {0}", queryId);
                     }
                 } else {
@@ -720,7 +720,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     private void addPropositionFactHandlers() throws KnowledgeSourceReadException, SQLException {
-        String[] potentialDerivedPropIdsArr = this.ontologyModel.extractDerived();
+        String[] potentialDerivedPropIdsArr = this.metadata.extractDerived();
         Set<String> dimDataTypes = this.settings.getDimensionDataTypes();
         RejectedFactHandlerFactory rejectedFactHandlerFactory
                 = new RejectedFactHandlerFactory(this.dataConnectionSpec, rejectedObservationFactTable());
@@ -735,7 +735,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 PropositionFactHandler propFactHandler
                         = new PropositionFactHandler(this.dataConnectionSpec, links, dataSpec.getPropertyName(),
                                 dataSpec.getStart(), dataSpec.getFinish(), dataSpec.getUnits(),
-                                potentialDerivedPropIdsArr, this.ontologyModel,
+                                potentialDerivedPropIdsArr, this.metadata,
                                 this.cache,
                                 rejectedFactHandlerFactory);
                 this.factHandlers.add(propFactHandler);
