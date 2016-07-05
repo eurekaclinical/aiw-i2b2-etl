@@ -109,11 +109,11 @@ public final class Metadata {
     private final Settings settings;
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
     private final String sourceSystemCode;
-    private final ProviderConceptTreeBuilder providerConceptTreeBuilder;
+    private ProviderConceptTreeBuilder providerConceptTreeBuilder;
     private final KnowledgeSourceCache cache;
     private final FolderSpec[] folderSpecs;
     private final List<Concept> modifierRoots;
-    private final List<Concept> allRoots;
+    private List<Concept> allRoots;
     private ConnectionSpec metaConnectionSpec;
 
     /**
@@ -128,13 +128,14 @@ public final class Metadata {
      * @param folderSpecs
      * @param settings
      * @param dataSection
-     * @throws OntologyBuildException
+     * @param metaConnectionSpec connection information for the i2b2 metadata 
+     * schema, or <code>null</code> to disable writing to the metadata schema.
      */
     public Metadata(String sourceSystemCode, KnowledgeSourceCache cache, KnowledgeSource knowledgeSource,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
-            Data dataSection, ConnectionSpec metaConnectionSpec) throws OntologyBuildException {
+            Data dataSection, ConnectionSpec metaConnectionSpec) {
         if (knowledgeSource == null) {
             throw new IllegalArgumentException("knowledgeSource cannot be null");
         }
@@ -150,6 +151,7 @@ public final class Metadata {
         if (cache == null) {
             throw new IllegalArgumentException("cache cannot be null");
         }
+        this.metaConnectionSpec = metaConnectionSpec;
         this.modifierRoots = new ArrayList<>();
         this.sourceSystemCode = MetadataUtil.toSourceSystemCode(sourceSystemCode);
         if (userDefinedPropositionDefinitions == null) {
@@ -160,6 +162,13 @@ public final class Metadata {
                     = userDefinedPropositionDefinitions.clone();
         }
         this.cache = cache;
+        this.settings = settings;
+        this.dataSection = dataSection;
+        this.folderSpecs = folderSpecs.clone();
+    }
+    
+    public void build() throws OntologyBuildException {
+        this.allRoots = new ArrayList<>();
         String rootNodeDisplayName = settings.getRootNodeName();
         if (rootNodeDisplayName != null) {
             try {
@@ -171,14 +180,9 @@ public final class Metadata {
             this.conceptRoot.setDisplayName(rootNodeDisplayName);
             this.conceptRoot.setDataType(DataType.TEXT);
             this.conceptRoot.setSourceSystemCode(this.sourceSystemCode);
-        }
-        this.settings = settings;
-        this.dataSection = dataSection;
-        this.folderSpecs = folderSpecs.clone();
-        this.allRoots = new ArrayList<>();
-        if (rootNodeDisplayName != null) {
             this.allRoots.add(this.conceptRoot);
         }
+        
         this.providerConceptTreeBuilder = new ProviderConceptTreeBuilder(this);
         try {
             constructTreePre();
@@ -198,13 +202,17 @@ public final class Metadata {
         } catch (InvalidPromoteArgumentException | SQLException | IOException | UnknownPropositionDefinitionException | KnowledgeSourceReadException | InvalidConceptCodeException ex) {
             throwOntologyBuildException(ex);
         }
-
-        this.metaConnectionSpec = metaConnectionSpec;
-
-        setI2B2PathsToConcepts();
         assert !this.allRoots.contains(null) : "Null root concepts! " + this.allRoots;
+        setI2B2PathsToConcepts();
     }
     
+    /**
+     * Returns connection information for the i2b2 metadata schema.
+     * 
+     * @return connection information for the i2b2 metadata schema, or
+     * <code>null</code> if no metadata schema connection information was
+     * provided in the destination configuration.
+     */
     public ConnectionSpec getMetaConnectionSpec() {
         return this.metaConnectionSpec;
     }
@@ -455,6 +463,7 @@ public final class Metadata {
             result = new HashMap<>();
         }
         for (Concept c : getAllRoots()) {
+            @SuppressWarnings("unchecked")
             Enumeration<Concept> emu = c.preorderEnumeration();
             boolean isInPhenotypes = false;
             while (emu.hasMoreElements()) {
