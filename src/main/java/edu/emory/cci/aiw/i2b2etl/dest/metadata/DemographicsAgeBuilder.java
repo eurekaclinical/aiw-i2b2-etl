@@ -46,7 +46,7 @@ class DemographicsAgeBuilder implements OntologyBuilder {
         ageGroup(95, 104),
         ageGroup(105, 120)
     };
-    private static final MessageFormat POSTGRESQL_AGE_FORMAT = new MessageFormat("now() - (365.25 * {0} || ' days')::interval");
+    private static final MessageFormat POSTGRESQL_AGE_FORMAT = new MessageFormat("now() - (365.25 * {0} || '' days'')::interval");
     private static final MessageFormat ORACLE_AGE_FORMAT = new MessageFormat("sysdate - (365.25 * {0})");
     private final Settings settings;
     private final Metadata metadata;
