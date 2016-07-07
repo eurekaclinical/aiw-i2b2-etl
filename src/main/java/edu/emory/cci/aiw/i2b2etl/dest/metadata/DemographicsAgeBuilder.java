@@ -32,6 +32,8 @@ import org.protempa.proposition.value.NumberValue;
  * @author Andrew Post
  */
 class DemographicsAgeBuilder implements OntologyBuilder {
+    
+    private static final String DEFAULT_AGE_PREFIX = "DEM|Age";
 
     private static final int[][] ageCategories = {
         ageGroup(0, 9),
@@ -67,6 +69,9 @@ class DemographicsAgeBuilder implements OntologyBuilder {
         age.setAlreadyLoaded(parent.isAlreadyLoaded());
         String ageConceptCodePrefix
                 = this.settings.getAgeConceptCodePrefix();
+        if (ageConceptCodePrefix == null) {
+            ageConceptCodePrefix = DEFAULT_AGE_PREFIX;
+        }
         MessageFormat ageFormat;
         ConnectionSpec metaConnectionSpec = this.metadata.getMetaConnectionSpec();
         if (metaConnectionSpec != null) {
