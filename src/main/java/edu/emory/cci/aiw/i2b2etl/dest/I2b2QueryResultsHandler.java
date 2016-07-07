@@ -250,11 +250,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.providerDimensionFactory = new ProviderDimensionFactory(this.metadata, this.settings, this.dataConnectionSpec);
             this.patientDimensionFactory = new PatientDimensionFactory(this.metadata, this.settings, this.data, this.dataConnectionSpec);
             this.visitDimensionFactory = new VisitDimensionFactory(this.metadata, this.settings, this.data, this.dataConnectionSpec);
+            DataRemoverFactory f = new DataRemoverFactory();
             if (this.query.getQueryMode() == QueryMode.REPLACE) {
-                DataRemoverFactory f = new DataRemoverFactory();
                 f.getInstance(this.dataRemoveMethod).doRemoveData();
-                f.getInstance(this.metaRemoveMethod).doRemoveMetadata();
             }
+            f.getInstance(this.metaRemoveMethod).doRemoveMetadata();
             this.factHandlers = new ArrayList<>();
             addPropositionFactHandlers();
             // disable indexes on observation_fact to speed up inserts
