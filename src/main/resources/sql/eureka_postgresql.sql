@@ -29,7 +29,7 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
             WHERE   provider_path IN
             (SELECT provider_path 
              FROM   ' || tempProviderTableName || ' 
-             WHERE  delete_date <= now()  
+             WHERE  delete_date IS NOT NULL 
             )';
 
         -- Update existing record(s) in provider_dimension according to temp table
@@ -75,7 +75,7 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
                 SELECT provider_dimension.provider_path 
                 FROM   provider_dimension
             )
-            AND   (temp2.delete_date is NULL OR temp2.delete_date > now())
+            AND   temp2.delete_date is NULL
             ';
         ANALYZE provider_dimension;
     EXCEPTION
@@ -212,7 +212,7 @@ BEGIN
                     and em.patient_ide = temp.patient_id
                     and em.patient_ide_source = temp.patient_id_source)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
             AND encounter_id_source = ''HIVE'' 
-            AND (temp.delete_date is NULL OR temp.delete_date > now())
+            AND temp.delete_date is NULL
             ';
             
         -- Update encounter_num for temp table
@@ -231,7 +231,7 @@ BEGIN
             WHERE   encounter_num IN
             (SELECT encounter_num 
              FROM   ' || tempTableName || ' 
-             WHERE  delete_date <= now() 
+             WHERE  delete_date IS NOT NULL
             )';
 
         -- Update existing record(s) in visit_dimension according to temp table                
@@ -290,7 +290,7 @@ BEGIN
             ) 
             AND pm.patient_ide = temp.patient_id 
             AND pm.patient_ide_source = temp.patient_id_source
-            AND (temp.delete_date is NULL OR temp.delete_date > now())
+            AND temp.delete_date is NULL
             ';
         ANALYZE visit_dimension;
     EXCEPTION
@@ -332,7 +332,7 @@ BEGIN
                 AND    pm.patient_ide_source = temp.patient_id_source
             )
             AND temp.patient_id_source = ''HIVE'' 
-            AND (temp.delete_date is NULL OR temp.delete_date > now())
+            AND temp.delete_date is NULL
             ';
         
         -- Update patient_num for temp table
@@ -347,7 +347,7 @@ BEGIN
             WHERE   patient_num IN
             (SELECT patient_num 
              FROM   ' || tempTableName || ' 
-             WHERE  delete_date <= now()  
+             WHERE  delete_date IS NOT NULL
             )';
 
         -- Update existing record(s) in patient_dimension according to temp table
@@ -417,7 +417,7 @@ BEGIN
             WHERE   temp2.patient_num NOT IN (SELECT patient_dimension.patient_num from patient_dimension) 
             AND     temp2.patient_num IS NOT NULL
             AND     temp2.patient_num::text <> ''''
-            AND     (temp2.delete_date is NULL OR temp2.delete_date > now())
+            AND     temp2.delete_date is NULL
             ';
 
         ANALYZE patient_dimension;
@@ -527,7 +527,7 @@ BEGIN
                 FROM ' || upload_temptable_name_c || ' temp
                 WHERE (temp.patient_num IS NOT NULL AND temp.patient_num::text <> '''') 
                 AND   (temp.encounter_num IS NOT NULL AND temp.encounter_num::text <> '''')
-                AND   (temp.delete_date is NULL OR temp.delete_date > now())
+                AND   temp.delete_date is NULL
                 ';
         ELSE
             -- Delete existing record(s) in observation_fact if it is marked as delete in temp table
@@ -536,7 +536,7 @@ BEGIN
                 WHERE   encounter_num IN
                 (SELECT encounter_num 
                  FROM   ' || upload_temptable_name_c || ' 
-                 WHERE  delete_date <= now() 
+                 WHERE  delete_date IS NOT NULL
                 )';
 
             -- Update existing record(s) in observation_fact according to temp table
@@ -629,7 +629,7 @@ BEGIN
                     AND   temp2.modifier_cd = temp.modifier_cd 
                     AND   temp2.instance_num = temp.instance_num
                 )
-                AND (temp2.delete_date is NULL OR temp2.delete_date > now())
+                AND temp2.delete_date is NULL
                 ';
         END IF ;
         ANALYZE OBSERVATION_FACT;
@@ -660,7 +660,7 @@ BEGIN
         end if;
         
         sql_stmt := 'SELECT distinct encounter_id, encounter_id_source, patient_map_id, patient_map_id_source from ' || tempEidTableName  ||'
-                     WHERE delete_date IS NULL or delete_date > now()
+                     WHERE delete_date IS NULL
                     ';
         OPEN distinctEidCur FOR EXECUTE sql_stmt ;
         LOOP
@@ -800,7 +800,7 @@ BEGIN
             WHERE   encounter_num IN
             (SELECT encounter_num 
              FROM   ' || tempEidTableName || ' 
-             WHERE  delete_date <= now()
+             WHERE  delete_date IS NOT NULL
             )';
 
         -- Do the mapping update if the update date is old
@@ -850,7 +850,7 @@ BEGIN
                    ' || upload_id || ' 
             FROM   ' || tempEidTableName || '  
             WHERE  process_status_flag = ''P''
-            AND   (delete_date is NULL OR delete_date > now())
+            AND   delete_date is NULL
             '; 
        ANALYZE encounter_mapping;
     EXCEPTION
@@ -875,7 +875,7 @@ DECLARE
         disPatientIdSource varchar(100);
 BEGIN
         sql_stmt := 'SELECT distinct patient_id,patient_id_source from ' || tempPidTableName || '
-                     WHERE delete_date IS NULL or delete_date > now()
+                     WHERE delete_date IS NULL
                     ';
         
         LOCK TABLE  patient_mapping IN EXCLUSIVE MODE NOWAIT;
@@ -1011,7 +1011,7 @@ BEGIN
             WHERE   patient_num IN
             (SELECT patient_num 
              FROM   ' || tempPidTableName || ' 
-             WHERE  delete_date <= now() 
+             WHERE  delete_date IS NOT NULL
             )';
 
         -- Do the mapping update if the update date is old
@@ -1056,7 +1056,7 @@ BEGIN
                    ' || upload_id ||' 
             FROM   '|| tempPidTableName || ' 
             WHERE  process_status_flag = ''P'' 
-            AND   (delete_date is NULL OR delete_date > now())
+            AND   delete_date is NULL
             '; 
         ANALYZE patient_mapping;
     EXCEPTION

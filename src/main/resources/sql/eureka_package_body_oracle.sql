@@ -40,7 +40,7 @@ AS
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
                 WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(provider_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
-                DELETE where temp.delete_date is not null and temp.delete_date<=sysdate
+                DELETE where temp.delete_date is not null
             WHEN NOT MATCHED THEN
                 INSERT (
                     provider_id,
@@ -62,7 +62,7 @@ AS
                     sysdate,
                     temp.sourcesystem_cd, '
                     || upload_id ||
-                ') where (temp.delete_date is null or temp.delete_date>sysdate)';
+                ') where temp.delete_date is null';
         dbms_stats.gather_table_stats(USER, 'provider_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -101,7 +101,7 @@ AS
                 where pm.patient_ide = temp.patient_id
                     and pm.patient_ide_source = temp.patient_id_source)
             and temp.patient_id_source = ''HIVE''
-            AND (temp.delete_date is null or temp.delete_date>sysdate)';
+            AND temp.delete_date is null';
         COMMIT;
 
         -- update patient_num for temp table
@@ -141,7 +141,7 @@ AS
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
                 WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(patient_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
-                DELETE where temp.delete_date is not null AND temp.delete_date<=sysdate
+                DELETE where temp.delete_date is not null
             WHEN NOT MATCHED THEN
                 INSERT (
                     PATIENT_NUM,
@@ -180,7 +180,7 @@ AS
                 sysdate,
                 temp.sourcesystem_cd,
                 '|| UPLOAD_ID || ')
-                WHERE temp.patient_num IS NOT NULL and (temp.delete_date is null or temp.delete_date>sysdate)';
+                WHERE temp.patient_num IS NOT NULL and temp.delete_date is null';
         dbms_stats.gather_table_stats(USER, 'patient_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -322,7 +322,7 @@ AS
                     and em.patient_ide = temp.patient_id
                     and em.patient_ide_source = temp.patient_id_source)
             and encounter_id_source = ''HIVE''
-            and (temp.delete_date is null or temp.delete_date>sysdate)';
+            and temp.delete_date is null';
 
         -- update encounter_num for temp table
         EXECUTE immediate '
@@ -356,7 +356,7 @@ AS
                     upload_id = ' || upload_id || ',
                     length_of_stay = temp.length_of_stay
                     WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(visit_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
-                DELETE where temp.delete_date is not null and temp.delete_date<=sysdate';
+                DELETE where temp.delete_date is not null';
 
         -- jk: added project_id='@' to WHERE clause... need to support projects...
         EXECUTE immediate '
@@ -395,7 +395,7 @@ AS
             )
             and pm.patient_ide = temp.patient_id
             and pm.patient_ide_source = temp.patient_id_source
-            and (temp.delete_date is null or temp.delete_date>sysdate)';
+            and temp.delete_date is null';
         dbms_stats.gather_table_stats(USER, 'visit_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -462,7 +462,7 @@ AS
                     quantity_num,confidence_num,observation_blob,units_cd,end_date,location_cd, update_date,download_date,sysdate import_date,sourcesystem_cd,
                     temp.upload_id
                     FROM ' || upload_temptable_name_c || ' temp
-                    where temp.patient_num is not null and  temp.encounter_num is not null and (temp.delete_Date is null or temp.delete_date>sysdate)'
+                    where temp.patient_num is not null and  temp.encounter_num is not null and temp.delete_date is null'
                     ;
         ELSE
             EXECUTE immediate
@@ -491,7 +491,7 @@ AS
                         sourcesystem_cd =temp.sourcesystem_cd,
                         upload_id = temp.upload_id
                     where nvl(observation_fact.update_date,to_date(''19000101'',''YYYYMMDD'')) <= nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD''))
-                    delete where delete_date is not null and delete_date<=sysdate
+                    delete where delete_date is not null
                 when not matched then
                     insert (encounter_num,
                         concept_cd,
@@ -538,7 +538,7 @@ AS
                         temp.sourcesystem_cd,
                         temp.upload_id)
                     where temp.patient_num is not null and temp.encounter_num is not null and
-                    (temp.delete_date is null or temp.delete_date>sysdate)'
+                    temp.delete_date is null'
                 ;
         END IF ;
         dbms_stats.gather_table_stats(USER, 'OBSERVATION_FACT');
@@ -570,7 +570,7 @@ AS
         end if;
 
         sql_stmt := 'SELECT distinct encounter_id, encounter_id_source, patient_map_id, patient_map_id_source from ' || tempEidTableName ||
-        ' where delete_Date is null or delete_date>sysdate';
+        ' where delete_Date is null';
         OPEN distinctEidCur FOR sql_stmt ;
         LOOP
             FETCH distinctEidCur INTO disEncounterId, disEncounterIdSource, patientMapId, patientMapIdSource;
@@ -725,7 +725,7 @@ AS
                 where temp.encounter_id_source = ''HIVE''
                     and temp.process_status_flag is null
                     and nvl(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= nvl(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-                delete where temp.delete_date is not null and temp.delete_date<=sysdate';
+                delete where temp.delete_date is not null';
         -- insert new mapping records i.e flagged P -- jk: added project_id
         execute immediate '
             insert into encounter_mapping (
@@ -755,7 +755,7 @@ AS
                 || upload_id || '
             from ' || tempEidTableName || '
             where process_status_flag = ''P''
-            and (delete_Date is null or delete_date>sysdate)';
+            and delete_date is null';
         dbms_stats.gather_table_stats(USER, 'encounter_mapping');
     EXCEPTION
         WHEN OTHERS THEN
@@ -778,7 +778,7 @@ AS
         disPatientId varchar2(100);
         disPatientIdSource varchar2(100);
     BEGIN
-        sql_stmt := ' SELECT distinct patient_id,patient_id_source from ' || tempPidTableName ||' where delete_date is null  or delete_date>sysdate';
+        sql_stmt := ' SELECT distinct patient_id,patient_id_source from ' || tempPidTableName ||' where delete_date is null';
 
         LOCK TABLE  patient_mapping IN EXCLUSIVE MODE NOWAIT;
         select max(patient_num) into maxPatientNum from patient_mapping ;
@@ -926,7 +926,7 @@ AS
                         where temp.patient_id_source = ''HIVE''
                             and temp.process_status_flag is null
                             and nvl(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= nvl(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-                    delete where temp.delete_date is not null AND temp.delete_date<=sysdate';
+                    delete where temp.delete_date is not null';
 
                         -- insert new mapping records i.e flagged P - jk: added project id
         execute immediate '
@@ -952,7 +952,7 @@ AS
                 ''@'' project_id,'
                 || upload_id ||'
             from '|| tempPidTableName || '
-            where process_status_flag = ''P'' AND (delete_date is null or delete_date>sysdate)';
+            where process_status_flag = ''P'' AND delete_date is null';
         dbms_stats.gather_table_stats(USER, 'patient_mapping');
     EXCEPTION
         WHEN OTHERS THEN
