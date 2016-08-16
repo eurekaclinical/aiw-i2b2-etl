@@ -24,8 +24,9 @@ AS
         upload_id IN NUMBER)
     IS
     BEGIN
+        execute immediate 'alter session enable parallel dml;';
         execute immediate '
-            MERGE INTO provider_dimension
+            MERGE /*+ parallel append */ INTO provider_dimension
             USING ' || tempProviderTableName || ' temp
             ON (
                 temp.provider_path = provider_dimension.provider_path
@@ -63,6 +64,7 @@ AS
                     temp.sourcesystem_cd, '
                     || upload_id ||
                 ') where temp.delete_date is null';
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'provider_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -80,8 +82,9 @@ AS
 
         -- Create new patient(patient_mapping) if temp table patient_ide does not exists
         -- in patient_mapping table.
+        execute immediate 'alter session enable parallel dml;';
         execute immediate '
-            insert into patient_mapping (
+            insert /*+ parallel append */ into patient_mapping (
                 patient_ide,
                 patient_ide_source,
                 patient_num,
@@ -102,11 +105,13 @@ AS
                     and pm.patient_ide_source = temp.patient_id_source)
             and temp.patient_id_source = ''HIVE''
             AND temp.delete_date is null';
+        execute immediate 'alter session disable parallel dml;';
         COMMIT;
 
         -- update patient_num for temp table
+        execute immediate 'alter session enable parallel dml;';
         execute immediate '
-            MERGE INTO ' || tempTableName || '
+            MERGE /*+ parallel append */ INTO ' || tempTableName || '
             USING patient_mapping
             ON (
                 patient_mapping.patient_ide = '|| tempTableName ||'.patient_id
@@ -117,7 +122,7 @@ AS
         COMMIT;
 
         execute immediate '
-            MERGE INTO patient_dimension
+            MERGE /*+ parallel append */ INTO patient_dimension
             USING ' || tempTableName || ' temp
             ON (
                 temp.patient_num = patient_dimension.patient_num
@@ -181,6 +186,7 @@ AS
                 temp.sourcesystem_cd,
                 '|| UPLOAD_ID || ')
                 WHERE temp.patient_num IS NOT NULL and temp.delete_date is null';
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'patient_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -193,8 +199,9 @@ AS
         upload_id IN NUMBER)
     IS
     BEGIN
+        execute immediate 'alter session enable parallel dml;';
         execute immediate '
-            MERGE INTO concept_dimension
+            MERGE /*+ parallel append */ INTO concept_dimension
             USING ' || tempConceptTableName || ' temp
             ON (
                 temp.concept_path = concept_dimension.concept_path
@@ -231,6 +238,7 @@ AS
                     temp.sourcesystem_cd, '
                     || UPLOAD_ID ||
                 ')';
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'concept_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -243,8 +251,9 @@ AS
         upload_id IN NUMBER)
     IS
     BEGIN
+        execute immediate 'alter session enable parallel dml;';
         execute immediate '
-            MERGE INTO modifier_dimension
+            MERGE /*+ parallel append */ INTO modifier_dimension
             USING ' || tempModifierTableName || ' temp
             ON (
                 temp.modifier_path = modifier_dimension.modifier_path
@@ -281,6 +290,7 @@ AS
                     temp.sourcesystem_cd, '
                     || upload_id ||
                 ')';
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'modifier_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -296,8 +306,9 @@ AS
         LOCK TABLE encounter_mapping IN EXCLUSIVE MODE NOWAIT ;
         --Create new encounter(encounter_mapping) if temp table encounter_ide does not exists
         -- in encounter_mapping table. -- jk added project id
+        execute immediate 'alter session enable parallel dml;';
         EXECUTE immediate '
-            insert into encounter_mapping (
+            insert /*+ parallel append */ into encounter_mapping (
                 encounter_ide,
                 encounter_ide_source,
                 encounter_num,
@@ -323,10 +334,9 @@ AS
                     and em.patient_ide_source = temp.patient_id_source)
             and encounter_id_source = ''HIVE''
             and temp.delete_date is null';
-
         -- update encounter_num for temp table
         EXECUTE immediate '
-            MERGE INTO ' || tempTableName || ' tempTableName
+            MERGE /*+ parallel append */ INTO ' || tempTableName || ' tempTableName
             USING encounter_mapping em
             ON (
                 em.encounter_ide = tempTableName.encounter_id
@@ -338,7 +348,7 @@ AS
                 UPDATE SET encounter_num = em.encounter_num' ;
 
         EXECUTE immediate '
-            MERGE INTO visit_dimension
+            MERGE /*+ parallel append */ INTO visit_dimension
             USING ' || tempTableName || ' temp
             ON (
                 temp.encounter_num = visit_dimension.encounter_num
@@ -360,7 +370,7 @@ AS
 
         -- jk: added project_id='@' to WHERE clause... need to support projects...
         EXECUTE immediate '
-            insert into visit_dimension (
+            insert /*+ parallel append */ into visit_dimension (
                 encounter_num,
                 patient_num,
                 START_DATE,
@@ -396,6 +406,7 @@ AS
             and pm.patient_ide = temp.patient_id
             and pm.patient_ide_source = temp.patient_id_source
             and temp.delete_date is null';
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'visit_dimension');
     EXCEPTION
         WHEN OTHERS THEN
@@ -410,7 +421,8 @@ AS
         appendFlag            IN NUMBER)
     IS
     BEGIN
-        EXECUTE IMMEDIATE 'INSERT INTO ' || upload_temptable_name_c || '
+        execute immediate 'alter session enable parallel dml;';
+        EXECUTE IMMEDIATE 'INSERT /*+ parallel append nologging */ INTO ' || upload_temptable_name_c || '
           (SELECT em.encounter_num,
                   temp.encounter_id,
                   temp.encounter_id_source,
@@ -455,7 +467,7 @@ AS
         IF ( appendFlag = 0 ) THEN
             --Transfer all rows from temp_obsfact to observation_fact
             EXECUTE immediate
-                'INSERT ALL INTO observation_fact(encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
+                'INSERT /*+ parallel append */ ALL INTO observation_fact(encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
                     quantity_num,confidence_num,observation_blob,units_cd,end_date,location_cd, update_date,download_date,import_date,sourcesystem_cd,
                     upload_id)
                     SELECT encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
@@ -466,7 +478,7 @@ AS
                     ;
         ELSE
             EXECUTE immediate
-                'MERGE INTO observation_fact USING ' || upload_temptable_name_c || ' temp ON
+                'MERGE /*+ parallel append */ INTO observation_fact USING ' || upload_temptable_name_c || ' temp ON
                     (temp.encounter_num = observation_fact.encounter_num
                     and temp.patient_num = observation_fact.patient_num
                     and temp.concept_cd = observation_fact.concept_cd
@@ -541,6 +553,7 @@ AS
                     temp.delete_date is null'
                 ;
         END IF ;
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'OBSERVATION_FACT');
     EXCEPTION
         WHEN OTHERS THEN
@@ -650,7 +663,7 @@ AS
                     maxEncounterNum := maxEncounterNum + 1 ;
                                  --TODO : add update colunn
                     execute immediate '
-                        insert into ' || tempEidTableName ||' (
+                        insert /*+ append */ into ' || tempEidTableName ||' (
                             encounter_map_id,
                             encounter_map_id_source,
                             encounter_id,
@@ -705,8 +718,9 @@ AS
         COMMIT;
 
         -- do the mapping update if the update date is old
+        execute immediate 'alter session enable parallel dml;';
         execute immediate '
-            merge into encounter_mapping
+            merge /*+ parallel append */ into encounter_mapping
             using ' || tempEidTableName ||' temp
             on (temp.encounter_map_id = encounter_mapping.ENCOUNTER_IDE
                 and temp.encounter_map_id_source = encounter_mapping.ENCOUNTER_IDE_SOURCE
@@ -728,7 +742,7 @@ AS
                 delete where temp.delete_date is not null';
         -- insert new mapping records i.e flagged P -- jk: added project_id
         execute immediate '
-            insert into encounter_mapping (
+            insert /*+ parallel append */ into encounter_mapping (
                 encounter_ide,
                 encounter_ide_source,
                 encounter_ide_status,
@@ -756,6 +770,7 @@ AS
             from ' || tempEidTableName || '
             where process_status_flag = ''P''
             and delete_date is null';
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'encounter_mapping');
     EXCEPTION
         WHEN OTHERS THEN
@@ -862,7 +877,7 @@ AS
                 else
                     maxPatientNum := maxPatientNum + 1;
                     execute immediate '
-                        insert into ' || tempPidTableName ||' (
+                        insert /*+ append */ into ' || tempPidTableName ||' (
                             patient_map_id,
                             patient_map_id_source,
                             patient_id,
@@ -908,8 +923,9 @@ AS
         COMMIT;
 
         -- do the mapping update if the update date is old
+        execute immediate 'alter session enable parallel dml;';
         execute immediate
-            'merge into patient_mapping
+            'merge /*+ parallel append */ into patient_mapping
                 using ' || tempPidTableName ||' temp
                 on (
                     temp.patient_map_id = patient_mapping.patient_IDE
@@ -930,7 +946,7 @@ AS
 
                         -- insert new mapping records i.e flagged P - jk: added project id
         execute immediate '
-            insert into patient_mapping (
+            insert /*+ parallel append */ into patient_mapping (
                 patient_ide,
                 patient_ide_source,
                 patient_ide_status,
@@ -953,6 +969,7 @@ AS
                 || upload_id ||'
             from '|| tempPidTableName || '
             where process_status_flag = ''P'' AND delete_date is null';
+        execute immediate 'alter session disable parallel dml;';
         dbms_stats.gather_table_stats(USER, 'patient_mapping');
     EXCEPTION
         WHEN OTHERS THEN

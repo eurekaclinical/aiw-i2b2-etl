@@ -35,7 +35,7 @@ public class ConceptDimensionHandler extends RecordHandler<ConceptDimension> {
 
     public ConceptDimensionHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
-                "insert into " + TEMP_CONCEPT_TABLE + " (concept_cd,concept_path,name_char,concept_blob,"
+                "insert /*+ append nologging */ into " + TEMP_CONCEPT_TABLE + " (concept_cd,concept_path,name_char,concept_blob,"
                 + "update_date,download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?)");
     }
 

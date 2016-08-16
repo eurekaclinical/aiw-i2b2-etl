@@ -36,7 +36,7 @@ public class PatientDimensionHandler extends RecordHandler<PatientDimension> {
 
     public PatientDimensionHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
-                "insert into " + TEMP_PATIENT_TABLE + "(patient_id,patient_id_source,vital_status_cd,birth_date,death_date,sex_cd,"
+                "insert /*+ append nologging */ into " + TEMP_PATIENT_TABLE + "(patient_id,patient_id_source,vital_status_cd,birth_date,death_date,sex_cd,"
                 + "age_in_years_num,language_cd,race_cd,marital_status_cd,religion_cd,zip_cd,statecityzip_path,patient_blob,update_date,"
                 + "download_date,import_date,sourcesystem_cd,delete_date) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     }

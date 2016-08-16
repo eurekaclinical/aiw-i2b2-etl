@@ -40,9 +40,9 @@ import org.dbunit.operation.DatabaseOperation;
  */
 public final class DatabasePopulator implements AutoCloseable {
 
-    private static final String JDBC_URL_POPULATE = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'src/test/resources/test-schema.sql'";
+    private static final String JDBC_URL_POPULATE = "jdbc:h2:mem:test;LOG=0;UNDO_LOG=0;DB_CLOSE_DELAY=-1;INIT=RUNSCRIPT FROM 'src/test/resources/test-schema.sql'";
     
-    private static final String JDBC_URL_NO_POPULATE = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+    private static final String JDBC_URL_NO_POPULATE = "jdbc:h2:mem:test;LOG=0;UNDO_LOG=0;DB_CLOSE_DELAY=-1";
 
     /**
      * Sample data file

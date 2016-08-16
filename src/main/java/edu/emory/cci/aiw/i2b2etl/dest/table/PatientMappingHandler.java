@@ -34,7 +34,7 @@ public class PatientMappingHandler extends RecordHandler<PatientDimension> {
     
     public PatientMappingHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
-                "insert into " + TEMP_PATIENT_MAPPING_TABLE + " (patient_id,patient_id_source,patient_map_id,patient_map_id_source,patient_map_id_status," +
+                "insert /*+ append nologging */ into " + TEMP_PATIENT_MAPPING_TABLE + " (patient_id,patient_id_source,patient_map_id,patient_map_id_source,patient_map_id_status," +
                     "update_date,download_date,import_date,sourcesystem_cd,delete_date) values (?,?,?,?,?,?,?,?,?,?)");
     }
 

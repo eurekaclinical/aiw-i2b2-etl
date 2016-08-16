@@ -37,7 +37,7 @@ public class ProviderDimensionHandler extends RecordHandler<ProviderDimension> {
 
     public ProviderDimensionHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
-                "insert into " + TEMP_PROVIDER_TABLE + " (provider_id,provider_path,name_char,"
+                "insert /*+ append nologging */ into " + TEMP_PROVIDER_TABLE + " (provider_id,provider_path,name_char,"
                 + "provider_blob,update_date,download_date,import_date,sourcesystem_cd,upload_id,delete_date) values (?,?,?,?,?,?,?,?,?,?)");
     }
 

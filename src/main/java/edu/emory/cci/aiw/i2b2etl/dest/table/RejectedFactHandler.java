@@ -34,7 +34,7 @@ public class RejectedFactHandler extends AbstractFactHandler {
     public static final String REJECTED_FACT_TABLE = "EK_REJECTED_OBSERVATION_FACT";
 
     public RejectedFactHandler(ConnectionSpec connSpec, String table) throws SQLException {
-        super(connSpec, "insert into " + table + "(encounter_id, encounter_id_source, concept_cd, " +
+        super(connSpec, "insert /*+ append nologging */ into " + table + "(encounter_id, encounter_id_source, concept_cd, " +
                             "patient_id, patient_id_source, provider_id, start_date, modifier_cd, instance_num, valtype_cd, tval_char, nval_num, valueflag_cd, quantity_num, " +
                             "confidence_num, observation_blob, units_cd, end_date, location_cd, update_date, download_date, import_date, sourcesystem_cd, upload_id, reason)" +
                             " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");

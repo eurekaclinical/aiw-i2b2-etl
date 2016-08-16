@@ -36,7 +36,7 @@ public class VisitDimensionHandler extends RecordHandler<VisitDimension> {
 
     public VisitDimensionHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec, 
-                "insert into " + TEMP_VISIT_TABLE + "(encounter_id, encounter_id_source,"
+                "insert /*+ append nologging */ into " + TEMP_VISIT_TABLE + "(encounter_id, encounter_id_source,"
                 + "patient_id, patient_id_source, inout_cd, location_cd, location_path, start_date, end_date, "
                 + "visit_blob, update_date, download_date, import_date, sourcesystem_cd, active_status_cd, length_of_stay,delete_date)" +
                         " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
