@@ -36,7 +36,7 @@ public class MetaTableConceptHandler extends RecordHandler<Concept> {
     private Timestamp importTimestamp;
 
     public MetaTableConceptHandler(ConnectionSpec connSpec, String tableName) throws SQLException {
-        super(connSpec, "insert /*+ append nologging */ into " + tableName + "(c_hlevel,c_fullname,c_name,c_synonym_cd,c_visualattributes,c_totalnum,"
+        super(connSpec, "insert into " + tableName + "(c_hlevel,c_fullname,c_name,c_synonym_cd,c_visualattributes,c_totalnum,"
                 + "c_basecode,c_metadataxml,c_facttablecolumn,c_tablename,c_columnname,c_columndatatype,c_operator,c_dimcode,c_comment,c_tooltip,"
                 + "update_date,download_Date,import_date,sourcesystem_cd,valuetype_cd,m_applied_path,m_exclusion_cd,c_path,c_symbol)"
                 + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");

@@ -34,7 +34,7 @@ public class EncounterMappingHandler extends RecordHandler<VisitDimension> {
     
     public EncounterMappingHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
-                "insert /*+ append nologging */ into " + TEMP_ENC_MAPPING_TABLE + "(encounter_id, encounter_id_source, encounter_map_id, encounter_map_id_source, " +
+                "insert into " + TEMP_ENC_MAPPING_TABLE + "(encounter_id, encounter_id_source, encounter_map_id, encounter_map_id_source, " +
                     "encounter_map_id_status, patient_map_id, patient_map_id_source, update_date, download_date, import_date, sourcesystem_cd, delete_date)" +
                     " values (?,?,?,?,?,?,?,?,?,?,?,?)");
     }

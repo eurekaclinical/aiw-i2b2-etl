@@ -35,7 +35,7 @@ public class ModifierDimensionHandler extends RecordHandler<ModifierDimension> {
 
     public ModifierDimensionHandler(ConnectionSpec connSpec) throws SQLException {
         super(connSpec,
-                "insert /*+ append nologging */ into " + TEMP_MODIFIER_TABLE + " (modifier_cd,modifier_path,name_char,modifier_blob,"
+                "insert into " + TEMP_MODIFIER_TABLE + " (modifier_cd,modifier_path,name_char,modifier_blob,"
                 + "update_date,download_date,import_date,sourcesystem_cd) values (?,?,?,?,?,?,?,?)");
     }
 

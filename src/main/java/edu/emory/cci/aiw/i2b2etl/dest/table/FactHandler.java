@@ -55,7 +55,7 @@ public abstract class FactHandler extends AbstractFactHandler {
 
     public FactHandler(ConnectionSpec connSpec, String propertyName, String startConfig, String finishConfig, String unitsPropertyName, Metadata metadata, RejectedFactHandlerFactory rejectedFactHandlerFactory) throws SQLException {
         super(connSpec,
-                "insert /*+ append nologging */ into " + TEMP_OBSERVATION_TABLE + "(encounter_id, encounter_id_source, concept_cd, "
+                "insert into " + TEMP_OBSERVATION_TABLE + "(encounter_id, encounter_id_source, concept_cd, "
                 + "patient_id, patient_id_source, provider_id, start_date, modifier_cd, instance_num, valtype_cd, tval_char, nval_num, valueflag_cd, quantity_num, "
                 + "confidence_num, observation_blob, units_cd, end_date, location_cd, update_date, download_date, import_date, sourcesystem_cd, upload_id, delete_date)"
                 + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
