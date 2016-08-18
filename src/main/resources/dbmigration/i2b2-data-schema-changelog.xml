@@ -42,22 +42,12 @@ limitations under the License.
     <changeSet author="arpost" id="DATA-EK-1">
         <createTable tableName="EK_REJECTED_OBSERVATION_FACT">
             <column name="ENCOUNTER_NUM" type="BIGINT"/>
-            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="CONCEPT_CD" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)"/>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="CONCEPT_CD" type="VARCHAR(50)"/>
             <column name="PATIENT_NUM" type="BIGINT"/>
-            <column name="PATIENT_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="PATIENT_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)"/>
             <column name="PROVIDER_ID" type="VARCHAR(50)"/>
             <column name="START_DATE" type="${date.type}"/>
             <column name="MODIFIER_CD" type="VARCHAR(100)"/>
@@ -79,15 +69,9 @@ limitations under the License.
             <column name="UPLOAD_ID" type="BIGINT"/>
             <column name="REASON" type="VARCHAR(255)"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-2">
         <createTable tableName="EK_TEMP_CONCEPT">
-            <column name="CONCEPT_CD" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="CONCEPT_PATH" type="VARCHAR(700)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="CONCEPT_CD" type="VARCHAR(50)"/>
+            <column name="CONCEPT_PATH" type="VARCHAR(700)"/>
             <column name="NAME_CHAR" type="VARCHAR(2000)"/>
             <column name="CONCEPT_BLOB" type="CLOB"/>
             <column name="UPDATE_DATE" type="${date.type}"/>
@@ -96,20 +80,12 @@ limitations under the License.
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-3">
         <createTable tableName="EK_TEMP_ENCOUNTER_MAPPING">
-            <column name="ENCOUNTER_MAP_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ENCOUNTER_MAP_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="ENCOUNTER_MAP_ID" type="VARCHAR(200)"/>
+            <column name="ENCOUNTER_MAP_ID_SOURCE" type="VARCHAR(50)"/>
             <column name="PATIENT_MAP_ID" type="VARCHAR(200)"/>
             <column name="PATIENT_MAP_ID_SOURCE" type="VARCHAR(50)"/>
-            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)"/>
             <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)"/>
             <column name="ENCOUNTER_NUM" type="BIGINT"/>
             <column name="ENCOUNTER_MAP_ID_STATUS" type="VARCHAR(50)"/>
@@ -120,15 +96,9 @@ limitations under the License.
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-4">
         <createTable tableName="EK_TEMP_MODIFIER">
-            <column name="MODIFIER_CD" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="MODIFIER_PATH" type="VARCHAR(900)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="MODIFIER_CD" type="VARCHAR(50)"/>
+            <column name="MODIFIER_PATH" type="VARCHAR(900)"/>
             <column name="NAME_CHAR" type="VARCHAR(2000)"/>
             <column name="MODIFIER_BLOB" type="CLOB"/>
             <column name="UPDATE_DATE" type="${date.type}"/>
@@ -137,26 +107,14 @@ limitations under the License.
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-5">
         <createTable tableName="EK_TEMP_OBSERVATION">
             <column name="ENCOUNTER_NUM" type="BIGINT"/>
-            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="CONCEPT_CD" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)"/>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="CONCEPT_CD" type="VARCHAR(50)"/>
             <column name="PATIENT_NUM" type="BIGINT"/>
-            <column name="PATIENT_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="PATIENT_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)"/>
             <column name="PROVIDER_ID" type="VARCHAR(50)"/>
             <column name="START_DATE" type="${date.type}"/>
             <column name="MODIFIER_CD" type="VARCHAR(100)"/>
@@ -178,26 +136,14 @@ limitations under the License.
             <column name="UPLOAD_ID" type="BIGINT"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-6">
         <createTable tableName="EK_TEMP_OBSERVATION_COMPLETE">
             <column name="ENCOUNTER_NUM" type="BIGINT"/>
-            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="CONCEPT_CD" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)"/>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="CONCEPT_CD" type="VARCHAR(50)"/>
             <column name="PATIENT_NUM" type="BIGINT"/>
-            <column name="PATIENT_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="PATIENT_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)"/>
             <column name="PROVIDER_ID" type="VARCHAR(50)"/>
             <column name="START_DATE" type="${date.type}"/>
             <column name="MODIFIER_CD" type="VARCHAR(100)"/>
@@ -219,8 +165,6 @@ limitations under the License.
             <column name="UPLOAD_ID" type="BIGINT"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-7">
         <createTable tableName="EK_TEMP_PATIENT">
             <column name="PATIENT_ID" type="VARCHAR(200)"/>
             <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)"/>
@@ -243,8 +187,6 @@ limitations under the License.
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-8">
         <createTable tableName="EK_TEMP_PATIENT_MAPPING">
             <column name="PATIENT_MAP_ID" type="VARCHAR(200)"/>
             <column name="PATIENT_MAP_ID_SOURCE" type="VARCHAR(50)"/>
@@ -260,15 +202,9 @@ limitations under the License.
             <column name="SOURCESYSTEM_CD" type="VARCHAR(50)"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-9">
         <createTable tableName="EK_TEMP_PROVIDER">
-            <column name="PROVIDER_ID" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="PROVIDER_PATH" type="VARCHAR(700)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="PROVIDER_ID" type="VARCHAR(50)"/>
+            <column name="PROVIDER_PATH" type="VARCHAR(700)"/>
             <column name="NAME_CHAR" type="VARCHAR(2000)"/>
             <column name="PROVIDER_BLOB" type="CLOB"/>
             <column name="UPDATE_DATE" type="${date.type}"/>
@@ -278,21 +214,11 @@ limitations under the License.
             <column name="UPLOAD_ID" type="BIGINT"/>
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-10">
         <createTable tableName="EK_TEMP_VISIT">
-            <column name="ENCOUNTER_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="PATIENT_ID" type="VARCHAR(200)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="ENCOUNTER_ID" type="VARCHAR(200)"/>
+            <column name="ENCOUNTER_ID_SOURCE" type="VARCHAR(50)"/>
+            <column name="PATIENT_ID" type="VARCHAR(200)"/>
+            <column name="PATIENT_ID_SOURCE" type="VARCHAR(50)"/>
             <column name="ENCOUNTER_NUM" type="BIGINT"/>
             <column name="INOUT_CD" type="VARCHAR(50)"/>
             <column name="LOCATION_CD" type="VARCHAR(50)"/>
@@ -309,120 +235,47 @@ limitations under the License.
             <column name="DELETE_DATE" type="${date.type}"/>
         </createTable>
     </changeSet>
-    <changeSet author="arpost" id="DATA-EK-11">
-        <createIndex indexName="EK_IDX_TEMP_CONCEPT_PAT_ID" tableName="EK_TEMP_CONCEPT" unique="false">
-            <column name="CONCEPT_PATH"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-12">
-        <createIndex indexName="EK_IDX_TEMP_ENCMAP_EID_ID" tableName="EK_TEMP_ENCOUNTER_MAPPING" unique="false">
-            <column name="ENCOUNTER_ID"/>
-            <column name="ENCOUNTER_ID_SOURCE"/>
-            <column name="ENCOUNTER_MAP_ID"/>
-            <column name="ENCOUNTER_MAP_ID_SOURCE"/>
-            <column name="ENCOUNTER_NUM"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-13">
-        <createIndex indexName="EK_IDX_TEMP_ENCMAP_STAT_EID_ID" tableName="EK_TEMP_ENCOUNTER_MAPPING" unique="false">
-            <column name="PROCESS_STATUS_FLAG"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-14">
-        <createIndex indexName="EK_IDX_TEMP_MODIFIER_PAT_ID" tableName="EK_TEMP_MODIFIER" unique="false">
-            <column name="MODIFIER_PATH"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-15">
-        <createIndex indexName="EK_IDX_TEMP_OBX_COM_ENC_PAT_ID" tableName="EK_TEMP_OBSERVATION_COMPLETE" unique="false">
-            <column name="ENCOUNTER_ID"/>
-            <column name="ENCOUNTER_ID_SOURCE"/>
-            <column name="PATIENT_ID"/>
-            <column name="PATIENT_ID_SOURCE"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-16">
-        <createIndex indexName="EK_IDX_TEMP_OBX_COM_PK" tableName="EK_TEMP_OBSERVATION_COMPLETE" unique="false">
-            <column name="ENCOUNTER_NUM"/>
-            <column name="PATIENT_NUM"/>
-            <column name="CONCEPT_CD"/>
-            <column name="PROVIDER_ID"/>
-            <column name="START_DATE"/>
-            <column name="MODIFIER_CD"/>
-            <column name="INSTANCE_NUM"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-17">
-        <createIndex indexName="EK_IDX_TEMP_PATIENT_PAT_ID" tableName="EK_TEMP_PATIENT" unique="false">
-            <column name="PATIENT_ID"/>
-            <column name="PATIENT_ID_SOURCE"/>
-            <column name="PATIENT_NUM"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-18">
-        <createIndex indexName="EK_IDX_TEMP_PATMAP_MAP_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
-            <column name="PATIENT_ID"/>
-            <column name="PATIENT_ID_SOURCE"/>
-            <column name="PATIENT_MAP_ID"/>
-            <column name="PATIENT_MAP_ID_SOURCE"/>
-            <column name="PATIENT_NUM"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-19">
-        <createIndex indexName="EK_IDX_TEMP_PATMAP_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
-            <column name="PATIENT_ID"/>
-            <column name="PATIENT_ID_SOURCE"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-20">
-        <createIndex indexName="EK_IDX_TEMP_PATMAP_STAT_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
-            <column name="PROCESS_STATUS_FLAG"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-21">
-        <createIndex indexName="EK_IDX_TEMP_PROVIDER_PPATH_ID" tableName="EK_TEMP_PROVIDER" unique="false">
-            <column name="PROVIDER_PATH"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-22">
-        <createIndex indexName="EK_IDX_TEMP_VISIT_ENC_ID" tableName="EK_TEMP_VISIT" unique="false">
-            <column name="ENCOUNTER_ID"/>
-            <column name="ENCOUNTER_ID_SOURCE"/>
-            <column name="PATIENT_ID"/>
-            <column name="PATIENT_ID_SOURCE"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="arpost" id="DATA-EK-23">
-        <createIndex indexName="EK_IDX_TEMP_VISIT_PATIENT_ID" tableName="EK_TEMP_VISIT" unique="false">
-            <column name="PATIENT_ID"/>
-            <column name="PATIENT_ID_SOURCE"/>
-        </createIndex>
-    </changeSet>
-    <changeSet id="DATA-EK-24" author="arpost">
+    <changeSet id="DATA-EK-2" author="arpost">
         <sql dbms="postgresql">
-            ALTER TABLE EK_REJECTED_OBSERVATION_FACT SET UNLOGGED;
-            ALTER TABLE EK_TEMP_CONCEPT SET UNLOGGED;
-            ALTER TABLE EK_TEMP_ENCOUNTER_MAPPING SET UNLOGGED;
-            ALTER TABLE EK_TEMP_MODIFIER SET UNLOGGED;
-            ALTER TABLE EK_TEMP_OBSERVATION SET UNLOGGED;
-            ALTER TABLE EK_TEMP_OBSERVATION_COMPLETE SET UNLOGGED;
-            ALTER TABLE EK_TEMP_PATIENT SET UNLOGGED;
-            ALTER TABLE EK_TEMP_PATIENT_MAPPING SET UNLOGGED;
-            ALTER TABLE EK_TEMP_PROVIDER SET UNLOGGED;
-            ALTER TABLE EK_TEMP_VISIT SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_CONCEPT_PAT_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_ENCMAP_EID_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_ENCMAP_STAT_EID_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_MODIFIER_PAT_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_OBX_COM_ENC_PAT_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_OBX_COM_PK SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_PATIENT_PAT_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_PATMAP_MAP_PID_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_PATMAP_PID_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_PATMAP_STAT_PID_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_PROVIDER_PPATH_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_VISIT_ENC_ID SET UNLOGGED;
-            ALTER INDEX EK_IDX_TEMP_VISIT_PATIENT_ID SET UNLOGGED;
+            CREATE UNLOGGED TABLE EK_REJECTED_OBSERVATION_FACT_N (LIKE EK_REJECTED_OBSERVATION_FACT);
+            DROP TABLE EK_REJECTED_OBSERVATION_FACT;
+            ALTER TABLE EK_REJECTED_OBSERVATION_FACT_N RENAME TO EK_REJECTED_OBSERVATION_FACT;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_CONCEPT_N (LIKE EK_TEMP_CONCEPT);
+            DROP TABLE EK_TEMP_CONCEPT;
+            ALTER TABLE EK_TEMP_CONCEPT_N RENAME TO EK_TEMP_CONCEPT;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_ENCOUNTER_MAPPING_N (LIKE EK_TEMP_ENCOUNTER_MAPPING);
+            DROP TABLE EK_TEMP_ENCOUNTER_MAPPING;
+            ALTER TABLE EK_TEMP_ENCOUNTER_MAPPING_N RENAME TO EK_TEMP_ENCOUNTER_MAPPING;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_MODIFIER_N (LIKE EK_TEMP_MODIFIER);
+            DROP TABLE EK_TEMP_MODIFIER;
+            ALTER TABLE EK_TEMP_MODIFIER_N RENAME TO EK_TEMP_MODIFIER;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_OBSERVATION_N (LIKE EK_TEMP_OBSERVATION);
+            DROP TABLE EK_TEMP_OBSERVATION;
+            ALTER TABLE EK_TEMP_OBSERVATION_N RENAME TO EK_TEMP_OBSERVATION;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_OBSERVATION_COMPLETE_N (LIKE EK_TEMP_OBSERVATION_COMPLETE);
+            DROP TABLE EK_TEMP_OBSERVATION_COMPLETE;
+            ALTER TABLE EK_TEMP_OBSERVATION_COMPLETE_N RENAME TO EK_TEMP_OBSERVATION_COMPLETE;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_PATIENT_N (LIKE EK_TEMP_PATIENT);
+            DROP TABLE EK_TEMP_PATIENT;
+            ALTER TABLE EK_TEMP_PATIENT_N RENAME TO EK_TEMP_PATIENT;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_PATIENT_MAPPING_N (LIKE EK_TEMP_PATIENT_MAPPING);
+            DROP TABLE EK_TEMP_PATIENT_MAPPING;
+            ALTER TABLE EK_TEMP_PATIENT_MAPPING_N RENAME TO EK_TEMP_PATIENT_MAPPING;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_PROVIDER_N (LIKE EK_TEMP_PROVIDER);
+            DROP TABLE EK_TEMP_PROVIDER;
+            ALTER TABLE EK_TEMP_PROVIDER_N RENAME TO EK_TEMP_PROVIDER;
+            
+            CREATE UNLOGGED TABLE EK_TEMP_VISIT_N (LIKE EK_TEMP_VISIT);
+            DROP TABLE EK_TEMP_VISIT;
+            ALTER TABLE EK_TEMP_VISIT_N RENAME TO EK_TEMP_VISIT;
         </sql>
         <sql dbms="oracle">
             ALTER TABLE EK_REJECTED_OBSERVATION_FACT NOLOGGING;
@@ -451,29 +304,45 @@ limitations under the License.
         </sql>
         <rollback>
             <sql dbms="postgresql">
-                ALTER TABLE EK_REJECTED_OBSERVATION_FACT SET LOGGED;
-                ALTER TABLE EK_TEMP_CONCEPT SET LOGGED;
-                ALTER TABLE EK_TEMP_ENCOUNTER_MAPPING SET LOGGED;
-                ALTER TABLE EK_TEMP_MODIFIER SET LOGGED;
-                ALTER TABLE EK_TEMP_OBSERVATION SET LOGGED;
-                ALTER TABLE EK_TEMP_OBSERVATION_COMPLETE SET LOGGED;
-                ALTER TABLE EK_TEMP_PATIENT SET LOGGED;
-                ALTER TABLE EK_TEMP_PATIENT_MAPPING SET LOGGED;
-                ALTER TABLE EK_TEMP_PROVIDER SET LOGGED;
-                ALTER TABLE EK_TEMP_VISIT SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_CONCEPT_PAT_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_ENCMAP_EID_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_ENCMAP_STAT_EID_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_MODIFIER_PAT_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_OBX_COM_ENC_PAT_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_OBX_COM_PK SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_PATIENT_PAT_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_PATMAP_MAP_PID_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_PATMAP_PID_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_PATMAP_STAT_PID_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_PROVIDER_PPATH_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_VISIT_ENC_ID SET LOGGED;
-                ALTER INDEX EK_IDX_TEMP_VISIT_PATIENT_ID SET LOGGED;
+                CREATE TABLE EK_REJECTED_OBSERVATION_FACT_N (LIKE EK_REJECTED_OBSERVATION_FACT);
+                DROP TABLE EK_REJECTED_OBSERVATION_FACT;
+                ALTER TABLE EK_REJECTED_OBSERVATION_FACT_N RENAME TO EK_REJECTED_OBSERVATION_FACT;
+            
+                CREATE TABLE EK_TEMP_CONCEPT_N (LIKE EK_TEMP_CONCEPT);
+                DROP TABLE EK_TEMP_CONCEPT;
+                ALTER TABLE EK_TEMP_CONCEPT_N RENAME TO EK_TEMP_CONCEPT;
+            
+                CREATE TABLE EK_TEMP_ENCOUNTER_MAPPING_N (LIKE EK_TEMP_ENCOUNTER_MAPPING);
+                DROP TABLE EK_TEMP_ENCOUNTER_MAPPING;
+                ALTER TABLE EK_TEMP_ENCOUNTER_MAPPING_N RENAME TO EK_TEMP_ENCOUNTER_MAPPING;
+            
+                CREATE TABLE EK_TEMP_MODIFIER_N (LIKE EK_TEMP_MODIFIER);
+                DROP TABLE EK_TEMP_MODIFIER;
+                ALTER TABLE EK_TEMP_MODIFIER_N RENAME TO EK_TEMP_MODIFIER;
+            
+                CREATE TABLE EK_TEMP_OBSERVATION_N (LIKE EK_TEMP_OBSERVATION);
+                DROP TABLE EK_TEMP_OBSERVATION;
+                ALTER TABLE EK_TEMP_OBSERVATION_N RENAME TO EK_TEMP_OBSERVATION;
+            
+                CREATE TABLE EK_TEMP_OBSERVATION_COMPLETE_N (LIKE EK_TEMP_OBSERVATION_COMPLETE);
+                DROP TABLE EK_TEMP_OBSERVATION_COMPLETE;
+                ALTER TABLE EK_TEMP_OBSERVATION_COMPLETE_N RENAME TO EK_TEMP_OBSERVATION_COMPLETE;
+            
+                CREATE TABLE EK_TEMP_PATIENT_N (LIKE EK_TEMP_PATIENT);
+                DROP TABLE EK_TEMP_PATIENT;
+                ALTER TABLE EK_TEMP_PATIENT_N RENAME TO EK_TEMP_PATIENT;
+            
+                CREATE TABLE EK_TEMP_PATIENT_MAPPING_N (LIKE EK_TEMP_PATIENT_MAPPING);
+                DROP TABLE EK_TEMP_PATIENT_MAPPING;
+                ALTER TABLE EK_TEMP_PATIENT_MAPPING_N RENAME TO EK_TEMP_PATIENT_MAPPING;
+            
+                CREATE TABLE EK_TEMP_PROVIDER_N (LIKE EK_TEMP_PROVIDER);
+                DROP TABLE EK_TEMP_PROVIDER;
+                ALTER TABLE EK_TEMP_PROVIDER_N RENAME TO EK_TEMP_PROVIDER;
+            
+                CREATE TABLE EK_TEMP_VISIT_N (LIKE EK_TEMP_VISIT);
+                DROP TABLE EK_TEMP_VISIT;
+                ALTER TABLE EK_TEMP_VISIT_N RENAME TO EK_TEMP_VISIT;
             </sql>
             <sql dbms="oracle">
                 ALTER TABLE EK_REJECTED_OBSERVATION_FACT LOGGING;
@@ -502,7 +371,7 @@ limitations under the License.
             </sql>
         </rollback>
     </changeSet>
-    <changeSet id="DATA-EK-25" author="arpost">
+    <changeSet id="DATA-EK-3" author="arpost">
         <sql dbms="oracle">
             ALTER TABLE EK_REJECTED_OBSERVATION_FACT PARALLEL;
             ALTER TABLE EK_TEMP_CONCEPT PARALLEL;
@@ -555,5 +424,100 @@ limitations under the License.
                 ALTER INDEX EK_IDX_TEMP_VISIT_PATIENT_ID NOPARALLEL;
             </sql>
         </rollback>
+    </changeSet>
+    <changeSet author="arpost" id="DATA-EK-4">
+        <createIndex indexName="EK_IDX_TEMP_CONCEPT_PAT_ID" tableName="EK_TEMP_CONCEPT" unique="false">
+            <column name="CONCEPT_PATH"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_ENCMAP_EID_ID" tableName="EK_TEMP_ENCOUNTER_MAPPING" unique="false">
+            <column name="ENCOUNTER_ID"/>
+            <column name="ENCOUNTER_ID_SOURCE"/>
+            <column name="ENCOUNTER_MAP_ID"/>
+            <column name="ENCOUNTER_MAP_ID_SOURCE"/>
+            <column name="ENCOUNTER_NUM"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_ENCMAP_STAT_EID_ID" tableName="EK_TEMP_ENCOUNTER_MAPPING" unique="false">
+            <column name="PROCESS_STATUS_FLAG"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_MODIFIER_PAT_ID" tableName="EK_TEMP_MODIFIER" unique="false">
+            <column name="MODIFIER_PATH"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_OBX_COM_ENC_PAT_ID" tableName="EK_TEMP_OBSERVATION_COMPLETE" unique="false">
+            <column name="ENCOUNTER_ID"/>
+            <column name="ENCOUNTER_ID_SOURCE"/>
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_OBX_COM_PK" tableName="EK_TEMP_OBSERVATION_COMPLETE" unique="false">
+            <column name="ENCOUNTER_NUM"/>
+            <column name="PATIENT_NUM"/>
+            <column name="CONCEPT_CD"/>
+            <column name="PROVIDER_ID"/>
+            <column name="START_DATE"/>
+            <column name="MODIFIER_CD"/>
+            <column name="INSTANCE_NUM"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_PATIENT_PAT_ID" tableName="EK_TEMP_PATIENT" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+            <column name="PATIENT_NUM"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_PATMAP_MAP_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+            <column name="PATIENT_MAP_ID"/>
+            <column name="PATIENT_MAP_ID_SOURCE"/>
+            <column name="PATIENT_NUM"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_PATMAP_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_PATMAP_STAT_PID_ID" tableName="EK_TEMP_PATIENT_MAPPING" unique="false">
+            <column name="PROCESS_STATUS_FLAG"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_PROVIDER_PPATH_ID" tableName="EK_TEMP_PROVIDER" unique="false">
+            <column name="PROVIDER_PATH"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_VISIT_ENC_ID" tableName="EK_TEMP_VISIT" unique="false">
+            <column name="ENCOUNTER_ID"/>
+            <column name="ENCOUNTER_ID_SOURCE"/>
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+        <createIndex indexName="EK_IDX_TEMP_VISIT_PATIENT_ID" tableName="EK_TEMP_VISIT" unique="false">
+            <column name="PATIENT_ID"/>
+            <column name="PATIENT_ID_SOURCE"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="DATA-EK-5" author="arpost">
+        <addNotNullConstraint tableName="EK_REJECTED_OBSERVATION_FACT" columnName="ENCOUNTER_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_REJECTED_OBSERVATION_FACT" columnName="ENCOUNTER_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_REJECTED_OBSERVATION_FACT" columnName="CONCEPT_CD" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_REJECTED_OBSERVATION_FACT" columnName="PATIENT_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_REJECTED_OBSERVATION_FACT" columnName="PATIENT_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_CONCEPT" columnName="CONCEPT_CD" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_CONCEPT" columnName="CONCEPT_PATH" columnDataType="VARCHAR(700)"/>
+        <addNotNullConstraint tableName="EK_TEMP_ENCOUNTER_MAPPING" columnName="ENCOUNTER_MAP_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_ENCOUNTER_MAPPING" columnName="ENCOUNTER_MAP_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_ENCOUNTER_MAPPING" columnName="ENCOUNTER_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_MODIFIER" columnName="MODIFIER_CD" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_MODIFIER" columnName="MODIFIER_PATH" columnDataType="VARCHAR(900)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION" columnName="ENCOUNTER_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION" columnName="ENCOUNTER_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION" columnName="CONCEPT_CD" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION" columnName="PATIENT_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION" columnName="PATIENT_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION_COMPLETE" columnName="ENCOUNTER_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION_COMPLETE" columnName="ENCOUNTER_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION_COMPLETE" columnName="CONCEPT_CD" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION_COMPLETE" columnName="PATIENT_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_OBSERVATION_COMPLETE" columnName="PATIENT_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_PROVIDER" columnName="PROVIDER_ID" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_PROVIDER" columnName="PROVIDER_PATH" columnDataType="VARCHAR(700)"/>
+        <addNotNullConstraint tableName="EK_TEMP_VISIT" columnName="ENCOUNTER_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_VISIT" columnName="ENCOUNTER_ID_SOURCE" columnDataType="VARCHAR(50)"/>
+        <addNotNullConstraint tableName="EK_TEMP_VISIT" columnName="PATIENT_ID" columnDataType="VARCHAR(200)"/>
+        <addNotNullConstraint tableName="EK_TEMP_VISIT" columnName="PATIENT_ID_SOURCE" columnDataType="VARCHAR(50)"/>
     </changeSet>
 </databaseChangeLog>
