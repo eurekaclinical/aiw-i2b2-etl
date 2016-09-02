@@ -95,7 +95,7 @@
         <dependency>
             <groupId>org.eurekaclinical</groupId>
             <artifactId>eurekaclinical-ontology</artifactId>
-            <version>1.0-Alpha-2</version>
+            <version>1.0-Alpha-3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
