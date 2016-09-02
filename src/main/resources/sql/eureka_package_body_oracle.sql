@@ -25,7 +25,7 @@ AS
     IS
     BEGIN
         execute immediate '
-            MERGE /*+ append nologging parallel */ INTO provider_dimension
+            MERGE /*+ append nologging parallel(auto) */ INTO provider_dimension
             USING ' || tempProviderTableName || ' temp
             ON (
                 temp.provider_path = provider_dimension.provider_path
@@ -76,12 +76,10 @@ AS
     IS
         maxPatientNum NUMBER;
     BEGIN
-        LOCK TABLE patient_mapping IN EXCLUSIVE MODE NOWAIT;
-
         -- Create new patient(patient_mapping) if temp table patient_ide does not exists
         -- in patient_mapping table.
         execute immediate '
-            insert /*+ append nologging parallel */ into patient_mapping (
+            insert /*+ append nologging parallel(auto) */ into patient_mapping (
                 patient_ide,
                 patient_ide_source,
                 patient_num,
@@ -106,7 +104,7 @@ AS
 
         -- update patient_num for temp table
         execute immediate '
-            MERGE /*+ append nologging parallel */ INTO ' || tempTableName || '
+            MERGE /*+ append nologging parallel(auto) */ INTO ' || tempTableName || '
             USING patient_mapping
             ON (
                 patient_mapping.patient_ide = '|| tempTableName ||'.patient_id
@@ -117,7 +115,7 @@ AS
         COMMIT;
 
         execute immediate '
-            MERGE /*+ append nologging parallel */ INTO patient_dimension
+            MERGE /*+ append nologging parallel(auto) */ INTO patient_dimension
             USING ' || tempTableName || ' temp
             ON (
                 temp.patient_num = patient_dimension.patient_num
@@ -194,7 +192,7 @@ AS
     IS
     BEGIN
         execute immediate '
-            MERGE /*+ append nologging parallel */ INTO concept_dimension
+            MERGE /*+ append nologging parallel(auto) */ INTO concept_dimension
             USING ' || tempConceptTableName || ' temp
             ON (
                 temp.concept_path = concept_dimension.concept_path
@@ -244,7 +242,7 @@ AS
     IS
     BEGIN
         execute immediate '
-            MERGE /*+ append nologging parallel */ INTO modifier_dimension
+            MERGE /*+ append nologging parallel(auto) */ INTO modifier_dimension
             USING ' || tempModifierTableName || ' temp
             ON (
                 temp.modifier_path = modifier_dimension.modifier_path
@@ -293,11 +291,10 @@ AS
         upload_id     IN NUMBER)
     IS
     BEGIN
-        LOCK TABLE encounter_mapping IN EXCLUSIVE MODE NOWAIT ;
         --Create new encounter(encounter_mapping) if temp table encounter_ide does not exists
         -- in encounter_mapping table. -- jk added project id
         EXECUTE immediate '
-            insert /*+ append nologging parallel */ into encounter_mapping (
+            insert /*+ append nologging parallel(auto) */ into encounter_mapping (
                 encounter_ide,
                 encounter_ide_source,
                 encounter_num,
@@ -327,7 +324,7 @@ AS
         
         -- update encounter_num for temp table
         EXECUTE immediate '
-            MERGE /*+ append nologging parallel */ INTO ' || tempTableName || ' tempTableName
+            MERGE /*+ append nologging parallel(auto) */ INTO ' || tempTableName || ' tempTableName
             USING encounter_mapping em
             ON (
                 em.encounter_ide = tempTableName.encounter_id
@@ -340,7 +337,7 @@ AS
         COMMIT;
 
         EXECUTE immediate '
-            MERGE /*+ append nologging parallel */ INTO visit_dimension
+            MERGE /*+ append nologging parallel(auto) */ INTO visit_dimension
             USING ' || tempTableName || ' temp
             ON (
                 temp.encounter_num = visit_dimension.encounter_num
@@ -363,7 +360,7 @@ AS
 
         -- jk: added project_id='@' to WHERE clause... need to support projects...
         EXECUTE immediate '
-            insert /*+ append nologging parallel */ into visit_dimension (
+            insert /*+ append nologging parallel(auto) */ into visit_dimension (
                 encounter_num,
                 patient_num,
                 START_DATE,
@@ -413,7 +410,7 @@ AS
         appendFlag            IN NUMBER)
     IS
     BEGIN
-        EXECUTE IMMEDIATE 'INSERT /*+ append nologging parallel */ INTO ' || upload_temptable_name_c || '
+        EXECUTE IMMEDIATE 'INSERT /*+ append nologging parallel(auto) */ INTO ' || upload_temptable_name_c || '
           (SELECT em.encounter_num,
                   temp.encounter_id,
                   temp.encounter_id_source,
@@ -458,7 +455,7 @@ AS
         IF ( appendFlag = 0 ) THEN
             --Transfer all rows from temp_obsfact to observation_fact
             EXECUTE immediate
-                'INSERT /*+ append nologging parallel */ ALL INTO observation_fact(encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
+                'INSERT /*+ append nologging parallel(auto) */ ALL INTO observation_fact(encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
                     quantity_num,confidence_num,observation_blob,units_cd,end_date,location_cd, update_date,download_date,import_date,sourcesystem_cd,
                     upload_id)
                     SELECT encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
@@ -469,7 +466,7 @@ AS
                     ;
         ELSE
             EXECUTE immediate
-                'MERGE /*+ append nologging parallel */ INTO observation_fact USING ' || upload_temptable_name_c || ' temp ON
+                'MERGE /*+ append nologging parallel(auto) */ INTO observation_fact USING ' || upload_temptable_name_c || ' temp ON
                     (temp.encounter_num = observation_fact.encounter_num
                     and temp.patient_num = observation_fact.patient_num
                     and temp.concept_cd = observation_fact.concept_cd
@@ -555,161 +552,64 @@ AS
         tempEidTableName IN VARCHAR,
         upload_id IN NUMBER)
     IS
-        existingEncounterNum varchar2(32);
-        maxEncounterNum number;
-        TYPE distinctEIdCurTyp IS REF CURSOR;
-        distinctEidCur   distinctEIdCurTyp;
-        sql_stmt  varchar2(400);
-        disEncounterId varchar2(100);
-        disEncounterIdSource varchar2(100);
-        patientMapId varchar2(200);
-        patientMapIdSource varchar2(50);
     BEGIN
-        LOCK TABLE  encounter_mapping IN EXCLUSIVE MODE NOWAIT;
-        select max(encounter_num) into maxEncounterNum from encounter_mapping;
 
-        if maxEncounterNum is null then
-            maxEncounterNum := 0;
-        end if;
+        execute immediate '
+            merge /*+ append nologging parallel(auto) */ into ' || tempEidTableName || ' temp
+            using encounter_mapping pm
+            on ((pm.encounter_ide = temp.encounter_map_id
+                        and pm.encounter_ide_source = temp.encounter_map_id_source)
+                and temp.delete_date is null)
+            when matched then
+                update set encounter_num = pm.encounter_num,
+                    process_status_flag = ''P''
+        ';
+        COMMIT;
 
-        sql_stmt := 'SELECT distinct encounter_id, encounter_id_source, patient_map_id, patient_map_id_source from ' || tempEidTableName ||
-        ' where delete_Date is null';
-        OPEN distinctEidCur FOR sql_stmt ;
-        LOOP
-            FETCH distinctEidCur INTO disEncounterId, disEncounterIdSource, patientMapId, patientMapIdSource;
-            EXIT WHEN distinctEidCur%NOTFOUND;
-            if  disEncounterIdSource = 'HIVE' THEN
-                BEGIN
-                    --check if hive number exist, if so assign that number to reset of map_id's within that pid
-                    select encounter_num into existingEncounterNum
-                        from encounter_mapping
-                        where encounter_num = disEncounterId
-                            and encounter_ide_source = 'HIVE';
-                EXCEPTION
-                    when NO_DATA_FOUND THEN
-                        existingEncounterNum := null;
-                END;
-                if existingEncounterNum is not null then
-                    execute immediate '
-                        update ' || tempEidTableName ||'
-                        set encounter_num = encounter_id,
-                            process_status_flag = ''P''
-                        where encounter_id = :x
-                            and encounter_id_source = ''HIVE''
-                            and not exists (
-                                select 1
-                                from encounter_mapping em
-                                where em.encounter_ide = encounter_map_id
-                                    and em.encounter_ide_source = encounter_map_id_source
-                            )'
-                    using disEncounterId;
-                else
-                    -- generate new patient_num i.e. take max(_num) + 1
-                    if maxEncounterNum < disEncounterId then
-                    maxEncounterNum := disEncounterId;
-                    end if ;
-                    execute immediate '
-                        update ' || tempEidTableName ||'
-                        set encounter_num = encounter_id,
-                            process_status_flag = ''P''
-                        where encounter_id =  :x
-                            and encounter_id_source = ''HIVE''
-                            and not exists (
-                                select 1
-                                from encounter_mapping em
-                                where em.encounter_ide = encounter_map_id
-                                    and em.encounter_ide_source = encounter_map_id_source
-                            )'
-                    using disEncounterId;
-                end if;
-            else
-                begin
-                    select encounter_num into existingEncounterNum
-                    from encounter_mapping
-                    where encounter_ide = disEncounterId
-                        and encounter_ide_source = disEncounterIdSource;
-                    -- test if record fetched.
-                EXCEPTION
-                    WHEN NO_DATA_FOUND THEN
-                        existingEncounterNum := null;
-                end;
-                if existingEncounterNum is not null then
-                    execute immediate '
-                        update ' || tempEidTableName ||'
-                        set encounter_num = :x,
-                            process_status_flag = ''P''
-                        where encounter_id = :y
-                            and encounter_id_source = :z
-                            and not exists (
-                                select 1
-                                from encounter_mapping em
-                                where em.encounter_ide = encounter_map_id
-                                    and em.encounter_ide_source = encounter_map_id_source
-                            )'
-                    using existingEncounterNum,
-                        disEncounterId,
-                        disEncounterIdSource;
-                else
-                    maxEncounterNum := maxEncounterNum + 1 ;
-                                 --TODO : add update colunn
-                    execute immediate '
-                        insert into ' || tempEidTableName ||' (
-                            encounter_map_id,
-                            encounter_map_id_source,
-                            encounter_id,
-                            encounter_id_source,
-                            encounter_num,
-                            patient_map_id,
-                            patient_map_id_source,
-                            process_status_flag,
-                            encounter_map_id_status,
-                            update_date,
-                            download_date,
-                            import_date,
-                            sourcesystem_cd)
-                        values(
-                            :x,
-                            ''HIVE'',
-                            :y,
-                            ''HIVE'',
-                            :z,
-                            :w,
-                            :v,
-                            ''P'',
-                            ''A'',
-                            sysdate,
-                            sysdate,
-                            sysdate,
-                            ''edu.harvard.i2b2.crc''
-                        )'
-                    using maxEncounterNum,
-                        maxEncounterNum,
-                        maxEncounterNum,
-                        patientMapId,
-                        patientMapIdSource;
+        execute immediate '
+            update /*+ append nologging parallel(auto) */ ' || tempEidTableName || '
+                set encounter_num = SQ_UP_ENCDIM_ENCOUNTERNUM.NEXTVAL,
+                    process_status_flag = ''P''
+                where process_status_flag is null and delete_date is null
+        ';
+        COMMIT;
 
-                    execute immediate '
-                        update ' || tempEidTableName ||'
-                        set encounter_num =  :x ,
-                            process_status_flag = ''P''
-                        where encounter_id = :y
-                            and encounter_id_source = :z
-                            and not exists (
-                                select 1
-                                from encounter_mapping em
-                                where em.encounter_ide = encounter_map_id
-                                    and em.encounter_ide_source = encounter_map_id_source
-                            )'
-                    using maxEncounterNum, disEncounterId, disEncounterIdSource;
-                end if;
-            end if;
-        END LOOP;
-        CLOSE distinctEidCur ;
+        execute immediate '
+            insert /*+ append nologging parallel(auto) */ into ' || tempEidTableName || '(
+                    encounter_map_id,
+                    encounter_map_id_source,
+                    encounter_id,
+                    encounter_id_source,
+                    encounter_num,
+                    patient_map_id,
+                    patient_map_id_source,
+                    process_status_flag,
+                    encounter_map_id_status,
+                    update_date,
+                    download_date,
+                    import_date,
+                    sourcesystem_cd)
+                select
+                    temp.encounter_num,
+                    ''HIVE'',
+                    temp.encounter_num,
+                    ''HIVE'',
+                    temp.encounter_num,
+                    temp.patient_map_id,
+                    temp.patient_map_id_source,
+                    ''P'',
+                    ''A'',
+                    sysdate,
+                    sysdate,
+                    sysdate,
+                    ''edu.harvard.i2b2.crc''
+                from ' || tempEidTableName || ' temp where delete_date is null
+        ';
         COMMIT;
 
         -- do the mapping update if the update date is old
         execute immediate '
-            merge /*+ append nologging parallel */ into encounter_mapping
+            merge /*+ append nologging parallel(auto) */ into encounter_mapping
             using ' || tempEidTableName ||' temp
             on (temp.encounter_map_id = encounter_mapping.ENCOUNTER_IDE
                 and temp.encounter_map_id_source = encounter_mapping.ENCOUNTER_IDE_SOURCE
@@ -731,7 +631,7 @@ AS
                 delete where temp.delete_date is not null';
         -- insert new mapping records i.e flagged P -- jk: added project_id
         execute immediate '
-            insert /*+ append nologging parallel */ into encounter_mapping (
+            insert /*+ append nologging parallel(auto) */ into encounter_mapping (
                 encounter_ide,
                 encounter_ide_source,
                 encounter_ide_status,
@@ -762,9 +662,6 @@ AS
         dbms_stats.gather_table_stats(USER, 'encounter_mapping');
     EXCEPTION
         WHEN OTHERS THEN
-           if distinctEidCur%isopen then
-               close distinctEidCur;
-           end if;
            rollback;
            raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
     END EK_INSERT_EID_MAP_FROMTEMP;
@@ -773,146 +670,59 @@ AS
         tempPidTableName IN VARCHAR,
         upload_id IN NUMBER)
     IS
-        existingPatientNum varchar2(32);
-        maxPatientNum number;
-        TYPE distinctPidCurTyp IS REF CURSOR;
-        distinctPidCur   distinctPidCurTyp;
-        sql_stmt  varchar2(400);
-        disPatientId varchar2(100);
-        disPatientIdSource varchar2(100);
     BEGIN
-        sql_stmt := ' SELECT distinct patient_id,patient_id_source from ' || tempPidTableName ||' where delete_date is null';
+        execute immediate '
+            merge /*+ append nologging parallel(auto) */ into ' || tempPidTableName || ' temp
+            using patient_mapping pm
+            on ((pm.patient_ide = temp.patient_map_id
+                        and pm.patient_ide_source = temp.patient_map_id_source)
+                and temp.delete_date is null)
+            when matched then
+                update set patient_num = pm.patient_num,
+                    process_status_flag = ''P''
+        ';
+        COMMIT;
 
-        LOCK TABLE  patient_mapping IN EXCLUSIVE MODE NOWAIT;
-        select max(patient_num) into maxPatientNum from patient_mapping ;
-        -- set max patient num to zero of the value is null
-        if maxPatientNum is null then maxPatientNum := 0;
-        end if;
+        execute immediate '
+            update /*+ append nologging parallel(auto) */ ' || tempPidTableName || '
+                set patient_num = SQ_UP_PATDIM_PATIENTNUM.NEXTVAL,
+                    process_status_flag = ''P''
+                where process_status_flag is null and delete_date is null
+        ';
+        COMMIT;
 
-        open distinctPidCur for sql_stmt ;
-        loop
-            FETCH distinctPidCur INTO disPatientId, disPatientIdSource;
-            EXIT WHEN distinctPidCur%NOTFOUND;
-            if  disPatientIdSource = 'HIVE'  THEN
-                begin
-                    --check if hive number exist, if so assign that number to reset of map_id's within that pid
-                    select patient_num into existingPatientNum
-                    from patient_mapping
-                    where patient_num = disPatientId
-                        and patient_ide_source = 'HIVE';
-                EXCEPTION
-                    when NO_DATA_FOUND THEN
-                        existingPatientNum := null;
-                end;
-                if existingPatientNum is not null then
-                    execute immediate '
-                        update ' || tempPidTableName ||'
-                        set patient_num = patient_id,
-                            process_status_flag = ''P''
-                        where patient_id = :x
-                            and patient_id_source = ''HIVE''
-                            and not exists (
-                                select 1
-                                from patient_mapping pm
-                                where pm.patient_ide = patient_map_id
-                                    and pm.patient_ide_source = patient_map_id_source
-                            )'
-                    using disPatientId;
-                else
-                    -- generate new patient_num i.e. take max(patient_num) + 1
-                    if maxPatientNum < disPatientId then
-                        maxPatientNum := disPatientId;
-                    end if ;
-                    execute immediate '
-                        update ' || tempPidTableName ||'
-                        set patient_num = patient_id,
-                            process_status_flag = ''P''
-                        where patient_id = :x
-                            and patient_id_source = ''HIVE''
-                            and not exists (
-                                select 1
-                                from patient_mapping pm
-                                where pm.patient_ide = patient_map_id
-                                and pm.patient_ide_source = patient_map_id_source
-                            )'
-                    using disPatientId;
-                end if;
-            else
-                BEGIN
-                    select patient_num into existingPatientNum
-                    from patient_mapping
-                    where patient_ide = disPatientId and
-                        patient_ide_source = disPatientIdSource ;
-                    -- test if record fetched.
-                EXCEPTION
-                    WHEN NO_DATA_FOUND THEN
-                        existingPatientNum := null;
-                end;
-                if existingPatientNum is not null then
-                    execute immediate '
-                        update ' || tempPidTableName ||'
-                        set patient_num = :x,
-                            process_status_flag = ''P''
-                        where patient_id = :y
-                            and patient_id_source = :z
-                            and not exists (
-                                select 1
-                                from patient_mapping pm
-                                where pm.patient_ide = patient_map_id
-                                    and pm.patient_ide_source = patient_map_id_source
-                            )'
-                    using existingPatientNum, disPatientId, disPatientIdSource;
-                else
-                    maxPatientNum := maxPatientNum + 1;
-                    execute immediate '
-                        insert into ' || tempPidTableName ||' (
-                            patient_map_id,
-                            patient_map_id_source,
-                            patient_id,
-                            patient_id_source,
-                            patient_num,
-                            process_status_flag,
-                            patient_map_id_status,
-                            update_date,
-                            download_date,
-                            import_date,
-                            sourcesystem_cd)
-                        values (
-                            :x,
-                            ''HIVE'',
-                            :y,
-                            ''HIVE'',
-                            :z,
-                            ''P'',
-                            ''A'',
-                            sysdate,
-                            sysdate,
-                            sysdate,
-                            ''edu.harvard.i2b2.crc''
-                        )'
-                    using maxPatientNum,maxPatientNum,maxPatientNum;
-                    execute immediate '
-                        update ' || tempPidTableName ||'
-                        set patient_num =  :x,
-                            process_status_flag = ''P''
-                        where patient_id = :y
-                            and patient_id_source = :z
-                            and not exists (
-                                select 1
-                                from patient_mapping pm
-                                where pm.patient_ide = patient_map_id
-                                    and pm.patient_ide_source = patient_map_id_source
-                            )'
-                    using maxPatientNum, disPatientId, disPatientIdSource;
-                end if ;
-            end if;
-        END LOOP;
-        CLOSE distinctPidCur ;
+        execute immediate '
+            insert /*+ append nologging parallel(auto) */ into ' || tempPidTableName || '(
+                    patient_map_id,
+                    patient_map_id_source,
+                    patient_id,
+                    patient_id_source,
+                    patient_num,
+                    process_status_flag,
+                    patient_map_id_status,
+                    update_date,
+                    download_date,
+                    import_date,
+                    sourcesystem_cd)
+                select
+                    temp.patient_num,
+                    ''HIVE'',
+                    temp.patient_num,
+                    ''HIVE'',
+                    temp.patient_num,
+                    ''P'',
+                    ''A'',
+                    sysdate,
+                    sysdate,
+                    sysdate,
+                    ''edu.harvard.i2b2.crc''
+                from ' || tempPidTableName || ' temp where delete_date is null
+        ';
         COMMIT;
 
         -- do the mapping update if the update date is old
         execute immediate
-            'merge /*+ append nologging parallel */ into patient_mapping
+            'merge /*+ append nologging parallel(auto) */ into patient_mapping
                 using ' || tempPidTableName ||' temp
                 on (
                     temp.patient_map_id = patient_mapping.patient_IDE
@@ -933,7 +743,7 @@ AS
 
                         -- insert new mapping records i.e flagged P - jk: added project id
         execute immediate '
-            insert /*+ append nologging parallel */ into patient_mapping (
+            insert /*+ append nologging parallel(auto) */ into patient_mapping (
                 patient_ide,
                 patient_ide_source,
                 patient_ide_status,
@@ -959,9 +769,6 @@ AS
         dbms_stats.gather_table_stats(USER, 'patient_mapping');
     EXCEPTION
         WHEN OTHERS THEN
-            if distinctPidCur%isopen then
-                close distinctPidCur;
-            end if;
             ROLLBACK;
             raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
     END EK_INSERT_PID_MAP_FROMTEMP;
