@@ -57,7 +57,7 @@ public class PatientDimensionFactory extends DimensionFactory {
         super(obxSection);
         this.settings = settings;
         this.metadata = metadata;
-        
+
         this.patientDimensionHandler = new PatientDimensionHandler(dataConnectionSpec);
         this.patientMappingHandler = new PatientMappingHandler(dataConnectionSpec);
     }
@@ -147,7 +147,13 @@ public class PatientDimensionFactory extends DimensionFactory {
                 patientDimension.setRace(race != null ? race.getFormatted() : null);
                 patientDimension.setSourceSystem(MetadataUtil.toSourceSystemCode(prop.getSourceSystem().getStringRepresentation()));
                 if (vitalStatus instanceof NominalValue) {
-                    patientDimension.setVital(VitalStatusCode.fromCode(vitalStatus.getFormatted()).getCode());
+                    String formatted = vitalStatus.getFormatted();
+                    VitalStatusCode vsCode = VitalStatusCode.fromCode(formatted);
+                    if (vsCode != null) {
+                        patientDimension.setVital(vsCode.getCode());
+                    } else {
+                        logger.log(Level.WARNING, "Unexpected vital status value {0}", formatted);
+                    }
                 } else if (vitalStatus instanceof BooleanValue) {
                     patientDimension.setVital(VitalStatusCode.getInstance(((BooleanValue) vitalStatus).booleanValue()).getCode());
                 } else {
