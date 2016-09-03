@@ -621,7 +621,6 @@ AS
                     patient_map_id_source,
                     process_status_flag,
                     encounter_map_id_status,
-                    update_date,
                     download_date,
                     import_date,
                     sourcesystem_cd)
@@ -635,7 +634,6 @@ AS
                     temp.patient_map_id_source,
                     ''N'',
                     ''A'',
-                    sysdate,
                     sysdate,
                     sysdate,
                     ''edu.harvard.i2b2.crc''
@@ -767,7 +765,6 @@ AS
                     patient_num,
                     process_status_flag,
                     patient_map_id_status,
-                    update_date,
                     download_date,
                     import_date,
                     sourcesystem_cd)
@@ -779,7 +776,6 @@ AS
                     pm.patient_num,
                     ''N'',
                     ''A'',
-                    sysdate,
                     sysdate,
                     sysdate,
                     ''edu.harvard.i2b2.crc''
