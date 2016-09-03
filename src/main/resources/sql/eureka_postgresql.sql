@@ -641,28 +641,61 @@ LANGUAGE PLPGSQL
 
 
 CREATE OR REPLACE FUNCTION EUREKA.EK_INSERT_EID_MAP_FROMTEMP ( tempEidTableName text, upload_id bigint)  RETURNS VOID AS $body$
+DECLARE
+    maxEncNum bigint;
 BEGIN
+        -- patient_map_id* is site-specific MRN and source.
+        -- patient_id* is enterprise person id and source.
+        -- 
+        -- Record is already in encounter_mapping, so prepare to update it.
         execute immediate '
-            update ' || tempEidTableName || '
+            update ' || tempEidTableName || ' temp
                 set encounter_num = pm.encounter_num,
-                    process_status_flag = ''P''
+                    process_status_flag = ''U''
             from encounter_mapping pm
-            where ((pm.encounter_ide = encounter_map_id
-                        and pm.encounter_ide_source = encounter_map_id_source)
-                and delete_date is null)
+            where pm.encounter_ide = temp.encounter_map_id
+                  and pm.encounter_ide_source = temp.encounter_map_id_source
+                  and temp.delete_date is null
         ';
         COMMIT;
 
+        -- Record is not in encounter_mapping, but there's an encounter_num for it, so set the patient_num.
         execute immediate '
-            update ' || tempEidTableName || '
-                set encounter_num = SQ_UP_ENCDIM_ENCOUNTERNUM.NEXTVAL,
-                    process_status_flag = ''P''
-                where process_status_flag is null and delete_date is null
+            update ' || tempEidTableName || ' temp
+                set temp.encounter_num = pm.encounter_num,
+                    temp.process_status_flag = ''A''
+                from (select distinct encounter_ide, encounter_ide_source, encounter_num from encounter_mapping) pm
+                where pm.encounter_ide = temp.encounter_id
+                      and pm.encounter_ide_source = temp.encounter_id_source
+                      and temp.delete_date is null
         ';
         COMMIT;
 
+        -- Record is not in encounter_mapping and there is no encounter_num, so generate and set a new encounter_num.
+        select max(encounter_num) into STRICT maxEncNum from encounter_mapping;
+        if coalesce(maxEncNum::text, '') = '' then 
+            maxEncNum := 0;
+        end if;
         execute immediate '
-            insert into ' || tempEidTableName || '(
+            update ' || tempEidTableName || ' temp
+                set temp.encounter_num=(temp2.encounter_num + ' || maxEncNum || '), 
+                    process_status_flag = ''N''
+            from (select encounter_id, 
+                    encounter_id_source, 
+                    row_number() over (order by encounter_id, encounter_id_source) encounter_num 
+                from (select distinct encounter_id, encounter_id_source 
+                    from ' || tempEidTableName || ' where encounter_num is null
+                )) temp2
+            where (temp.encounter_id=temp2.encounter_id 
+                and temp.encounter_id_source=temp2.encounter_id_source
+                and temp.delete_date is null)
+                    
+        ';
+
+        -- Create a hive record for each new encounter.
+        execute immediate '
+            insert into ' || tempEidTableName || '
+                (
                     encounter_map_id,
                     encounter_map_id_source,
                     encounter_id,
@@ -672,11 +705,10 @@ BEGIN
                     patient_map_id_source,
                     process_status_flag,
                     encounter_map_id_status,
-                    update_date,
                     download_date,
                     import_date,
                     sourcesystem_cd)
-                select
+                select 
                     temp.encounter_num,
                     ''HIVE'',
                     temp.encounter_num,
@@ -684,58 +716,58 @@ BEGIN
                     temp.encounter_num,
                     temp.patient_map_id,
                     temp.patient_map_id_source,
-                    ''P'',
+                    ''N'',
                     ''A'',
-                    sysdate,
-                    sysdate,
-                    sysdate,
+                    now(),
+                    now(),
                     ''edu.harvard.i2b2.crc''
-                from ' || tempEidTableName || ' temp where delete_date is null
+                from (select distinct encounter_num from ' || tempEidTableName || ' where process_status_flag = ''N'') pm
         ';
         COMMIT;
         
-        -- Delete existing record(s) in encounter_mapping if it is marked as delete in temp table
+        -- Delete existing record(s) in encounter_mapping that are marked as delete in temp table
         EXECUTE '
-            DELETE FROM encounter_mapping 
-            WHERE   encounter_num IN
-            (SELECT encounter_num 
-             FROM   ' || tempEidTableName || ' 
-             WHERE  delete_date IS NOT NULL
-            )';
+            DELETE FROM encounter_mapping pm
+            USING ' || tempEidTableName || ' temp
+            WHERE  temp.encounter_map_id = pm.encounter_ide
+                   and temp.encounter_map_id_source = pm.encounter_ide_source
+                   and temp.delete_date IS NOT NULL
+            ';
 
         -- Do the mapping update if the update date is old
         EXECUTE '
-            UPDATE encounter_mapping SET ENCOUNTER_NUM = cast(temp.encounter_id as bigint),
-                   patient_ide = temp.patient_map_id,
-                   patient_ide_source = temp.patient_map_id_source,
-                   encounter_ide_status = temp.encounter_map_id_status,
-                   update_date = temp.update_date, 
-                   download_date = temp.download_date,
-                   import_date = now(),
-                   sourcesystem_cd  = temp.sourcesystem_cd, 
-                   upload_id = ' || upload_id ||'  FROM ' || tempEidTableName ||' temp 
-            WHERE  temp.encounter_map_id = encounter_mapping.ENCOUNTER_IDE 
-            AND    temp.encounter_map_id_source = encounter_mapping.ENCOUNTER_IDE_SOURCE
-            AND    temp.encounter_id_source = ''HIVE'' 
-            AND    temp.process_status_flag is null 
-            AND    coalesce(encounter_mapping.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date, to_date(''01-JAN-1900'',''DD-MON-YYYY''))
-            ';        
+            UPDATE  encounter_mapping pm
+            SET pm.encounter_num = temp.encounter_num,
+                    pm.patient_ide = temp.patient_map_id,
+                    pm.patient_ide_source = temp.patient_map_id_source,
+                    pm.encounter_ide_status = temp.encounter_map_id_status,
+                    pm.update_date = temp.update_date,
+                    pm.download_date  = temp.download_date,
+                    pm.sourcesystem_cd  = temp.sourcesystem_cd,
+                    pm.upload_id = ' || upload_id ||'  
+            FROM    ' || tempEidTableName ||' temp 
+            WHERE   temp.encounter_map_id = pm.encounter_ide
+                and temp.encounter_map_id_source = pm.encounter_ide_source
+                and     temp.process_status_flag = ''U''
+                and     temp.delete_date is not null
+                and     coalesce(pm.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))      
+          ';
 
-        -- Insert new mapping records i.e flagged P -- jk: added project_id
+        -- Insert new mapping records
         EXECUTE '
-            INSERT INTO encounter_mapping (
-                   encounter_ide,
-                   encounter_ide_source,
-                   encounter_ide_status,
-                   encounter_num,
-                   patient_ide,
-                   patient_ide_source,
-                   update_date,
-                   download_date,
-                   import_date,
-                   sourcesystem_cd,
-                   project_id,
-                   upload_id) 
+            INSERT INTO patient_mapping (
+                encounter_ide,
+                encounter_ide_source,
+                encounter_ide_status,
+                encounter_num,
+                patient_ide,
+                patient_ide_source,
+                update_date,
+                download_date,
+                import_date,
+                sourcesystem_cd,
+                project_id,
+                upload_id) 
             SELECT encounter_map_id,
                    encounter_map_id_source,
                    encounter_map_id_status,
@@ -747,9 +779,9 @@ BEGIN
                    now(),
                    sourcesystem_cd,
                    ''@'' project_id, 
-                   ' || upload_id || ' 
-            FROM   ' || tempEidTableName || '  
-            WHERE  process_status_flag = ''P''
+                   ' || upload_id ||' 
+            FROM   '|| tempEidTableName || ' 
+            WHERE  process_status_flag in (''A'', ''N'')
             AND   delete_date is NULL
             '; 
        ANALYZE encounter_mapping;
@@ -765,28 +797,61 @@ LANGUAGE PLPGSQL
 
 
 CREATE OR REPLACE FUNCTION EUREKA.EK_INSERT_PID_MAP_FROMTEMP ( tempPidTableName text, upload_id bigint)  RETURNS VOID AS $body$
+DECLARE
+    maxPatientNum bigint;
 BEGIN
+        -- patient_map_id* is site-specific MRN and source.
+        -- patient_id* is enterprise person id and source.
+        -- 
+        -- Record is already in patient_mapping, so prepare to update it.
         execute immediate '
-            update ' || tempPidTableName || '
+            update ' || tempPidTableName || ' temp
                 set patient_num = pm.patient_num,
-                    process_status_flag = ''P''
+                    process_status_flag = ''U''
             from patient_mapping pm
-            where ((pm.patient_ide = patient_map_id
-                        and pm.patient_ide_source = patient_map_id_source)
-                and delete_date is null)
+            where pm.patient_ide = temp.patient_map_id
+                  and pm.patient_ide_source = temp.patient_map_id_source
+                  and temp.delete_date is null
         ';
         COMMIT;
 
+        -- Record is not in patient_mapping, but there's a patient_num for it, so set the patient_num.
         execute immediate '
-            update ' || tempPidTableName || '
-                set patient_num = SQ_UP_PATDIM_PATIENTNUM.NEXTVAL,
-                    process_status_flag = ''P''
-                where process_status_flag is null and delete_date is null
+            update ' || tempPidTableName || ' temp
+                set temp.patient_num = pm.patient_num,
+                    temp.process_status_flag = ''A''
+                from (select distinct patient_ide, patient_ide_source, patient_num from patient_mapping) pm
+                where pm.patient_ide = temp.patient_id
+                      and pm.patient_ide_source = temp.patient_id_source
+                      and temp.delete_date is null
         ';
         COMMIT;
 
+        -- Record is not in patient_mapping and there is no patient_num, so generate and set a new patient_num.
+        select max(patient_num) into STRICT maxPatientNum from patient_mapping;
+        if coalesce(maxPatientNum::text, '') = '' then 
+            maxPatientNum := 0;
+        end if;
         execute immediate '
-            insert into ' || tempPidTableName || '(
+            update ' || tempPidTableName || ' temp
+                set temp.patient_num=(temp2.patient_num + ' || maxPatientNum || '), 
+                    process_status_flag = ''N''
+            from (select patient_id, 
+                    patient_id_source, 
+                    row_number() over (order by patient_id, patient_id_source) patient_num 
+                from (select distinct patient_id, patient_id_source 
+                    from ' || tempPidTableName || ' where patient_num is null
+                )) temp2
+            where (temp.patient_id=temp2.patient_id 
+                and temp.patient_id_source=temp2.patient_id_source
+                and temp.delete_date is null)
+                    
+        ';
+
+        -- Create a hive record for each new patient.
+        execute immediate '
+            insert into ' || tempPidTableName || '
+                (
                     patient_map_id,
                     patient_map_id_source,
                     patient_id,
@@ -794,65 +859,62 @@ BEGIN
                     patient_num,
                     process_status_flag,
                     patient_map_id_status,
-                    update_date,
                     download_date,
                     import_date,
                     sourcesystem_cd)
-                select
-                    temp.patient_num,
+                select 
+                    pm.patient_num,
                     ''HIVE'',
-                    temp.patient_num,
+                    pm.patient_num,
                     ''HIVE'',
-                    temp.patient_num,
-                    ''P'',
+                    pm.patient_num,
+                    ''N'',
                     ''A'',
-                    sysdate,
-                    sysdate,
-                    sysdate,
+                    now(),
+                    now(),
                     ''edu.harvard.i2b2.crc''
-                from ' || tempPidTableName || ' temp where delete_date is null
+                from (select distinct patient_num from ' || tempPidTableName || ' where process_status_flag = ''N'') pm
         ';
         COMMIT;
         
-        -- Delete existing record(s) in patient_mapping if it is marked as delete in temp table
+        -- Delete existing record(s) in patient_mapping that are marked as delete in temp table
         EXECUTE '
-            DELETE FROM patient_mapping 
-            WHERE   patient_num IN
-            (SELECT patient_num 
-             FROM   ' || tempPidTableName || ' 
-             WHERE  delete_date IS NOT NULL
-            )';
+            DELETE FROM patient_mapping pm
+            USING ' || tempPidTableName || ' temp
+            WHERE  temp.patient_map_id = pm.patient_ide
+                   and temp.patient_map_id_source = pm.patient_ide_source
+                   and temp.delete_date IS NOT NULL
+            ';
 
         -- Do the mapping update if the update date is old
         EXECUTE '
-        	UPDATE  patient_mapping SET patient_num = cast(temp.patient_id as bigint),
-                        patient_ide_status = temp.patient_map_id_status,
+        	UPDATE  patient_mapping pm
+                SET pm.patient_num = temp.patient_num,
                         update_date = temp.update_date,
-                        download_date  = temp.download_date,
-                        import_date = now(),
-                        sourcesystem_cd  = temp.sourcesystem_cd,
+                        download_date = temp.download_date,
+                        sourcesystem_cd = temp.sourcesystem_cd,
                         upload_id = ' || upload_id ||'  
         	FROM    ' || tempPidTableName ||' temp 
-        	WHERE   temp.patient_map_id = patient_mapping.patient_IDE 
-                AND     temp.patient_map_id_source = patient_mapping.patient_IDE_SOURCE
-                AND     temp.patient_id_source = ''HIVE''
-                AND     temp.process_status_flag is null  
-                AND     coalesce(patient_mapping.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))      
+        	WHERE   temp.patient_map_id = pm.patient_ide
+                    and temp.patient_map_id_source = pm.patient_ide_source
+                    and     temp.process_status_flag = ''U''
+                    and     temp.delete_date is not null
+                    and     coalesce(pm.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY'')) <= coalesce(temp.update_date,to_date(''01-JAN-1900'',''DD-MON-YYYY''))      
           ';
 
-        -- Insert new mapping records i.e flagged P - jk: added project id
+        -- Insert new mapping records
         EXECUTE '
             INSERT INTO patient_mapping (
-                   patient_ide,
-                   patient_ide_source,
-                   patient_ide_status,
-                   patient_num,
-                   update_date,
-                   download_date,
-                   import_date,
-                   sourcesystem_cd,
-                   project_id,
-                   upload_id) 
+                patient_ide,
+                patient_ide_source,
+                patient_ide_status,
+                patient_num,
+                update_date,
+                download_date,
+                import_date,
+                sourcesystem_cd,
+                project_id,
+                upload_id) 
             SELECT patient_map_id,
                    patient_map_id_source,
                    patient_map_id_status,
@@ -864,7 +926,7 @@ BEGIN
                    ''@'' project_id, 
                    ' || upload_id ||' 
             FROM   '|| tempPidTableName || ' 
-            WHERE  process_status_flag = ''P'' 
+            WHERE  process_status_flag in (''A'', ''N'')
             AND   delete_date is NULL
             '; 
         ANALYZE patient_mapping;
