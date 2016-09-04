@@ -648,8 +648,8 @@ BEGIN
         -- patient_id* is enterprise person id and source.
         -- 
         -- Record is already in encounter_mapping, so prepare to update it.
-        execute immediate '
-            update ' || tempEidTableName || ' temp
+        execute '
+            update ' || tempEidTableName || ' as temp
                 set encounter_num = pm.encounter_num,
                     process_status_flag = ''U''
             from encounter_mapping pm
@@ -657,35 +657,34 @@ BEGIN
                   and pm.encounter_ide_source = temp.encounter_map_id_source
                   and temp.delete_date is null
         ';
-        COMMIT;
 
         -- Record is not in encounter_mapping, but there's an encounter_num for it, so set the patient_num.
-        execute immediate '
-            update ' || tempEidTableName || ' temp
-                set temp.encounter_num = pm.encounter_num,
-                    temp.process_status_flag = ''A''
-                from (select distinct encounter_ide, encounter_ide_source, encounter_num from encounter_mapping) pm
+        execute '
+            update ' || tempEidTableName || ' as temp
+                set encounter_num = pm.encounter_num,
+                    process_status_flag = ''A''
+                from (select distinct encounter_ide, encounter_ide_source, encounter_num from encounter_mapping) as pm
                 where pm.encounter_ide = temp.encounter_id
                       and pm.encounter_ide_source = temp.encounter_id_source
                       and temp.delete_date is null
+                      and temp.encounter_num is null
         ';
-        COMMIT;
 
         -- Record is not in encounter_mapping and there is no encounter_num, so generate and set a new encounter_num.
         select max(encounter_num) into STRICT maxEncNum from encounter_mapping;
         if coalesce(maxEncNum::text, '') = '' then 
             maxEncNum := 0;
         end if;
-        execute immediate '
-            update ' || tempEidTableName || ' temp
-                set temp.encounter_num=(temp2.encounter_num + ' || maxEncNum || '), 
+        execute '
+            update ' || tempEidTableName || ' as temp
+                set encounter_num=(temp2.encounter_num + ' || maxEncNum || '), 
                     process_status_flag = ''N''
-            from (select encounter_id, 
-                    encounter_id_source, 
-                    row_number() over (order by encounter_id, encounter_id_source) encounter_num 
+            from (select temp3.encounter_id, 
+                    temp3.encounter_id_source, 
+                    row_number() over (order by temp3.encounter_id, temp3.encounter_id_source) encounter_num 
                 from (select distinct encounter_id, encounter_id_source 
                     from ' || tempEidTableName || ' where encounter_num is null
-                )) temp2
+                ) temp3) temp2
             where (temp.encounter_id=temp2.encounter_id 
                 and temp.encounter_id_source=temp2.encounter_id_source
                 and temp.delete_date is null)
@@ -693,7 +692,7 @@ BEGIN
         ';
 
         -- Create a hive record for each new encounter.
-        execute immediate '
+        execute '
             insert into ' || tempEidTableName || '
                 (
                     encounter_map_id,
@@ -709,26 +708,25 @@ BEGIN
                     import_date,
                     sourcesystem_cd)
                 select 
-                    temp.encounter_num,
+                    pm.encounter_num,
                     ''HIVE'',
-                    temp.encounter_num,
+                    pm.encounter_num,
                     ''HIVE'',
-                    temp.encounter_num,
-                    temp.patient_map_id,
-                    temp.patient_map_id_source,
+                    pm.encounter_num,
+                    pm.patient_map_id,
+                    pm.patient_map_id_source,
                     ''N'',
                     ''A'',
                     now(),
                     now(),
                     ''edu.harvard.i2b2.crc''
-                from (select distinct encounter_num from ' || tempEidTableName || ' where process_status_flag = ''N'') pm
+                from (select distinct encounter_num, patient_map_id, patient_map_id_source from ' || tempEidTableName || ' where process_status_flag = ''N'') pm
         ';
-        COMMIT;
         
         -- Delete existing record(s) in encounter_mapping that are marked as delete in temp table
         EXECUTE '
             DELETE FROM encounter_mapping pm
-            USING ' || tempEidTableName || ' temp
+            USING ' || tempEidTableName || ' as temp
             WHERE  temp.encounter_map_id = pm.encounter_ide
                    and temp.encounter_map_id_source = pm.encounter_ide_source
                    and temp.delete_date IS NOT NULL
@@ -737,15 +735,15 @@ BEGIN
         -- Do the mapping update if the update date is old
         EXECUTE '
             UPDATE  encounter_mapping pm
-            SET pm.encounter_num = temp.encounter_num,
-                    pm.patient_ide = temp.patient_map_id,
-                    pm.patient_ide_source = temp.patient_map_id_source,
-                    pm.encounter_ide_status = temp.encounter_map_id_status,
-                    pm.update_date = temp.update_date,
-                    pm.download_date  = temp.download_date,
-                    pm.sourcesystem_cd  = temp.sourcesystem_cd,
-                    pm.upload_id = ' || upload_id ||'  
-            FROM    ' || tempEidTableName ||' temp 
+            SET encounter_num = temp.encounter_num,
+                    patient_ide = temp.patient_map_id,
+                    patient_ide_source = temp.patient_map_id_source,
+                    encounter_ide_status = temp.encounter_map_id_status,
+                    update_date = temp.update_date,
+                    download_date  = temp.download_date,
+                    sourcesystem_cd  = temp.sourcesystem_cd,
+                    upload_id = ' || upload_id ||'  
+            FROM    ' || tempEidTableName ||' as temp
             WHERE   temp.encounter_map_id = pm.encounter_ide
                 and temp.encounter_map_id_source = pm.encounter_ide_source
                 and     temp.process_status_flag = ''U''
@@ -755,7 +753,7 @@ BEGIN
 
         -- Insert new mapping records
         EXECUTE '
-            INSERT INTO patient_mapping (
+            INSERT INTO encounter_mapping (
                 encounter_ide,
                 encounter_ide_source,
                 encounter_ide_status,
@@ -804,44 +802,43 @@ BEGIN
         -- patient_id* is enterprise person id and source.
         -- 
         -- Record is already in patient_mapping, so prepare to update it.
-        execute immediate '
-            update ' || tempPidTableName || ' temp
+        execute '
+            update ' || tempPidTableName || '
                 set patient_num = pm.patient_num,
                     process_status_flag = ''U''
             from patient_mapping pm
-            where pm.patient_ide = temp.patient_map_id
-                  and pm.patient_ide_source = temp.patient_map_id_source
-                  and temp.delete_date is null
+            where pm.patient_ide = patient_map_id
+                  and pm.patient_ide_source = patient_map_id_source
+                  and delete_date is null
         ';
-        COMMIT;
 
         -- Record is not in patient_mapping, but there's a patient_num for it, so set the patient_num.
-        execute immediate '
-            update ' || tempPidTableName || ' temp
-                set temp.patient_num = pm.patient_num,
-                    temp.process_status_flag = ''A''
+        execute '
+            update ' || tempPidTableName || ' as temp
+                set patient_num = pm.patient_num,
+                    process_status_flag = ''A''
                 from (select distinct patient_ide, patient_ide_source, patient_num from patient_mapping) pm
                 where pm.patient_ide = temp.patient_id
                       and pm.patient_ide_source = temp.patient_id_source
                       and temp.delete_date is null
+                      and temp.patient_num is null
         ';
-        COMMIT;
 
         -- Record is not in patient_mapping and there is no patient_num, so generate and set a new patient_num.
         select max(patient_num) into STRICT maxPatientNum from patient_mapping;
         if coalesce(maxPatientNum::text, '') = '' then 
             maxPatientNum := 0;
         end if;
-        execute immediate '
-            update ' || tempPidTableName || ' temp
-                set temp.patient_num=(temp2.patient_num + ' || maxPatientNum || '), 
+        execute '
+            update ' || tempPidTableName || ' as temp
+                set patient_num=(temp2.patient_num + ' || maxPatientNum || '), 
                     process_status_flag = ''N''
-            from (select patient_id, 
-                    patient_id_source, 
-                    row_number() over (order by patient_id, patient_id_source) patient_num 
+            from (select temp3.patient_id, 
+                    temp3.patient_id_source, 
+                    row_number() over (order by temp3.patient_id, temp3.patient_id_source) patient_num 
                 from (select distinct patient_id, patient_id_source 
                     from ' || tempPidTableName || ' where patient_num is null
-                )) temp2
+                ) temp3) temp2
             where (temp.patient_id=temp2.patient_id 
                 and temp.patient_id_source=temp2.patient_id_source
                 and temp.delete_date is null)
@@ -849,7 +846,7 @@ BEGIN
         ';
 
         -- Create a hive record for each new patient.
-        execute immediate '
+        execute '
             insert into ' || tempPidTableName || '
                 (
                     patient_map_id,
@@ -875,12 +872,11 @@ BEGIN
                     ''edu.harvard.i2b2.crc''
                 from (select distinct patient_num from ' || tempPidTableName || ' where process_status_flag = ''N'') pm
         ';
-        COMMIT;
         
         -- Delete existing record(s) in patient_mapping that are marked as delete in temp table
         EXECUTE '
             DELETE FROM patient_mapping pm
-            USING ' || tempPidTableName || ' temp
+            USING ' || tempPidTableName || ' as temp
             WHERE  temp.patient_map_id = pm.patient_ide
                    and temp.patient_map_id_source = pm.patient_ide_source
                    and temp.delete_date IS NOT NULL
@@ -889,12 +885,12 @@ BEGIN
         -- Do the mapping update if the update date is old
         EXECUTE '
         	UPDATE  patient_mapping pm
-                SET pm.patient_num = temp.patient_num,
+                SET patient_num = temp.patient_num,
                         update_date = temp.update_date,
                         download_date = temp.download_date,
                         sourcesystem_cd = temp.sourcesystem_cd,
                         upload_id = ' || upload_id ||'  
-        	FROM    ' || tempPidTableName ||' temp 
+        	FROM    ' || tempPidTableName ||' as temp
         	WHERE   temp.patient_map_id = pm.patient_ide
                     and temp.patient_map_id_source = pm.patient_ide_source
                     and     temp.process_status_flag = ''U''
