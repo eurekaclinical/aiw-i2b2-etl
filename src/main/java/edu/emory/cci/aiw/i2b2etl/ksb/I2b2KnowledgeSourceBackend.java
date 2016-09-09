@@ -1456,7 +1456,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                             new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
                             new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.BIRTHDATE)
                         }),
-                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfDeathPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId),
+                new PropertyDefinition(this.patientDetailsPropositionId, this.dateOfDeathPropertyName, null, ValueType.DATEVALUE, null, this.patientDetailsPropositionId,
+                        new Attribute[]{
+                            new Attribute(DeidAttributes.IS_HIPAA_IDENTIFIER, BooleanValue.TRUE),
+                            new Attribute(DeidAttributes.HIPAA_IDENTIFIER_TYPE, DeidAttributes.BIRTHDATE)
+                        }),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.genderPropertyName, null, ValueType.NOMINALVALUE, this.genderPropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.languagePropertyName, null, ValueType.NOMINALVALUE, this.languagePropertyValueSet.getId(), this.patientDetailsPropositionId),
                 new PropertyDefinition(this.patientDetailsPropositionId, this.maritalStatusPropertyName, null, ValueType.NOMINALVALUE, this.maritalStatusPropertyValueSet.getId(), this.patientDetailsPropositionId),
