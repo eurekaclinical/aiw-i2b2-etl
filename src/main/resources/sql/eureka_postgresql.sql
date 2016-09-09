@@ -39,7 +39,6 @@ CREATE OR REPLACE FUNCTION EUREKA.EK_INS_PROVIDER_FROMTEMP ( tempProviderTableNa
                                 provider_blob = temp.provider_blob,
                                 update_date = temp.update_date,
                                 download_date = temp.download_date,
-                                import_date = now(),
                                 sourcesystem_cd = temp.sourcesystem_cd,
                                 upload_id = ' || upload_id || ' 
             FROM  ' || tempProviderTableName || ' temp 
@@ -95,7 +94,6 @@ BEGIN
                     concept_blob = temp.concept_blob,
                     update_date = temp.update_date,
                     download_date = temp.DOWNLOAD_DATE,
-                    import_date = now(),
                     sourcesystem_cd = temp.SOURCESYSTEM_CD,
                     upload_id = ' || upload_id || '
             FROM ' || tempConceptTableName || ' temp 
@@ -141,7 +139,6 @@ BEGIN
                     modifier_blob = temp.modifier_blob,
                     update_date = temp.update_date,
                     download_date = temp.download_date,
-                    import_date = now(),
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
             FROM ' || tempModifierTableName || ' temp 
@@ -242,7 +239,6 @@ BEGIN
                 visit_blob = temp.visit_blob,
                 update_date = temp.update_date,
                 download_date = temp.download_date,
-                import_date = now(),
                 sourcesystem_cd = temp.sourcesystem_cd,
                 upload_id = ' || upload_id || ',
                 length_of_stay = temp.length_of_stay
@@ -364,7 +360,6 @@ BEGIN
                     patient_blob = temp.patient_blob,
                     update_date = temp.update_date,
                     download_date = temp.download_date,
-                    import_date = now(),
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || ' 
             FROM    ' || tempTableName || ' temp 
@@ -550,8 +545,7 @@ BEGIN
                     end_date=temp.end_date, 
                     location_cd =temp.location_cd, 
                     update_date=temp.update_date, 
-                    download_date =temp.download_date, 
-                    import_date=temp.import_date, 
+                    download_date =temp.download_date,  
                     sourcesystem_cd =temp.sourcesystem_cd, 
                     upload_id = temp.upload_id 
                     FROM ' || upload_temptable_name_c || ' temp 

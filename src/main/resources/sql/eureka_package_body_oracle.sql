@@ -36,7 +36,6 @@ AS
                     provider_blob = temp.provider_blob,
                     update_date = temp.update_date,
                     download_date = temp.download_date,
-                    import_date = sysdate,
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
                 WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(provider_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
@@ -135,7 +134,6 @@ AS
                     patient_blob = temp.patient_blob,
                     update_date = temp.update_date,
                     download_date = temp.download_date,
-                    import_date = sysdate,
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
                 WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(patient_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
@@ -203,7 +201,6 @@ AS
                     concept_blob = temp.concept_blob,
                     update_date = temp.update_date,
                     download_date = temp.DOWNLOAD_DATE,
-                    import_date = sysdate,
                     sourcesystem_cd = temp.SOURCESYSTEM_CD,
                     upload_id = ' || upload_id || '
                 WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(concept_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
@@ -253,7 +250,6 @@ AS
                     modifier_blob = temp.modifier_blob,
                     update_date = temp.update_date,
                     download_date = temp.download_date,
-                    import_date = sysdate,
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || '
                 WHERE nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD'')) >= nvl(modifier_dimension.update_date,to_date(''19000101'',''YYYYMMDD''))
@@ -350,7 +346,6 @@ AS
                     visit_blob = temp.visit_blob,
                     update_date = temp.update_date,
                     download_date = temp.download_date,
-                    import_date = sysdate,
                     sourcesystem_cd = temp.sourcesystem_cd,
                     upload_id = ' || upload_id || ',
                     length_of_stay = temp.length_of_stay
@@ -487,7 +482,6 @@ AS
                         location_cd =temp.location_cd,
                         update_date=temp.update_date,
                         download_date =temp.download_date,
-                        import_date=temp.import_date,
                         sourcesystem_cd =temp.sourcesystem_cd,
                         upload_id = temp.upload_id
                     where nvl(observation_fact.update_date,to_date(''19000101'',''YYYYMMDD'')) <= nvl(temp.update_date,to_date(''19000101'',''YYYYMMDD''))
