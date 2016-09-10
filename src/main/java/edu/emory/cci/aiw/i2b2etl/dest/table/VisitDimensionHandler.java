@@ -51,8 +51,8 @@ public class VisitDimensionHandler extends RecordHandler<VisitDimension> {
         ps.setString(5, visit.getInOut());
         ps.setString(6, null);
         ps.setString(7, null);
-        ps.setDate(8, visit.getStartDate());
-        ps.setDate(9, visit.getEndDate());
+        ps.setTimestamp(8, visit.getStartDate());
+        ps.setTimestamp(9, visit.getEndDate());
         ps.setObject(10, null);
         ps.setTimestamp(11, visit.getUpdated());
         ps.setTimestamp(12, visit.getDownloaded());

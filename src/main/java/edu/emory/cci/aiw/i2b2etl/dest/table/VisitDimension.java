@@ -21,14 +21,13 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 
 public class VisitDimension extends AbstractRecord {
 
     private String visitId;
-    private Date startDate;
-    private Date endDate;
+    private Timestamp startDate;
+    private Timestamp endDate;
     private String visitSourceSystem;
     private String encryptedPatientIdSource;
     private String activeStatus;
@@ -48,11 +47,11 @@ public class VisitDimension extends AbstractRecord {
         this.visitId = visitId;
     }
 
-    public void setStartDate(Date startDate) {
+    public void setStartDate(Timestamp startDate) {
         this.startDate = startDate;
     }
 
-    public void setEndDate(Date endDate) {
+    public void setEndDate(Timestamp endDate) {
         this.endDate = endDate;
     }
 
@@ -88,11 +87,11 @@ public class VisitDimension extends AbstractRecord {
         return this.visitIdSource;
     }
 
-    public Date getStartDate() {
+    public Timestamp getStartDate() {
         return startDate;
     }
 
-    public Date getEndDate() {
+    public Timestamp getEndDate() {
         return endDate;
     }
 

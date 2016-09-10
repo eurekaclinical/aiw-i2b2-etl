@@ -61,8 +61,8 @@ public class VisitDimensionFactory extends DimensionFactory {
             TemporalProposition encounterProp,
             Map<UniqueId, Proposition> references) throws SQLException {
         Interval interval = encounterProp.getInterval();
-        java.util.Date visitStartDate = AbsoluteTimeGranularityUtil.asDate(interval.getMinStart());
-        java.util.Date visitEndDate = AbsoluteTimeGranularityUtil.asDate(interval.getMinFinish());
+        Date visitStartDate = AbsoluteTimeGranularityUtil.asDate(interval.getMinStart());
+        Date visitEndDate = AbsoluteTimeGranularityUtil.asDate(interval.getMinFinish());
         Value visitId = getField(this.settings.getVisitDimensionId(), encounterProp, references);
         String visitIdStr;
         if (visitId != null) {
@@ -74,8 +74,8 @@ public class VisitDimensionFactory extends DimensionFactory {
         String visitSourceSystem = MetadataUtil.toSourceSystemCode(encounterProp.getSourceSystem().getStringRepresentation());
         VisitDimension visitDimension = new VisitDimension();
         visitDimension.setEncryptedPatientId(TableUtil.setStringAttribute(encryptedPatientId));
-        visitDimension.setStartDate(TableUtil.setDateAttribute(visitStartDate));
-        visitDimension.setEndDate(TableUtil.setDateAttribute(visitEndDate));
+        visitDimension.setStartDate(TableUtil.setTimestampAttribute(visitStartDate));
+        visitDimension.setEndDate(TableUtil.setTimestampAttribute(visitEndDate));
         visitDimension.setVisitId(TableUtil.setStringAttribute(visitIdStr));
         visitDimension.setVisitIdSource(visitSourceSystem);
         visitDimension.setVisitSourceSystem(visitSourceSystem);

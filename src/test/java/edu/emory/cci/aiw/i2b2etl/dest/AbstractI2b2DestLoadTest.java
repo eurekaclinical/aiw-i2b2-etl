@@ -83,7 +83,7 @@ public abstract class AbstractI2b2DestLoadTest extends AbstractI2b2DestTest {
     protected static void dumpTruth(String prefix) throws IOException, InvalidConnectionSpecArguments, SQLException, DatabaseUnitException {
         File file = File.createTempFile(prefix, ".xml");
         try (FileOutputStream out = new FileOutputStream(file)) {
-            getProtempaFactory().exportI2b2MetaSchema(out);
+            getProtempaFactory().exportI2b2DataSchema(out);
             System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
         }
     }
