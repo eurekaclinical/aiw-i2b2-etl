@@ -450,7 +450,7 @@ AS
         IF ( appendFlag = 0 ) THEN
             --Transfer all rows from temp_obsfact to observation_fact
             EXECUTE immediate
-                'INSERT /*+ append nologging parallel(auto) */ ALL INTO observation_fact(encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
+                'INSERT /*+ append nologging parallel(auto) */ INTO observation_fact(encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
                     quantity_num,confidence_num,observation_blob,units_cd,end_date,location_cd, update_date,download_date,import_date,sourcesystem_cd,
                     upload_id)
                     SELECT encounter_num,concept_cd, patient_num,provider_id, start_date,modifier_cd,instance_num,valtype_cd,tval_char,nval_num,valueflag_cd,
