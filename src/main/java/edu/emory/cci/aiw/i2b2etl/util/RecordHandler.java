@@ -153,17 +153,28 @@ public abstract class RecordHandler<E> implements AutoCloseable {
                     try {
                         this.ps.close();
                     } catch (SQLException ignore) {
-                        exceptionThrown.addSuppressed(ignore);
+                        if (exceptionThrown != null) {
+                            exceptionThrown.addSuppressed(ignore);
+                        } else {
+                            exceptionThrown = ignore;
+                        }
                     }
                 }
                 if (this.connSpec != null && this.cn != null) {
                     try {
                         this.cn.close();
                     } catch (SQLException ignore) {
-                        exceptionThrown.addSuppressed(ignore);
+                        if (exceptionThrown != null) {
+                            exceptionThrown.addSuppressed(ignore);
+                        } else {
+                            exceptionThrown = ignore;
+                        }
                     }
                 }
             }
+        }
+        if (exceptionThrown != null) {
+            throw exceptionThrown;
         }
     }
 
