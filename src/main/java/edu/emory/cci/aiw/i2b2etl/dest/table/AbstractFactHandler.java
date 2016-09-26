@@ -24,7 +24,6 @@ import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import edu.emory.cci.aiw.i2b2etl.util.RecordHandler;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.logging.Level;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.proposition.value.InequalityNumberValue;
@@ -37,16 +36,11 @@ import org.protempa.proposition.value.Value;
  * @author Andrew Post
  */
 public abstract class AbstractFactHandler extends RecordHandler<ObservationFact> {
-    private Timestamp importTimestamp;
 
     AbstractFactHandler(ConnectionSpec connSpec, String statement) throws SQLException {
         super(connSpec, statement);
     }
 
-    Timestamp getImportTimestamp() {
-        return importTimestamp;
-    }
-    
     @Override
     protected void setParameters(PreparedStatement ps, ObservationFact record) throws SQLException {
         assert record != null : "record cannot be null";
@@ -102,12 +96,9 @@ public abstract class AbstractFactHandler extends RecordHandler<ObservationFact>
         ps.setString(17, record.getUnits());
         ps.setTimestamp(18, record.getEndDate());
         ps.setString(19, null);
-        ps.setTimestamp(20, null);
+        ps.setTimestamp(20, record.getUpdateDate());
         ps.setTimestamp(21, record.getDownloadDate());
-        if (this.importTimestamp == null) {
-            this.importTimestamp = new Timestamp(System.currentTimeMillis());
-        }
-        ps.setTimestamp(22, this.importTimestamp);
+        ps.setTimestamp(22, importTimestamp());
         ps.setString(23, record.getSourceSystem());
         ps.setInt(24, 0);
         ps.setTimestamp(25, record.getDeletedDate());
