@@ -6,6 +6,9 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd"
                    logicalFilePath="eureka-ontology-SCHEMES-changelog.xml">
     <changeSet author="arpost" id="SCHEMES-1">
+        <delete tableName="SCHEMES"/>
+    </changeSet>
+    <changeSet author="arpost" id="SCHEMES-2">
         <insert tableName="SCHEMES">
             <column name="C_KEY" value="ICD9:"/>
             <column name="C_NAME" value="ICD9"/>
@@ -71,5 +74,8 @@
             <column name="C_NAME" value="None"/>
             <column name="C_DESCRIPTION" valueDate="No scheme"/>
         </insert>
+        <rollback>
+            <delete tableName="SCHEMES"/>
+        </rollback>
     </changeSet>
 </databaseChangeLog>
