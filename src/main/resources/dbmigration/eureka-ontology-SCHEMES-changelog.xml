@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" 
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd"
+                   logicalFilePath="eureka-ontology-SCHEMES-changelog.xml">
+    <changeSet author="arpost" id="SCHEMES-1">
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="ICD9:"/>
+            <column name="C_NAME" value="ICD9"/>
+            <column name="C_DESCRIPTION" valueDate="ICD9 diagnosis and procedure codes"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="ICD10:"/>
+            <column name="C_NAME" value="ICD10"/>
+            <column name="C_DESCRIPTION" valueDate="ICD10 diagnosis codes"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="ICD10PCS:"/>
+            <column name="C_NAME" value="ICD10PCS"/>
+            <column name="C_DESCRIPTION" valueDate="ICD10 procedure codes"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="LOINC:"/>
+            <column name="C_NAME" value="LOINC"/>
+            <column name="C_DESCRIPTION" valueDate="Lab codes"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="DEM|AGE:"/>
+            <column name="C_NAME" value="DEM|AGE"/>
+            <column name="C_DESCRIPTION" valueDate="Age of patient from demographics data"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="DEM|DATE:"/>
+            <column name="C_NAME" value="DEM|DATE"/>
+            <column name="C_DESCRIPTION" valueDate="Patient date of birth from demographics data"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="DEM|RACE:"/>
+            <column name="C_NAME" value="DEM|RACE"/>
+            <column name="C_DESCRIPTION" valueDate="Race of patient"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="DEM|SEX:"/>
+            <column name="C_NAME" value="DEM|SEX"/>
+            <column name="C_DESCRIPTION" valueDate="Gender of patient"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="DEM|VITAL:"/>
+            <column name="C_NAME" value="DEM|VITAL"/>
+            <column name="C_DESCRIPTION" valueDate="Vital status of patient"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="DEM|MARITAL:"/>
+            <column name="C_NAME" value="DEM|MARITAL"/>
+            <column name="C_DESCRIPTION" valueDate="Marital status of patient"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="DEM|LANGUAGE:"/>
+            <column name="C_NAME" value="DEM|LANGUAGE"/>
+            <column name="C_DESCRIPTION" valueDate="Primary language spoken by patient"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value="RXNORM:"/>
+            <column name="C_NAME" value="RXNORM"/>
+            <column name="C_DESCRIPTION" valueDate="Medication order codes"/>
+        </insert>
+        <insert tableName="SCHEMES">
+            <column name="C_KEY" value=""/>
+            <column name="C_NAME" value="None"/>
+            <column name="C_DESCRIPTION" valueDate="No scheme"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
