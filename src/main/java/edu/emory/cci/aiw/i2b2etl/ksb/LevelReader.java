@@ -44,6 +44,15 @@ class LevelReader {
     LevelReader(QuerySupport querySupport) {
         this.querySupport = querySupport;
     }
+    
+    Set<String> readChildrenFromDatabase(String fullName, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR, tableAccessReader)) {
+            return queryExecutor.execute(
+                    fullName,
+                    RESULT_SET_READER
+            );
+        }
+    }
 
     Set<String> readChildrenFromDatabase(String fullName) throws KnowledgeSourceReadException {
         try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR)) {

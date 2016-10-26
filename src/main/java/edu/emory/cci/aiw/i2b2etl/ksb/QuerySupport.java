@@ -135,6 +135,14 @@ class QuerySupport {
         }
     }
     
+    ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
+        try {
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, tableAccessReader);
+        } catch (InvalidConnectionSpecArguments | SQLException ex) {
+            throw new KnowledgeSourceReadException(ex);
+        }
+    }
+    
     ConnectionSpecQueryExecutor getQueryExecutorInstanceRestrictByEkUniqueIds(QueryConstructor queryConstructor, String... ekUniqueIds) throws KnowledgeSourceReadException {
         try {
             return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, getTableAccessReaderBuilder().restrictTablesBy(ekUniqueIds).build());
@@ -154,6 +162,14 @@ class QuerySupport {
     QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         if (connection != null) {
             return new QueryExecutor(connection, queryConstructor, getTableAccessReaderBuilder().build());
+        } else {
+            return getQueryExecutorInstance(queryConstructor);
+        }
+    }
+    
+    QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
+        if (connection != null) {
+            return new QueryExecutor(connection, queryConstructor, tableAccessReader);
         } else {
             return getQueryExecutorInstance(queryConstructor);
         }

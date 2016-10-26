@@ -1780,7 +1780,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private final QueryConstructor IDS_PROPDEF_QC_POSTGRESQL = new QueryConstructor() {
 
         @Override
@@ -1806,7 +1806,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private final QueryConstructor N_PROPDEF_QC_POSTGRESQL = new QueryConstructor() {
 
         @Override
@@ -1843,7 +1843,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private final QueryConstructor COLLECT_SUBTREE_PROPDEF_QC_POSTGRESQL = new QueryConstructor() {
 
         @Override
@@ -1927,7 +1927,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -1943,9 +1943,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(table);
             sql.append(" A2 ON (A2.C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND A2.C_SYNONYM_CD ='N' AND A2.M_APPLIED_PATH ='@')");
         }
-        
+
     };
-    
+
     private final QueryConstructor READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL = new QueryConstructor() {
 
         @Override
@@ -2088,28 +2088,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     }
 
-    private final ResultSetReader<TemporalPropositionDefinition> resultSetReader = new ResultSetReader<TemporalPropositionDefinition>() {
-
-        @Override
-        public TemporalPropositionDefinition read(ResultSet rs) throws KnowledgeSourceReadException {
-            try {
-                if (rs != null && rs.next()) {
-                    AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
-                    Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
-                    abd.setInverseIsA(children.toArray(new String[children.size()]));
-                    List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2));
-                    abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
-                    return (TemporalPropositionDefinition) abd;
-                } else {
-                    return null;
-                }
-            } catch (SQLException | SAXParseException ex) {
-                throw new KnowledgeSourceReadException(ex);
-            }
-        }
-
-    };
-
     private final QueryConstructor READ_FACT_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -2122,39 +2100,34 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     };
 
     private TemporalPropositionDefinition readPropDef(final String id) throws KnowledgeSourceReadException {
-        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FACT_QUERY_CONSTRUCTOR)) {
+        TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(id).build();
+        ResultSetReader<TemporalPropositionDefinition> resultSetReader = new ResultSetReader<TemporalPropositionDefinition>() {
+
+            @Override
+            public TemporalPropositionDefinition read(ResultSet rs) throws KnowledgeSourceReadException {
+                try {
+                    if (rs != null && rs.next()) {
+                        AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
+                        Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2), tableAccessReader);
+                        abd.setInverseIsA(children.toArray(new String[children.size()]));
+                        List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2), tableAccessReader);
+                        abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
+                        return (TemporalPropositionDefinition) abd;
+                    } else {
+                        return null;
+                    }
+                } catch (SQLException | SAXParseException ex) {
+                    throw new KnowledgeSourceReadException(ex);
+                }
+            }
+
+        };
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FACT_QUERY_CONSTRUCTOR, tableAccessReader)) {
             return queryExecutor.execute(
                     id,
                     resultSetReader);
         }
     }
-
-    private final ResultSetReader<List<TemporalPropositionDefinition>> resultSetReaderAll = new ResultSetReader<List<TemporalPropositionDefinition>>() {
-
-        @Override
-        public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
-            try {
-                List<TemporalPropositionDefinition> r = new ArrayList<>();
-                if (rs != null) {
-                    Set<String> propIds = new HashSet<>();
-                    while (rs.next()) {
-                        AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
-                        if (propIds.add(abd.getId())) {
-                            Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
-                            abd.setInverseIsA(children.toArray(new String[children.size()]));
-                            List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2));
-                            abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
-                            r.add((TemporalPropositionDefinition) abd);
-                        }
-                    }
-                }
-                return r;
-            } catch (SQLException | SAXParseException ex) {
-                throw new KnowledgeSourceReadException(ex);
-            }
-        }
-
-    };
 
     private final QueryConstructor READ_PROPDEFS_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
@@ -2167,6 +2140,33 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     };
 
     private List<TemporalPropositionDefinition> readPropDefs(final List<String> ids) throws KnowledgeSourceReadException {
+        TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(ids.toArray(new String[ids.size()])).build();
+        ResultSetReader<List<TemporalPropositionDefinition>> resultSetReaderAll = new ResultSetReader<List<TemporalPropositionDefinition>>() {
+
+            @Override
+            public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
+                try {
+                    List<TemporalPropositionDefinition> r = new ArrayList<>();
+                    if (rs != null) {
+                        Set<String> propIds = new HashSet<>();
+                        while (rs.next()) {
+                            AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
+                            if (propIds.add(abd.getId())) {
+                                Set<String> children = levelReader.readChildrenFromDatabase(rs.getString(2));
+                                abd.setInverseIsA(children.toArray(new String[children.size()]));
+                                List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2), tableAccessReader);
+                                abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
+                                r.add((TemporalPropositionDefinition) abd);
+                            }
+                        }
+                    }
+                    return r;
+                } catch (SQLException | SAXParseException ex) {
+                    throw new KnowledgeSourceReadException(ex);
+                }
+            }
+
+        };
         List<TemporalPropositionDefinition> result = new ArrayList<>();
         try (Connection connection = this.querySupport.getConnection()) {
             try {
@@ -2176,7 +2176,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     }
                 }
 
-                try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, READ_PROPDEFS_QUERY_CONSTRUCTOR)) {
+                try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, READ_PROPDEFS_QUERY_CONSTRUCTOR, tableAccessReader)) {
                     result.addAll(queryExecutor.execute(
                             resultSetReaderAll));
                 }
@@ -2207,9 +2207,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
     };
 
-    private List<PropertyDefinition> readPropertyDefinitions(final String symbol, String fullName) throws KnowledgeSourceReadException {
+    private List<PropertyDefinition> readPropertyDefinitions(final String symbol, String fullName, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
         final Map<String, Map<String, ModInterp>> modInterp = readModInterp(null);
-        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(READ_PROP_DEF_QUERY_CONSTRUCTOR, symbol)) {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PROP_DEF_QUERY_CONSTRUCTOR, tableAccessReader)) {
             return queryExecutor.execute(fullName,
                     new ResultSetReader<List<PropertyDefinition>>() {
 
