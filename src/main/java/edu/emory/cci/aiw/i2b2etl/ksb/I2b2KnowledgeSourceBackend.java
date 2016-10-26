@@ -1683,7 +1683,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public Collection<String> collectPropIdDescendantsUsingAllNarrower(boolean inDataSourceOnly, final String[] propIds) throws KnowledgeSourceReadException {
         final Set<String> result = new HashSet<>();
         if (propIds != null && propIds.length > 0) {
-            try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(inDataSourceOnly ? IDS_PROPID_QC : N_PROPID_QC)) {
+            try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(inDataSourceOnly ? IDS_PROPID_QC : N_PROPID_QC, propIds)) {
                 queryExecutor.prepare();
                 for (String propId : filterPropId(propIds, result)) {
                     result.addAll(queryExecutor.execute(
@@ -1756,7 +1756,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     public Collection<String> collectPropIdDescendantsUsingInverseIsA(final String[] propIds) throws KnowledgeSourceReadException {
         final Set<String> result = new HashSet<>();
         if (propIds != null && propIds.length > 0) {
-            try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(COLLECT_SUBTREE_PROPID_QC)) {
+            try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(COLLECT_SUBTREE_PROPID_QC, propIds)) {
                 queryExecutor.prepare();
                 for (String propId : filterPropId(propIds, result)) {
                     result.addAll(queryExecutor.execute(
@@ -1871,7 +1871,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private List<PropositionDefinition> collectPropDefDescendantsCommon(final String[] propIds, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         List<PropositionDefinition> result = new ArrayList<>();
         if (propIds != null && propIds.length > 0) {
-            try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(queryConstructor)) {
+            try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(queryConstructor, propIds)) {
                 queryExecutor.prepare();
                 ListResultSetReader reader = new ListResultSetReader();
                 for (String propId : filterPropDef(propIds, result)) {
@@ -1904,9 +1904,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 /*
                  * Getting temp space full errors with one query, so split it into one query per metadata table.
                  */
-                for (String table : this.querySupport.getTableAccessReader().read(connection)) {
+                for (String table : this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(propIds).build().read(connection)) {
                     DatabaseProduct databaseProduct = this.querySupport.getDatabaseProduct();
-                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, databaseProduct == DatabaseProduct.ORACLE ? READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL : READ_ALL_PROPERTIES_CONSTRUCTOR, table)) {
+                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByTables(connection, databaseProduct == DatabaseProduct.ORACLE ? READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL : READ_ALL_PROPERTIES_CONSTRUCTOR, table)) {
                         partials.putAll(queryExecutor.execute(ALL_PROPERTIES_RSR));
                     }
                 }
@@ -2209,7 +2209,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     private List<PropertyDefinition> readPropertyDefinitions(final String symbol, String fullName) throws KnowledgeSourceReadException {
         final Map<String, Map<String, ModInterp>> modInterp = readModInterp(null);
-        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PROP_DEF_QUERY_CONSTRUCTOR)) {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(READ_PROP_DEF_QUERY_CONSTRUCTOR, symbol)) {
             return queryExecutor.execute(fullName,
                     new ResultSetReader<List<PropertyDefinition>>() {
 

@@ -25,8 +25,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import org.protempa.KnowledgeSourceReadException;
 
@@ -39,13 +41,46 @@ import org.protempa.KnowledgeSourceReadException;
  *
  * @author Andrew Post
  */
-public class TableAccessReader {
+public final class TableAccessReader {
+
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+
+    static final class TableAccessReaderBuilder {
+
+        private String excludeTableName;
+        private String[] ekUniqueIds;
+
+        public TableAccessReaderBuilder() {
+            this.ekUniqueIds = EMPTY_STRING_ARRAY;
+        }
+        
+        public TableAccessReaderBuilder(TableAccessReaderBuilder builder) {
+            this.ekUniqueIds = builder.ekUniqueIds.clone();
+            this.excludeTableName = builder.excludeTableName;
+        }
+
+        public TableAccessReaderBuilder excludeTableName(String excludeTableName) {
+            this.excludeTableName = excludeTableName;
+            return this;
+        }
+
+        public TableAccessReaderBuilder restrictTablesBy(String... ekUniqueIds) {
+            this.ekUniqueIds = ekUniqueIds;
+            return this;
+        }
+
+        public TableAccessReader build() {
+            return new TableAccessReader(this.excludeTableName, this.ekUniqueIds);
+        }
+    }
 
     private String[] ontTables;
     private final String excludeTableName;
+    private final String[] ekUniqueIds;
 
-    public TableAccessReader(String excludeTableName) {
+    public TableAccessReader(String excludeTableName, String... ekUniqueIds) {
         this.excludeTableName = excludeTableName;
+        this.ekUniqueIds = ekUniqueIds.clone();
     }
 
     public String[] read(Connection connection) throws KnowledgeSourceReadException {
@@ -91,7 +126,25 @@ public class TableAccessReader {
                 } catch (SQLException ex) {
                     throw new KnowledgeSourceReadException(ex);
                 }
-                this.ontTables = tables.toArray(new String[tables.size()]);
+
+                if (this.ekUniqueIds.length > 0) {
+                    try {
+                        DefaultUnionedMetadataQueryBuilder builder = new DefaultUnionedMetadataQueryBuilder();
+                        String subQuery = builder.statement("SELECT 1 FROM {0} WHERE EK_UNIQUE_ID IN (''" + String.join("'',''", this.ekUniqueIds) + "'') AND C_FULLNAME LIKE C_FULLNAME || ''%''").ontTables(tables.toArray(new String[tables.size()])).build();
+                        try (Statement stmt = connection.createStatement();
+                                ResultSet resultSet = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS TA WHERE EXISTS (" + subQuery + ")")) {
+                            List<String> l = new ArrayList<>();
+                            while (resultSet.next()) {
+                                l.add(resultSet.getString(1));
+                            }
+                            this.ontTables = l.toArray(new String[l.size()]);
+                        }
+                    } catch (SQLException ex) {
+                        throw new KnowledgeSourceReadException(ex);
+                    }
+                } else {
+                    this.ontTables = tables.toArray(new String[tables.size()]);
+                }
             }
         }
         return this.ontTables.clone();

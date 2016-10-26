@@ -54,49 +54,51 @@ class LevelReader {
         }
     }
 
-    Map<String, Set<String>> readChildrenFromDatabase(final Collection<String> symbols) throws KnowledgeSourceReadException {
+    Map<String, Set<String>> readChildrenFromDatabase(final Collection<String> ekUniqueIds) throws KnowledgeSourceReadException {
         Map<String, Set<String>> result = new HashMap<>();
-        try (Connection connection = this.querySupport.getConnection()) {
-            try {
-                try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
-                    for (String child : symbols) {
-                        childTempTableHandler.insert(child);
-                    }
-                }
-
-                try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, new QueryConstructor() {
-
-                    @Override
-                    public void appendStatement(StringBuilder sql, String table) {
-                        String ekIdCol = querySupport.getEurekaIdColumn();
-                        sql.append("SELECT A2.").append(ekIdCol).append(", A1.").append(ekIdCol).append(" FROM ");
-                        sql.append(table);
-                        sql.append(" A1 JOIN ");
-                        sql.append(table);
-                        sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
-                    }
-                })) {
-                    putSetAll(result,
-                            queryExecutor.execute(MULT_RESULT_SET_READER));
-                }
-                connection.commit();
-            } catch (SQLException ex) {
+        if (ekUniqueIds != null && !ekUniqueIds.isEmpty()) {
+            try (Connection connection = this.querySupport.getConnection()) {
                 try {
-                    connection.rollback();
-                } catch (SQLException ignore) {
-                } finally {
-                    throw ex;
+                    try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
+                        for (String child : ekUniqueIds) {
+                            childTempTableHandler.insert(child);
+                        }
+                    }
+
+                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(connection, new QueryConstructor() {
+
+                        @Override
+                        public void appendStatement(StringBuilder sql, String table) {
+                            String ekIdCol = querySupport.getEurekaIdColumn();
+                            sql.append("SELECT A2.").append(ekIdCol).append(", A1.").append(ekIdCol).append(" FROM ");
+                            sql.append(table);
+                            sql.append(" A1 JOIN ");
+                            sql.append(table);
+                            sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
+                        }
+                    }, ekUniqueIds.toArray(new String[ekUniqueIds.size()]))) {
+                        putSetAll(result,
+                                queryExecutor.execute(MULT_RESULT_SET_READER));
+                    }
+                    connection.commit();
+                } catch (SQLException ex) {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException ignore) {
+                    } finally {
+                        throw ex;
+                    }
                 }
+            } catch (InvalidConnectionSpecArguments | SQLException ex) {
+                throw new KnowledgeSourceReadException(ex);
             }
-        } catch (InvalidConnectionSpecArguments | SQLException ex) {
-            throw new KnowledgeSourceReadException(ex);
         }
 
         return result;
     }
 
     Set<String> readParentsFromDatabase(String propId) throws KnowledgeSourceReadException {
-        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PARENTS_FROM_DB_QUERY_CONSTRUCTOR)) {
+        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(READ_PARENTS_FROM_DB_QUERY_CONSTRUCTOR, propId)) {
             return queryExecutor.execute(
                     propId,
                     RESULT_SET_READER

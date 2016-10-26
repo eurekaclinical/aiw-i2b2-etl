@@ -130,23 +130,12 @@ public class QueryExecutor implements AutoCloseable {
             try {
                 openConnection();
                 readOntologyTables();
-                StringBuilder sql = new StringBuilder();
                 if (this.ontTables.length > 0) {
-                    if (this.ontTables.length > 1) {
-                        sql.append('(');
-                    }
-                    for (int i = 0, n = this.ontTables.length; i < n; i++) {
-                        String table = this.ontTables[i];
-                        if (i > 0) {
-                            sql.append(") UNION ALL (");
-                        }
-                        this.queryConstructor.appendStatement(sql, table);
-                    }
-                    if (this.ontTables.length > 1) {
-                        sql.append(')');
-                    }
-
-                    this.sql = sql.toString();
+                    QueryConstructorUnionedMetadataQueryBuilder builder = 
+                        new QueryConstructorUnionedMetadataQueryBuilder();
+                    this.sql = builder
+                            .queryConstructor(this.queryConstructor)
+                            .ontTables(this.ontTables).build();
                     LOGGER.log(Level.FINE, "Preparing query {0}", this.sql);
                     this.preparedStatement = this.connection.prepareStatement(this.sql);
                     this.preparedStatement.setFetchSize(1000);

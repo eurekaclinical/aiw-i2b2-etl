@@ -19,6 +19,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * limitations under the License.
  * #L%
  */
+import edu.emory.cci.aiw.i2b2etl.ksb.TableAccessReader.TableAccessReaderBuilder;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.arp.javautil.sql.DatabaseAPI;
@@ -39,14 +40,14 @@ class QuerySupport {
     private String username;
     private String password;
     private String excludeTableName;
-    private TableAccessReader ontTableReader;
+    private TableAccessReaderBuilder tableAccessReaderBuilder;
     private String eurekaIdColumn;
     private DatabaseProduct databaseProduct;
 
     QuerySupport() {
         this.databaseApi = DatabaseAPI.DRIVERMANAGER;
         this.eurekaIdColumn = DEFAULT_EUREKA_ID_COLUMN;
-        this.ontTableReader = new TableAccessReader(null);
+        this.tableAccessReaderBuilder = new TableAccessReaderBuilder();
     }
 
     String getEurekaIdColumn() {
@@ -96,11 +97,11 @@ class QuerySupport {
 
     void setExcludeTableName(String excludeTableName) {
         this.excludeTableName = excludeTableName;
-        this.ontTableReader = new TableAccessReader(excludeTableName);
+        this.tableAccessReaderBuilder = this.tableAccessReaderBuilder.excludeTableName(excludeTableName);
     }
 
-    TableAccessReader getTableAccessReader() {
-        return this.ontTableReader;
+    TableAccessReaderBuilder getTableAccessReaderBuilder() {
+        return new TableAccessReaderBuilder(this.tableAccessReaderBuilder);
     }
 
     Connection getConnection() throws InvalidConnectionSpecArguments, SQLException {
@@ -118,7 +119,7 @@ class QuerySupport {
         return this.databaseProduct;
     }
 
-    ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
+    ConnectionSpecQueryExecutor getQueryExecutorInstanceRestrictByTables(QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
         try {
             return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, tables);
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
@@ -128,23 +129,39 @@ class QuerySupport {
 
     ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         try {
-            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, this.ontTableReader);
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, getTableAccessReaderBuilder().build());
+        } catch (InvalidConnectionSpecArguments | SQLException ex) {
+            throw new KnowledgeSourceReadException(ex);
+        }
+    }
+    
+    ConnectionSpecQueryExecutor getQueryExecutorInstanceRestrictByEkUniqueIds(QueryConstructor queryConstructor, String... ekUniqueIds) throws KnowledgeSourceReadException {
+        try {
+            return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, getTableAccessReaderBuilder().restrictTablesBy(ekUniqueIds).build());
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
     }
 
-    QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
+    QueryExecutor getQueryExecutorInstanceRestrictByTables(Connection connection, QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
         if (connection != null) {
             return new QueryExecutor(connection, queryConstructor, tables);
         } else {
-            return getQueryExecutorInstance(queryConstructor, tables);
+            return getQueryExecutorInstanceRestrictByTables(queryConstructor, tables);
         }
     }
 
     QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
         if (connection != null) {
-            return new QueryExecutor(connection, queryConstructor, this.ontTableReader);
+            return new QueryExecutor(connection, queryConstructor, getTableAccessReaderBuilder().build());
+        } else {
+            return getQueryExecutorInstance(queryConstructor);
+        }
+    }
+    
+    QueryExecutor getQueryExecutorInstanceRestrictByEkUniqueIds(Connection connection, QueryConstructor queryConstructor, String... ekUniqueIds) throws KnowledgeSourceReadException {
+        if (connection != null) {
+            return new QueryExecutor(connection, queryConstructor, getTableAccessReaderBuilder().restrictTablesBy(ekUniqueIds).build());
         } else {
             return getQueryExecutorInstance(queryConstructor);
         }
