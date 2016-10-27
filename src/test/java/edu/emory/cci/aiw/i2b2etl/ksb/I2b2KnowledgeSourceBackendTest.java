@@ -22,7 +22,9 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
 import org.junit.Test;
 import org.protempa.PropositionDefinition;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -45,6 +47,12 @@ public class I2b2KnowledgeSourceBackendTest extends AbstractKSBTest {
     public void testReadPropositionDefinitionNotNull() throws Exception {
         PropositionDefinition propDef = readPropositionDefinition(ICD9_250_ID);
         assertNotNull(propDef);
+    }
+    
+    @Test
+    public void testReadPropositionsDefinitionNotNull() throws Exception {
+        List<PropositionDefinition> propDefs = readPropositionDefinitions(new String[]{ICD9_250_ID});
+        assertEquals(1, propDefs.size());
     }
 
     @Test

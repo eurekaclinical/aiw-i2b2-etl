@@ -30,6 +30,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import org.arp.javautil.sql.DatabaseProduct;
+import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSourceReadException;
 
 /**
@@ -53,7 +55,7 @@ public final class TableAccessReader {
         public TableAccessReaderBuilder() {
             this.ekUniqueIds = EMPTY_STRING_ARRAY;
         }
-        
+
         public TableAccessReaderBuilder(TableAccessReaderBuilder builder) {
             this.ekUniqueIds = builder.ekUniqueIds.clone();
             this.excludeTableName = builder.excludeTableName;
@@ -93,6 +95,7 @@ public final class TableAccessReader {
                     query.append(" WHERE C_TABLE_NAME <> ?");
                 }
                 try (PreparedStatement stmt = connection.prepareStatement(query.toString())) {
+                    stmt.setFetchSize(10);
                     if (this.excludeTableName != null) {
                         stmt.setString(1, this.excludeTableName);
                     }
@@ -129,10 +132,12 @@ public final class TableAccessReader {
 
                 if (this.ekUniqueIds.length > 0) {
                     try {
+                        DatabaseProduct databaseProduct = DatabaseProduct.fromMetaData(connection.getMetaData());
                         DefaultUnionedMetadataQueryBuilder builder = new DefaultUnionedMetadataQueryBuilder();
-                        String subQuery = builder.statement("SELECT 1 FROM {0} WHERE EK_UNIQUE_ID IN (''" + String.join("'',''", this.ekUniqueIds) + "'') AND C_FULLNAME LIKE C_FULLNAME || ''%''").ontTables(tables.toArray(new String[tables.size()])).build();
+                        String subQuery = builder.statement("SELECT 1 FROM {0} WHERE EK_UNIQUE_ID IN (''" + String.join("'',''", this.ekUniqueIds) + "'') AND C_FULLNAME LIKE TA.C_FULLNAME || ''%''" + (databaseProduct == DatabaseProduct.POSTGRESQL ? " ESCAPE ''''" : "")).ontTables(tables.toArray(new String[tables.size()])).build();
                         try (Statement stmt = connection.createStatement();
                                 ResultSet resultSet = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS TA WHERE EXISTS (" + subQuery + ")")) {
+                            resultSet.setFetchSize(10);
                             List<String> l = new ArrayList<>();
                             while (resultSet.next()) {
                                 l.add(resultSet.getString(1));

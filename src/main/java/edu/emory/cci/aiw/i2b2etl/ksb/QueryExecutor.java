@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.ArrayUtils;
-import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSourceReadException;
 
 /**
@@ -95,8 +94,14 @@ public class QueryExecutor implements AutoCloseable {
                 for (int i = 0, n = this.ontTables.length; i < n; i++) {
                     j = paramSetter.set(this.preparedStatement, j);
                 }
+                long start = System.currentTimeMillis();
                 try (ResultSet rs = this.preparedStatement.executeQuery()) {
-                    return resultSetReader.read(rs);
+                    E result = resultSetReader.read(rs);
+                    double queryTime = (System.currentTimeMillis() - start) / 1000.0;
+                    if (LOGGER.isLoggable(Level.FINE) && queryTime >= 1) {
+                        LOGGER.log(Level.FINE, "Long running query ({0} seconds): {1}", new Object[]{queryTime, this.sql});
+                    }
+                    return result;
                 }
             }
         } catch (SQLException ex) {
@@ -123,11 +128,10 @@ public class QueryExecutor implements AutoCloseable {
     public void prepare() throws KnowledgeSourceReadException {
         if (this.preparedStatement == null) {
             try {
-                openConnection();
                 readOntologyTables();
                 if (this.ontTables.length > 0) {
-                    QueryConstructorUnionedMetadataQueryBuilder builder = 
-                        new QueryConstructorUnionedMetadataQueryBuilder();
+                    QueryConstructorUnionedMetadataQueryBuilder builder
+                            = new QueryConstructorUnionedMetadataQueryBuilder();
                     this.sql = builder
                             .queryConstructor(this.queryConstructor)
                             .ontTables(this.ontTables).build();
@@ -135,14 +139,10 @@ public class QueryExecutor implements AutoCloseable {
                     this.preparedStatement = this.connection.prepareStatement(this.sql);
                     this.preparedStatement.setFetchSize(1000);
                 }
-            } catch (SQLException | InvalidConnectionSpecArguments ex) {
+            } catch (SQLException ex) {
                 throw new KnowledgeSourceReadException(ex);
             }
         }
-    }
-
-    private Connection openConnection() throws InvalidConnectionSpecArguments, SQLException {
-        return this.connection;
     }
 
     private void readOntologyTables() throws KnowledgeSourceReadException {

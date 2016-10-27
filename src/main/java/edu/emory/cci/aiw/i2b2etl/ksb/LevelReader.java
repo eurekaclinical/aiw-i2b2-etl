@@ -53,17 +53,8 @@ class LevelReader {
             );
         }
     }
-
-    Set<String> readChildrenFromDatabase(String fullName) throws KnowledgeSourceReadException {
-        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR)) {
-            return queryExecutor.execute(
-                    fullName,
-                    RESULT_SET_READER
-            );
-        }
-    }
-
-    Map<String, Set<String>> readChildrenFromDatabase(final Collection<String> ekUniqueIds) throws KnowledgeSourceReadException {
+    
+    Map<String, Set<String>> readChildrenFromDatabase(final Collection<String> ekUniqueIds, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
         Map<String, Set<String>> result = new HashMap<>();
         if (ekUniqueIds != null && !ekUniqueIds.isEmpty()) {
             try (Connection connection = this.querySupport.getConnection()) {
@@ -74,7 +65,7 @@ class LevelReader {
                         }
                     }
 
-                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(connection, new QueryConstructor() {
+                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, new QueryConstructor() {
 
                         @Override
                         public void appendStatement(StringBuilder sql, String table) {
@@ -85,7 +76,7 @@ class LevelReader {
                             sql.append(table);
                             sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
                         }
-                    }, ekUniqueIds.toArray(new String[ekUniqueIds.size()]))) {
+                    }, tableAccessReader)) {
                         putSetAll(result,
                                 queryExecutor.execute(MULT_RESULT_SET_READER));
                     }
