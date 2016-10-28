@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseProduct;
@@ -191,6 +193,12 @@ public class I2b2Statistics implements Statistics {
     }
 
     private void collectParentsAndCountsFromEurekafiedTables(final Connection conn) throws KnowledgeSourceReadException {
+        DatabaseProduct databaseProduct;
+        try {
+            databaseProduct = DatabaseProduct.fromMetaData(conn.getMetaData());
+        } catch (SQLException ex) {
+            throw new KnowledgeSourceReadException("Could not collect parents and counts", ex);
+        }
         QueryExecutor queryExecutor = new QueryExecutor(conn, new QueryConstructor() {
 
             @Override
@@ -202,7 +210,7 @@ public class I2b2Statistics implements Statistics {
                 }
             }
         },
-                new TableAccessReader(this.metaTableName));
+                new TableAccessReader(databaseProduct, this.metaTableName));
         IntStatisticsBuilder b = queryExecutor.execute(new ResultSetReader<IntStatisticsBuilder>() {
 
             @Override

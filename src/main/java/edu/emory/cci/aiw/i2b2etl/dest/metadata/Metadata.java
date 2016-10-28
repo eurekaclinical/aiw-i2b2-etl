@@ -403,7 +403,7 @@ public final class Metadata {
     private void setI2B2PathsToConcepts() throws OntologyBuildException {
         Map<String, List<String>> result;
         if (this.metaConnectionSpec != null) {
-            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, new TableAccessReader(this.settings.getMetaTableName()))) {
+            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, new TableAccessReader(this.metaConnectionSpec.getDatabaseProduct(), this.settings.getMetaTableName()))) {
                 result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
 
                     @Override

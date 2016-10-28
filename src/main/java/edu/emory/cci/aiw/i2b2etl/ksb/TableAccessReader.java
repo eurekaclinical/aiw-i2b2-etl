@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.arp.javautil.sql.DatabaseProduct;
-import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.protempa.KnowledgeSourceReadException;
 
 /**
@@ -51,14 +50,17 @@ public final class TableAccessReader {
 
         private String excludeTableName;
         private String[] ekUniqueIds;
+        private DatabaseProduct databaseProduct;
 
-        public TableAccessReaderBuilder() {
+        public TableAccessReaderBuilder(DatabaseProduct databaseProduct) {
             this.ekUniqueIds = EMPTY_STRING_ARRAY;
+            this.databaseProduct = databaseProduct;
         }
 
         public TableAccessReaderBuilder(TableAccessReaderBuilder builder) {
             this.ekUniqueIds = builder.ekUniqueIds.clone();
             this.excludeTableName = builder.excludeTableName;
+            this.databaseProduct = builder.databaseProduct;
         }
 
         public TableAccessReaderBuilder excludeTableName(String excludeTableName) {
@@ -72,15 +74,17 @@ public final class TableAccessReader {
         }
 
         public TableAccessReader build() {
-            return new TableAccessReader(this.excludeTableName, this.ekUniqueIds);
+            return new TableAccessReader(this.databaseProduct, this.excludeTableName, this.ekUniqueIds);
         }
     }
 
     private String[] ontTables;
     private final String excludeTableName;
     private final String[] ekUniqueIds;
+    private final DatabaseProduct databaseProduct;
 
-    public TableAccessReader(String excludeTableName, String... ekUniqueIds) {
+    public TableAccessReader(DatabaseProduct databaseProduct, String excludeTableName, String... ekUniqueIds) {
+        this.databaseProduct = databaseProduct;
         this.excludeTableName = excludeTableName;
         this.ekUniqueIds = ekUniqueIds.clone();
     }
@@ -132,7 +136,6 @@ public final class TableAccessReader {
 
                 if (this.ekUniqueIds.length > 0) {
                     try {
-                        DatabaseProduct databaseProduct = DatabaseProduct.fromMetaData(connection.getMetaData());
                         DefaultUnionedMetadataQueryBuilder builder = new DefaultUnionedMetadataQueryBuilder();
                         String subQuery = builder.statement("SELECT 1 FROM {0} WHERE EK_UNIQUE_ID IN (''" + String.join("'',''", this.ekUniqueIds) + "'') AND C_FULLNAME LIKE TA.C_FULLNAME || ''%''" + (databaseProduct == DatabaseProduct.POSTGRESQL ? " ESCAPE ''''" : "")).ontTables(tables.toArray(new String[tables.size()])).build();
                         try (Statement stmt = connection.createStatement();

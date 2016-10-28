@@ -22,6 +22,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
 import edu.emory.cci.aiw.i2b2etl.ksb.TableAccessReader.TableAccessReaderBuilder;
 import java.sql.Connection;
 import java.sql.SQLException;
+import org.arp.javautil.sql.ConnectionSpec;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.arp.javautil.sql.DatabaseProduct;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
@@ -35,69 +36,122 @@ class QuerySupport {
 
     private static final String DEFAULT_EUREKA_ID_COLUMN = "EK_UNIQUE_ID";
 
-    private DatabaseAPI databaseApi;
-    private String databaseId;
-    private String username;
-    private String password;
-    private String excludeTableName;
-    private TableAccessReaderBuilder tableAccessReaderBuilder;
-    private String eurekaIdColumn;
-    private DatabaseProduct databaseProduct;
+    static class QuerySupportBuilder {
 
-    QuerySupport() {
-        this.databaseApi = DatabaseAPI.DRIVERMANAGER;
-        this.eurekaIdColumn = DEFAULT_EUREKA_ID_COLUMN;
-        this.tableAccessReaderBuilder = new TableAccessReaderBuilder();
+        private DatabaseAPI databaseApi;
+        private String databaseId;
+        private String username;
+        private String password;
+        private String excludeTableName;
+        private String eurekaIdColumn;
+
+        QuerySupportBuilder() {
+            this.databaseApi = DatabaseAPI.DRIVERMANAGER;
+            this.eurekaIdColumn = DEFAULT_EUREKA_ID_COLUMN;
+        }
+
+        DatabaseAPI getDatabaseApi() {
+            return databaseApi;
+        }
+
+        void setDatabaseApi(DatabaseAPI databaseApi) {
+            this.databaseApi = databaseApi;
+        }
+
+        String getDatabaseId() {
+            return databaseId;
+        }
+
+        void setDatabaseId(String databaseId) {
+            this.databaseId = databaseId;
+        }
+
+        String getUsername() {
+            return username;
+        }
+
+        void setUsername(String username) {
+            this.username = username;
+        }
+
+        String getPassword() {
+            return password;
+        }
+
+        void setPassword(String password) {
+            this.password = password;
+        }
+
+        String getExcludeTableName() {
+            return excludeTableName;
+        }
+
+        void setExcludeTableName(String excludeTableName) {
+            this.excludeTableName = excludeTableName;
+        }
+
+        String getEurekaIdColumn() {
+            return eurekaIdColumn;
+        }
+
+        void setEurekaIdColumn(String eurekaIdColumn) {
+            this.eurekaIdColumn = eurekaIdColumn;
+        }
+
+        QuerySupport build() throws InvalidConnectionSpecArguments, SQLException {
+            return new QuerySupport(databaseApi, databaseId, username, password, excludeTableName, eurekaIdColumn);
+        }
+
+    }
+    
+    private final DatabaseAPI databaseApi;
+    private final String databaseId;
+    private final String username;
+    private final String password;
+    private final String excludeTableName;
+    private final TableAccessReaderBuilder tableAccessReaderBuilder;
+    private final String eurekaIdColumn;
+    private final DatabaseProduct databaseProduct;
+    private final ConnectionSpec connectionSpec;
+    private final LevelReader levelReader;
+
+    QuerySupport(DatabaseAPI databaseApi, String databaseId, String username, String password, String excludeTableName, String eurekaIdColumn) throws InvalidConnectionSpecArguments, SQLException {
+        this.databaseApi = databaseApi;
+        this.eurekaIdColumn = eurekaIdColumn;
+        this.databaseId = databaseId;
+        this.username = username;
+        this.password = password;
+        this.excludeTableName = excludeTableName;
+        this.connectionSpec = this.databaseApi.newConnectionSpecInstance(databaseId, username, password, false);
+        this.tableAccessReaderBuilder = new TableAccessReaderBuilder(this.connectionSpec.getDatabaseProduct()).excludeTableName(excludeTableName);
+        try (Connection cn = this.connectionSpec.getOrCreate()) {
+            this.databaseProduct = DatabaseProduct.fromMetaData(cn.getMetaData());
+        }
+        this.levelReader = new LevelReader(this);
     }
 
     String getEurekaIdColumn() {
         return eurekaIdColumn;
     }
 
-    void setEurekaIdColumn(String eurekaIdColumn) {
-        this.eurekaIdColumn = eurekaIdColumn;
-    }
-
     DatabaseAPI getDatabaseApi() {
         return this.databaseApi;
-    }
-
-    void setDatabaseApi(DatabaseAPI databaseApi) {
-        this.databaseApi = databaseApi;
     }
 
     String getDatabaseId() {
         return databaseId;
     }
 
-    void setDatabaseId(String databaseId) {
-        this.databaseId = databaseId;
-        this.databaseProduct = null;
-    }
-
     String getUsername() {
         return username;
-    }
-
-    void setUsername(String username) {
-        this.username = username;
     }
 
     String getPassword() {
         return password;
     }
 
-    void setPassword(String password) {
-        this.password = password;
-    }
-
     String getExcludeTableName() {
         return excludeTableName;
-    }
-
-    void setExcludeTableName(String excludeTableName) {
-        this.excludeTableName = excludeTableName;
-        this.tableAccessReaderBuilder = this.tableAccessReaderBuilder.excludeTableName(excludeTableName);
     }
 
     TableAccessReaderBuilder getTableAccessReaderBuilder() {
@@ -105,18 +159,15 @@ class QuerySupport {
     }
 
     Connection getConnection() throws InvalidConnectionSpecArguments, SQLException {
-        return this.databaseApi.newConnectionSpecInstance(databaseId, username, password, false).getOrCreate();
+        return this.connectionSpec.getOrCreate();
     }
 
     DatabaseProduct getDatabaseProduct() throws KnowledgeSourceReadException {
-        if (this.databaseProduct == null) {
-            try (Connection cn = getConnection()) {
-                this.databaseProduct = DatabaseProduct.fromMetaData(cn.getMetaData());
-            } catch (InvalidConnectionSpecArguments | SQLException ex) {
-                throw new KnowledgeSourceReadException(ex);
-            }
-        }
         return this.databaseProduct;
+    }
+    
+    LevelReader getLevelReader() {
+        return this.levelReader;
     }
 
     ConnectionSpecQueryExecutor getQueryExecutorInstanceRestrictByTables(QueryConstructor queryConstructor, String... tables) throws KnowledgeSourceReadException {
@@ -134,7 +185,7 @@ class QuerySupport {
             throw new KnowledgeSourceReadException(ex);
         }
     }
-    
+
     ConnectionSpecQueryExecutor getQueryExecutorInstance(QueryConstructor queryConstructor, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
         try {
             return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, tableAccessReader);
@@ -142,7 +193,7 @@ class QuerySupport {
             throw new KnowledgeSourceReadException(ex);
         }
     }
-    
+
     ConnectionSpecQueryExecutor getQueryExecutorInstanceRestrictByEkUniqueIds(QueryConstructor queryConstructor, String... ekUniqueIds) throws KnowledgeSourceReadException {
         try {
             return new ConnectionSpecQueryExecutor(this.databaseApi, this.databaseId, this.username, this.password, queryConstructor, getTableAccessReaderBuilder().restrictTablesBy(ekUniqueIds).build());
@@ -166,7 +217,7 @@ class QuerySupport {
             return getQueryExecutorInstance(queryConstructor);
         }
     }
-    
+
     QueryExecutor getQueryExecutorInstance(Connection connection, QueryConstructor queryConstructor, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
         if (connection != null) {
             return new QueryExecutor(connection, queryConstructor, tableAccessReader);
@@ -174,7 +225,7 @@ class QuerySupport {
             return getQueryExecutorInstance(queryConstructor);
         }
     }
-    
+
     QueryExecutor getQueryExecutorInstanceRestrictByEkUniqueIds(Connection connection, QueryConstructor queryConstructor, String... ekUniqueIds) throws KnowledgeSourceReadException {
         if (connection != null) {
             return new QueryExecutor(connection, queryConstructor, getTableAccessReaderBuilder().restrictTablesBy(ekUniqueIds).build());
