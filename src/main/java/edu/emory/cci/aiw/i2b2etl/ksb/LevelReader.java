@@ -30,8 +30,8 @@ import java.util.Set;
 import org.protempa.KnowledgeSourceReadException;
 
 import static org.arp.javautil.collections.Collections.putSet;
-import static org.arp.javautil.collections.Collections.putSetAll;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
+import org.protempa.PropositionDefinition;
 
 /**
  *
@@ -44,7 +44,7 @@ class LevelReader {
     LevelReader(QuerySupport querySupport) {
         this.querySupport = querySupport;
     }
-    
+
     Set<String> readChildrenFromDatabase(String fullName, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
         try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_CHILDREN_FROM_DB_QUERY_CONSTRUCTOR, tableAccessReader)) {
             return queryExecutor.execute(
@@ -53,32 +53,42 @@ class LevelReader {
             );
         }
     }
-    
-    Map<String, Set<String>> readChildrenFromDatabase(final Collection<String> ekUniqueIds, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
-        Map<String, Set<String>> result = new HashMap<>();
-        if (ekUniqueIds != null && !ekUniqueIds.isEmpty()) {
+
+    void readChildrenFromDatabase(Map<String, PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader, ReadChildrenAction action) throws KnowledgeSourceReadException {
+        if (propIdToPropDef != null && !propIdToPropDef.isEmpty()) {
             try (Connection connection = this.querySupport.getConnection()) {
                 try {
                     try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
-                        for (String child : ekUniqueIds) {
-                            childTempTableHandler.insert(child);
+                        for (PropositionDefinition propDef : propIdToPropDef.values()) {
+                            childTempTableHandler.insert(propDef.getId());
                         }
                     }
 
-                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, new QueryConstructor() {
-
-                        @Override
-                        public void appendStatement(StringBuilder sql, String table) {
-                            String ekIdCol = querySupport.getEurekaIdColumn();
-                            sql.append("SELECT A2.").append(ekIdCol).append(", A1.").append(ekIdCol).append(" FROM ");
-                            sql.append(table);
-                            sql.append(" A1 JOIN ");
-                            sql.append(table);
-                            sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
-                        }
+                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, (StringBuilder sql, String table) -> {
+                        String ekIdCol = querySupport.getEurekaIdColumn();
+                        sql.append("SELECT A2.").append(ekIdCol).append(", A1.").append(ekIdCol).append(" FROM ");
+                        sql.append(table);
+                        sql.append(" A1 JOIN ");
+                        sql.append(table);
+                        sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
                     }, tableAccessReader)) {
-                        putSetAll(result,
-                                queryExecutor.execute(MULT_RESULT_SET_READER));
+                        queryExecutor.execute((ResultSet rs) -> {
+                            Map<String, Set<String>> result = new HashMap<>();
+                            if (rs != null) {
+                                try {
+                                    while (rs.next()) {
+                                        putSet(result, rs.getString(1), rs.getString(2));
+                                    }
+                                } catch (SQLException ex) {
+                                    throw new KnowledgeSourceReadException(ex);
+                                }
+                                for (Map.Entry<String, Set<String>> me : result.entrySet()) {
+                                    action.execute(propIdToPropDef.get(me.getKey()), me.getValue());
+                                }
+                            }
+                            return null;
+                        });
+
                     }
                     connection.commit();
                 } catch (SQLException ex) {
@@ -93,8 +103,6 @@ class LevelReader {
                 throw new KnowledgeSourceReadException(ex);
             }
         }
-
-        return result;
     }
 
     Set<String> readParentsFromDatabase(String propId) throws KnowledgeSourceReadException {
@@ -127,25 +135,6 @@ class LevelReader {
                 if (rs != null) {
                     while (rs.next()) {
                         result.add(rs.getString(1));
-                    }
-                }
-                return result;
-            } catch (SQLException ex) {
-                throw new KnowledgeSourceReadException(ex);
-            }
-        }
-
-    };
-
-    private static final ResultSetReader<Map<String, Set<String>>> MULT_RESULT_SET_READER = new ResultSetReader<Map<String, Set<String>>>() {
-
-        @Override
-        public Map<String, Set<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
-            try {
-                Map<String, Set<String>> result = new HashMap<>();
-                if (rs != null) {
-                    while (rs.next()) {
-                        putSet(result, rs.getString(1), rs.getString(2));
                     }
                 }
                 return result;

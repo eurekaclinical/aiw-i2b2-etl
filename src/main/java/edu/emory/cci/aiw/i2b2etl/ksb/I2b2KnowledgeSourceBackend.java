@@ -1767,24 +1767,24 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         return propIdsAsSet;
     }
 
-    private Set<String> filterPropDef(String[] propIds, final List<PropositionDefinition> result) throws KnowledgeSourceReadException {
+    private Set<String> filterPropDef(String[] propIds, Map<String, PropositionDefinition> result) throws KnowledgeSourceReadException {
         Set<String> propIdsAsSet = Arrays.asSet(propIds);
         for (Iterator<String> itr = propIdsAsSet.iterator(); itr.hasNext();) {
             String propId = itr.next();
             if (patientDetailsPropositionId.equals(propId)) {
-                result.add(newPatientDetailsPropositionDefinition());
+                result.put(propId, newPatientDetailsPropositionDefinition());
                 itr.remove();
             } else if (patientPropositionId.equals(propId)) {
-                result.add(newPatientPropositionDefinition());
+                result.put(propId, newPatientPropositionDefinition());
                 itr.remove();
             } else if (visitPropositionId.equals(propId)) {
-                result.add(newVisitPropositionDefinition());
+                result.put(propId, newVisitPropositionDefinition());
                 itr.remove();
             } else if (providerPropositionId.equals(propId)) {
-                result.add(newProviderPropositionDefinition());
+                result.put(propId, newProviderPropositionDefinition());
                 itr.remove();
             } else if (patientAliasPropositionId.equals(propId)) {
-                result.add(newPatientAliasPropositionDefinition());
+                result.put(propId, newPatientAliasPropositionDefinition());
             }
         }
         return propIdsAsSet;
@@ -1933,8 +1933,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
     }
 
-    private List<PropositionDefinition> collectPropDefDescendantsCommon(final String[] propIds, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
-        List<PropositionDefinition> result = new ArrayList<>();
+    private Collection<PropositionDefinition> collectPropDefDescendantsCommon(final String[] propIds, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
+        Map<String, PropositionDefinition> result = new HashMap<>();
         if (propIds != null && propIds.length > 0) {
             TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(propIds).build();
             try (Connection connection = this.querySupport.getConnection()) {
@@ -1945,8 +1945,22 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 }
                 try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, queryConstructor, tableAccessReader)) {
                     queryExecutor.prepare();
-                    ListResultSetReader reader = new ListResultSetReader();
-                    result.addAll(queryExecutor.execute(reader));
+                    queryExecutor.execute((ResultSet rs) -> {
+                        try {
+                            if (rs != null) {
+                                Date now = new Date();
+                                while (rs.next()) {
+                                    String propId = rs.getString(7);
+                                    if (!result.containsKey(propId)) {
+                                        result.put(propId, newTemporalPropositionDefinition(rs, now));
+                                    }
+                                }
+                            }
+                            return null;
+                        } catch (SQLException | SAXParseException ex) {
+                            throw new KnowledgeSourceReadException(ex);
+                        }
+                    });
                 }
                 try {
                     connection.commit();
@@ -1958,27 +1972,79 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 throw new KnowledgeSourceReadException(ex);
             }
 
-            final Map<String, PropositionDefinition> resultMap = new HashMap<>();
-            for (PropositionDefinition propDef : result) {
-                resultMap.put(propDef.getId(), propDef);
-            }
-            populateChildren(resultMap, tableAccessReader);
-            populateProperties(resultMap, tableAccessReader);
+            populateChildren(result, tableAccessReader);
+            populateProperties(result, tableAccessReader);
         }
 
-        return result;
+        return result.values();
     }
 
-    void populateProperties(final Map<String, PropositionDefinition> resultMap, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
-        Map<String, List<PropertyDefinition>> partials;
+    void populateProperties(Map<String, PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
         try (Connection connection = this.querySupport.getConnection()) {
             try {
                 try (UniqueIdTempTableHandler childTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
-                    for (String child : resultMap.keySet()) {
-                        childTempTableHandler.insert(child);
+                    for (String propId : propIdToPropDef.keySet()) {
+                        childTempTableHandler.insert(propId);
                     }
                 }
-                partials = new HashMap<>();
+                ResultSetReader<Map<PropositionDefinition, List<PropertyDefinition>>> reader = (ResultSet rs) -> {
+                    Map<PropositionDefinition, List<PropertyDefinition>> result = new HashMap<>();
+                    if (rs != null) {
+                        try {
+                            CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
+                            XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
+                            Map<String, Map<String, ModInterp>> modInterp;
+                            try (final Connection connection1 = querySupport.getConnection()) {
+                                modInterp = readModInterp(connection1);
+                            } catch (InvalidConnectionSpecArguments ex) {
+                                throw new KnowledgeSourceReadException(ex);
+                            }
+                            Set<List<String>> propertyDefUids = new HashSet<>();
+                            while (rs.next()) {
+                                String declaringConceptSymbol = rs.getString(5);
+                                String conceptSymbol = rs.getString(4);
+                                String symbol = rs.getString(3);
+                                String name = rs.getString(1); // the display name
+                                if (name == null) {
+                                    throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
+                                }
+                                Clob clob = rs.getClob(6);
+                                valueMetadataParser.setDeclaringPropId(declaringConceptSymbol);
+                                valueMetadataParser.setConceptBaseCode(symbol);
+                                valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
+                                ValueType valueType = valueMetadataParser.getValueType();
+                                
+                                Map<String, ModInterp> get = modInterp.get(declaringConceptSymbol);
+                                if (get != null) {
+                                    ModInterp get1 = get.get(symbol);
+                                    if (get1 != null && get1.getPropertyName() != null) {
+                                        symbol = get1.getPropertyName();
+                                    }
+                                    if (get1 != null && get1.getDisplayName() != null) {
+                                        name = get1.getDisplayName();
+                                    }
+                                    if (get1 != null) {
+                                        valueType = ValueType.NOMINALVALUE;
+                                    }
+                                }
+                                if (get != null || clob != null) {
+                                    List<String> l = new ArrayList<>(2);
+                                    l.add(conceptSymbol);
+                                    l.add(symbol);
+                                    if (propertyDefUids.add(l)) {
+                                        ValueSetSupport vsSupport = new ValueSetSupport();
+                                        vsSupport.setPropertyName(symbol);
+                                        vsSupport.setDeclaringPropId(declaringConceptSymbol);
+                                        Collections.putList(result, propIdToPropDef.get(conceptSymbol), new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
+                                    }
+                                }
+                            }
+                        } catch (SQLException ex) {
+                            throw new KnowledgeSourceReadException(ex);
+                        }
+                    }
+                    return result;
+                };
                 /*
                 * Getting temp space full errors with one query, so split it into one query per metadata table.
                  */
@@ -1994,8 +2060,17 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         default:
                             qc = READ_ALL_PROPERTIES_CONSTRUCTOR;
                     }
+
                     try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByTables(connection, qc, table)) {
-                        partials.putAll(queryExecutor.execute(ALL_PROPERTIES_RSR));
+                        for (Map.Entry<PropositionDefinition, List<PropertyDefinition>> me : queryExecutor.execute(reader).entrySet()) {
+                            PropositionDefinition pd = me.getKey();
+                            if (pd != null) {
+                                List<PropertyDefinition> value = me.getValue();
+                                if (value != null) {
+                                    ((AbstractPropositionDefinition) pd).setPropertyDefinitions(value.toArray(new PropertyDefinition[value.size()]));
+                                }
+                            }
+                        }
                     }
                 }
                 connection.commit();
@@ -2006,26 +2081,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
-        for (Map.Entry<String, List<PropertyDefinition>> me : partials.entrySet()) {
-            PropositionDefinition pd = resultMap.get(me.getKey());
-            if (pd != null) {
-                List<PropertyDefinition> value = me.getValue();
-                if (value != null) {
-                    ((AbstractPropositionDefinition) pd).setPropertyDefinitions(value.toArray(new PropertyDefinition[value.size()]));
-                }
-            }
-        }
     }
 
-    void populateChildren(final Map<String, PropositionDefinition> resultMap, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
-        Map<String, Set<String>> children = this.querySupport.getLevelReader().readChildrenFromDatabase(resultMap.keySet(), tableAccessReader);
-        for (Map.Entry<String, Set<String>> me : children.entrySet()) {
-            PropositionDefinition pd = resultMap.get(me.getKey());
-            Set<String> value = me.getValue();
-            if (value != null && pd != null) {
-                ((AbstractPropositionDefinition) pd).setInverseIsA(value.toArray(new String[value.size()]));
+    void populateChildren(Map<String, PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
+        this.querySupport.getLevelReader().readChildrenFromDatabase(propIdToPropDef, tableAccessReader, (PropositionDefinition pd, Set<String> children) -> {
+            if (children != null && pd != null) {
+                ((AbstractPropositionDefinition) pd).setInverseIsA(children.toArray(new String[children.size()]));
             }
-        }
+        });
     }
 
     private final QueryConstructor READ_ALL_PROPERTIES_CONSTRUCTOR = new QueryConstructor() {
@@ -2042,7 +2105,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
     };
-    
+
     private final QueryConstructor READ_ALL_PROPERTIES_CONSTRUCTOR_POSTGRESQL = new QueryConstructor() {
 
         @Override
@@ -2069,70 +2132,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append(table);
             sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH AND A1.C_SYNONYM_CD ='N' AND A1.M_APPLIED_PATH<>'@' AND A1.C_BASECODE IS NOT NULL)");
-        }
-
-    };
-
-    private final ResultSetReader<Map<String, List<PropertyDefinition>>> ALL_PROPERTIES_RSR = new ResultSetReader<Map<String, List<PropertyDefinition>>>() {
-
-        @Override
-        public Map<String, List<PropertyDefinition>> read(ResultSet rs) throws KnowledgeSourceReadException {
-            Map<String, List<PropertyDefinition>> result = new HashMap<>();
-            if (rs != null) {
-                try {
-                    CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                    XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                    Map<String, Map<String, ModInterp>> modInterp;
-                    try (Connection connection = querySupport.getConnection()) {
-                        modInterp = readModInterp(connection);
-                    } catch (InvalidConnectionSpecArguments ex) {
-                        throw new KnowledgeSourceReadException(ex);
-                    }
-                    Set<List<String>> propertyDefUids = new HashSet<>();
-                    while (rs.next()) {
-                        String declaringConceptSymbol = rs.getString(5);
-                        String conceptSymbol = rs.getString(4);
-                        String symbol = rs.getString(3);
-                        String name = rs.getString(1); // the display name
-                        if (name == null) {
-                            throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
-                        }
-                        Clob clob = rs.getClob(6);
-                        valueMetadataParser.setDeclaringPropId(declaringConceptSymbol);
-                        valueMetadataParser.setConceptBaseCode(symbol);
-                        valueMetadataSupport.parseAndFreeClob(xmlReader, clob);
-                        ValueType valueType = valueMetadataParser.getValueType();
-
-                        Map<String, ModInterp> get = modInterp.get(declaringConceptSymbol);
-                        if (get != null) {
-                            ModInterp get1 = get.get(symbol);
-                            if (get1 != null && get1.getPropertyName() != null) {
-                                symbol = get1.getPropertyName();
-                            }
-                            if (get1 != null && get1.getDisplayName() != null) {
-                                name = get1.getDisplayName();
-                            }
-                            if (get1 != null) {
-                                valueType = ValueType.NOMINALVALUE;
-                            }
-                        }
-                        if (get != null || clob != null) {
-                            List<String> l = new ArrayList<>(2);
-                            l.add(conceptSymbol);
-                            l.add(symbol);
-                            if (propertyDefUids.add(l)) {
-                                ValueSetSupport vsSupport = new ValueSetSupport();
-                                vsSupport.setPropertyName(symbol);
-                                vsSupport.setDeclaringPropId(declaringConceptSymbol);
-                                Collections.putList(result, conceptSymbol, new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
-                            }
-                        }
-                    }
-                } catch (SQLException ex) {
-                    throw new KnowledgeSourceReadException(ex);
-                }
-            }
-            return result;
         }
 
     };
@@ -2171,35 +2170,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             return result;
         }
     }
-
-    private class ListResultSetReader implements ResultSetReader<List<TemporalPropositionDefinition>> {
-
-        private Set<String> propIds;
-
-        ListResultSetReader() {
-            this.propIds = new HashSet<>();
-        }
-
-        @Override
-        public List<TemporalPropositionDefinition> read(ResultSet rs) throws KnowledgeSourceReadException {
-            try {
-                List<TemporalPropositionDefinition> r = new ArrayList<>();
-                if (rs != null) {
-                    Date now = new Date();
-                    while (rs.next()) {
-                        if (this.propIds.add(rs.getString(7))) {
-                            r.add(newTemporalPropositionDefinition(rs, now));
-                        }
-                    }
-                }
-                return r;
-            } catch (SQLException | SAXParseException ex) {
-                throw new KnowledgeSourceReadException(ex);
-            }
-        }
-
-    }
-
+    
     private final QueryConstructor READ_FACT_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -2213,26 +2184,21 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     private TemporalPropositionDefinition readPropDef(final String id) throws KnowledgeSourceReadException {
         TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(id).build();
-        ResultSetReader<TemporalPropositionDefinition> resultSetReader = new ResultSetReader<TemporalPropositionDefinition>() {
-
-            @Override
-            public TemporalPropositionDefinition read(ResultSet rs) throws KnowledgeSourceReadException {
-                try {
-                    if (rs != null && rs.next()) {
-                        AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
-                        Set<String> children = querySupport.getLevelReader().readChildrenFromDatabase(rs.getString(2), tableAccessReader);
-                        abd.setInverseIsA(children.toArray(new String[children.size()]));
-                        List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2), tableAccessReader);
-                        abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
-                        return (TemporalPropositionDefinition) abd;
-                    } else {
-                        return null;
-                    }
-                } catch (SQLException | SAXParseException ex) {
-                    throw new KnowledgeSourceReadException(ex);
+        ResultSetReader<TemporalPropositionDefinition> resultSetReader = (ResultSet rs) -> {
+            try {
+                if (rs != null && rs.next()) {
+                    AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
+                    Set<String> children = querySupport.getLevelReader().readChildrenFromDatabase(rs.getString(2), tableAccessReader);
+                    abd.setInverseIsA(children.toArray(new String[children.size()]));
+                    List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2), tableAccessReader);
+                    abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
+                    return (TemporalPropositionDefinition) abd;
+                } else {
+                    return null;
                 }
+            } catch (SQLException | SAXParseException ex) {
+                throw new KnowledgeSourceReadException(ex);
             }
-
         };
         try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FACT_QUERY_CONSTRUCTOR, tableAccessReader)) {
             return queryExecutor.execute(
