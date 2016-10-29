@@ -22,6 +22,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.logging.Logger;
@@ -63,22 +64,14 @@ class ValueMetadataSupport {
         xmlReader.setContentHandler(valueMetadataParser);
         return xmlReader;
     }
-
-    void parseAndFreeClob(XMLReader xmlReader, Clob clob) throws KnowledgeSourceReadException {
+    
+    void parse(XMLReader xmlReader, String clob) throws KnowledgeSourceReadException {
         if (clob != null) {
-            try (Reader r = clob.getCharacterStream()) {
+            try (Reader r = new StringReader(clob)) {
                 xmlReader.parse(new InputSource(r));
-                clob.free();
                 clob = null;
-            } catch (SAXException | SQLException | IOException sqle) {
+            } catch (SAXException | IOException sqle) {
                 throw new KnowledgeSourceReadException(sqle);
-            } finally {
-                if (clob != null) {
-                    try {
-                        clob.free();
-                    } catch (SQLException ignore) {
-                    }
-                }
             }
         }
     }

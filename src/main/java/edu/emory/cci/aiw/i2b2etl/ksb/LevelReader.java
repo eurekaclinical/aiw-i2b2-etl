@@ -54,7 +54,7 @@ class LevelReader {
         }
     }
 
-    void readChildrenFromDatabase(Map<String, PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader, ReadChildrenAction action) throws KnowledgeSourceReadException {
+    void readChildrenFromDatabase(Map<String, ? extends PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader, ReadChildrenAction action) throws KnowledgeSourceReadException {
         if (propIdToPropDef != null && !propIdToPropDef.isEmpty()) {
             try (Connection connection = this.querySupport.getConnection()) {
                 try {
