@@ -1993,6 +1993,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                 throw new KnowledgeSourceReadException(ex);
                             }
                             Set<List<String>> propertyDefUids = new HashSet<>();
+                            ValueSetSupport vsSupport = new ValueSetSupport();
                             while (rs.next()) {
                                 String declaringConceptSymbol = rs.getString(5);
                                 String conceptSymbol = rs.getString(4);
@@ -2025,7 +2026,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                     l.add(conceptSymbol);
                                     l.add(symbol);
                                     if (propertyDefUids.add(l)) {
-                                        ValueSetSupport vsSupport = new ValueSetSupport();
                                         vsSupport.setPropertyName(symbol);
                                         vsSupport.setDeclaringPropId(declaringConceptSymbol);
                                         Collections.putList(result, propIdToPropDef.get(conceptSymbol), new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
