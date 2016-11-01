@@ -1992,7 +1992,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                             } catch (InvalidConnectionSpecArguments ex) {
                                 throw new KnowledgeSourceReadException(ex);
                             }
-                            Set<List<String>> propertyDefUids = new HashSet<>();
                             ValueSetSupport vsSupport = new ValueSetSupport();
                             while (rs.next()) {
                                 String declaringConceptSymbol = rs.getString(5);
@@ -2022,14 +2021,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                     }
                                 }
                                 if (get != null || clob != null) {
-                                    List<String> l = new ArrayList<>(2);
-                                    l.add(conceptSymbol);
-                                    l.add(symbol);
-                                    if (propertyDefUids.add(l)) {
-                                        vsSupport.setPropertyName(symbol);
-                                        vsSupport.setDeclaringPropId(declaringConceptSymbol);
-                                        Collections.putList(result, propIdToPropDef.get(conceptSymbol), new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
-                                    }
+                                    vsSupport.setPropertyName(symbol);
+                                    vsSupport.setDeclaringPropId(declaringConceptSymbol);
+                                    Collections.putList(result, propIdToPropDef.get(conceptSymbol), new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
                                 }
                             }
                         } catch (SQLException ex) {
@@ -2088,13 +2082,16 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.").append(querySupport.getEurekaIdColumn()).append(", A3.").append(querySupport.getEurekaIdColumn()).append(", A2.").append(querySupport.getEurekaIdColumn()).append(", A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
+            sql.append(table);
+            sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
+            sql.append("(SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM (SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, C_NAME DISPLAYNAME, VALUETYPE_CD, C_BASECODE PROPERTYNAME, C_METADATAXML FROM ");
             sql.append(table);
-            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH AND A1.C_SYNONYM_CD ='N' AND A1.M_APPLIED_PATH<>'@' AND A1.C_BASECODE IS NOT NULL) JOIN ");
+            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
             sql.append(table);
-            sql.append(" A2 ON (A2.C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND A2.C_SYNONYM_CD ='N' AND A2.M_APPLIED_PATH ='@')");
+            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N'))) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
         }
 
     };
@@ -2103,15 +2100,16 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.").append(querySupport.getEurekaIdColumn()).append(", A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
             sql.append(table);
             sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
-            sql.append("(SELECT M_APPLIED_PATH, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME FROM (SELECT M_APPLIED_PATH, C_SYNONYM_CD, C_BASECODE, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME, ROW_NUMBER() over (partition by M_APPLIED_PATH, C_PATH order by ").append(querySupport.getEurekaIdColumn()).append(" desc) rn FROM ");
+            sql.append("(SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM (SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, C_NAME DISPLAYNAME, VALUETYPE_CD, C_BASECODE PROPERTYNAME, C_METADATAXML FROM ");
             sql.append(table);
-            sql.append(" WHERE M_APPLIED_PATH<>'@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') AA1 WHERE rn=1)");
-            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
+            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
+            sql.append(table);
+            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N'))) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
         }
 
     };
@@ -2120,15 +2118,16 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.").append(querySupport.getEurekaIdColumn()).append(", A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
             sql.append(table);
             sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
-            sql.append("(SELECT M_APPLIED_PATH, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME FROM (SELECT M_APPLIED_PATH, C_SYNONYM_CD, C_BASECODE, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME, ROW_NUMBER() over (partition by M_APPLIED_PATH, C_PATH order by ").append(querySupport.getEurekaIdColumn()).append(" desc) rn FROM ");
+            sql.append("(SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM (SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, C_NAME DISPLAYNAME, VALUETYPE_CD, C_BASECODE PROPERTYNAME, C_METADATAXML FROM ");
             sql.append(table);
-            sql.append(" WHERE M_APPLIED_PATH<>'@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') WHERE rn=1)");
-            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
+            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
+            sql.append(table);
+            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N'))) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
         }
 
     };
@@ -2229,7 +2228,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     queryExecutor.execute((ResultSet rs) -> {
                         try {
                             if (rs != null) {
-                                
+
                                 while (rs.next()) {
                                     TemporalPropositionDefinition abd = newTemporalPropositionDefinition(rs, new Date());
                                     resultMap.put(abd.getId(), abd);
