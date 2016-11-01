@@ -23,9 +23,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.sql.Clob;
-import java.sql.SQLException;
-import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -40,8 +37,6 @@ import org.xml.sax.XMLReader;
  * @author Andrew Post
  */
 class ValueMetadataSupport {
-    
-    private static final Logger LOGGER = Logger.getLogger(ValueMetadataSupport.class.getName());
     
     private final SAXParser saxParser;
 
