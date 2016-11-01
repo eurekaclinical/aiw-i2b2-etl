@@ -31,6 +31,7 @@ import org.protempa.HighLevelAbstractionDefinition;
 import org.protempa.LowLevelAbstractionDefinition;
 import org.protempa.LowLevelAbstractionValueDefinition;
 import org.protempa.PropositionDefinition;
+import org.protempa.ProtempaException;
 import org.protempa.SimpleGapFunction;
 import org.protempa.SliceDefinition;
 import org.protempa.SlidingWindowWidthMode;
@@ -44,15 +45,16 @@ import org.protempa.proposition.value.NumberValue;
 import org.protempa.proposition.value.ValueComparator;
 import org.protempa.query.DefaultQueryBuilder;
 
-
 /**
- * Data validation tests for the i2b2 ETL. The test initiates Protempa to access the
- * test data and execute a query before AIW ETL loads the processed data into an H2 database.
- * The new loaded data is compared to the one expected using DbUnit.
+ * Data validation tests for the i2b2 ETL. The test initiates Protempa to access
+ * the test data and execute a query before AIW ETL loads the processed data
+ * into an H2 database. The new loaded data is compared to the one expected
+ * using DbUnit.
  *
  * @author Andrew Post
  */
 public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
+
     /**
      * Executes the i2b2 ETL load.
      *
@@ -164,14 +166,17 @@ public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
         q.setPropositionIds(new String[]{ed.getId(), hd.getId(), ldWrapper.getId(), ld2.getId(), clad.getId(), clad2.getId(), ld2.getId(), sd.getId(), "ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails", "Provider"});
         q.setName("i2b2 ETL Test Query");
 
-        getProtempaFactory().execute(q);
-        
-        File file = File.createTempFile("i2b2LoadTest", ".xml");
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            getProtempaFactory().exportI2b2DataSchema(out);
-            System.out.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
+        try {
+            getProtempaFactory().execute(q);
+        } catch (ProtempaException ex) {
+            File file = File.createTempFile("i2b2LoadTest", ".xml");
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                getProtempaFactory().exportI2b2DataSchema(out);
+                System.err.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
+            }
+            throw ex;
         }
-        
+
         setExpectedDataSet("/truth/i2b2LoadTestData.xml");
     }
 

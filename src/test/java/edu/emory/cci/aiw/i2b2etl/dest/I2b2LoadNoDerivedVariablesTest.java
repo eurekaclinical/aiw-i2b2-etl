@@ -21,6 +21,7 @@ package edu.emory.cci.aiw.i2b2etl.dest;
 
 
 import org.junit.BeforeClass;
+import org.protempa.ProtempaException;
 import org.protempa.query.DefaultQueryBuilder;
 
 /**
@@ -41,9 +42,13 @@ public class I2b2LoadNoDerivedVariablesTest extends AbstractI2b2DestLoadTest {
         DefaultQueryBuilder q = new DefaultQueryBuilder();
         q.setName("i2b2 ETL Test Query No Derived Variables");
         q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign", "PatientDetails"});
-        getProtempaFactory().execute(q);
         
-        dumpTruth("i2b2LoadNoDerivedVariablesTest");
+        try {
+            getProtempaFactory().execute(q);
+        } catch (ProtempaException ex) {
+            dumpTruth("i2b2LoadNoDerivedVariablesTest");
+            throw ex;
+        }
         
         setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesTestData.xml");
     }

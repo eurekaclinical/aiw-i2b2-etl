@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.BeforeClass;
+import org.protempa.ProtempaException;
 import org.protempa.backend.dsb.filter.DateTimeFilter;
 import org.protempa.proposition.interval.Interval.Side;
 import org.protempa.proposition.value.AbsoluteTimeGranularity;
@@ -54,9 +55,13 @@ public class I2b2LoadNoDerivedVariablesUpperDateBoundTest extends AbstractI2b2De
         Date first = c.getTime();
         q.setFilters(new DateTimeFilter(new String[]{"Encounter"}, null, null, first, AbsoluteTimeGranularity.DAY, null, Side.FINISH));
         q.setQueryMode(QueryMode.REPLACE);
-        getProtempaFactory().execute(q);
         
-        dumpTruth("i2b2LoadNoDerivedVariablesUpperDateBoundTest");
+        try {
+            getProtempaFactory().execute(q);
+        } catch (ProtempaException ex) {
+            dumpTruth("i2b2LoadNoDerivedVariablesUpperDateBoundTest");
+            throw ex;
+        }
         
         setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesUpperDateBoundTestData.xml");
     }

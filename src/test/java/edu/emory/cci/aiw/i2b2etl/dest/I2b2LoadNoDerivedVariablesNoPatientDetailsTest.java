@@ -19,18 +19,20 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest;
 
-
 import org.junit.BeforeClass;
+import org.protempa.ProtempaException;
 import org.protempa.query.DefaultQueryBuilder;
 
 /**
- * Data validation tests for the i2b2 ETL. The test initiates Protempa to access the
- * test data and execute a query before AIW ETL loads the processed data into an H2 database.
- * The new loaded data is compared to the one expected using DbUnit.
+ * Data validation tests for the i2b2 ETL. The test initiates Protempa to access
+ * the test data and execute a query before AIW ETL loads the processed data
+ * into an H2 database. The new loaded data is compared to the one expected
+ * using DbUnit.
  *
  * @author Andrew Post
  */
 public class I2b2LoadNoDerivedVariablesNoPatientDetailsTest extends AbstractI2b2DestLoadTest {
+
     /**
      * Executes the i2b2 ETL load.
      *
@@ -41,10 +43,13 @@ public class I2b2LoadNoDerivedVariablesNoPatientDetailsTest extends AbstractI2b2
         DefaultQueryBuilder q = new DefaultQueryBuilder();
         q.setName("i2b2 ETL Test Query No Derived Variables No PatientDetails");
         q.setPropositionIds(new String[]{"ICD9:Diagnoses", "ICD9:Procedures", "LAB:LabTest", "Encounter", "MED:medications", "VitalSign"});
-        getProtempaFactory().execute(q);
-        
-        dumpTruth("i2b2LoadNoDerivedVariablesNoPatientDetailsTest");
-        
+        try {
+            getProtempaFactory().execute(q);
+        } catch (ProtempaException ex) {
+            dumpTruth("i2b2LoadNoDerivedVariablesNoPatientDetailsTest");
+            throw ex;
+        }
+
         setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesNoPatientDetailsTest.xml");
     }
 
