@@ -1182,34 +1182,12 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public PropositionDefinition readPropositionDefinition(String id) throws KnowledgeSourceReadException {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.log(Level.FINEST, "Looking for proposition {0}", id);
+        List<PropositionDefinition> result = readPropositionDefinitions(new String[] {id});
+        if (result.isEmpty()) {
+            return null;
+        } else {
+            return result.get(0);
         }
-
-        if (id != null) {
-            PropositionDefinition result;
-            if (id.equals(this.patientDetailsPropositionId)) {
-                result = newPatientDetailsPropositionDefinition();
-            } else if (id.equals(this.patientPropositionId)) {
-                result = newPatientPropositionDefinition();
-            } else if (id.equals(this.visitPropositionId)) {
-                result = newVisitPropositionDefinition();
-            } else if (id.equals(this.providerPropositionId)) {
-                result = newProviderPropositionDefinition();
-            } else if (id.equals(this.patientAliasPropositionId)) {
-                result = newPatientAliasPropositionDefinition();
-            } else {
-                result = readPropDef(id);
-            }
-
-            if (result != null) {
-                LOGGER.log(Level.FINEST, "Found proposition id: {0}", id);
-
-                return result;
-            }
-            LOGGER.log(Level.FINER, "Failed to find proposition id: {0}", id);
-        }
-        return null;
     }
 
     @Override
@@ -1507,25 +1485,12 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public TemporalPropositionDefinition readTemporalPropositionDefinition(String id) throws KnowledgeSourceReadException {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.log(Level.FINEST, "Looking for proposition {0}", id);
+        List<TemporalPropositionDefinition> result = readTemporalPropositionDefinitions(new String[] {id});
+        if (result.isEmpty()) {
+            return null;
+        } else {
+            return result.get(0);
         }
-
-        if (id != null) {
-            TemporalPropositionDefinition result;
-            if (id.equals(this.visitPropositionId)) {
-                result = newVisitPropositionDefinition();
-            } else {
-                result = readPropDef(id);
-            }
-
-            if (result != null) {
-                LOGGER.log(Level.FINEST, "Found proposition id: {0}", id);
-                return result;
-            }
-            LOGGER.log(Level.FINER, "Failed to find proposition id: {0}", id);
-        }
-        return null;
     }
 
     @Override
@@ -1633,23 +1598,50 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             throw new KnowledgeSourceReadException(ex);
         }
     }
-
-    private static final ResultSetReader<Collection<String>> IN_DS_RESULT_SET_READER = new ResultSetReader<Collection<String>>() {
-
-        @Override
-        public Collection<String> read(ResultSet rs) throws KnowledgeSourceReadException {
-            List<String> result = new ArrayList<>();
-            try {
-                if (rs != null) {
+    
+    private Map<String, Map<String, ModInterp>> readModInterp(Connection connection) throws KnowledgeSourceReadException {
+        synchronized (this.modInterpCachedSyncVariable) {
+            if (this.modInterpCached == null) {
+                Map<String, Map<String, ModInterp>> modInterp = new HashMap<>();
+                LOGGER.fine("Getting modifier information from EK_MODIFIER_INTERP");
+                try (Connection conn = connection != null ? connection : this.querySupport.getConnection();
+                        Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT DECLARING_CONCEPT, C_BASECODE, PROPERTYNAME, DISPLAYNAME FROM EK_MODIFIER_INTERP")) {
                     while (rs.next()) {
-                        result.add(rs.getString(1));
+                        String declaringSymbol = rs.getString(1);
+                        String propertySymbol = rs.getString(2);
+                        String propertyName = rs.getString(3);
+                        String displayName = rs.getString(4);
+                        Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
+                        if (modInterpVal == null) {
+                            modInterpVal = new HashMap<>();
+                            modInterp.put(declaringSymbol, modInterpVal);
+                        }
+                        modInterpVal.put(propertySymbol, new ModInterp(propertyName, displayName));
                     }
+                } catch (InvalidConnectionSpecArguments | SQLException ex) {
+                    throw new KnowledgeSourceReadException(ex);
                 }
-            } catch (SQLException ex) {
-                throw new KnowledgeSourceReadException(ex);
+                LOGGER.fine("Done!");
+
+                this.modInterpCached = modInterp;
             }
-            return result;
         }
+        return this.modInterpCached;
+    }
+
+    private static final ResultSetReader<Collection<String>> IN_DS_RESULT_SET_READER = (ResultSet rs) -> {
+        List<String> result = new ArrayList<>();
+        try {
+            if (rs != null) {
+                while (rs.next()) {
+                    result.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new KnowledgeSourceReadException(ex);
+        }
+        return result;
     };
 
     private final QueryConstructor IDS_PROPID_QC = new QueryConstructor() {
@@ -1986,12 +1978,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         try {
                             CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
                             XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                            Map<String, Map<String, ModInterp>> modInterp;
-                            try (final Connection connection1 = querySupport.getConnection()) {
-                                modInterp = readModInterp(connection1);
-                            } catch (InvalidConnectionSpecArguments ex) {
-                                throw new KnowledgeSourceReadException(ex);
-                            }
                             ValueSetSupport vsSupport = new ValueSetSupport();
                             while (rs.next()) {
                                 String declaringConceptSymbol = rs.getString(5);
@@ -2002,29 +1988,18 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                     throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
                                 }
                                 String clob = rs.getString(6);
-                                valueMetadataParser.setDeclaringPropId(declaringConceptSymbol);
-                                valueMetadataParser.setConceptBaseCode(symbol);
-                                valueMetadataSupport.parse(xmlReader, clob);
-                                ValueType valueType = valueMetadataParser.getValueType();
-
-                                Map<String, ModInterp> get = modInterp.get(declaringConceptSymbol);
-                                if (get != null) {
-                                    ModInterp get1 = get.get(symbol);
-                                    if (get1 != null && get1.getPropertyName() != null) {
-                                        symbol = get1.getPropertyName();
-                                    }
-                                    if (get1 != null && get1.getDisplayName() != null) {
-                                        name = get1.getDisplayName();
-                                    }
-                                    if (get1 != null) {
-                                        valueType = ValueType.NOMINALVALUE;
-                                    }
+                                ValueType valueType;
+                                if (clob != null) {
+                                    valueMetadataParser.setDeclaringPropId(declaringConceptSymbol);
+                                    valueMetadataParser.setConceptBaseCode(symbol);
+                                    valueMetadataSupport.parse(xmlReader, clob);
+                                    valueType = valueMetadataParser.getValueType();
+                                } else {
+                                    valueType = ValueType.NOMINALVALUE;
                                 }
-                                if (get != null || clob != null) {
-                                    vsSupport.setPropertyName(symbol);
-                                    vsSupport.setDeclaringPropId(declaringConceptSymbol);
-                                    Collections.putList(result, propIdToPropDef.get(conceptSymbol), new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
-                                }
+                                vsSupport.setPropertyName(symbol);
+                                vsSupport.setDeclaringPropId(declaringConceptSymbol);
+                                Collections.putList(result, propIdToPropDef.get(conceptSymbol), new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
                             }
                         } catch (SQLException ex) {
                             throw new KnowledgeSourceReadException(ex);
@@ -2107,9 +2082,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append("(SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM (SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, C_NAME DISPLAYNAME, VALUETYPE_CD, C_BASECODE PROPERTYNAME, C_METADATAXML FROM ");
             sql.append(table);
-            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
+            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') U1 UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
             sql.append(table);
-            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N'))) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
+            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N') U2)) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
         }
 
     };
@@ -2167,42 +2142,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
     }
 
-    private final QueryConstructor READ_FACT_QUERY_CONSTRUCTOR = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT C_NAME, C_FULLNAME, VALUETYPE_CD, C_COMMENT, C_METADATAXML, CASE WHEN C_BASECODE IS NOT NULL THEN 1 ELSE 0 END, ").append(querySupport.getEurekaIdColumn()).append(", IMPORT_DATE, UPDATE_DATE, DOWNLOAD_DATE FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_SYNONYM_CD='N' AND ").append(querySupport.getEurekaIdColumn()).append(" = ?");
-        }
-
-    };
-
-    private TemporalPropositionDefinition readPropDef(final String id) throws KnowledgeSourceReadException {
-        TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(id).build();
-        ResultSetReader<TemporalPropositionDefinition> resultSetReader = (ResultSet rs) -> {
-            try {
-                if (rs != null && rs.next()) {
-                    AbstractPropositionDefinition abd = (AbstractPropositionDefinition) newTemporalPropositionDefinition(rs, new Date());
-                    Set<String> children = querySupport.getLevelReader().readChildrenFromDatabase(rs.getString(2), tableAccessReader);
-                    abd.setInverseIsA(children.toArray(new String[children.size()]));
-                    List<PropertyDefinition> propDefs = readPropertyDefinitions(rs.getString(7), rs.getString(2), tableAccessReader);
-                    abd.setPropertyDefinitions(propDefs.toArray(new PropertyDefinition[propDefs.size()]));
-                    return (TemporalPropositionDefinition) abd;
-                } else {
-                    return null;
-                }
-            } catch (SQLException | SAXParseException ex) {
-                throw new KnowledgeSourceReadException(ex);
-            }
-        };
-        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_FACT_QUERY_CONSTRUCTOR, tableAccessReader)) {
-            return queryExecutor.execute(
-                    id,
-                    resultSetReader);
-        }
-    }
-
     private final QueryConstructor READ_PROPDEFS_QUERY_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
@@ -2255,118 +2194,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
 
         return resultMap.values();
-    }
-
-    private final QueryConstructor READ_PROP_DEF_QUERY_CONSTRUCTOR = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.").append(querySupport.getEurekaIdColumn()).append(", A1.C_NAME, A1.C_METADATAXML, (SELECT A2.").append(querySupport.getEurekaIdColumn()).append(" FROM ");
-            sql.append(table);
-            sql.append(" A2 WHERE A2.C_FULLNAME LIKE (CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END)) FROM ");
-            sql.append(table);
-            sql.append(" A1 WHERE ? LIKE A1.M_APPLIED_PATH");
-        }
-    };
-
-    private List<PropertyDefinition> readPropertyDefinitions(final String symbol, String fullName, TableAccessReader tableAccessReader) throws KnowledgeSourceReadException {
-        final Map<String, Map<String, ModInterp>> modInterp = readModInterp(null);
-        try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(READ_PROP_DEF_QUERY_CONSTRUCTOR, tableAccessReader)) {
-            return queryExecutor.execute(fullName, (ResultSet rs) -> {
-                try {
-                    List<PropertyDefinition> result = new ArrayList<>();
-                    if (rs != null && rs.isBeforeFirst()) {
-                        CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                        XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                        Set<List<String>> propertyDefUids = new HashSet<>();
-                        ValueSetSupport vsSupport = new ValueSetSupport();
-                        while (rs.next()) {
-                            String propertySymbol = rs.getString(1);
-                            String propertyDisplayName = rs.getString(2);
-                            if (propertySymbol == null) {
-                                throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
-                            }
-                            String declaringSymbol = rs.getString(4);
-                            valueMetadataParser.setDeclaringPropId(declaringSymbol);
-                            valueMetadataParser.setConceptBaseCode(propertySymbol);
-                            String clob = rs.getString(3);
-                            valueMetadataSupport.parse(xmlReader, clob);
-                            SAXParseException exception = valueMetadataParser.getException();
-                            if (exception != null) {
-                                throw exception;
-                            }
-                            ValueType valueType = valueMetadataParser.getValueType();
-                            ValueSet valueSet = valueMetadataParser.getValueSet();
-                            String valueSetId = valueSet != null ? valueSet.getId() : null;
-                            Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
-                            ModInterp modInterpValPropertySym;
-                            if (modInterpVal != null) {
-                                modInterpValPropertySym = modInterpVal.get(propertySymbol);
-                                if (modInterpValPropertySym != null) {
-                                    propertySymbol = modInterpValPropertySym.getPropertyName();
-                                    valueType = ValueType.NOMINALVALUE;
-                                    propertyDisplayName = modInterpValPropertySym.getDisplayName();
-                                    vsSupport.setPropertyName(propertySymbol);
-                                    vsSupport.setDeclaringPropId(declaringSymbol);
-                                    valueSetId = vsSupport.getId();
-                                }
-                            } else {
-                                modInterpValPropertySym = null;
-                            }
-                            if (clob != null || modInterpValPropertySym != null) {
-                                List<String> l = new ArrayList<>(2);
-                                l.add(symbol);
-                                l.add(propertySymbol);
-                                if (propertyDefUids.add(l)) {
-                                    result.add(
-                                            new PropertyDefinition(
-                                                    symbol,
-                                                    propertySymbol,
-                                                    propertyDisplayName,
-                                                    valueType,
-                                                    valueSetId,
-                                                    declaringSymbol));
-                                }
-                            }
-                        }
-                    }
-                    return result;
-                } catch (SQLException | SAXParseException ex) {
-                    throw new KnowledgeSourceReadException(ex);
-                }
-            });
-        }
-    }
-
-    private Map<String, Map<String, ModInterp>> readModInterp(Connection connection) throws KnowledgeSourceReadException {
-        synchronized (this.modInterpCachedSyncVariable) {
-            if (this.modInterpCached == null) {
-                Map<String, Map<String, ModInterp>> modInterp = new HashMap<>();
-                LOGGER.fine("Getting modifier information from EK_MODIFIER_INTERP");
-                try (Connection conn = connection != null ? connection : this.querySupport.getConnection();
-                        Statement stmt = conn.createStatement();
-                        ResultSet rs = stmt.executeQuery("SELECT DECLARING_CONCEPT, C_BASECODE, PROPERTYNAME, DISPLAYNAME FROM EK_MODIFIER_INTERP")) {
-                    while (rs.next()) {
-                        String declaringSymbol = rs.getString(1);
-                        String propertySymbol = rs.getString(2);
-                        String propertyName = rs.getString(3);
-                        String displayName = rs.getString(4);
-                        Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
-                        if (modInterpVal == null) {
-                            modInterpVal = new HashMap<>();
-                            modInterp.put(declaringSymbol, modInterpVal);
-                        }
-                        modInterpVal.put(propertySymbol, new ModInterp(propertyName, displayName));
-                    }
-                } catch (InvalidConnectionSpecArguments | SQLException ex) {
-                    throw new KnowledgeSourceReadException(ex);
-                }
-                LOGGER.fine("Done!");
-
-                this.modInterpCached = modInterp;
-            }
-        }
-        return this.modInterpCached;
     }
 
     private static ValueSet parseValueSet(String valueSetId, String vses) {
