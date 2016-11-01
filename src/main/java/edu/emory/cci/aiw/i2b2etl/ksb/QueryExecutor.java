@@ -72,15 +72,11 @@ public class QueryExecutor implements AutoCloseable {
 
     public <E extends Object> E execute(final String bindArgument, ResultSetReader<E> resultSetReader) throws KnowledgeSourceReadException {
         return execute(
-                new ParameterSetter() {
-
-            @Override
-            public int set(PreparedStatement stmt, int j) throws SQLException {
+            (PreparedStatement stmt, int j) -> {
                 stmt.setString(j++, bindArgument);
                 return j;
-            }
-        },
-                resultSetReader
+            },
+            resultSetReader
         );
     }
 
