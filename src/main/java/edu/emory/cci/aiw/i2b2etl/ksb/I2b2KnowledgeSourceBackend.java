@@ -2103,13 +2103,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.").append(querySupport.getEurekaIdColumn()).append(", A3.").append(querySupport.getEurekaIdColumn()).append(", A2.").append(querySupport.getEurekaIdColumn()).append(", A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.").append(querySupport.getEurekaIdColumn()).append(", A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
+            sql.append(table);
+            sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
+            sql.append("(SELECT M_APPLIED_PATH, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME FROM (SELECT M_APPLIED_PATH, C_SYNONYM_CD, C_BASECODE, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME, ROW_NUMBER() over (partition by M_APPLIED_PATH, C_PATH order by ").append(querySupport.getEurekaIdColumn()).append(" desc) rn FROM ");
             sql.append(table);
-            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '' AND A1.C_SYNONYM_CD ='N' AND A1.M_APPLIED_PATH<>'@' AND A1.C_BASECODE IS NOT NULL) JOIN ");
-            sql.append(table);
-            sql.append(" A2 ON (A2.C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND A2.C_SYNONYM_CD ='N' AND A2.M_APPLIED_PATH ='@')");
+            sql.append(" WHERE M_APPLIED_PATH<>'@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') AA1 WHERE rn=1)");
+            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
         }
 
     };
@@ -2123,8 +2125,10 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
+            sql.append("(SELECT M_APPLIED_PATH, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME FROM (SELECT M_APPLIED_PATH, C_SYNONYM_CD, C_BASECODE, C_METADATAXML, ").append(querySupport.getEurekaIdColumn()).append(", VALUETYPE_CD, C_NAME, ROW_NUMBER() over (partition by M_APPLIED_PATH, C_PATH order by ").append(querySupport.getEurekaIdColumn()).append(" desc) rn FROM ");
             sql.append(table);
-            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH AND A1.C_SYNONYM_CD ='N' AND A1.M_APPLIED_PATH<>'@' AND A1.C_BASECODE IS NOT NULL)");
+            sql.append(" WHERE M_APPLIED_PATH<>'@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') WHERE rn=1)");
+            sql.append(" A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
         }
 
     };
