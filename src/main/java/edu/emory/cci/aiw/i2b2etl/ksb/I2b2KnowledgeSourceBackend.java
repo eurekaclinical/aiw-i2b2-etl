@@ -42,6 +42,7 @@ import org.protempa.backend.annotations.BackendProperty;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -157,7 +158,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     }
 
-    private ValueMetadataSupport valueMetadataSupport;
     private final QuerySupportBuilder querySupportBuilder;
     private QuerySupport querySupport;
     private String patientPropositionId;
@@ -1182,7 +1182,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public PropositionDefinition readPropositionDefinition(String id) throws KnowledgeSourceReadException {
-        List<PropositionDefinition> result = readPropositionDefinitions(new String[] {id});
+        List<PropositionDefinition> result = readPropositionDefinitions(new String[]{id});
         if (result.isEmpty()) {
             return null;
         } else {
@@ -1274,7 +1274,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceBackendInitializationException(ex);
         }
-        this.valueMetadataSupport = new ValueMetadataSupport();
     }
 
     private ConstantDefinition newProviderPropositionDefinition() {
@@ -1485,7 +1484,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public TemporalPropositionDefinition readTemporalPropositionDefinition(String id) throws KnowledgeSourceReadException {
-        List<TemporalPropositionDefinition> result = readTemporalPropositionDefinitions(new String[] {id});
+        List<TemporalPropositionDefinition> result = readTemporalPropositionDefinitions(new String[]{id});
         if (result.isEmpty()) {
             return null;
         } else {
@@ -1555,31 +1554,21 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             return result;
         }
         try (Connection connection = this.querySupport.getConnection()) {
-            final ValueSetSupport vsSupport = new ValueSetSupport();
-            vsSupport.parseId(id);
-            if (!vsSupport.isValid()) {
-                return null;
-            }
-            try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, READ_ONE_PROPERTY_DEF_QUERY_CONSTRUCTOR)) {
-                return queryExecutor.execute(vsSupport.getPropertyName(), (ResultSet rs) -> {
+            ValueMetadataParser valueMetadataParser = new ValueMetadataParser();
+            valueMetadataParser.init();
+            valueMetadataParser.parseValueSetId(id);
+            try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(connection, READ_ONE_PROPERTY_DEF_QUERY_CONSTRUCTOR, valueMetadataParser.getDeclaringPropId())) {
+                return queryExecutor.execute(valueMetadataParser.getConceptBaseCode(), (ResultSet rs) -> {
                     try {
                         if (rs != null && rs.next()) {
                             String clob = rs.getString(2);
                             if (clob != null) {
-                                CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                                valueMetadataParser.setDeclaringPropId(vsSupport.getDeclaringPropId());
-                                valueMetadataParser.setConceptBaseCode(vsSupport.getPropertyName());
-                                XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                                valueMetadataSupport.parse(xmlReader, clob);
-                                SAXParseException exception = valueMetadataParser.getException();
-                                if (exception != null) {
-                                    throw exception;
-                                }
+                                valueMetadataParser.parse(clob);
                                 return valueMetadataParser.getValueSet();
                             }
                         }
                         Map<String, Map<String, ModInterp>> modInterp = readModInterp(connection);
-                        Map<String, ModInterp> get = modInterp.get(vsSupport.getDeclaringPropId());
+                        Map<String, ModInterp> get = modInterp.get(valueMetadataParser.getDeclaringPropId());
                         if (get != null && !get.isEmpty()) {
                             ValueSetElement[] elts = new ValueSetElement[get.size()];
                             int i = 0;
@@ -1594,11 +1583,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     }
                 });
             }
-        } catch (InvalidConnectionSpecArguments | SQLException ex) {
+        } catch (InvalidConnectionSpecArguments | SQLException | ParseException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
     }
-    
+
     private Map<String, Map<String, ModInterp>> readModInterp(Connection connection) throws KnowledgeSourceReadException {
         synchronized (this.modInterpCachedSyncVariable) {
             if (this.modInterpCached == null) {
@@ -1934,10 +1923,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         try {
                             if (rs != null) {
                                 Date now = new Date();
+                                ValueMetadataParser valueMetadataParser = new ValueMetadataParser();
                                 while (rs.next()) {
                                     String propId = rs.getString(7);
                                     if (!result.containsKey(propId)) {
-                                        result.put(propId, newTemporalPropositionDefinition(rs, now));
+                                        result.put(propId, newTemporalPropositionDefinition(rs, now, valueMetadataParser));
                                     }
                                 }
                             }
@@ -1976,9 +1966,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     Map<PropositionDefinition, List<PropertyDefinition>> result = new HashMap<>();
                     if (rs != null) {
                         try {
-                            CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-                            XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-                            ValueSetSupport vsSupport = new ValueSetSupport();
+                            PropertyDefinitionFactory propertyDefinitionFactory = new PropertyDefinitionFactory();
                             while (rs.next()) {
                                 String declaringConceptSymbol = rs.getString(5);
                                 String conceptSymbol = rs.getString(4);
@@ -1988,20 +1976,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                     throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
                                 }
                                 String clob = rs.getString(6);
-                                ValueType valueType;
-                                if (clob != null) {
-                                    valueMetadataParser.setDeclaringPropId(declaringConceptSymbol);
-                                    valueMetadataParser.setConceptBaseCode(symbol);
-                                    valueMetadataSupport.parse(xmlReader, clob);
-                                    valueType = valueMetadataParser.getValueType();
-                                } else {
-                                    valueType = ValueType.NOMINALVALUE;
-                                }
-                                vsSupport.setPropertyName(symbol);
-                                vsSupport.setDeclaringPropId(declaringConceptSymbol);
-                                Collections.putList(result, propIdToPropDef.get(conceptSymbol), new PropertyDefinition(conceptSymbol, symbol, name, valueType, vsSupport.getId(), declaringConceptSymbol));
+                                Collections.putList(result,
+                                        propIdToPropDef.get(conceptSymbol),
+                                        propertyDefinitionFactory.getPropertyDefinitionInstance(clob, declaringConceptSymbol, symbol, conceptSymbol, name));
                             }
-                        } catch (SQLException ex) {
+                        } catch (SQLException | SAXParseException ex) {
                             throw new KnowledgeSourceReadException(ex);
                         }
                     }
@@ -2107,15 +2086,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     };
 
-    private TemporalPropositionDefinition newTemporalPropositionDefinition(ResultSet rs, Date accessed) throws SAXParseException, KnowledgeSourceReadException, SQLException {
+    private TemporalPropositionDefinition newTemporalPropositionDefinition(ResultSet rs, Date accessed, ValueMetadataParser valueMetadataParser) throws SAXParseException, KnowledgeSourceReadException, SQLException {
         if (Arrays.contains(VALUE_TYPE_CDS, rs.getString(3))) {
-            CMetadataXmlParser valueMetadataParser = new CMetadataXmlParser();
-            XMLReader xmlReader = valueMetadataSupport.init(valueMetadataParser);
-            valueMetadataSupport.parse(xmlReader, rs.getString(4));
-            SAXParseException exception = valueMetadataParser.getException();
-            if (exception != null) {
-                throw exception;
-            }
+            valueMetadataParser.init();
+            String clob = rs.getString(4);
+            valueMetadataParser.parse(clob);
             ValueType valueType = valueMetadataParser.getValueType();
             PrimitiveParameterDefinition result = new PrimitiveParameterDefinition(rs.getString(7));
             result.setDisplayName(rs.getString(1));
@@ -2167,9 +2142,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     queryExecutor.execute((ResultSet rs) -> {
                         try {
                             if (rs != null) {
-
+                                ValueMetadataParser valueMetadataParser = new ValueMetadataParser();
                                 while (rs.next()) {
-                                    TemporalPropositionDefinition abd = newTemporalPropositionDefinition(rs, new Date());
+                                    TemporalPropositionDefinition abd = newTemporalPropositionDefinition(rs, new Date(), valueMetadataParser);
                                     resultMap.put(abd.getId(), abd);
                                 }
                                 populateChildren(resultMap, tableAccessReader);

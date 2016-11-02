@@ -27,7 +27,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.protempa.KnowledgeSourceReadException;
-import org.protempa.backend.KnowledgeSourceBackendInitializationException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -40,12 +39,12 @@ class ValueMetadataSupport {
     
     private final SAXParser saxParser;
 
-    ValueMetadataSupport() throws KnowledgeSourceBackendInitializationException {
+    ValueMetadataSupport() throws KnowledgeSourceReadException {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         try {
             this.saxParser = spf.newSAXParser();
         } catch (ParserConfigurationException | SAXException ex) {
-            throw new KnowledgeSourceBackendInitializationException(ex);
+            throw new KnowledgeSourceReadException(ex);
         }
     }
 

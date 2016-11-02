@@ -20,6 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * #L%
  */
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -42,10 +43,6 @@ final class ValueSetSupport {
     private String declaringPropId;
     private String propertyName;
     
-    boolean isValid() {
-        return this.declaringPropId != null && this.propertyName != null;
-    }
-
     String getDeclaringPropId() {
         return declaringPropId;
     }
@@ -62,7 +59,7 @@ final class ValueSetSupport {
         this.propertyName = propertyName;
     }
 
-    void parseId(String id) {
+    void parseId(String id) throws ParseException {
         try (CSVParser csvParser = CSVParser.parse(id, CSV_FORMAT)) {
             List<CSVRecord> records = csvParser.getRecords();
             if (records.size() != 1) {
@@ -75,6 +72,7 @@ final class ValueSetSupport {
             this.declaringPropId = record.get(0);
             this.propertyName = record.get(1);
         } catch (IOException invalid) {
+            throw new ParseException("Invalid value set id " + id, 0);
         }
     }
 
