@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import org.apache.commons.lang3.ArrayUtils;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.protempa.AbstractionDefinition;
@@ -1537,14 +1538,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
     }
 
-    private final QueryConstructor READ_ONE_PROPERTY_DEF_QUERY_CONSTRUCTOR = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT ").append(querySupport.getEurekaIdColumn()).append(", C_METADATAXML FROM ");
-            sql.append(table);
-            sql.append(" WHERE ").append(querySupport.getEurekaIdColumn()).append(" = ? AND C_SYNONYM_CD='N' AND M_APPLIED_PATH<>'@' AND C_BASECODE IS NOT NULL");
-        }
+    private final QueryConstructor READ_ONE_PROPERTY_DEF_QUERY_CONSTRUCTOR = (StringBuilder sql, String table) -> {
+        sql.append("(SELECT C_BASECODE, C_METADATAXML FROM ");
+        sql.append(table);
+        sql.append(" WHERE ").append(querySupport.getEurekaIdColumn()).append(" = ? AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH<>'@' AND C_BASECODE IS NOT NULL AND C_METADATAXML IS NOT NULL)");
+        sql.append(" UNION ALL ");
+        sql.append("(SELECT C_BASECODE, NULL FROM (SELECT DISTINCT C_BASECODE FROM EK_MODIFIER_INTERP A2 WHERE PROPERTYNAME = ? AND NOT EXISTS (SELECT 1 FROM ");
+        sql.append(table);
+        sql.append(" WHERE ").append(querySupport.getEurekaIdColumn()).append(" = ? AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH<>'@' AND C_BASECODE IS NOT NULL AND C_METADATAXML IS NOT NULL)) U2)");
     };
 
     @Override
@@ -1558,65 +1559,39 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             valueMetadataParser.init();
             valueMetadataParser.parseValueSetId(id);
             try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByEkUniqueIds(connection, READ_ONE_PROPERTY_DEF_QUERY_CONSTRUCTOR, valueMetadataParser.getDeclaringPropId())) {
-                return queryExecutor.execute(valueMetadataParser.getConceptBaseCode(), (ResultSet rs) -> {
-                    try {
-                        if (rs != null && rs.next()) {
-                            String clob = rs.getString(2);
-                            if (clob != null) {
-                                valueMetadataParser.parse(clob);
-                                return valueMetadataParser.getValueSet();
+                return queryExecutor.execute(
+                        (PreparedStatement stmt, int j) -> {
+                            stmt.setString(j++, valueMetadataParser.getConceptBaseCode());
+                            stmt.setString(j++, valueMetadataParser.getConceptBaseCode());
+                            stmt.setString(j++, valueMetadataParser.getConceptBaseCode());
+                            return j;
+                        },
+                        (ResultSet rs) -> {
+                            try {
+                                if (rs != null && rs.next()) {
+                                    String clob = rs.getString(2);
+                                    if (clob != null) {
+                                        valueMetadataParser.parse(clob);
+                                        return valueMetadataParser.getValueSet();
+                                    } else {
+                                        List<String> elts = new ArrayList<>();
+                                        elts.add(rs.getString(1));
+                                        while (rs.next()) {
+                                            elts.add(rs.getString(1));
+                                        }
+                                        return new PropertyDefinitionFactory().getValueSetInstance(id, elts);
+                                    }
+                                } else {
+                                    return null;
+                                }
+                            } catch (SQLException | SAXParseException ex) {
+                                throw new KnowledgeSourceReadException(ex);
                             }
-                        }
-                        Map<String, Map<String, ModInterp>> modInterp = readModInterp(connection);
-                        Map<String, ModInterp> get = modInterp.get(valueMetadataParser.getDeclaringPropId());
-                        if (get != null && !get.isEmpty()) {
-                            ValueSetElement[] elts = new ValueSetElement[get.size()];
-                            int i = 0;
-                            for (Map.Entry<String, ModInterp> me : get.entrySet()) {
-                                elts[i++] = new ValueSetElement(NominalValue.getInstance(me.getKey()), me.getKey());
-                            }
-                            return new ValueSet(id, null, elts, null);
-                        }
-                        return null;
-                    } catch (SQLException | SAXParseException ex) {
-                        throw new KnowledgeSourceReadException(ex);
-                    }
-                });
+                        });
             }
         } catch (InvalidConnectionSpecArguments | SQLException | ParseException ex) {
             throw new KnowledgeSourceReadException(ex);
         }
-    }
-
-    private Map<String, Map<String, ModInterp>> readModInterp(Connection connection) throws KnowledgeSourceReadException {
-        synchronized (this.modInterpCachedSyncVariable) {
-            if (this.modInterpCached == null) {
-                Map<String, Map<String, ModInterp>> modInterp = new HashMap<>();
-                LOGGER.fine("Getting modifier information from EK_MODIFIER_INTERP");
-                try (Connection conn = connection != null ? connection : this.querySupport.getConnection();
-                        Statement stmt = conn.createStatement();
-                        ResultSet rs = stmt.executeQuery("SELECT DECLARING_CONCEPT, C_BASECODE, PROPERTYNAME, DISPLAYNAME FROM EK_MODIFIER_INTERP")) {
-                    while (rs.next()) {
-                        String declaringSymbol = rs.getString(1);
-                        String propertySymbol = rs.getString(2);
-                        String propertyName = rs.getString(3);
-                        String displayName = rs.getString(4);
-                        Map<String, ModInterp> modInterpVal = modInterp.get(declaringSymbol);
-                        if (modInterpVal == null) {
-                            modInterpVal = new HashMap<>();
-                            modInterp.put(declaringSymbol, modInterpVal);
-                        }
-                        modInterpVal.put(propertySymbol, new ModInterp(propertyName, displayName));
-                    }
-                } catch (InvalidConnectionSpecArguments | SQLException ex) {
-                    throw new KnowledgeSourceReadException(ex);
-                }
-                LOGGER.fine("Done!");
-
-                this.modInterpCached = modInterp;
-            }
-        }
-        return this.modInterpCached;
     }
 
     private static final ResultSetReader<Collection<String>> IN_DS_RESULT_SET_READER = (ResultSet rs) -> {

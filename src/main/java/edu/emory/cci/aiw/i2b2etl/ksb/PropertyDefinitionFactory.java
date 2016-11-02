@@ -44,7 +44,8 @@ final class PropertyDefinitionFactory {
     ValueSet getValueSetInstance(String valueSetId, List<String> nominalValues) {
         ValueSetElement[] elts = new ValueSetElement[nominalValues.size()];
         for (int i = 0, n = nominalValues.size(); i < n; i++) {
-            elts[i] = new ValueSetElement(NominalValue.getInstance(nominalValues.get(i)));
+            String val = nominalValues.get(i);
+            elts[i] = new ValueSetElement(NominalValue.getInstance(val), val);
         }
         return new ValueSet(valueSetId, null, elts, null);
     }
