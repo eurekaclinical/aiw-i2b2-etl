@@ -1938,8 +1938,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     }
                 }
 
-                ResultSetReader<Map<PropositionDefinition, List<PropertyDefinition>>> reader = (ResultSet rs) -> {
-                    Map<PropositionDefinition, List<PropertyDefinition>> result = new HashMap<>();
+                ResultSetReader<Map<PropositionDefinition, Map<String, PropertyDefinition>>> reader = (ResultSet rs) -> {
+                    Map<PropositionDefinition, Map<String, PropertyDefinition>> result = new HashMap<>();
                     if (rs != null) {
                         try {
                             PropertyDefinitionFactory propertyDefinitionFactory = new PropertyDefinitionFactory();
@@ -1952,9 +1952,15 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                                     throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
                                 }
                                 String clob = rs.getString(6);
-                                Collections.putList(result,
-                                        propIdToPropDef.get(conceptSymbol),
-                                        propertyDefinitionFactory.getPropertyDefinitionInstance(clob, declaringConceptSymbol, symbol, conceptSymbol, name));
+                                PropositionDefinition propDef = propIdToPropDef.get(conceptSymbol);
+                                Map<String, PropertyDefinition> m = result.get(propDef);
+                                if (m == null) {
+                                    m = new HashMap<>();
+                                    result.put(propDef, m);
+                                }
+                                if (!m.containsKey(symbol)) {
+                                    m.put(symbol, propertyDefinitionFactory.getPropertyDefinitionInstance(clob, declaringConceptSymbol, symbol, conceptSymbol, name));
+                                }
                             }
                         } catch (SQLException | SAXParseException ex) {
                             throw new KnowledgeSourceReadException(ex);
@@ -1981,12 +1987,12 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     }
 
                     try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByTables(connection, qc, table)) {
-                        for (Map.Entry<PropositionDefinition, List<PropertyDefinition>> me : queryExecutor.execute(reader).entrySet()) {
+                        for (Map.Entry<PropositionDefinition, Map<String, PropertyDefinition>> me : queryExecutor.execute(reader).entrySet()) {
                             PropositionDefinition pd = me.getKey();
                             if (pd != null) {
-                                List<PropertyDefinition> value = me.getValue();
+                                Map<String, PropertyDefinition> value = me.getValue();
                                 if (value != null) {
-                                    ((AbstractPropositionDefinition) pd).setPropertyDefinitions(value.toArray(new PropertyDefinition[value.size()]));
+                                    ((AbstractPropositionDefinition) pd).setPropertyDefinitions(value.values().toArray(new PropertyDefinition[value.size()]));
                                 }
                             }
                         }
