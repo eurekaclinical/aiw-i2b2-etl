@@ -1937,6 +1937,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         childTempTableHandler.insert(propId);
                     }
                 }
+
                 ResultSetReader<Map<PropositionDefinition, List<PropertyDefinition>>> reader = (ResultSet rs) -> {
                     Map<PropositionDefinition, List<PropertyDefinition>> result = new HashMap<>();
                     if (rs != null) {
@@ -1965,6 +1966,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 * Getting temp space full errors with one query, so split it into one query per metadata table.
                  */
                 for (String table : tableAccessReader.read(connection)) {
+                    PropertiesTempTableHandler childTempTableHandler = new PropertiesTempTableHandler(this.querySupport.getDatabaseProduct(), connection, table, this.querySupport.getEurekaIdColumn());
+                    childTempTableHandler.execute();
                     QueryConstructor qc;
                     switch (this.querySupport.getDatabaseProduct()) {
                         case ORACLE:
@@ -2016,11 +2019,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
-            sql.append("(SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM (SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, C_NAME DISPLAYNAME, VALUETYPE_CD, C_BASECODE PROPERTYNAME, C_METADATAXML FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
-            sql.append(table);
-            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N'))) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
+            sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
         }
 
     };
@@ -2034,11 +2033,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
-            sql.append("(SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM (SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, C_NAME DISPLAYNAME, VALUETYPE_CD, C_BASECODE PROPERTYNAME, C_METADATAXML FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') U1 UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
-            sql.append(table);
-            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N') U2)) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
+            sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
         }
 
     };
@@ -2052,11 +2047,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
-            sql.append("(SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM (SELECT ").append(querySupport.getEurekaIdColumn()).append(", M_APPLIED_PATH, C_NAME DISPLAYNAME, VALUETYPE_CD, C_BASECODE PROPERTYNAME, C_METADATAXML FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N') UNION ALL (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN ");
-            sql.append(table);
-            sql.append(" T1 ON (EMI.C_BASECODE=T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH <> '@' AND T1.C_SYNONYM_CD = 'N'))) A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
+            sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
         }
 
     };
