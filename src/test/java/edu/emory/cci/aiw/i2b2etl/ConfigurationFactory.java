@@ -120,7 +120,7 @@ public class ConfigurationFactory implements AutoCloseable {
         try {
             if (populateMetaSchema) {
                 File ksbDb = new I2b2MetadataSchemaPopulator().populate();
-                this.metaDS = newBasicDataSource("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql';LOG=0;LOCK_MODE=0;UNDO_LOG=0");
+                this.metaDS = newBasicDataSource("jdbc:h2:" + ksbDb.getAbsolutePath() + ";DEFAULT_ESCAPE='';INIT=RUNSCRIPT FROM 'src/test/resources/i2b2_temp_tables.sql';LOG=0;UNDO_LOG=0");
                 this.initialContextBinder.bind(I2B2_METASOURCE, this.metaDS);
             }
 
