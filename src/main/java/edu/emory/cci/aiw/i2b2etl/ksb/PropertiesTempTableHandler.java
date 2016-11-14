@@ -43,9 +43,11 @@ class PropertiesTempTableHandler {
         " WHERE C_METADATAXML IS NOT NULL AND M_APPLIED_PATH  <> '@' AND C_BASECODE IS NOT NULL AND C_SYNONYM_CD = 'N')" +
         " UNION ALL" +
         " (SELECT NULL, M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME, NULL " +
-        "FROM (SELECT DISTINCT T1.M_APPLIED_PATH, DISPLAYNAME, NULL, PROPERTYNAME FROM EK_MODIFIER_INTERP EMI JOIN " +
+        "FROM (SELECT DISTINCT a1.M_APPLIED_PATH, a2.DISPLAYNAME, NULL, a2.PROPERTYNAME FROM " +
+        table +
+        " a1 JOIN ek_modifier_interp a2 on (a1.c_basecode=a2.c_basecode and a1.C_SYNONYM_CD = 'N' and a1.c_metadataxml is null) JOIN " +
         table + 
-        " T1 ON (EMI.C_BASECODE =T1.C_BASECODE) WHERE T1.C_METADATAXML IS NULL AND T1.M_APPLIED_PATH  <> '@' AND T1.C_SYNONYM_CD = 'N') U0)) U1)";
+        " a3 on (a2.declaring_concept=a3.ek_unique_id AND a3.c_fullname = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END and a3.c_synonym_cd='N')) U0)) U1)";
         createTempTableIfNeeded(connection, databaseProduct);
     }
     
