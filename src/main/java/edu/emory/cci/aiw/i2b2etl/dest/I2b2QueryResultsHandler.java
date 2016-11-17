@@ -92,6 +92,69 @@ import org.protempa.backend.ksb.KnowledgeSourceBackend;
 import org.protempa.dest.QueryResultsHandlerCloseException;
 
 /**
+ * After loading data intp the temporary tables, a series of stored procedures
+ * are called to do the final stage of the data load into i2b2's data schema.
+ * There currently are Oracle and PostgreSQL implementations of the stored
+ * procedures. An implementation of the stored procedures must implement the
+ * following API. The procedures below are executed in order:
+ * 
+ * <dl>
+ * <dt>EUREKA.EK_PRE_HOOK()</dt>
+ * <dd>Called first after the database session is created. Sets up the session.</dd>
+ * <dt>EUREKA.EK_DISABLE_INDEXES()</dt>
+ * <dd>Statements to disable indexes that might slow down ETL can be put here. This
+ * procedure is called optionally. It gets called second, after EK_PRE_HOOK.</dd>
+ * <dt>EUREKA.EK_INSERT_PID_MAP_FROMTEMP(?, ?)</dt>
+ * <dd>Populates the PATIENT_MAPPING table. First argument is the name of the 
+ * temporary table for new, changed, and logically deleted patient mapping
+ * records. Second argument is the upload id. It is not called if there was a previous
+ * error.</dd>
+ * <dt>EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?)</dt>
+ * <dd>Populates the ENCOUNTER_MAPPING table. First argument is the name of the 
+ * temporary table for new, changed, and logically deleted encounter mapping
+ * records. Second argument is the upload id. It is not called if there was a previous
+ * error.</dd>
+ * <dt>EUREKA.EK_INS_PATIENT_FROMTEMP(?, ?)</dt>
+ * <dd>Populates the PATIENT_DIMENSION table. First argument is the name of the
+ * temporary table for new, changed, and logically deleted patient records.
+ * Second argument is the upload id. It is not called if there was a previous
+ * error.</dd>
+ * <dt>EUREKA.EK_INS_ENC_VISIT_FROMTEMP(?, ?)</dt>
+ * <dd>Populates the VISIT_DIMENSION table. First argument is the name of the
+ * temporary table for new, changed, and logically deleted visit records.
+ * Second argument is the upload id. It is not called if there was a previous
+ * error.</dd>
+ * <dt>EUREKA.EK_INS_PROVIDER_FROMTEMP(?, ?)</dt>
+ * <dd>Populates the PROVIDER_DIMENSION table. First argument is the name of the
+ * temporary table for new, changed, and logically deleted provider records.
+ * Second argument is the upload id. It is not called if there was a previous
+ * error.</dd>
+ * <dt>EUREKA.EK_INS_CONCEPT_FROMTEMP(?, ?)</dt>
+ * <dd>Populates the CONCEPT_DIMENSION table. First argument is the name of the
+ * temporary table for new, changed, and logically deleted concept records.
+ * Second argument is the upload id. It is not called if there was a previous
+ * error.</dd>
+ * <dt>EUREKA.EK_INS_MODIFIER_FROMTEMP(?, ?)</dt>
+ * <dd>Populates the MODIFIER_DIMENSION table. First argument is the name of the
+ * temporary table for new, changed, and logically deleted modifier records.
+ * Second argument is the upload id. It is not called if there was a previous
+ * error.</dd>
+ * <dt>EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?)</dt>
+ * <dd>Populates the OBSERVATION_FACT table. First argument is the name of the
+ * temporary table for new, changed, and logically deleted observation facts.
+ * Second argument is the name of the intermediate temporary table for processing
+ * observation facts. Third argument is the upload id. Fourth argument is 1 or
+ * 0 depending on whether to merge on update (1) or append on update (0). It is 
+ * not called if there was a previous error.</dd>
+ * <dt>EUREKA.EK_ENABLE_INDEXES()</dt>
+ * <dd>Statements to disable indexes that might slow down ETL can be put here. This
+ * procedure gets called only if EUREKA.EK_DISABLE_INDEXES was called. It is 
+ * called even if there was a previous error.</dd>
+ * <dt>EUREKA.EK_POST_HOOK()</dt>
+ * <dd>It is always called, even if there was a previous error. Performs 
+ * database-specific session cleanup.</dd>
+ * </dl>
+ * 
  * @author Andrew Post
  */
 public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
