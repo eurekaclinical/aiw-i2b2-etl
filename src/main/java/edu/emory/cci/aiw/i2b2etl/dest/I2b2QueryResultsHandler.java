@@ -257,6 +257,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             f.getInstance(this.metaRemoveMethod).doRemoveMetadata();
             this.factHandlers = new ArrayList<>();
             addPropositionFactHandlers();
+            executePreHook();
             // disable indexes on observation_fact to speed up inserts
             disableObservationFactIndexes();
             // create i2b2 temporary tables using stored procedures
@@ -608,11 +609,20 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
-        if (exception == null) {
-            try {
-                // re-enable the indexes now that we're done populating the table
-                enableObservationFactIndexes();
-            } catch (SQLException ex) {
+        try {
+            // re-enable the indexes now that we're done populating the table
+            enableObservationFactIndexes();
+        } catch (SQLException ex) {
+            if (exception == null) {
+                exception = ex;
+            }
+        }
+
+        try {
+            // execute post-hook
+            executePostHook();
+        } catch (SQLException ex) {
+            if (exception == null) {
                 exception = ex;
             }
         }
@@ -869,24 +879,48 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
     }
 
-    private void disableObservationFactIndexes() throws SQLException {
+    private void executePreHook() throws SQLException {
         Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, "Disabling indices on observation_fact");
+        logger.log(Level.INFO, "Executing pre-hook");
         try (Connection conn = openDataDatabaseConnection();
-                CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_DISABLE_INDEXES()}")) {
-            //stmt.registerOutParameter(1, Types.VARCHAR);
+                CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_PRE_HOOK()}")) {
             stmt.execute();
-            logger.log(Level.INFO, "Disabled indices on observation_fact");
+            logger.log(Level.INFO, "Pre-hook executed successfully");
+        }
+    }
+
+    private void executePostHook() throws SQLException {
+        Logger logger = I2b2ETLUtil.logger();
+        logger.log(Level.INFO, "Executing post-hook");
+        try (Connection conn = openDataDatabaseConnection();
+                CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_POST_HOOK()}")) {
+            stmt.execute();
+            logger.log(Level.INFO, "Post-hook executed successfully");
+        }
+    }
+
+    private void disableObservationFactIndexes() throws SQLException {
+        if (this.query.getQueryMode() == QueryMode.REPLACE || !this.configuration.getSettings().getMergeOnUpdate()) {
+            Logger logger = I2b2ETLUtil.logger();
+            logger.log(Level.INFO, "Disabling indices on observation_fact");
+            try (Connection conn = openDataDatabaseConnection();
+                    CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_DISABLE_INDEXES()}")) {
+                //stmt.registerOutParameter(1, Types.VARCHAR);
+                stmt.execute();
+                logger.log(Level.INFO, "Disabled indices on observation_fact");
+            }
         }
     }
 
     private void enableObservationFactIndexes() throws SQLException {
-        Logger logger = I2b2ETLUtil.logger();
-        logger.log(Level.INFO, "Enabling indices on observation_fact");
-        try (Connection conn = openDataDatabaseConnection();
-                CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_ENABLE_INDEXES()}")) {
-            stmt.execute();
-            logger.log(Level.INFO, "Enabled indices on observation_fact");
+        if (this.query.getQueryMode() == QueryMode.REPLACE || !this.configuration.getSettings().getMergeOnUpdate()) {
+            Logger logger = I2b2ETLUtil.logger();
+            logger.log(Level.INFO, "Enabling indices on observation_fact");
+            try (Connection conn = openDataDatabaseConnection();
+                    CallableStatement stmt = conn.prepareCall("{call EUREKA.EK_ENABLE_INDEXES()}")) {
+                stmt.execute();
+                logger.log(Level.INFO, "Enabled indices on observation_fact");
+            }
         }
     }
 

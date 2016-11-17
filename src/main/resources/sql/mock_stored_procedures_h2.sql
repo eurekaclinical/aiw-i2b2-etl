@@ -67,6 +67,18 @@ void updateObservationFact(Connection conn, String tableName, String tableName2,
 }
 $$;
 
+DROP ALIAS IF EXISTS EUREKA.EK_PRE_HOOK;
+CREATE ALIAS EUREKA.EK_PRE_HOOK AS $$
+void preHook(Connection conn) {
+}
+$$;
+
+DROP ALIAS IF EXISTS EUREKA.EK_POST_HOOK;
+CREATE ALIAS EUREKA.EK_POST_HOOK AS $$
+void postHook(Connection conn) {
+}
+$$;
+
 DROP ALIAS IF EXISTS EUREKA.EK_DISABLE_INDEXES;
 CREATE ALIAS EUREKA.EK_DISABLE_INDEXES AS $$
 void disableIndexes(Connection conn) {

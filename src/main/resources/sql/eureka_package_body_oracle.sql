@@ -825,6 +825,24 @@ AS
             raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
     END EK_INSERT_PID_MAP_FROMTEMP;
 
+    PROCEDURE EK_PRE_HOOK
+    IS
+    BEGIN
+        EXECUTE IMMEDIATE 'alter session enable parallel dml';
+    EXCEPTION
+        WHEN OTHERS THEN
+            raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
+    END EK_PRE_HOOK;
+
+    PROCEDURE EK_POST_HOOK
+    IS
+    BEGIN
+        EXECUTE IMMEDIATE 'alter session disable parallel dml';
+    EXCEPTION
+        WHEN OTHERS THEN
+            raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
+    END EK_POST_HOOK;
+
     PROCEDURE EK_DISABLE_INDEXES
     IS
     BEGIN
@@ -832,7 +850,6 @@ AS
         EXECUTE IMMEDIATE 'ALTER INDEX FACT_PATCON_DATE_PRVD_IDX UNUSABLE';
         EXECUTE IMMEDIATE 'ALTER INDEX FACT_CNPT_PAT_ENCT_IDX UNUSABLE';
         EXECUTE IMMEDIATE 'ALTER SESSION SET skip_unusable_indexes = true';
-        EXECUTE IMMEDIATE 'alter session enable parallel dml';
     EXCEPTION
         WHEN OTHERS THEN
             raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
@@ -845,7 +862,6 @@ AS
         EXECUTE IMMEDIATE 'ALTER INDEX FACT_PATCON_DATE_PRVD_IDX REBUILD';
         EXECUTE IMMEDIATE 'ALTER INDEX FACT_CNPT_PAT_ENCT_IDX REBUILD';
         EXECUTE IMMEDIATE 'ALTER SESSION SET skip_unusable_indexes = false';
-        EXECUTE IMMEDIATE 'alter session disable parallel dml';
     EXCEPTION
         WHEN OTHERS THEN
             raise_application_error(-20001,'An error was encountered - '||SQLCODE||' -ERROR- '||SQLERRM);
