@@ -125,7 +125,10 @@ public abstract class FactHandler extends AbstractFactHandler {
         Date finish = handleFinishDate(prop, encounterProp, null);
         Value value = modConcept != null ? handleValue(prop, modConcept, modConceptId) : handleValue(prop, concept, conceptId);
         ValueFlagCode valueFlagCode = ValueFlagCode.NO_VALUE_FLAG;
-        String units = handleUnits(prop);
+	    String units = null;
+	    if(modConcept == null){
+		    units = handleUnits(prop);
+	    }
         ObservationFact obx = new ObservationFact();
         obx.reset();
         obx.setStartDate(TableUtil.setTimestampAttribute(start));
