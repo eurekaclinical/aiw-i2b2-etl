@@ -41,7 +41,15 @@ public class GetPropositionIdsNeededTest extends AbstractI2b2DestTest {
     @Test
     public void testPropositionIds() throws Exception {
         try (Protempa protempa = getProtempaFactory().newInstance()) {
-            assertEqualsStrings("/truth/get-proposition-ids-needed-test-file", protempa.getSupportedPropositionIds(new I2b2DestinationFactory("/conf.xml").getInstance(true)));
+            String[] supportedPropositionIds = protempa.getSupportedPropositionIds(new I2b2DestinationFactory("/conf.xml").getInstance(true));
+            java.io.File createTempFile = java.io.File.createTempFile("foo", "bar");
+            try (java.io.PrintWriter w = new java.io.PrintWriter(new java.io.FileWriter(createTempFile))) {
+                for (String propId : supportedPropositionIds) {
+                    w.println(propId);
+                }
+            }
+            System.err.println("Written expected to " + createTempFile.getAbsolutePath());
+            assertEqualsStrings("/truth/get-proposition-ids-needed-test-file", supportedPropositionIds);
         }
     }
     

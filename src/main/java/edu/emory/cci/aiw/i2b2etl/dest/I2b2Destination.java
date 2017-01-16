@@ -138,7 +138,8 @@ public final class I2b2Destination extends AbstractDestination {
                     }
                 }
             }
-            return result.toArray(new String[result.size()]);
+            Set<String> collectPropIdDescendantsUsingInverseIsA = knowledgeSource.collectPropIdDescendantsUsingInverseIsA(result.toArray(new String[result.size()]));
+            return collectPropIdDescendantsUsingInverseIsA.toArray(new String[collectPropIdDescendantsUsingInverseIsA.size()]);
         } else {
             return ArrayUtils.EMPTY_STRING_ARRAY;
         }
