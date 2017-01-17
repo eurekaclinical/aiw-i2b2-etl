@@ -1193,7 +1193,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public List<PropositionDefinition> readPropositionDefinitions(String[] ids) throws KnowledgeSourceReadException {
-        List<PropositionDefinition> results = new ArrayList<>();
+        List<PropositionDefinition> results = new ArrayList<>(ids != null ? ids.length : 0);
         if (ids != null) {
             List<String> propIdsToFind = readHardCodedPropDefs(ids, results);
             results.addAll(readPropDefs(propIdsToFind));
@@ -1202,7 +1202,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     }
 
     private List<String> readHardCodedPropDefs(String[] ids, List<PropositionDefinition> results) throws KnowledgeSourceReadException {
-        List<String> propIdsToFind = new ArrayList<>();
+        List<String> propIdsToFind = new ArrayList<>(ids.length);
         for (String id : ids) {
             if (id.equals(this.patientDetailsPropositionId)) {
                 results.add(newPatientDetailsPropositionDefinition());
@@ -1495,7 +1495,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public List<TemporalPropositionDefinition> readTemporalPropositionDefinitions(String[] ids) throws KnowledgeSourceReadException {
-        List<TemporalPropositionDefinition> results = new ArrayList<>();
+        List<TemporalPropositionDefinition> results = new ArrayList<>(ids != null ? ids.length : 0);
         if (ids != null) {
             List<String> propIdsToFind = readHardCodedTempPropDefs(ids, results);
             results.addAll(readPropDefs(propIdsToFind));
@@ -1504,7 +1504,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     }
 
     private List<String> readHardCodedTempPropDefs(String[] ids, List<TemporalPropositionDefinition> results) throws KnowledgeSourceReadException {
-        List<String> propIdsToFind = new ArrayList<>();
+        List<String> propIdsToFind = new ArrayList<>(ids.length);
         for (String id : ids) {
             if (id.equals(this.visitPropositionId)) {
                 results.add(newVisitPropositionDefinition());
@@ -1662,7 +1662,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public Collection<String> collectPropIdDescendantsUsingAllNarrower(boolean inDataSourceOnly, final String[] propIds) throws KnowledgeSourceReadException {
-        final Set<String> result = new HashSet<>();
+        final Set<String> result = new HashSet<>(10000);
         if (propIds != null && propIds.length > 0) {
             TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(propIds).build();
             QueryConstructor qc;
@@ -1767,7 +1767,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
     @Override
     public Collection<String> collectPropIdDescendantsUsingInverseIsA(final String[] propIds) throws KnowledgeSourceReadException {
-        final Set<String> result = new HashSet<>();
+        final Set<String> result = new HashSet<>(10000);
         if (propIds != null && propIds.length > 0) {
             TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(propIds).build();
             try (ConnectionSpecQueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(this.querySupport.getDatabaseProduct() == DatabaseProduct.POSTGRESQL ? COLLECT_SUBTREE_PROPID_QC_POSTGRESQL : COLLECT_SUBTREE_PROPID_QC, tableAccessReader)) {
@@ -1883,7 +1883,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     }
 
     private Collection<PropositionDefinition> collectPropDefDescendantsCommon(final String[] propIds, QueryConstructor queryConstructor) throws KnowledgeSourceReadException {
-        Map<String, PropositionDefinition> result = new HashMap<>();
+        Map<String, PropositionDefinition> result = Collections.newHashMap(10000);
         if (propIds != null && propIds.length > 0) {
             TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(propIds).build();
             try (Connection connection = this.querySupport.getConnection()) {
@@ -2100,7 +2100,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     };
 
     private Collection<TemporalPropositionDefinition> readPropDefs(final List<String> ids) throws KnowledgeSourceReadException {
-        Map<String, TemporalPropositionDefinition> resultMap = new HashMap<>();
+        Map<String, TemporalPropositionDefinition> resultMap = Collections.newHashMap(ids.size());
         TableAccessReader tableAccessReader = this.querySupport.getTableAccessReaderBuilder().restrictTablesBy(ids.toArray(new String[ids.size()])).build();
         try (Connection connection = this.querySupport.getConnection()) {
             try {
