@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import org.arp.javautil.sql.DatabaseAPI;
 import org.arp.javautil.sql.InvalidConnectionSpecArguments;
 import org.dbunit.Assertion;
@@ -35,6 +36,8 @@ import org.dbunit.dataset.SortedDataSet;
 import org.dbunit.dataset.xml.FlatDtdWriter;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.protempa.Protempa;
+import org.protempa.ProtempaEvent;
+import org.protempa.ProtempaEventListener;
 import org.protempa.ProtempaException;
 import org.protempa.SourceFactory;
 import org.protempa.dest.QueryResultsHandler;
@@ -68,12 +71,18 @@ public class ProtempaFactory implements AutoCloseable {
     public QueryResultsHandler getQueryResultsHandler(QueryBuilder queryBuilder) throws ProtempaException {
         try (Protempa protempa = newInstance()) {
             Query query = protempa.buildQuery(queryBuilder);
-            return this.dest.getInstance().getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource());
+            return this.dest.getInstance().getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource(), new ArrayList<>());
         }
     }
 
     public void execute(QueryBuilder queryBuilder) throws ProtempaException {
         try (Protempa protempa = newInstance()) {
+            protempa.addEventListener(new ProtempaEventListener() {
+                @Override
+                public void eventFired(ProtempaEvent protempaEvent) {
+                    System.out.println(protempaEvent);
+                }
+            });
             Query query = protempa.buildQuery(queryBuilder);
             protempa.execute(query, dest.getInstance());
         }

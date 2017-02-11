@@ -75,6 +75,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -86,6 +87,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.protempa.DataSource;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceCacheFactory;
+import org.protempa.ProtempaEvent;
+import org.protempa.ProtempaEventListener;
 import org.protempa.backend.dsb.DataSourceBackend;
 import org.protempa.backend.ksb.KnowledgeSourceBackend;
 
@@ -97,23 +100,25 @@ import org.protempa.dest.QueryResultsHandlerCloseException;
  * There currently are Oracle and PostgreSQL implementations of the stored
  * procedures. An implementation of the stored procedures must implement the
  * following API. The procedures below are executed in order:
- * 
+ *
  * <dl>
  * <dt>EUREKA.EK_PRE_HOOK()</dt>
- * <dd>Called first after the database session is created. Sets up the session.</dd>
+ * <dd>Called first after the database session is created. Sets up the
+ * session.</dd>
  * <dt>EUREKA.EK_DISABLE_INDEXES()</dt>
- * <dd>Statements to disable indexes that might slow down ETL can be put here. This
- * procedure is called optionally. It gets called second, after EK_PRE_HOOK.</dd>
+ * <dd>Statements to disable indexes that might slow down ETL can be put here.
+ * This procedure is called optionally. It gets called second, after
+ * EK_PRE_HOOK.</dd>
  * <dt>EUREKA.EK_INSERT_PID_MAP_FROMTEMP(?, ?)</dt>
- * <dd>Populates the PATIENT_MAPPING table. First argument is the name of the 
+ * <dd>Populates the PATIENT_MAPPING table. First argument is the name of the
  * temporary table for new, changed, and logically deleted patient mapping
- * records. Second argument is the upload id. It is not called if there was a previous
- * error.</dd>
+ * records. Second argument is the upload id. It is not called if there was a
+ * previous error.</dd>
  * <dt>EUREKA.EK_INSERT_EID_MAP_FROMTEMP(?, ?)</dt>
- * <dd>Populates the ENCOUNTER_MAPPING table. First argument is the name of the 
+ * <dd>Populates the ENCOUNTER_MAPPING table. First argument is the name of the
  * temporary table for new, changed, and logically deleted encounter mapping
- * records. Second argument is the upload id. It is not called if there was a previous
- * error.</dd>
+ * records. Second argument is the upload id. It is not called if there was a
+ * previous error.</dd>
  * <dt>EUREKA.EK_INS_PATIENT_FROMTEMP(?, ?)</dt>
  * <dd>Populates the PATIENT_DIMENSION table. First argument is the name of the
  * temporary table for new, changed, and logically deleted patient records.
@@ -121,8 +126,8 @@ import org.protempa.dest.QueryResultsHandlerCloseException;
  * error.</dd>
  * <dt>EUREKA.EK_INS_ENC_VISIT_FROMTEMP(?, ?)</dt>
  * <dd>Populates the VISIT_DIMENSION table. First argument is the name of the
- * temporary table for new, changed, and logically deleted visit records.
- * Second argument is the upload id. It is not called if there was a previous
+ * temporary table for new, changed, and logically deleted visit records. Second
+ * argument is the upload id. It is not called if there was a previous
  * error.</dd>
  * <dt>EUREKA.EK_INS_PROVIDER_FROMTEMP(?, ?)</dt>
  * <dd>Populates the PROVIDER_DIMENSION table. First argument is the name of the
@@ -142,19 +147,19 @@ import org.protempa.dest.QueryResultsHandlerCloseException;
  * <dt>EUREKA.EK_UPDATE_OBSERVATION_FACT(?, ?, ?, ?)</dt>
  * <dd>Populates the OBSERVATION_FACT table. First argument is the name of the
  * temporary table for new, changed, and logically deleted observation facts.
- * Second argument is the name of the intermediate temporary table for processing
- * observation facts. Third argument is the upload id. Fourth argument is 1 or
- * 0 depending on whether to merge on update (1) or append on update (0). It is 
- * not called if there was a previous error.</dd>
+ * Second argument is the name of the intermediate temporary table for
+ * processing observation facts. Third argument is the upload id. Fourth
+ * argument is 1 or 0 depending on whether to merge on update (1) or append on
+ * update (0). It is not called if there was a previous error.</dd>
  * <dt>EUREKA.EK_ENABLE_INDEXES()</dt>
- * <dd>Statements to disable indexes that might slow down ETL can be put here. This
- * procedure gets called only if EUREKA.EK_DISABLE_INDEXES was called. It is 
- * called even if there was a previous error.</dd>
+ * <dd>Statements to disable indexes that might slow down ETL can be put here.
+ * This procedure gets called only if EUREKA.EK_DISABLE_INDEXES was called. It
+ * is called even if there was a previous error.</dd>
  * <dt>EUREKA.EK_POST_HOOK()</dt>
- * <dd>It is always called, even if there was a previous error. Performs 
+ * <dd>It is always called, even if there was a previous error. Performs
  * database-specific session cleanup.</dd>
  * </dl>
- * 
+ *
  * @author Andrew Post
  */
 public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
@@ -192,6 +197,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private VisitDimensionFactory visitDimensionFactory;
     private final Configuration configuration;
     private KnowledgeSourceCache cache;
+    private List<? extends ProtempaEventListener> eventListeners;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -209,7 +215,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * {@link Query}.
      * @param dataInsertMode whether to truncate existing data or append to it
      */
-    I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, Configuration configuration)
+    I2b2QueryResultsHandler(Query query, DataSource dataSource, KnowledgeSource knowledgeSource, Configuration configuration, List<? extends ProtempaEventListener> eventListeners)
             throws QueryResultsHandlerInitException {
         if (dataSource == null) {
             throw new IllegalArgumentException("dataSource cannot be null");
@@ -287,6 +293,8 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
         this.knowledgeSourceBackendIds.add(this.qrhId);
+
+        this.eventListeners = eventListeners;
     }
 
     @Override
@@ -690,6 +698,48 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             }
         }
 
+        List<String> cFullNames = new ArrayList<>();
+        if (exception == null && this.metadataConnectionSpec != null) {
+            try (Connection conn = openMetadataDatabaseConnection()) {
+                try (Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT DISTINCT C_FULLNAME FROM TABLE_ACCESS")) {
+                    while (rs.next()) {
+                        cFullNames.add(rs.getString(1));
+                    }
+                }
+            } catch (SQLException ex) {
+                exception = ex;
+            }
+        }
+
+        if (exception == null && !cFullNames.isEmpty()) {
+            for (String cFullName : cFullNames) {
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_START, getClass(), new Date(), "Count of " + cFullName));
+                String countQuery = "SELECT count(*) FROM " + tempObservationFactCompleteTableName()
+                        + " obx join "
+                        + tempConceptTableName()
+                        + " tc ON (obx.concept_cd=tc.concept_cd) WHERE tc.concept_path like '"
+                        + cFullName
+                        + "%' AND obx.patient_num IS NOT NULL AND obx.encounter_num IS NOT NULL";
+                int count = -1;
+                try (Connection conn = openDataDatabaseConnection();
+                        Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery(countQuery)) {
+                    if (rs.next()) {
+                        count = rs.getInt(1);
+                    }
+                } catch (SQLException ex) {
+                    exception = ex;
+                }
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_STOP, getClass(), new Date(), "Count of " + cFullName));
+                if (exception == null) {
+                    fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of " + cFullName + ": " + count));
+                } else {
+                    fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of " + cFullName + ": ERROR (" + exception.getMessage() + ")"));
+                }
+            }
+        }
+
         if (exception == null) {
             try {
                 logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
@@ -732,6 +782,12 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception != null) {
             logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, exception);
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + queryId, exception);
+        }
+    }
+
+    private void fireProtempaEvent(ProtempaEvent evt) {
+        for (ProtempaEventListener listener : this.eventListeners) {
+            listener.eventFired(evt);
         }
     }
 

@@ -21,6 +21,7 @@ package edu.emory.cci.aiw.i2b2etl.dest;
 
 import static edu.emory.cci.aiw.i2b2etl.AbstractDataTest.getConfigFactory;
 import edu.emory.cci.aiw.i2b2etl.I2b2DestinationFactory;
+import java.util.ArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
 import org.protempa.Protempa;
@@ -60,7 +61,7 @@ public class GetPropositionIdsNeededTest extends AbstractI2b2DestTest {
             Destination dest = new I2b2DestinationFactory("/conf.xml").getInstance();
             QueryBuilder queryBuilder = new DefaultQueryBuilder();
             Query query = protempa.buildQuery(queryBuilder);
-            try (QueryResultsHandler qrh = dest.getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource())) {
+            try (QueryResultsHandler qrh = dest.getQueryResultsHandler(query, protempa.getDataSource(), protempa.getKnowledgeSource(), new ArrayList<>())) {
                 assertArrayEquals(ArrayUtils.EMPTY_STRING_ARRAY, protempa.getSupportedPropositionIds(dest));
             }
         }
