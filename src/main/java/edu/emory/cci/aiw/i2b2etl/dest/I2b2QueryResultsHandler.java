@@ -730,6 +730,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                     }
                 } catch (SQLException ex) {
                     exception = ex;
+                    break;
                 }
                 fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_STOP, getClass(), new Date(), "Count of " + cFullName));
                 if (exception == null) {
@@ -739,7 +740,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
             }
         }
-
+        
         if (exception == null) {
             try {
                 logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
