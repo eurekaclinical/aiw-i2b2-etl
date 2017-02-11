@@ -700,6 +700,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         List<String> cFullNames = new ArrayList<>();
         if (exception == null && this.metadataConnectionSpec != null) {
+            logger.log(Level.INFO, "Querying TABLE_ACCESS for full names");
             try (Connection conn = openMetadataDatabaseConnection()) {
                 try (Statement stmt = conn.createStatement();
                         ResultSet rs = stmt.executeQuery("SELECT DISTINCT C_FULLNAME FROM TABLE_ACCESS")) {
@@ -714,6 +715,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
         if (exception == null && !cFullNames.isEmpty()) {
             for (String cFullName : cFullNames) {
+                logger.log(Level.INFO, "Getting number of records loaded for {0}", cFullName);
                 fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_START, getClass(), new Date(), "Count of " + cFullName));
                 String countQuery = "SELECT count(*) FROM " + tempObservationFactCompleteTableName()
                         + " obx join "
