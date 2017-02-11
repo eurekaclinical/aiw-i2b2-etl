@@ -736,13 +736,102 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 }
                 fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_STOP, getClass(), new Date(), "Count of " + cFullName));
                 if (exception == null) {
+                    logger.log(Level.INFO, "{0} {1} record(s) loaded", new Object[]{count, cFullName});
                     fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of " + cFullName + ": " + count));
                 } else {
                     fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of " + cFullName + ": ERROR (" + exception.getMessage() + ")"));
                 }
             }
         }
-        
+
+        if (exception == null) {
+            logger.log(Level.INFO, "Getting number of patient records loaded");
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_START, getClass(), new Date(), "Count of patient records"));
+            int count = -1;
+            try (Connection conn = openDataDatabaseConnection();
+                    Statement stmt = conn.createStatement();
+                    ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tempPatientTableName())) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            } catch (SQLException ex) {
+                exception = ex;
+            }
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_STOP, getClass(), new Date(), "Count of patient records"));
+            if (exception == null) {
+                logger.log(Level.INFO, "{0} patient record(s) loaded", count);
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of patient records: " + count));
+            } else {
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of patient records: ERROR (" + exception.getMessage() + ")"));
+            }
+        }
+
+        if (exception == null) {
+            logger.log(Level.INFO, "Getting number of visit records loaded");
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_START, getClass(), new Date(), "Count of visit records"));
+            int count = -1;
+            try (Connection conn = openDataDatabaseConnection();
+                    Statement stmt = conn.createStatement();
+                    ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tempVisitTableName())) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            } catch (SQLException ex) {
+                exception = ex;
+            }
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_STOP, getClass(), new Date(), "Count of visit records"));
+            if (exception == null) {
+                logger.log(Level.INFO, "{0} visit record(s) loaded", count);
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of visit records: " + count));
+            } else {
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of visit records: ERROR (" + exception.getMessage() + ")"));
+            }
+        }
+
+        if (exception == null) {
+            logger.log(Level.INFO, "Getting number of provider records loaded");
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_START, getClass(), new Date(), "Count of provider records"));
+            int count = -1;
+            try (Connection conn = openDataDatabaseConnection();
+                    Statement stmt = conn.createStatement();
+                    ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tempProviderTableName())) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            } catch (SQLException ex) {
+                exception = ex;
+            }
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_STOP, getClass(), new Date(), "Count of provider records"));
+            if (exception == null) {
+                logger.log(Level.INFO, "{0} provider record(s) loaded", count);
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of provider records: " + count));
+            } else {
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of provider records: ERROR (" + exception.getMessage() + ")"));
+            }
+        }
+
+        if (exception == null) {
+            logger.log(Level.INFO, "Getting number of concept records loaded");
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_START, getClass(), new Date(), "Count of concept records"));
+            int count = -1;
+            try (Connection conn = openDataDatabaseConnection();
+                    Statement stmt = conn.createStatement();
+                    ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tempConceptTableName())) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            } catch (SQLException ex) {
+                exception = ex;
+            }
+            fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_STOP, getClass(), new Date(), "Count of concept records"));
+            if (exception == null) {
+                logger.log(Level.INFO, "{0} concept record(s) loaded", count);
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of concept records: " + count));
+            } else {
+                fireProtempaEvent(new ProtempaEvent(ProtempaEvent.Level.INFO, ProtempaEvent.Type.QRH_STEP_RESULT, getClass(), new Date(), "Count of concept records: ERROR (" + exception.getMessage() + ")"));
+            }
+        }
+
         if (exception == null) {
             try {
                 logger.log(Level.INFO, "Done populating observation fact table for query {0}", queryId);
