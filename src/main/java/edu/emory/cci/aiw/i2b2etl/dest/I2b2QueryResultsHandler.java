@@ -722,7 +722,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                         + tempConceptTableName()
                         + " tc ON (obx.concept_cd=tc.concept_cd) WHERE tc.concept_path like '"
                         + cFullName
-                        + "%' AND obx.patient_num IS NOT NULL AND obx.encounter_num IS NOT NULL";
+                        + "%' AND obx.modifier_cd='@' AND obx.patient_num IS NOT NULL AND obx.encounter_num IS NOT NULL";
                 int count = -1;
                 try (Connection conn = openDataDatabaseConnection();
                         Statement stmt = conn.createStatement();
