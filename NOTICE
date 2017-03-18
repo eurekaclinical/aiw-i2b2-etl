@@ -23,7 +23,6 @@ This project includes:
   Apache Commons Pool under The Apache Software License, Version 2.0
   Apache Log4j under The Apache Software License, Version 2.0
   Apache POI under The Apache Software License, Version 2.0
-  Apache ServiceMix :: Bundles :: xstream under The Apache Software License, Version 2.0
   avalon-framework under Apache License, Version 2.0
   Commons Collections under The Apache Software License, Version 2.0
   Commons IO under The Apache Software License, Version 2.0
@@ -37,7 +36,6 @@ This project includes:
   JavaUtil under Apache License, Version 2.0
   je under Sleepycat License
   JUnit under Eclipse Public License 1.0
-  kXML 2 is a small XML pull parser based on the common XML pull API under BSD style or Public Domain
   Liquibase Core under Apache License, Version 2.0
   Logging under The Apache Software License, Version 2.0
   logkit under Apache License, Version 2.0
