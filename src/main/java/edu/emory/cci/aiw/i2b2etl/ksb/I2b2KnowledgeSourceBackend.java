@@ -1972,7 +1972,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 * Getting temp space full errors with one query, so split it into one query per metadata table.
                  */
                 for (String table : tableAccessReader.read(connection)) {
-                    PropertiesTempTableHandler childTempTableHandler = new PropertiesTempTableHandler(this.querySupport.getDatabaseProduct(), connection, table, this.querySupport.getEurekaIdColumn());
+                    PropertiesTempTableHandler childTempTableHandler = new PropertiesTempTableHandler(this.querySupport, connection, table, this.querySupport.getEurekaIdColumn());
                     childTempTableHandler.execute();
                     QueryConstructor qc;
                     switch (this.querySupport.getDatabaseProduct()) {
@@ -2020,9 +2020,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
@@ -2034,9 +2032,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
@@ -2048,9 +2044,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", (SELECT ").append(querySupport.getEurekaIdColumn()).append(" FROM ");
-            sql.append(table);
-            sql.append(" WHERE C_FULLNAME = CASE WHEN SUBSTR(A1.M_APPLIED_PATH, LENGTH(A1.M_APPLIED_PATH), 1) = '%' THEN SUBSTR(A1.M_APPLIED_PATH, 1, LENGTH(A1.M_APPLIED_PATH) - 1) ELSE A1.M_APPLIED_PATH END AND C_SYNONYM_CD ='N' AND M_APPLIED_PATH ='@'), A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A1.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
