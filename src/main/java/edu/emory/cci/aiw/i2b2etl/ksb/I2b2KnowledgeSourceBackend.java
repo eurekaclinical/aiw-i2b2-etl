@@ -1974,18 +1974,19 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 for (String table : tableAccessReader.read(connection)) {
                     PropertiesTempTableHandler childTempTableHandler = new PropertiesTempTableHandler(this.querySupport, connection, table, this.querySupport.getEurekaIdColumn());
                     childTempTableHandler.execute();
-                    QueryConstructor qc;
-                    switch (this.querySupport.getDatabaseProduct()) {
-                        case ORACLE:
-                            qc = READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL;
-                            break;
-                        case POSTGRESQL:
-                            qc = READ_ALL_PROPERTIES_CONSTRUCTOR_POSTGRESQL;
-                            break;
-                        default:
-                            qc = READ_ALL_PROPERTIES_CONSTRUCTOR;
-                    }
-
+                }
+                QueryConstructor qc;
+                switch (this.querySupport.getDatabaseProduct()) {
+                    case ORACLE:
+                        qc = READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL;
+                        break;
+                    case POSTGRESQL:
+                        qc = READ_ALL_PROPERTIES_CONSTRUCTOR_POSTGRESQL;
+                        break;
+                    default:
+                        qc = READ_ALL_PROPERTIES_CONSTRUCTOR;
+                }
+                for (String table : tableAccessReader.read(connection)) {
                     try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByTables(connection, qc, table)) {
                         for (Map.Entry<PropositionDefinition, Map<String, PropertyDefinition>> me : queryExecutor.execute(reader).entrySet()) {
                             PropositionDefinition pd = me.getKey();
