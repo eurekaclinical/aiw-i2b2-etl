@@ -49,11 +49,10 @@ public class UniqueIdTempTableHandler extends RecordHandler<String> {
     }
     
     private void createTempTableIfNeeded(DatabaseProduct databaseProduct) throws SQLException {
-        
         switch (databaseProduct) {
             case POSTGRESQL:
                 try (Statement stmt = getConnection().createStatement()) {
-                    stmt.execute("CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT DELETE ROWS");
+                    stmt.execute("CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS EK_TEMP_UNIQUE_IDS (UNIQUE_ID VARCHAR(700)) ON COMMIT PRESERVE ROWS");
                 }
                 break;
             default:
