@@ -64,7 +64,6 @@ class PropertiesTempTableHandler {
         (querySupport.getDatabaseProduct() == DatabaseProduct.POSTGRESQL ? "ESCAPE '' " : "") +
         "and a3.c_synonym_cd='N') " + 
         ") U0)) U1)";
-        createTempTableIfNeeded(connection, querySupport.getDatabaseProduct());
     }
     
     void execute() throws SQLException {
@@ -73,7 +72,7 @@ class PropertiesTempTableHandler {
         }
     }
     
-    private void createTempTableIfNeeded(Connection connection, DatabaseProduct databaseProduct) throws SQLException {
+    static void createTempTableIfNeeded(Connection connection, DatabaseProduct databaseProduct) throws SQLException {
         
         switch (databaseProduct) {
             case POSTGRESQL:

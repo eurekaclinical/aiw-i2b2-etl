@@ -1968,6 +1968,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                     }
                     return result;
                 };
+                PropertiesTempTableHandler.createTempTableIfNeeded(connection, this.querySupport.getDatabaseProduct());
                 try (Statement stmt = connection.createStatement();
                         ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM EK_TEMP_PROPERTIES")) {
                     if (rs.next() && rs.getInt(1) == 0) {
