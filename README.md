@@ -56,6 +56,7 @@ The i2b2 destination requires adding stored procedures to the i2b2 metadata sche
 
 
 ### Additional i2b2 knowledge source backend installation
+See the [eurekaclinical-ontology](https://github.com/eurekaclinical/eurekaclinical-ontology) project's README for how to create an i2b2 metadata schema that the i2b2 knowledge source backend can read.
 
 ## Using it
 Here is an example:
