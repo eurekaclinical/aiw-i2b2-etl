@@ -4,9 +4,9 @@
 
 ## What does it do?
 This project provides:
-* a [Protempa](https://github.com/eurekaclinical/protempa) destination for loading data into an i2b2 database. Protempa destinations implement the `org.protempa.dest.Destination` interface and process output from the temporal abstraction process. See the Protempa project's README for more details on Protempa's architecture.
-* a Protempa data source backend for reading data from an i2b2 database.
-* a Protempa knowledge source backend for fetching clinical concepts from an i2b2 ontology cell.
+* a [Protempa](https://github.com/eurekaclinical/protempa) destination, `edu.emory.cci.aiw.i2b2etl.dest.I2b2Destination`, for loading data into an i2b2 database. Protempa destinations implement the `org.protempa.dest.Destination` interface and process output from the temporal abstraction process. See the Protempa project's README for more details on Protempa's architecture.
+* a Protempa data source backend, `org.emory.cci.aiw.i2b2etl.dsb.I2b2DataSourceBackend`, for reading data from an i2b2 database.
+* a Protempa knowledge source backend, `org.emory.cci.aiw.i2b2etl.dsb.I2b2KnowledgeSourceBackend`, for fetching clinical concepts from an i2b2 ontology cell.
 
 ## Version 3 development series
 Version 3 is primarily focused around performance improvements.
