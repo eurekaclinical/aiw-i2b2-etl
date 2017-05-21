@@ -56,7 +56,7 @@ The i2b2 destination requires adding stored procedures to the i2b2 metadata sche
 
 
 ### Additional i2b2 knowledge source backend installation
-See the [eurekaclinical-ontology](https://github.com/eurekaclinical/eurekaclinical-ontology) project's README for how to create an i2b2 metadata schema that the i2b2 knowledge source backend can read.
+See the [eurekaclinical-ontology](https://github.com/eurekaclinical/eurekaclinical-ontology) project's README for how to create an i2b2 metadata schema that the i2b2 knowledge source backend can read. Eureka! Clinical requires some extensions to the schema that i2b2 ships out of the box. The ontology project also contains Liquibase changelogs that install various common terminologies into such an i2b2 metadata schema.
 
 ## Using it
 Here is an example:
