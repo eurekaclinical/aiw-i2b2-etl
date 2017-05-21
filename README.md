@@ -47,6 +47,14 @@ The i2b2 destination requires adding tables and stored procedures to the i2b2 da
 * PostgreSQL
   * [Stored procedures](https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/sql/eureka_postgresql.sql)
 
+### Additional i2b2 knowledge source backend installation
+The i2b2 knowledge source backend requires adding stored procedures to the i2b2 metadata schema. The following files contain the SQL for creating the stored procedures:
+* Oracle
+  * [Package declaration](https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/sql/eureka_meta_package_oracle.sql)
+  * [Package implementation](https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/sql/eureka_meta_package_body_oracle.sql)
+* PostgreSQL
+  * [Stored procedures](https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/sql/eureka_meta_postgresql.sql)
+
 Here is an example:
 ```
 import org.protempa.SourceFactory;
