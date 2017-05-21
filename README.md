@@ -37,7 +37,14 @@ The project uses the maven build tool. Typically, you build it by invoking `mvn 
 ```
 
 ## Using it
-Just put the `aiw-i2b2-etl` jarfile and its dependencies in the classpath, and Protempa will automatically register it.
+Put the `aiw-i2b2-etl` jarfile and its dependencies in the classpath, and Protempa will automatically register the data source backend and knowledge source backend.
+
+The i2b2 destination requires adding tables and stored procedures to the i2b2 data schema. A [Liquibase changelog]( https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/dbmigration/i2b2-data-schema-changelog.xml) contains the DDL. The following files contain the SQL for creating the stored procedures:
+* Oracle
+  * [Package declaration](https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/sql/eureka_package_oracle.sql)
+  * [Package implementation](https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/sql/eureka_package_body_oracle.sql)
+* PostgreSQL
+  * [Stored procedures](https://github.com/eurekaclinical/aiw-i2b2-etl/blob/master/src/main/resources/sql/eureka_postgresql.sql)
 
 Here is an example:
 ```
