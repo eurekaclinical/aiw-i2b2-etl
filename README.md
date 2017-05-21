@@ -1,12 +1,15 @@
-# Protempa i2b2 Destination
+# Protempa i2b2 Tools
 
 [Department of Biomedical Informatics](http://bmi.emory.edu), [Emory University](http://www.emory.edu), Atlanta, GA
 
 ## What does it do?
-It is a [Protempa](https://github.com/eurekaclinical/protempa) destination for loading data into an i2b2 database. Protempa destinations implement the `org.protempa.dest.Destination` interface and process output from the temporal abstraction process. See the Protempa project's README for more details on Protempa's architecture.
+This project provides:
+* a [Protempa](https://github.com/eurekaclinical/protempa) destination for loading data into an i2b2 database. Protempa destinations implement the `org.protempa.dest.Destination` interface and process output from the temporal abstraction process. See the Protempa project's README for more details on Protempa's architecture.
+* a Protempa data source backend for reading data from an i2b2 database.
+* a Protempa knowledge source backend for fetching clinical concepts from an i2b2 ontology cell.
 
 ## Version 3 development series
-
+Version 3 is primarily focused around performance improvements.
 
 ## Version history
 ### Version 2.4.1
