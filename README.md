@@ -36,7 +36,7 @@ The project uses the maven build tool. Typically, you build it by invoking `mvn 
 </dependency>
 ```
 
-## Using it
+## Installation
 Put the `aiw-i2b2-etl` jarfile and its dependencies in the classpath, and Protempa will automatically register the data source backend and knowledge source backend.
 
 ### Additional i2b2 destination installation
@@ -57,7 +57,7 @@ The i2b2 destination requires adding stored procedures to the i2b2 metadata sche
 
 ### Additional i2b2 knowledge source backend installation
 
-### Examples
+## Using it
 Here is an example:
 ```
 import org.protempa.SourceFactory;
