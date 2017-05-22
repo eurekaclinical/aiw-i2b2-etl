@@ -68,10 +68,11 @@ See the [eurekaclinical-ontology](https://github.com/eurekaclinical/eurekaclinic
 * `databaseId`: a JDBC URL or a JNDI URL for connecting to the i2b2 metadata schema.
 * `username`: for JDBC URLs, a database username.
 * `password`: for JDBC URLs, a database password.
+* `targetTable`: the name of the metadata table that contains computed temporal sequences.
 
 #### `edu.emory.cci.aiw.i2b2etl.dsb.I2b2DataSourceBackend`
 * `databaseAPI`: `DRIVERMANAGER` or `DATASOURCE` depending on whether the `databaseId` property contains a JDBC URL or a JNDI URL, respectively.
-* `databaseId`: a JDBC URL or a JNDI URL for connecting to the i2b2 metadata schema.
+* `databaseId`: a JDBC URL or a JNDI URL for connecting to the i2b2 data schema.
 * `username`: for JDBC URLs, a database username.
 * `password`: for JDBC URLs, a database password.
 
