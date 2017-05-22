@@ -61,7 +61,21 @@ The i2b2 destination requires adding stored procedures to the i2b2 metadata sche
 See the [eurekaclinical-ontology](https://github.com/eurekaclinical/eurekaclinical-ontology) project's README for how to create an i2b2 metadata schema that the i2b2 knowledge source backend can read. Eureka! Clinical requires some extensions to the schema that i2b2 ships out of the box. The ontology project also contains Liquibase changelogs that install various common terminologies into such an i2b2 metadata schema.
 
 ## Using it
-Here is an example:
+
+### Configuration
+#### `edu.emory.cci.aiw.i2b2etl.ksb.I2b2KnowledgeSourceBackend`
+* `databaseApi`: `DRIVERMANAGER` or `DATASOURCE` depending on whether the `databaseId` property contains a JDBC URL or a JNDI URL, respectively.
+* `databaseId`: a JDBC URL or a JNDI URL for connecting to the i2b2 metadata schema.
+* `username`: for JDBC URLs, a database username.
+* `password`: for JDBC URLs, a database password.
+
+#### `edu.emory.cci.aiw.i2b2etl.dsb.I2b2DataSourceBackend`
+* `databaseAPI`: `DRIVERMANAGER` or `DATASOURCE` depending on whether the `databaseId` property contains a JDBC URL or a JNDI URL, respectively.
+* `databaseId`: a JDBC URL or a JNDI URL for connecting to the i2b2 metadata schema.
+* `username`: for JDBC URLs, a database username.
+* `password`: for JDBC URLs, a database password.
+
+### Examples
 ```
 import org.protempa.SourceFactory;
 import org.protempa.backend.Configurations;
