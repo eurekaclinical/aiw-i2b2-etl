@@ -91,7 +91,24 @@ try (Protempa protempa = Protempa.newInstance(sourceFactory)) {
 }
 ```
 
-This Protempa destination loads data into i2b2 directly into its data schema rather than through its web services APIs for performance.
+The `protempa-config.ini` might contain the following sections for configuring the i2b2 data source backend and knowledge source backend:
+```
+[edu.emory.cci.aiw.i2b2etl.dsb.I2B2DataSourceBackend]
+dataSourceBackendId=HIVE
+databaseId = JDBC URL for the data schema
+username = username with privileges to read the data schema
+password = data schema user's password
+schemaName = name of the data schema
+
+[edu.emory.cci.aiw.i2b2etl.ksb.I2b2KnowledgeSourceBackend]
+databaseAPI = DATASOURCE # any setters in the implementation that have the @BackendProperty annotation.
+databaseId = java:/comp/env/jdbc/I2b2KS
+targetTable = EUREKAPHENOTYPEONTOLOGY
+
+[org.protempa.backend.asb.java.JavaAlgorithmBackend]
+```
+
+The i2b2 Protempa destination loads data into i2b2 directly into its data schema rather than through its web services APIs for performance.
 
 ## License
 Unlike other Eureka! Clinical projects, this one is available under [GNU General Public License version 3](http://www.gnu.org/licenses/gpl-3.0-standalone.html) due to the licensing of the Neo4j libraries on which this project depends.
