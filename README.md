@@ -108,5 +108,5 @@ targetTable = EUREKAPHENOTYPEONTOLOGY
 [org.protempa.backend.asb.java.JavaAlgorithmBackend]
 ```
 
-The i2b2 Protempa destination loads data into i2b2 directly into its data schema rather than through its web services APIs for performance.
+The i2b2 data and knowledge source backends read data directly from i2b2's database schemas rather than through its web services APIs for performance. Similarly, the i2b2 Protempa destination loads data into i2b2 directly into its data schema rather than through its web services APIs for performance.
 
