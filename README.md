@@ -75,7 +75,7 @@ See the [eurekaclinical-ontology](https://github.com/eurekaclinical/eurekaclinic
 * `databaseId`: a JDBC URL or a JNDI URL for connecting to the i2b2 data schema.
 * `username`: for JDBC URLs, a database username.
 * `password`: for JDBC URLs, a database password.
-* `schemaName`: the name of the data schema to query. If not specified, the schema that will be queried will be database dependent. Typically, the database will query the user's default schema.
+* `schemaName`: the name of the data schema to query. If specified, the schema name will be included in queries. If not specified, no schema name will be specified, and the schema that will be queried will be database dependent. Typically, the database will query the user's default schema.
 
 ### Examples
 ```
