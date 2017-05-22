@@ -62,7 +62,7 @@ See the [eurekaclinical-ontology](https://github.com/eurekaclinical/eurekaclinic
 
 ## Using it
 
-### Configuration
+### Backend configuration
 #### `edu.emory.cci.aiw.i2b2etl.ksb.I2b2KnowledgeSourceBackend`
 * `databaseApi`: `DRIVERMANAGER` or `DATASOURCE` depending on whether the `databaseId` property contains a JDBC URL or a JNDI URL, respectively.
 * `databaseId`: a JDBC URL or a JNDI URL for connecting to the i2b2 metadata schema.
