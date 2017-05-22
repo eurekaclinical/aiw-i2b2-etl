@@ -94,7 +94,7 @@ try (Protempa protempa = Protempa.newInstance(sourceFactory)) {
 The `protempa-config.ini` might contain the following sections for configuring the i2b2 data source backend and knowledge source backend:
 ```
 [edu.emory.cci.aiw.i2b2etl.dsb.I2B2DataSourceBackend]
-dataSourceBackendId=HIVE
+dataSourceBackendId=Unique identifier for this i2b2 repository
 databaseId = JDBC URL for the data schema
 username = username with privileges to read the data schema
 password = data schema user's password
@@ -110,3 +110,5 @@ targetTable = EUREKAPHENOTYPEONTOLOGY
 
 The i2b2 data and knowledge source backends read data directly from i2b2's database schemas rather than through its web services APIs for performance. Similarly, the i2b2 Protempa destination loads data into i2b2 directly into its data schema rather than through its web services APIs for performance.
 
+## Developer documentation
+[Javadoc for latest development release](http://javadoc.io/doc/org.eurekaclinical/aiw-i2b2-etl) [![Javadocs](http://javadoc.io/badge/org.eurekaclinical/aiw-i2b2-etl.svg)](http://javadoc.io/doc/org.eurekaclinical/aiw-i2b2-etl)
