@@ -11,6 +11,8 @@ This project provides:
 See the Protempa project's README for more details on Protempa's architecture.
 
 ## Version 3 development series
+Latest release: [![Latest release](https://maven-badges.herokuapp.com/maven-central/org.eurekaclinical/aiw-i2b2-etl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.eurekaclinical/aiw-i2b2-etl)
+
 Version 3 is primarily focused around performance improvements.
 
 ## Version history
