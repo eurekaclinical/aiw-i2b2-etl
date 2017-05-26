@@ -23,8 +23,8 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
+import java.util.Collection;
 import org.arp.javautil.sql.ConnectionSpec;
-import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.PropositionDefinition;
 
@@ -34,13 +34,13 @@ import org.protempa.PropositionDefinition;
  */
 public final class MetadataFactory {
 
-    public Metadata getInstance(String sourceSystemCode, KnowledgeSourceCache cache, KnowledgeSource knowledgeSource,
+    public Metadata getInstance(Collection<PropositionDefinition> propDefs, String sourceSystemCode, KnowledgeSourceCache cache,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
             Data dataSection, ConnectionSpec metaConnectionSpec) throws OntologyBuildException {
-        Metadata result = new Metadata(sourceSystemCode, cache, 
-                knowledgeSource, userDefinedPropositionDefinitions,
+        Metadata result = new Metadata(propDefs, sourceSystemCode, cache, 
+                userDefinedPropositionDefinitions,
                 folderSpecs, settings, dataSection, metaConnectionSpec);
         result.init();
         return result;

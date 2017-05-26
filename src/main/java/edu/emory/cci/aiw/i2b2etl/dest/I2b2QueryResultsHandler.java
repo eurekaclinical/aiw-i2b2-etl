@@ -317,7 +317,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             this.conceptDimensionHandler = new ConceptDimensionHandler(dataConnectionSpec);
             this.modifierDimensionHandler = new ModifierDimensionHandler(dataConnectionSpec);
             this.cache = new KnowledgeSourceCacheFactory().getInstance(this.knowledgeSource, propDefs, true);
-            this.metadata = new MetadataFactory().getInstance(this.qrhId, this.cache, knowledgeSource, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.metadataConnectionSpec);
+            this.metadata = new MetadataFactory().getInstance(propDefs, this.qrhId, this.cache, collectUserPropositionDefinitions(), this.conceptsSection.getFolderSpecs(), settings, this.data, this.metadataConnectionSpec);
             this.providerDimensionFactory = new ProviderDimensionFactory(this.metadata, this.settings, this.dataConnectionSpec);
             this.patientDimensionFactory = new PatientDimensionFactory(this.metadata, this.settings, this.data, this.dataConnectionSpec);
             this.visitDimensionFactory = new VisitDimensionFactory(this.metadata, this.settings, this.data, this.dataConnectionSpec);

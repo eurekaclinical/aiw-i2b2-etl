@@ -31,11 +31,14 @@ import edu.emory.cci.aiw.i2b2etl.ksb.TableAccessReader;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryConstructor;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryExecutor;
 import edu.emory.cci.aiw.i2b2etl.ksb.ResultSetReader;
+import edu.emory.cci.aiw.i2b2etl.ksb.UniqueIdTempTableHandler;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +58,7 @@ import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
 import org.protempa.proposition.value.Value;
+import org.protempa.query.Query;
 
 /**
  * Maintains the concepts for the data being loaded into i2b2. The 
@@ -80,6 +84,7 @@ public final class Metadata {
     private final List<Concept> modifierRoots;
     private List<Concept> allRoots;
     private ConnectionSpec metaConnectionSpec;
+    private Collection<PropositionDefinition> propDefs;
 
     /**
      *
@@ -88,21 +93,20 @@ public final class Metadata {
      * necessary, to 50 characters to fit into the i2b2 database tables. Cannot
      * be <code>null</code>.
      * @param cache
-     * @param knowledgeSource
      * @param userDefinedPropositionDefinitions
      * @param folderSpecs
      * @param settings
      * @param dataSection
-     * @param metaConnectionSpec connection information for the i2b2 metadata 
+     * @param metaConnectionSpec connection information for the i2b2 metadata
      * schema, or <code>null</code> to disable writing to the metadata schema.
      */
-    Metadata(String sourceSystemCode, KnowledgeSourceCache cache, KnowledgeSource knowledgeSource,
+    Metadata(Collection<PropositionDefinition> propDefs, String sourceSystemCode, KnowledgeSourceCache cache,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
             Data dataSection, ConnectionSpec metaConnectionSpec) {
-        if (knowledgeSource == null) {
-            throw new IllegalArgumentException("knowledgeSource cannot be null");
+        if (propDefs == null) {
+            throw new IllegalArgumentException("propDefs cannot be null");
         }
         if (dataSection == null) {
             throw new IllegalArgumentException("dataSource cannot be null");
@@ -130,8 +134,9 @@ public final class Metadata {
         this.settings = settings;
         this.dataSection = dataSection;
         this.folderSpecs = folderSpecs.clone();
+        this.propDefs = propDefs;
     }
-    
+
     void init() throws OntologyBuildException {
         this.allRoots = new ArrayList<>();
         String rootNodeDisplayName = settings.getRootNodeName();
@@ -147,7 +152,7 @@ public final class Metadata {
             this.conceptRoot.setSourceSystemCode(this.sourceSystemCode);
             this.allRoots.add(this.conceptRoot);
         }
-        
+
         this.providerConceptTreeBuilder = new ProviderConceptTreeBuilder(this);
         try {
             constructTreePre();
@@ -170,10 +175,10 @@ public final class Metadata {
         assert !this.allRoots.contains(null) : "Null root concepts! " + this.allRoots;
         setI2B2PathsToConcepts();
     }
-    
+
     /**
      * Returns connection information for the i2b2 metadata schema.
-     * 
+     *
      * @return connection information for the i2b2 metadata schema, or
      * <code>null</code> if no metadata schema connection information was
      * provided in the destination configuration.
@@ -390,7 +395,7 @@ public final class Metadata {
             }
         }
     }
-    
+
     private static final QueryConstructor ALL_CONCEPTS_QUERY = new QueryConstructor() {
 
         @Override
@@ -399,28 +404,59 @@ public final class Metadata {
             sql.append(table);
         }
     };
+    
+    private static final QueryConstructor ALL_CONCEPTS_QUERY_WITH_TMP = new QueryConstructor() {
+
+        @Override
+        public void appendStatement(StringBuilder sql, String table) {
+            sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
+            sql.append(table);
+            sql.append(" A1 JOIN EK_TEMP_UNIQUE_IDS A2 ON (A1.EK_UNIQUE_ID=A2.UNIQUE_ID)");
+        }
+    };
 
     private void setI2B2PathsToConcepts() throws OntologyBuildException {
         Map<String, List<String>> result;
         if (this.metaConnectionSpec != null) {
-            try (QueryExecutor qe = new QueryExecutor(this.metaConnectionSpec.getOrCreate(), ALL_CONCEPTS_QUERY, new TableAccessReader(this.metaConnectionSpec.getDatabaseProduct(), this.settings.getMetaTableName()))) {
-                result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
-
-                    @Override
-                    public Map<String, List<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
-                        Map<String, List<String>> result = new HashMap<>();
-                        if (rs != null) {
-                            try {
-                                while (rs.next()) {
-                                    Collections.putList(result, rs.getString(1), rs.getString(2));
-                                }
-                            } catch (SQLException ex) {
-                                throw new KnowledgeSourceReadException(ex);
-                            }
+            boolean allAlreadyLoaded = true;
+            for (FolderSpec folderSpec : this.folderSpecs) {
+                if (!folderSpec.isAlreadyLoaded()) {
+                    allAlreadyLoaded = false;
+                    break;
+                }
+            }
+            //if allAlreadyLoaded, just pull the concepts that we're querying?
+            try (Connection connection = this.metaConnectionSpec.getOrCreate()) {
+                QueryConstructor theQuery;
+                if (allAlreadyLoaded) {
+                    try (UniqueIdTempTableHandler tmp = new UniqueIdTempTableHandler(this.metaConnectionSpec.getDatabaseProduct(), connection)) {
+                        for (PropositionDefinition pd : this.propDefs) {
+                            tmp.insert(pd.getId());
                         }
-                        return result;
                     }
-                });
+                    theQuery = ALL_CONCEPTS_QUERY_WITH_TMP;
+                } else {
+                    theQuery = ALL_CONCEPTS_QUERY;
+                }
+                try (QueryExecutor qe = new QueryExecutor(connection, theQuery, new TableAccessReader(this.metaConnectionSpec.getDatabaseProduct(), this.settings.getMetaTableName()))) {
+                    result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
+
+                        @Override
+                        public Map<String, List<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
+                            Map<String, List<String>> result = new HashMap<>();
+                            if (rs != null) {
+                                try {
+                                    while (rs.next()) {
+                                        Collections.putList(result, rs.getString(1), rs.getString(2));
+                                    }
+                                } catch (SQLException ex) {
+                                    throw new KnowledgeSourceReadException(ex);
+                                }
+                            }
+                            return result;
+                        }
+                    });
+                }
             } catch (KnowledgeSourceReadException | SQLException ex) {
                 throw new OntologyBuildException(ex);
             }
