@@ -18,7 +18,7 @@
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-        <protempa.version>4.0-Alpha-15</protempa.version>
+        <protempa.version>4.0-Alpha-18</protempa.version>
     </properties>
     
     <scm>
