@@ -19,6 +19,7 @@
     
     <properties>
         <protempa.version>4.0-Alpha-18</protempa.version>
+        <eurekaclinical-ontology-version>2.0-Beta-3</eurekaclinical-ontology-version>
     </properties>
     
     <scm>
@@ -95,7 +96,7 @@
         <dependency>
             <groupId>org.eurekaclinical</groupId>
             <artifactId>eurekaclinical-ontology</artifactId>
-            <version>1.0</version>
+            <version>${eurekaclinical-ontology-version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
