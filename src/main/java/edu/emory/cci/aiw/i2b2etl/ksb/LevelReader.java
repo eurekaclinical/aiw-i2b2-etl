@@ -22,7 +22,6 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -63,33 +62,7 @@ class LevelReader {
                             childTempTableHandler.insert(propDef.getId());
                         }
                     }
-
-                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, (StringBuilder sql, String table) -> {
-                        String ekIdCol = querySupport.getEurekaIdColumn();
-                        sql.append("SELECT A2.").append(ekIdCol).append(", A1.").append(ekIdCol).append(" FROM ");
-                        sql.append(table);
-                        sql.append(" A1 JOIN ");
-                        sql.append(table);
-                        sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
-                    }, tableAccessReader)) {
-                        queryExecutor.execute((ResultSet rs) -> {
-                            Map<String, Set<String>> result = new HashMap<>();
-                            if (rs != null) {
-                                try {
-                                    while (rs.next()) {
-                                        putSet(result, rs.getString(1), rs.getString(2));
-                                    }
-                                } catch (SQLException ex) {
-                                    throw new KnowledgeSourceReadException(ex);
-                                }
-                                for (Map.Entry<String, Set<String>> me : result.entrySet()) {
-                                    action.execute(propIdToPropDef.get(me.getKey()), me.getValue());
-                                }
-                            }
-                            return null;
-                        });
-
-                    }
+                    doReadChildren(connection, tableAccessReader, action, propIdToPropDef);
                     connection.commit();
                 } catch (SQLException ex) {
                     try {
@@ -102,6 +75,41 @@ class LevelReader {
             } catch (InvalidConnectionSpecArguments | SQLException ex) {
                 throw new KnowledgeSourceReadException(ex);
             }
+        }
+    }
+
+    void readChildrenFromDatabase(Map<String, ? extends PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader, ReadChildrenAction action, Connection connection) throws KnowledgeSourceReadException {
+        if (propIdToPropDef != null && !propIdToPropDef.isEmpty()) {
+            doReadChildren(connection, tableAccessReader, action, propIdToPropDef);
+        }
+    }
+
+    private void doReadChildren(final Connection connection, TableAccessReader tableAccessReader, ReadChildrenAction action, Map<String, ? extends PropositionDefinition> propIdToPropDef) throws KnowledgeSourceReadException {
+        try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstance(connection, (StringBuilder sql, String table) -> {
+            String ekIdCol = querySupport.getEurekaIdColumn();
+            sql.append("SELECT A2.").append(ekIdCol).append(", A1.").append(ekIdCol).append(" FROM ");
+            sql.append(table);
+            sql.append(" A1 JOIN ");
+            sql.append(table);
+            sql.append(" A2 ON (A1.C_PATH=A2.C_FULLNAME) JOIN EK_TEMP_UNIQUE_IDS A3 ON (A3.UNIQUE_ID=A2.").append(ekIdCol).append(") WHERE A2.M_APPLIED_PATH='@' and A1.C_SYNONYM_CD='N' and A2.C_SYNONYM_CD='N'");
+        }, tableAccessReader)) {
+            queryExecutor.execute((ResultSet rs) -> {
+                Map<String, Set<String>> result = new HashMap<>();
+                if (rs != null) {
+                    try {
+                        while (rs.next()) {
+                            putSet(result, rs.getString(1), rs.getString(2));
+                        }
+                    } catch (SQLException ex) {
+                        throw new KnowledgeSourceReadException(ex);
+                    }
+                    for (Map.Entry<String, Set<String>> me : result.entrySet()) {
+                        action.execute(propIdToPropDef.get(me.getKey()), me.getValue());
+                    }
+                }
+                return null;
+            });
+
         }
     }
 

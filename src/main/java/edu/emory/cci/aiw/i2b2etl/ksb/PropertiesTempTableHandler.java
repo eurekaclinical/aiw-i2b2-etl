@@ -23,6 +23,8 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.arp.javautil.sql.DatabaseProduct;
 import org.protempa.KnowledgeSourceReadException;
 
@@ -31,6 +33,8 @@ import org.protempa.KnowledgeSourceReadException;
  * @author Andrew Post
  */
 class PropertiesTempTableHandler {
+    
+    private static final Logger LOGGER = Logger.getLogger(PropertiesTempTableHandler.class.getName());
 
     private final Connection connection;
     private final String statement;
@@ -38,7 +42,8 @@ class PropertiesTempTableHandler {
     PropertiesTempTableHandler(QuerySupport querySupport, Connection connection, String table, String eurekaIdColumn) throws SQLException, KnowledgeSourceReadException {
         this.connection = connection;
         
-        this.statement = "INSERT INTO ek_temp_properties (SELECT " + eurekaIdColumn + ", M_APPLIED_PATH, DECLARING_CONCEPT_ID, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM" +
+        this.statement = "INSERT INTO ek_temp_properties (EK_UNIQUE_ID, M_APPLIED_PATH, DECLARING_CONCEPT_ID, C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML) " +
+        "(SELECT " + eurekaIdColumn + ", M_APPLIED_PATH, DECLARING_CONCEPT_ID, DISPLAYNAME C_NAME, VALUETYPE_CD, PROPERTYNAME, C_METADATAXML FROM" +
         " ((SELECT a2." + eurekaIdColumn + ", a2.M_APPLIED_PATH, a3." + eurekaIdColumn + " DECLARING_CONCEPT_ID, a2.C_NAME DISPLAYNAME, a2.VALUETYPE_CD, a2.C_BASECODE PROPERTYNAME, a2.C_METADATAXML FROM " +
         table +
         " a2 " +
@@ -56,14 +61,16 @@ class PropertiesTempTableHandler {
         "AND a3.c_hlevel > aa1.c_hlevel))" +
         " UNION ALL" +
         " (SELECT NULL, M_APPLIED_PATH, DECLARING_CONCEPT DECLARING_CONCEPT_ID, DISPLAYNAME, NULL, PROPERTYNAME, NULL " +
-        "FROM (SELECT DISTINCT a1.M_APPLIED_PATH, a2.DISPLAYNAME, a2.DECLARING_CONCEPT, NULL, a2.PROPERTYNAME FROM " +
+        "FROM (SELECT DISTINCT a1.M_APPLIED_PATH, a2.DISPLAYNAME, a2.DECLARING_CONCEPT, a2.PROPERTYNAME FROM " +
         table +
-        " a1 JOIN ek_modifier_interp a2 on (a1.c_basecode=a2.c_basecode and a1.C_SYNONYM_CD = 'N' and a1.c_metadataxml is null) JOIN " +
+        " a1 JOIN ek_modifier_interp a2 on (a1.c_basecode=a2.c_basecode and a1.C_SYNONYM_CD = 'N' and a1.m_applied_path <> '@' and a1.c_metadataxml is null) JOIN " +
         table + 
         " a3 on (a2.declaring_concept=a3.ek_unique_id AND a3.c_fullname LIKE a1.m_applied_path " +
         (querySupport.getDatabaseProduct() == DatabaseProduct.POSTGRESQL ? "ESCAPE '' " : "") +
-        "and a3.c_synonym_cd='N') " + 
+        "and a3.c_synonym_cd='N' and a3.m_applied_path = '@') " + 
         ") U0)) U1)";
+        
+        LOGGER.log(Level.FINE, "Created query {0}", this.statement);
     }
     
     void execute() throws SQLException {

@@ -63,7 +63,6 @@ class ValueMetadataSupport {
         if (clob != null) {
             try (Reader r = new StringReader(clob)) {
                 xmlReader.parse(new InputSource(r));
-                clob = null;
             } catch (SAXException | IOException sqle) {
                 throw new KnowledgeSourceReadException(sqle);
             }

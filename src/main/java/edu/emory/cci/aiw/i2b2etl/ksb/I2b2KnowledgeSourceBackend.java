@@ -1937,76 +1937,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         childTempTableHandler.insert(propId);
                     }
                 }
-
-                ResultSetReader<Map<PropositionDefinition, Map<String, PropertyDefinition>>> reader = (ResultSet rs) -> {
-                    Map<PropositionDefinition, Map<String, PropertyDefinition>> result = new HashMap<>();
-                    if (rs != null) {
-                        try {
-                            PropertyDefinitionFactory propertyDefinitionFactory = new PropertyDefinitionFactory();
-                            while (rs.next()) {
-                                String declaringConceptSymbol = rs.getString(5);
-                                String conceptSymbol = rs.getString(4);
-                                String symbol = rs.getString(3);
-                                String name = rs.getString(1); // the display name
-                                if (name == null) {
-                                    throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
-                                }
-                                String clob = rs.getString(6);
-                                PropositionDefinition propDef = propIdToPropDef.get(conceptSymbol);
-                                Map<String, PropertyDefinition> m = result.get(propDef);
-                                if (m == null) {
-                                    m = new HashMap<>();
-                                    result.put(propDef, m);
-                                }
-                                if (!m.containsKey(symbol)) {
-                                    m.put(symbol, propertyDefinitionFactory.getPropertyDefinitionInstance(clob, declaringConceptSymbol, symbol, conceptSymbol, name));
-                                }
-                            }
-                        } catch (SQLException | SAXParseException ex) {
-                            throw new KnowledgeSourceReadException(ex);
-                        }
-                    }
-                    return result;
-                };
-                PropertiesTempTableHandler.createTempTableIfNeeded(connection, this.querySupport.getDatabaseProduct());
-                try (Statement stmt = connection.createStatement();
-                        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM EK_TEMP_PROPERTIES")) {
-                    if (rs.next() && rs.getInt(1) == 0) {
-                        TableAccessReader localTableAccessReader = this.querySupport.getTableAccessReaderBuilder().build();
-                        for (String table : localTableAccessReader.read(connection)) {
-                            /*
-                             * Getting temp space full errors with one query, so split it into one query per metadata table.
-                             */
-                            PropertiesTempTableHandler childTempTableHandler = new PropertiesTempTableHandler(this.querySupport, connection, table, this.querySupport.getEurekaIdColumn());
-                            childTempTableHandler.execute();
-                        }
-                    }
-                }
-
-                QueryConstructor qc;
-                switch (this.querySupport.getDatabaseProduct()) {
-                    case ORACLE:
-                        qc = READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL;
-                        break;
-                    case POSTGRESQL:
-                        qc = READ_ALL_PROPERTIES_CONSTRUCTOR_POSTGRESQL;
-                        break;
-                    default:
-                        qc = READ_ALL_PROPERTIES_CONSTRUCTOR;
-                }
-                for (String table : tableAccessReader.read(connection)) {
-                    try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByTables(connection, qc, table)) {
-                        for (Map.Entry<PropositionDefinition, Map<String, PropertyDefinition>> me : queryExecutor.execute(reader).entrySet()) {
-                            PropositionDefinition pd = me.getKey();
-                            if (pd != null) {
-                                Map<String, PropertyDefinition> value = me.getValue();
-                                if (value != null) {
-                                    ((AbstractPropositionDefinition) pd).setPropertyDefinitions(value.values().toArray(new PropertyDefinition[value.size()]));
-                                }
-                            }
-                        }
-                    }
-                }
+                doPopulateProperties(propIdToPropDef, connection, tableAccessReader);
                 connection.commit();
             } catch (SQLException ex) {
                 connection.rollback();
@@ -2014,6 +1945,86 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
         } catch (InvalidConnectionSpecArguments | SQLException ex) {
             throw new KnowledgeSourceReadException(ex);
+        }
+    }
+
+    void populateProperties(Map<String, ? extends PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader, Connection connection) throws KnowledgeSourceReadException {
+        try {
+            doPopulateProperties(propIdToPropDef, connection, tableAccessReader);
+        } catch (SQLException ex) {
+            throw new KnowledgeSourceReadException(ex);
+        }
+    }
+
+    private void doPopulateProperties(Map<String, ? extends PropositionDefinition> propIdToPropDef, final Connection connection, TableAccessReader tableAccessReader) throws SQLException, KnowledgeSourceReadException {
+        ResultSetReader<Map<PropositionDefinition, Map<String, PropertyDefinition>>> reader = (ResultSet rs) -> {
+            Map<PropositionDefinition, Map<String, PropertyDefinition>> result = new HashMap<>();
+            if (rs != null) {
+                try {
+                    PropertyDefinitionFactory propertyDefinitionFactory = new PropertyDefinitionFactory();
+                    while (rs.next()) {
+                        String declaringConceptSymbol = rs.getString(5);
+                        String conceptSymbol = rs.getString(4);
+                        String symbol = rs.getString(3);
+                        String name = rs.getString(1); // the display name
+                        if (name == null) {
+                            throw new KnowledgeSourceReadException("Null property symbol for concept " + symbol);
+                        }
+                        String clob = rs.getString(6);
+                        PropositionDefinition propDef = propIdToPropDef.get(conceptSymbol);
+                        Map<String, PropertyDefinition> m = result.get(propDef);
+                        if (m == null) {
+                            m = new HashMap<>();
+                            result.put(propDef, m);
+                        }
+                        if (!m.containsKey(symbol)) {
+                            m.put(symbol, propertyDefinitionFactory.getPropertyDefinitionInstance(clob, declaringConceptSymbol, symbol, conceptSymbol, name));
+                        }
+                    }
+                } catch (SQLException | SAXParseException ex) {
+                    throw new KnowledgeSourceReadException(ex);
+                }
+            }
+            return result;
+        };
+        PropertiesTempTableHandler.createTempTableIfNeeded(connection, this.querySupport.getDatabaseProduct());
+        try (Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM EK_TEMP_PROPERTIES")) {
+            if (rs.next() && rs.getInt(1) == 0) {
+                TableAccessReader localTableAccessReader = this.querySupport.getTableAccessReaderBuilder().build();
+                for (String table : localTableAccessReader.read(connection)) {
+                    /*
+                     * Getting temp space full errors with one query, so split it into one query per metadata table.
+                     */
+                    PropertiesTempTableHandler childTempTableHandler = new PropertiesTempTableHandler(this.querySupport, connection, table, this.querySupport.getEurekaIdColumn());
+                    childTempTableHandler.execute();
+                }
+            }
+        }
+
+        QueryConstructor qc;
+        switch (this.querySupport.getDatabaseProduct()) {
+            case ORACLE:
+                qc = READ_ALL_PROPERTIES_CONSTRUCTOR_ORCL;
+                break;
+            case POSTGRESQL:
+                qc = READ_ALL_PROPERTIES_CONSTRUCTOR_POSTGRESQL;
+                break;
+            default:
+                qc = READ_ALL_PROPERTIES_CONSTRUCTOR;
+        }
+        for (String table : tableAccessReader.read(connection)) {
+            try (QueryExecutor queryExecutor = this.querySupport.getQueryExecutorInstanceRestrictByTables(connection, qc, table)) {
+                for (Map.Entry<PropositionDefinition, Map<String, PropertyDefinition>> me : queryExecutor.execute(reader).entrySet()) {
+                    PropositionDefinition pd = me.getKey();
+                    if (pd != null) {
+                        Map<String, PropertyDefinition> value = me.getValue();
+                        if (value != null) {
+                            ((AbstractPropositionDefinition) pd).setPropertyDefinitions(value.values().toArray(new PropertyDefinition[value.size()]));
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -2025,11 +2036,19 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         });
     }
 
+    void populateChildren(Map<String, ? extends PropositionDefinition> propIdToPropDef, TableAccessReader tableAccessReader, Connection connection) throws KnowledgeSourceReadException {
+        this.querySupport.getLevelReader().readChildrenFromDatabase(propIdToPropDef, tableAccessReader, (PropositionDefinition pd, Set<String> children) -> {
+            if (children != null && pd != null) {
+                ((AbstractPropositionDefinition) pd).setInverseIsA(children.toArray(new String[children.size()]));
+            }
+        }, connection);
+    }
+
     private final QueryConstructor READ_ALL_PROPERTIES_CONSTRUCTOR = new QueryConstructor() {
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A3.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
@@ -2041,7 +2060,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A3.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH ESCAPE '')");
@@ -2053,7 +2072,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
 
         @Override
         public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A1.C_METADATAXML FROM ");
+            sql.append("SELECT A1.C_NAME, A1.VALUETYPE_CD, A1.PROPERTYNAME, A3.").append(querySupport.getEurekaIdColumn()).append(", A1.DECLARING_CONCEPT_ID, A3.C_METADATAXML FROM ");
             sql.append(table);
             sql.append(" A3 JOIN EK_TEMP_UNIQUE_IDS A4 ON (A3.").append(querySupport.getEurekaIdColumn()).append("=A4.UNIQUE_ID AND A3.C_SYNONYM_CD  ='N' AND A3.M_APPLIED_PATH='@') JOIN ");
             sql.append("EK_TEMP_PROPERTIES A1 ON (A3.C_FULLNAME LIKE A1.M_APPLIED_PATH)");
@@ -2118,12 +2137,11 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                         try {
                             if (rs != null) {
                                 ValueMetadataParser valueMetadataParser = new ValueMetadataParser();
+                                Date accessed = new Date();
                                 while (rs.next()) {
-                                    TemporalPropositionDefinition abd = newTemporalPropositionDefinition(rs, new Date(), valueMetadataParser);
+                                    TemporalPropositionDefinition abd = newTemporalPropositionDefinition(rs, accessed, valueMetadataParser);
                                     resultMap.put(abd.getId(), abd);
                                 }
-                                populateChildren(resultMap, tableAccessReader);
-                                populateProperties(resultMap, tableAccessReader);
                             }
                             return null;
                         } catch (SQLException | SAXParseException ex) {
@@ -2141,6 +2159,28 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
         } catch (SQLException | InvalidConnectionSpecArguments ex) {
             throw new KnowledgeSourceReadException(ex);
+        }
+        if (!resultMap.isEmpty()) {
+            try (Connection connection = this.querySupport.getConnection()) {
+                try {
+                    try (UniqueIdTempTableHandler uniqIdTempTableHandler = new UniqueIdTempTableHandler(this.querySupport.getDatabaseProduct(), connection, false)) {
+                        for (PropositionDefinition pd : resultMap.values()) {
+                            uniqIdTempTableHandler.insert(pd.getId());
+                        }
+                    }
+                    populateChildren(resultMap, tableAccessReader, connection);
+                    populateProperties(resultMap, tableAccessReader, connection);
+                    connection.commit();
+                } catch (SQLException ex) {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException ignore) {
+                    }
+                    throw ex;
+                }
+            } catch (SQLException | InvalidConnectionSpecArguments ex) {
+                throw new KnowledgeSourceReadException(ex);
+            }
         }
 
         return resultMap.values();
