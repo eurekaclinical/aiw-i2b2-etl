@@ -1987,20 +1987,6 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             }
             return result;
         };
-        PropertiesTempTableHandler.createTempTableIfNeeded(connection, this.querySupport.getDatabaseProduct());
-        try (Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM EK_TEMP_PROPERTIES")) {
-            if (rs.next() && rs.getInt(1) == 0) {
-                TableAccessReader localTableAccessReader = this.querySupport.getTableAccessReaderBuilder().build();
-                for (String table : localTableAccessReader.read(connection)) {
-                    /*
-                     * Getting temp space full errors with one query, so split it into one query per metadata table.
-                     */
-                    PropertiesTempTableHandler childTempTableHandler = new PropertiesTempTableHandler(this.querySupport, connection, table, this.querySupport.getEurekaIdColumn());
-                    childTempTableHandler.execute();
-                }
-            }
-        }
 
         QueryConstructor qc;
         switch (this.querySupport.getDatabaseProduct()) {
