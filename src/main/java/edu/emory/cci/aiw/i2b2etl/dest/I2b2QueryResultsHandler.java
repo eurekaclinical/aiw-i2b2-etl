@@ -70,6 +70,7 @@ import org.protempa.query.Query;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -198,6 +199,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     private final Configuration configuration;
     private KnowledgeSourceCache cache;
     private List<? extends ProtempaEventListener> eventListeners;
+    private String dataSchemaName;
 
     /**
      * Creates a new query results handler that will use the provided
@@ -335,19 +337,14 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
             truncateTempTables();
             this.dataSchemaConnection = openDataDatabaseConnection();
 
+            this.dataSchemaName = this.dataSchemaConnection.getSchema();
+
             if (this.settings.getManageCTotalNum()) {
                 try (Connection conn = openMetadataDatabaseConnection()) {
-                    try (Statement stmt = conn.createStatement();
-                            ResultSet rs = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS")) {
-                        while (rs.next()) {
-                            String tableName = rs.getString(1);
-                            try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_CLEAR_C_TOTALNUM(?) }")) {
-                                logger.log(Level.INFO, "Clearing C_TOTALNUM for query {0}", this.query.getName());
-                                mappingCall.setString(1, tableName);
-                                mappingCall.execute();
-                                //commit and rollback are called by stored procedure.
-                            }
-                        }
+                    try (CallableStatement mappingCall = conn.prepareCall("{ call ECMETA.EC_CLEAR_C_TOTALNUM() }")) {
+                        logger.log(Level.INFO, "Clearing C_TOTALNUM for query {0}", this.query.getName());
+                        mappingCall.execute();
+                        //commit and rollback are called by stored procedure.
                     }
                 }
             }
@@ -852,26 +849,24 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         }
 
         if (exception == null && this.settings.getManageCTotalNum()) {
-            try (Connection conn = openMetadataDatabaseConnection()) {
-                conn.setAutoCommit(true);
-                try (Statement stmt = conn.createStatement();
-                        ResultSet rs = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS")) {
-                    while (rs.next()) {
-                        String tableName = rs.getString(1);
-                        try (CallableStatement mappingCall = conn.prepareCall("{ call EUREKA.EK_UPDATE_C_TOTALNUM(?) }")) {
-                            logger.log(Level.INFO, "Updating C_TOTALNUM for query {0}", this.query.getName());
-                            mappingCall.setString(1, tableName);
-                            mappingCall.execute();
-                            //commit and rollback are called by stored procedure.
-                        }
+            if (this.dataSchemaName != null) {
+                try (Connection conn = openMetadataDatabaseConnection()) {
+                    try (CallableStatement mappingCall = conn.prepareCall("{ call ECMETA.EC_UPDATE_C_TOTALNUM(?) }")) {
+                        logger.log(Level.INFO, "Updating C_TOTALNUM for query {0}", this.query.getName());
+                        mappingCall.setString(1, this.dataSchemaName);
+                        mappingCall.execute();
+                        //commit and rollback are called by stored procedure.
                     }
+                } catch (SQLException ex) {
+                    exception = ex;
                 }
-            } catch (SQLException ex) {
-                exception = ex;
+            } else {
+                logger.log(Level.WARNING, "Data schema is unknown, so could not update C_TOTALNUM");
             }
         }
 
-        if (exception != null) {
+        if (exception
+                != null) {
             logger.log(Level.SEVERE, "Load into i2b2 failed for query " + queryId, exception);
             throw new QueryResultsHandlerProcessingException("Load into i2b2 failed for query " + queryId, exception);
         }
@@ -1036,6 +1031,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "An error occurred truncating the tables for query " + queryId, ex);
             throw ex;
+
         }
     }
 
