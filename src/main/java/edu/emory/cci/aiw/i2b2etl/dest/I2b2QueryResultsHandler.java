@@ -341,10 +341,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
 
             if (this.settings.getManageCTotalNum()) {
                 try (Connection conn = openMetadataDatabaseConnection()) {
+                    conn.setAutoCommit(true);
                     try (CallableStatement mappingCall = conn.prepareCall("{ call ECMETA.EC_CLEAR_C_TOTALNUM() }")) {
                         logger.log(Level.INFO, "Clearing C_TOTALNUM for query {0}", this.query.getName());
                         mappingCall.execute();
-                        //commit and rollback are called by stored procedure.
                     }
                 }
             }
@@ -556,7 +556,6 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
                 call.setString(1, tempVisitTableName());
                 call.setInt(2, UPLOAD_ID);
                 call.execute();
-                //commit and rollback are called by the stored procedure.
             } catch (SQLException ex) {
                 exception = ex;
             }
@@ -851,11 +850,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         if (exception == null && this.settings.getManageCTotalNum()) {
             if (this.dataSchemaName != null) {
                 try (Connection conn = openMetadataDatabaseConnection()) {
+                    conn.setAutoCommit(true);
                     try (CallableStatement mappingCall = conn.prepareCall("{ call ECMETA.EC_UPDATE_C_TOTALNUM(?) }")) {
                         logger.log(Level.INFO, "Updating C_TOTALNUM for query {0}", this.query.getName());
                         mappingCall.setString(1, this.dataSchemaName);
                         mappingCall.execute();
-                        //commit and rollback are called by stored procedure.
                     }
                 } catch (SQLException ex) {
                     exception = ex;
