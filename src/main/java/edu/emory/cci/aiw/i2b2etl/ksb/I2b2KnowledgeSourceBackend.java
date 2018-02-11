@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import org.apache.commons.lang3.ArrayUtils;
@@ -42,7 +41,6 @@ import org.protempa.backend.annotations.BackendProperty;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -55,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.collections.Collections;
@@ -79,7 +76,6 @@ import org.protempa.proposition.value.BooleanValue;
 import org.protempa.proposition.value.NominalValue;
 import org.protempa.proposition.value.ValueType;
 import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLReader;
 
 /**
  * Implements using an <a href="http://www.i2b2.org">i2b2</a> metadata schema to
