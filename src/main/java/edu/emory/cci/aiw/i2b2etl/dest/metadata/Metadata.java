@@ -393,23 +393,19 @@ public final class Metadata {
         }
     }
 
-    private static final QueryConstructor ALL_CONCEPTS_QUERY = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
-            sql.append(table);
-        }
+    private static final QueryConstructor ALL_CONCEPTS_QUERY = (StringBuilder sql, String table) -> {
+        sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
+        sql.append(table);
     };
 
-    private static final QueryConstructor ALL_CONCEPTS_QUERY_WITH_TMP = new QueryConstructor() {
-
-        @Override
-        public void appendStatement(StringBuilder sql, String table) {
-            sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
-            sql.append(table);
-            sql.append(" A1 JOIN EK_TEMP_UNIQUE_IDS A2 ON (A1.EK_UNIQUE_ID=A2.UNIQUE_ID)");
-        }
+    private static final QueryConstructor ALL_CONCEPTS_QUERY_WITH_TMP = (StringBuilder sql, String table) -> {
+        sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
+        sql.append(table);
+        sql.append(" A1 JOIN EK_TEMP_UNIQUE_IDS A2 ON (A1.EK_UNIQUE_ID=A2.UNIQUE_ID) WHERE M_APPLIED_PATH = '@'");
+        sql.append(" UNION ALL ");
+        sql.append("SELECT DISTINCT EK_UNIQUE_ID, C_FULLNAME FROM ");
+        sql.append(table);
+        sql.append(" WHERE M_APPLIED_PATH <> '@'");
     };
 
     private void setI2B2PathsToConcepts() throws OntologyBuildException {
