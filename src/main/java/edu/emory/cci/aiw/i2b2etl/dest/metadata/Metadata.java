@@ -30,7 +30,6 @@ import edu.emory.cci.aiw.i2b2etl.dest.table.ProviderDimension;
 import edu.emory.cci.aiw.i2b2etl.ksb.TableAccessReader;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryConstructor;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryExecutor;
-import edu.emory.cci.aiw.i2b2etl.ksb.ResultSetReader;
 import edu.emory.cci.aiw.i2b2etl.ksb.UniqueIdTempTableHandler;
 
 import java.io.IOException;
@@ -53,12 +52,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.arp.javautil.arrays.Arrays;
 import org.arp.javautil.collections.Collections;
 import org.arp.javautil.sql.ConnectionSpec;
-import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
 import org.protempa.proposition.value.Value;
-import org.protempa.query.Query;
 
 /**
  * Maintains the concepts for the data being loaded into i2b2. The 
@@ -404,7 +401,7 @@ public final class Metadata {
             sql.append(table);
         }
     };
-    
+
     private static final QueryConstructor ALL_CONCEPTS_QUERY_WITH_TMP = new QueryConstructor() {
 
         @Override
@@ -428,34 +425,45 @@ public final class Metadata {
             //if allAlreadyLoaded, just pull the concepts that we're querying?
             try (Connection connection = this.metaConnectionSpec.getOrCreate()) {
                 QueryConstructor theQuery;
-                if (allAlreadyLoaded) {
-                    try (UniqueIdTempTableHandler tmp = new UniqueIdTempTableHandler(this.metaConnectionSpec.getDatabaseProduct(), connection)) {
-                        for (PropositionDefinition pd : this.propDefs) {
-                            tmp.insert(pd.getId());
+                try {
+                    if (allAlreadyLoaded) {
+                        try (UniqueIdTempTableHandler tmp = new UniqueIdTempTableHandler(this.metaConnectionSpec.getDatabaseProduct(), connection, false)) {
+                            for (PropositionDefinition pd : this.propDefs) {
+                                tmp.insert(pd.getId());
+                            }
                         }
+                        theQuery = ALL_CONCEPTS_QUERY_WITH_TMP;
+                    } else {
+                        theQuery = ALL_CONCEPTS_QUERY;
                     }
-                    theQuery = ALL_CONCEPTS_QUERY_WITH_TMP;
-                } else {
-                    theQuery = ALL_CONCEPTS_QUERY;
+                } catch (SQLException sqle) {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException ignore) {
+                    }
+                    throw sqle;
                 }
                 try (QueryExecutor qe = new QueryExecutor(connection, theQuery, new TableAccessReader(this.metaConnectionSpec.getDatabaseProduct(), this.settings.getMetaTableName()))) {
-                    result = qe.execute(new ResultSetReader<Map<String, List<String>>>() {
-
-                        @Override
-                        public Map<String, List<String>> read(ResultSet rs) throws KnowledgeSourceReadException {
-                            Map<String, List<String>> result = new HashMap<>();
-                            if (rs != null) {
-                                try {
-                                    while (rs.next()) {
-                                        Collections.putList(result, rs.getString(1), rs.getString(2));
-                                    }
-                                } catch (SQLException ex) {
-                                    throw new KnowledgeSourceReadException(ex);
+                    result = qe.execute((ResultSet rs) -> {
+                        Map<String, List<String>> result1 = new HashMap<>();
+                        if (rs != null) {
+                            try {
+                                while (rs.next()) {
+                                    Collections.putList(result1, rs.getString(1), rs.getString(2));
                                 }
+                            } catch (SQLException ex) {
+                                throw new KnowledgeSourceReadException(ex);
                             }
-                            return result;
                         }
+                        return result1;
                     });
+                    connection.commit();
+                } catch (KnowledgeSourceReadException | SQLException ksre) {
+                    try {
+                        connection.rollback();
+                    } catch (SQLException ignore) {
+                    }
+                    throw ksre;
                 }
             } catch (KnowledgeSourceReadException | SQLException ex) {
                 throw new OntologyBuildException(ex);
