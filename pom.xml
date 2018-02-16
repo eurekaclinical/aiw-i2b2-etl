@@ -12,14 +12,14 @@
     <parent>
         <groupId>org.eurekaclinical</groupId>
         <artifactId>eurekaclinical-parent-standard-deps</artifactId>
-        <version>2-Beta-4</version>
+        <version>2</version>
     </parent>
     
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-        <protempa.version>4.0-Beta-1</protempa.version>
-        <eurekaclinical-ontology-version>2.0-Beta-10</eurekaclinical-ontology-version>
+        <protempa.version>4.0</protempa.version>
+        <eurekaclinical-ontology-version>2.0</eurekaclinical-ontology-version>
     </properties>
     
     <scm>
