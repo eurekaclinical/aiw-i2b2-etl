@@ -10,10 +10,9 @@ This project provides the ability to read data and concepts from an [i2b2](http:
 
 See the Protempa project's README for more details on Protempa's architecture.
 
-## Version history
 Latest release: [![Latest release](https://maven-badges.herokuapp.com/maven-central/org.eurekaclinical/aiw-i2b2-etl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.eurekaclinical/aiw-i2b2-etl)
 
-### Version 3.0
+## Version 3.0
 Version 3 is primarily focused around performance improvements.
 
 ## Build requirements
