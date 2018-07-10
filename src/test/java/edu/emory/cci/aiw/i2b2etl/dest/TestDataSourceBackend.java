@@ -32,7 +32,6 @@ import org.protempa.backend.dsb.relationaldb.JDBCPositionFormat;
 import org.protempa.backend.dsb.relationaldb.JoinSpec;
 import org.protempa.backend.dsb.relationaldb.PropertySpec;
 import org.protempa.backend.dsb.relationaldb.ReferenceSpec;
-import org.protempa.backend.dsb.relationaldb.StagingSpec;
 import org.protempa.backend.dsb.relationaldb.mappings.Mappings;
 import org.protempa.backend.dsb.relationaldb.mappings.ResourceMappingsFactory;
 import org.protempa.proposition.value.AbsoluteTimeGranularity;
@@ -63,10 +62,6 @@ public final class TestDataSourceBackend extends RelationalDbDataSourceBackend {
         setDefaultKeyIdColumn("PATIENT_KEY");
         setDefaultKeyIdJoinKey("PATIENT_KEY");
         setMappingsFactory(new ResourceMappingsFactory("/etc/mappings/", getClass()));
-    }
-
-    protected StagingSpec[] stagedSpecs(String keyIdSchema, String keyIdTable, String keyIdColumn, String keyIdJoinKey) throws IOException {
-        return null;
     }
 
     @Override

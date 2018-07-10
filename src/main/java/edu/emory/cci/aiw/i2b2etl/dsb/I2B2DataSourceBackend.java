@@ -45,7 +45,6 @@ import org.protempa.backend.dsb.relationaldb.JoinSpec;
 import org.protempa.backend.dsb.relationaldb.PropertySpec;
 import org.protempa.backend.dsb.relationaldb.ReferenceSpec;
 import org.protempa.backend.dsb.relationaldb.RelationalDbDataSourceBackend;
-import org.protempa.backend.dsb.relationaldb.StagingSpec;
 import org.protempa.backend.dsb.relationaldb.mappings.DefaultMappings;
 import org.protempa.backend.dsb.relationaldb.mappings.Mappings;
 import org.protempa.proposition.value.AbsoluteTimeGranularity;
@@ -350,11 +349,6 @@ public final class I2B2DataSourceBackend extends RelationalDbDataSourceBackend {
     @Override
     protected EntitySpec[] primitiveParameterSpecs(String keyIdSchema, String keyIdTable, String keyIdColumn, String keyIdJoinKey) throws IOException {
         return new EntitySpec[0];
-    }
-
-    @Override
-    protected StagingSpec[] stagedSpecs(String keyIdSchema, String keyIdTable, String keyIdColumn, String keyIdJoinKey) throws IOException {
-        return new StagingSpec[0];
     }
 
     @Override
