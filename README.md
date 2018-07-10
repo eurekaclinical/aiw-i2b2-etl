@@ -12,6 +12,9 @@ See the Protempa project's README for more details on Protempa's architecture.
 
 Latest release: [![Latest release](https://maven-badges.herokuapp.com/maven-central/org.eurekaclinical/aiw-i2b2-etl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.eurekaclinical/aiw-i2b2-etl)
 
+## Version 4.0
+Updated Protempa version requirements.
+
 ## Version 3.0.1
 Depend on a range of Protempa versions that are backward compatible.
 
