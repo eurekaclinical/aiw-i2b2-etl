@@ -104,36 +104,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <configuration>
-                    <repositoryLayout>flat</repositoryLayout>
-                    <repositoryName>lib</repositoryName>
-                    <programs>
-                        <program>
-                            <mainClass>
-                                edu.emory.cci.aiw.i2b2etl.cli.I2B2ETL
-                            </mainClass>
-                            <name>aiw-i2b2-etl-run</name>
-                        </program>
-                        <program>
-                            <mainClass>
-                                edu.emory.cci.aiw.i2b2etl.cli.GatherStatistics
-                            </mainClass>
-                            <name>aiw-i2b2-etl-stats</name>
-                        </program>
-                    </programs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>assemble</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
