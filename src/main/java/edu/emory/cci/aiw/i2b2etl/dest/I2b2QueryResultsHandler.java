@@ -70,7 +70,6 @@ import org.protempa.query.Query;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -414,7 +413,10 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
     }
 
     @Override
-    public void handleQueryResult(String keyId, List<Proposition> propositions, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references) throws QueryResultsHandlerProcessingException {
+    public void handleQueryResult(String keyId, List<Proposition> propositions, 
+            Map<Proposition, Set<Proposition>> forwardDerivations, 
+            Map<Proposition, Set<Proposition>> backwardDerivations, 
+            Map<UniqueId, Proposition> references) throws QueryResultsHandlerProcessingException {
         Logger logger = I2b2ETLUtil.logger();
         logger.log(Level.FINER, "Loading patient into i2b2");
         try {
@@ -431,7 +433,11 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
         logger.log(Level.FINER, "Done loading patient into i2b2");
     }
 
-    private PatientDimension handlePatient(PatientDimension pd, String keyId, Proposition prop, Map<UniqueId, Proposition> references, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Set<Proposition> derivedPropositions) throws SQLException, InvalidConceptCodeException, InvalidFactException, InvalidPatientRecordException {
+    private PatientDimension handlePatient(PatientDimension pd, String keyId, 
+            Proposition prop, Map<UniqueId, Proposition> references, 
+            Map<Proposition, Set<Proposition>> forwardDerivations, 
+            Map<Proposition, Set<Proposition>> backwardDerivations, 
+            Set<Proposition> derivedPropositions) throws SQLException, InvalidConceptCodeException, InvalidFactException, InvalidPatientRecordException {
         if (pd == null) {
             pd = this.patientDimensionFactory.getInstance(keyId, prop, references);
         }

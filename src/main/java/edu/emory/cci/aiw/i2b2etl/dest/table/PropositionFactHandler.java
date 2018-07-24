@@ -99,8 +99,8 @@ public final class PropositionFactHandler extends FactHandler {
     public void handleRecord(PatientDimension patient, VisitDimension visit,
             ProviderDimension provider,
             Proposition encounterProp,
-            Map<Proposition, List<Proposition>> forwardDerivations,
-            Map<Proposition, List<Proposition>> backwardDerivations,
+            Map<Proposition, Set<Proposition>> forwardDerivations,
+            Map<Proposition, Set<Proposition>> backwardDerivations,
             Map<UniqueId, Proposition> references,
             Set<Proposition> derivedPropositions)
             throws InvalidFactException {

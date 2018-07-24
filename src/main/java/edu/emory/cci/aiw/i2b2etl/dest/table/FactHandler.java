@@ -25,7 +25,6 @@ import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ModifierConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.PropertyConceptId;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.arp.javautil.sql.ConnectionSpec;
@@ -105,7 +104,13 @@ public abstract class FactHandler extends AbstractFactHandler {
         }
     }
     
-    public abstract void handleRecord(PatientDimension patient, VisitDimension visit, ProviderDimension provider, Proposition encounterProp, Map<Proposition, List<Proposition>> forwardDerivations, Map<Proposition, List<Proposition>> backwardDerivations, Map<UniqueId, Proposition> references, Set<Proposition> derivedPropositions) throws InvalidFactException;
+    public abstract void handleRecord(PatientDimension patient, 
+            VisitDimension visit, ProviderDimension provider, 
+            Proposition encounterProp, 
+            Map<Proposition, Set<Proposition>> forwardDerivations, 
+            Map<Proposition, Set<Proposition>> backwardDerivations, 
+            Map<UniqueId, Proposition> references, 
+            Set<Proposition> derivedPropositions) throws InvalidFactException;
 
     protected ObservationFact populateObxFact(Proposition prop,
             Proposition encounterProp, PatientDimension patient,
