@@ -55,6 +55,7 @@ import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropositionDefinition;
+import org.protempa.PropositionDefinitionCache;
 import org.protempa.proposition.value.Value;
 
 /**
@@ -81,7 +82,7 @@ public final class Metadata {
     private final List<Concept> modifierRoots;
     private List<Concept> allRoots;
     private ConnectionSpec metaConnectionSpec;
-    private Collection<PropositionDefinition> propDefs;
+    private PropositionDefinitionCache propDefs;
 
     /**
      *
@@ -97,7 +98,7 @@ public final class Metadata {
      * @param metaConnectionSpec connection information for the i2b2 metadata
      * schema, or <code>null</code> to disable writing to the metadata schema.
      */
-    Metadata(Collection<PropositionDefinition> propDefs, String sourceSystemCode, KnowledgeSourceCache cache,
+    Metadata(PropositionDefinitionCache propDefs, String sourceSystemCode, KnowledgeSourceCache cache,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
@@ -424,7 +425,7 @@ public final class Metadata {
                 try {
                     if (allAlreadyLoaded) {
                         try (UniqueIdTempTableHandler tmp = new UniqueIdTempTableHandler(this.metaConnectionSpec.getDatabaseProduct(), connection, false)) {
-                            for (PropositionDefinition pd : this.propDefs) {
+                            for (PropositionDefinition pd : this.propDefs.getAll()) {
                                 tmp.insert(pd.getId());
                             }
                         }

@@ -74,7 +74,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -87,6 +86,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.protempa.DataSource;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceCacheFactory;
+import org.protempa.PropositionDefinitionCache;
 import org.protempa.ProtempaEvent;
 import org.protempa.ProtempaEventListener;
 import org.protempa.backend.dsb.DataSourceBackend;
@@ -312,7 +312,7 @@ public final class I2b2QueryResultsHandler extends AbstractQueryResultsHandler {
      * @throws QueryResultsHandlerProcessingException
      */
     @Override
-    public void start(Collection<PropositionDefinition> propDefs) throws QueryResultsHandlerProcessingException {
+    public void start(PropositionDefinitionCache propDefs) throws QueryResultsHandlerProcessingException {
         Logger logger = I2b2ETLUtil.logger();
         try {
             this.conceptDimensionHandler = new ConceptDimensionHandler(dataConnectionSpec);

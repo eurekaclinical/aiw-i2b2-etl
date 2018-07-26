@@ -23,10 +23,10 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.FolderSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
-import java.util.Collection;
 import org.arp.javautil.sql.ConnectionSpec;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.PropositionDefinition;
+import org.protempa.PropositionDefinitionCache;
 
 /**
  *
@@ -34,7 +34,7 @@ import org.protempa.PropositionDefinition;
  */
 public final class MetadataFactory {
 
-    public Metadata getInstance(Collection<PropositionDefinition> propDefs, String sourceSystemCode, KnowledgeSourceCache cache,
+    public Metadata getInstance(PropositionDefinitionCache propDefs, String sourceSystemCode, KnowledgeSourceCache cache,
             PropositionDefinition[] userDefinedPropositionDefinitions,
             FolderSpec[] folderSpecs,
             Settings settings,
