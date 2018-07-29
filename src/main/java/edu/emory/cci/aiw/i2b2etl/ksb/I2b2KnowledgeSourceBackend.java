@@ -88,12 +88,14 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private static final char DEFAULT_DELIMITER = '\t';
     private static final Properties visitPropositionProperties;
     private static final Properties patientAliasPropositionProperties;
+    private static final Properties careSitePropositionProperties;
     private static final Properties patientPropositionProperties;
     private static final Properties patientDetailsPropositionProperties;
     private static final Properties providerPropositionProperties;
     private final static String[] VALUE_TYPE_CDS = {"LAB", "DOC"};
     private static final String defaultPatientPropositionId;
     private static final String defaultPatientAliasPropositionId;
+    private static final String defaultCareSitePropositionId;
     private static final String defaultPatientDetailsPropositionId;
     private static final ValueSet defaultLanguagePropertyValueSet;
     private static final ValueSet defaultMaritalStatusPropertyValueSet;
@@ -116,6 +118,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
             patientPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientProposition.properties");
             visitPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/visitProposition.properties");
             patientAliasPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientAliasProposition.properties");
+            careSitePropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/careSiteProposition.properties");
             patientDetailsPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/patientDetailsProposition.properties");
             providerPropositionProperties = IOUtil.loadPropertiesFromResource(I2b2KnowledgeSourceBackend.class, "/providerProposition.properties");
         } catch (IOException ex) {
@@ -150,6 +153,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         defaultGenderPropertyValueSet = parseValueSet(patientDetailsPropositionProperties.getProperty("gender.valueSet.id"), patientDetailsPropositionProperties.getProperty("gender.valueSet.values"));
         defaultRacePropertyValueSet = parseValueSet(patientDetailsPropositionProperties.getProperty("race.valueSet.id"), patientDetailsPropositionProperties.getProperty("race.valueSet.values"));
         defaultPatientAliasPropositionId = patientAliasPropositionProperties.getProperty("propositionId");
+        defaultCareSitePropositionId = careSitePropositionProperties.getProperty("propositionId");
         defaultVisitPropositionId = visitPropositionProperties.getProperty("propositionId");
         defaultInoutPropertyValueSet = parseValueSet(visitPropositionProperties.getProperty("inout.valueSet.id"), visitPropositionProperties.getProperty("inout.valueSet.values"));
 
@@ -159,6 +163,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private QuerySupport querySupport;
     private String patientPropositionId;
     private String patientAliasPropositionId;
+    private String careSitePropositionId;
     private String patientDetailsPropositionId;
     private String visitPropositionId;
     private String providerPropositionId;
@@ -224,6 +229,7 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
     private String vitalStatusPropertyName;
     private final String patientDisplayName;
     private final String patientAliasDisplayName;
+    private final String careSiteDisplayName;
     private String patientDetailsDisplayName;
     private String visitDisplayName;
     private String visitIdPropertyName;
@@ -252,6 +258,9 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         this.patientAliasDisplayName = patientAliasPropositionProperties.getProperty("displayName");
         this.patientAliasPatientIdPropertyName = patientAliasPropositionProperties.getProperty("patientId.propertyName");
         this.patientAliasFieldNamePropertyName = patientAliasPropositionProperties.getProperty("fieldName.propertyName");
+        
+        this.careSitePropositionId = defaultCareSitePropositionId;
+        this.careSiteDisplayName = careSitePropositionProperties.getProperty("displayName");
 
         this.patientDetailsPropositionId = defaultPatientDetailsPropositionId;
         this.patientDetailsDisplayName = patientDetailsPropositionProperties.getProperty("displayName");
@@ -1210,6 +1219,8 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 results.add(newProviderPropositionDefinition());
             } else if (id.equals(this.patientAliasPropositionId)) {
                 results.add(newPatientAliasPropositionDefinition());
+            } else if (id.equals(this.careSitePropositionId)) {
+                results.add(newCareSitePropositionDefinition());
             } else {
                 propIdsToFind.add(id);
             }
@@ -1415,6 +1426,17 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 new PropertyDefinition(this.patientAliasPropositionId, this.patientAliasFieldNamePropertyName, null, ValueType.NOMINALVALUE, null, this.patientAliasPropositionId)
         );
         return patientDim;
+    }
+    
+    private ConstantDefinition newCareSitePropositionDefinition() {
+        Date now = new Date();
+        ConstantDefinition careSitePropDef = new ConstantDefinition(this.careSitePropositionId);
+        careSitePropDef.setAccessed(now);
+        careSitePropDef.setSourceId(this.sourceIdFactory.getInstance());
+        careSitePropDef.setCreated(DIMENSION_PROP_DEFS_CREATED_DATE);
+        careSitePropDef.setDisplayName(this.careSiteDisplayName);
+        careSitePropDef.setInDataSource(true);
+        return careSitePropDef;
     }
 
     private ConstantDefinition newPatientDetailsPropositionDefinition() {
