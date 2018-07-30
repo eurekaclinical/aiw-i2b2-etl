@@ -1712,21 +1712,20 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
         }
         return result;
     }
-
+    
     private Set<String> filterPropId(String[] propIds, final Collection<String> result) {
         Set<String> propIdsAsSet = Arrays.asSet(propIds);
+        Set<String> hardCodedPropIds = Arrays.asSet(new String[]{
+                patientPropositionId,
+                patientDetailsPropositionId,
+                visitPropositionId,
+                providerPropositionId,
+                patientAliasPropositionId,
+                careSitePropositionId
+            });
         for (Iterator<String> itr = propIdsAsSet.iterator(); itr.hasNext();) {
             String propId = itr.next();
-            if (patientPropositionId.equals(propId)) {
-                result.add(propId);
-                itr.remove();
-            } else if (patientDetailsPropositionId.equals(propId)) {
-                result.add(propId);
-                itr.remove();
-            } else if (visitPropositionId.equals(propId)) {
-                result.add(propId);
-                itr.remove();
-            } else if (providerPropositionId.equals(propId)) {
+            if (hardCodedPropIds.contains(propId)) {
                 result.add(propId);
                 itr.remove();
             }
@@ -1752,6 +1751,10 @@ public class I2b2KnowledgeSourceBackend extends AbstractCommonsKnowledgeSourceBa
                 itr.remove();
             } else if (patientAliasPropositionId.equals(propId)) {
                 result.put(propId, newPatientAliasPropositionDefinition());
+                itr.remove();
+            } else if (careSitePropositionId.equals(propId)) {
+                result.put(propId, newCareSitePropositionDefinition());
+                itr.remove();
             }
         }
         return propIdsAsSet;
