@@ -26,12 +26,6 @@ import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.SimpleConceptId;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.DataSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
-import org.protempa.KnowledgeSource;
 import org.protempa.KnowledgeSourceCache;
 import org.protempa.KnowledgeSourceReadException;
 import org.protempa.PropertyDefinition;
@@ -74,14 +68,7 @@ abstract class DimensionValueSetFolderBuilder implements OntologyBuilder {
         this.settings = metadata.getSettings();
         String propId = settings.getVisitDimension();
         if (propId != null) {
-            try {
-                this.propDef = cache.get(propId);
-                if (this.propDef == null) {
-                    throw new UnknownPropositionDefinitionException(propId);
-                }
-            } catch (UnknownPropositionDefinitionException ex) {
-                throw new OntologyBuildException("Could not build descendants", ex);
-            }
+            this.propDef = cache.get(propId);
         } else {
             this.propDef = null;
         }
