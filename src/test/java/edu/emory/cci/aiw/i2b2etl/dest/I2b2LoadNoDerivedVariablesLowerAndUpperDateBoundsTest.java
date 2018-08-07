@@ -65,7 +65,7 @@ public class I2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTest extends Abstr
             dumpTruth("i2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTest");
             throw ex;
         }
-
+        
         setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesLowerAndUpperDateBoundsTestData.xml");
     }
 

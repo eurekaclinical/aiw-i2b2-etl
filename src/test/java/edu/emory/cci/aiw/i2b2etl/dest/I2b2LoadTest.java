@@ -169,14 +169,10 @@ public class I2b2LoadTest extends AbstractI2b2DestLoadTest {
         try {
             getProtempaFactory().execute(q);
         } catch (ProtempaException ex) {
-            File file = File.createTempFile("i2b2LoadTest", ".xml");
-            try (FileOutputStream out = new FileOutputStream(file)) {
-                getProtempaFactory().exportI2b2DataSchema(out);
-                System.err.println("Dumped i2b2 data schema to " + file.getAbsolutePath());
-            }
+            dumpTruth("i2b2LoadTest");
             throw ex;
         }
-
+        
         setExpectedDataSet("/truth/i2b2LoadTestData.xml");
     }
 

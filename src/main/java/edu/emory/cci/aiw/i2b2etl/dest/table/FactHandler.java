@@ -156,6 +156,7 @@ public abstract class FactHandler extends AbstractFactHandler {
             updateDate = prop.getCreateDate();
         }
         obx.setUpdateDate(TableUtil.setTimestampAttribute(updateDate));
+        obx.setDeletedDate(TableUtil.setTimestampAttribute(prop.getDeleteDate()));
         obx.setInstanceNum(prop.getUniqueId().getLocalUniqueId().getNumericalId());
         if (concept != null) {
             obx.setDisplayName(concept.getDisplayName());

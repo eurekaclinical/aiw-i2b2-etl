@@ -49,7 +49,7 @@ public class I2b2LoadNoDerivedVariablesNoPatientDetailsTest extends AbstractI2b2
             dumpTruth("i2b2LoadNoDerivedVariablesNoPatientDetailsTest");
             throw ex;
         }
-
+        
         setExpectedDataSet("/truth/i2b2LoadNoDerivedVariablesNoPatientDetailsTest.xml");
     }
 
