@@ -22,6 +22,9 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import java.sql.SQLException;
 import java.util.Enumeration;
+
+import javax.swing.tree.TreeNode;
+
 import org.protempa.ProtempaUtil;
 
 /**
@@ -37,9 +40,9 @@ public abstract class ConceptHierarchyLoader {
     public final void execute(Concept... roots) throws SQLException {
         ProtempaUtil.checkArrayForNullElement(roots, "roots");
         for (Concept root : roots) {
-            Enumeration<Concept> emu = root.breadthFirstEnumeration();
+            Enumeration<TreeNode> emu = root.breadthFirstEnumeration();
             while (emu.hasMoreElements()) {
-                loadConcept(emu.nextElement());
+                loadConcept((Concept) emu.nextElement());
             }
         }
     }

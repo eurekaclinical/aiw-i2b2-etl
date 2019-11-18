@@ -307,9 +307,9 @@ public final class Metadata {
         Set<String> potentialDerivedConceptCodes = new HashSet<>();
 
         for (Concept r : getAllRoots()) {
-            Enumeration<Concept> emu = r.depthFirstEnumeration();
+            Enumeration<TreeNode> emu = r.depthFirstEnumeration();
             while (emu.hasMoreElements()) {
-                Concept concept = emu.nextElement();
+                Concept concept = (Concept) emu.nextElement();
                 if (concept.isDerived()) {
                     potentialDerivedConceptCodes.add(concept.getId().getId());
                 }
@@ -470,10 +470,10 @@ public final class Metadata {
         }
         for (Concept c : getAllRoots()) {
             @SuppressWarnings("unchecked")
-            Enumeration<Concept> emu = c.preorderEnumeration();
+            Enumeration<TreeNode> emu = c.preorderEnumeration();
             boolean isInPhenotypes = false;
             while (emu.hasMoreElements()) {
-                Concept concept = emu.nextElement();
+                Concept concept = (Concept) emu.nextElement();
                 TreeNode parent = concept.getParent();
                 if (parent != null && parent.equals(c)) {
                     isInPhenotypes = false;
