@@ -23,7 +23,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Metadata;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
-import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
+import edu.emory.cci.aiw.etl.util.CodeUtil;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;

@@ -119,7 +119,6 @@ ng	Ndonga
 ne	Nepali
 nl	Dutch; Flemish
 nn	"Norwegian Nynorsk; Nynorsk, Norwegian"
-nb	"Bokm�l, Norwegian; Norwegian Bokm�l"
 no	Norwegian
 ny	Chichewa; Chewa; Nyanja
 oc	Occitan (post 1500)
@@ -175,7 +174,6 @@ ur	Urdu
 uz	Uzbek
 ve	Venda
 vi	Vietnamese
-vo	Volap�k
 wa	Walloon
 wo	Wolof
 xh	Xhosa
@@ -253,7 +251,6 @@ lt_LT	Lithuanian
 mk_MK	Macedonian
 ms_MY	Malay
 mt_MT	Maltese
-no_NO	Norwegian (Bokmål)
 no_NO_NY	Norwegian (Nynorsk)
 pl_PL	Polish
 pt_BR	Portuguese (Brazil)

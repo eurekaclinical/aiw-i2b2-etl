@@ -21,7 +21,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
-import edu.emory.cci.aiw.i2b2etl.util.CodeUtil;
+import edu.emory.cci.aiw.etl.util.CodeUtil;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.ArrayList;

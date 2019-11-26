@@ -24,7 +24,7 @@ import edu.emory.cci.aiw.i2b2etl.dest.config.Concepts;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Configuration;
 import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Data;
-import edu.emory.cci.aiw.i2b2etl.dest.config.Database;
+import edu.emory.cci.aiw.etl.dest.config.Database;
 import edu.emory.cci.aiw.i2b2etl.dest.config.Settings;
 import java.io.File;
 

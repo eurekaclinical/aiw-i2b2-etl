@@ -21,6 +21,8 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import edu.emory.cci.aiw.etl.table.AbstractRecord;
+
 import java.sql.Timestamp;
 
 public class VisitDimension extends AbstractRecord {
