@@ -20,8 +20,8 @@ package edu.emory.cci.aiw.i2b2etl.dest;
  * #L%
  */
 import edu.emory.cci.aiw.i2b2etl.dest.config.Configuration;
-import edu.emory.cci.aiw.i2b2etl.dest.config.Database;
-import edu.emory.cci.aiw.i2b2etl.dest.config.DatabaseSpec;
+import edu.emory.cci.aiw.etl.dest.config.Database;
+import edu.emory.cci.aiw.etl.dest.config.DatabaseSpec;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.MetadataUtil;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryConstructor;
 import edu.emory.cci.aiw.i2b2etl.ksb.QueryExecutor;

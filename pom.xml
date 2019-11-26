@@ -1,4 +1,3 @@
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eurekaclinical</groupId>
@@ -18,8 +17,9 @@
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-        <protempa.version>5.1-Beta-3</protempa.version>
-        <eurekaclinical-ontology-version>2.0.4</eurekaclinical-ontology-version>
+         <protempa-version>[5.1-Beta-5,)</protempa-version>
+        <eurekaclinical-ontology-version>[2.0.4,)</eurekaclinical-ontology-version>
+        <etl-common-version>[0.0.1,)</etl-common-version>
     </properties>
     
     <scm>
@@ -38,7 +38,13 @@
         <dependency>
             <groupId>org.eurekaclinical</groupId>
             <artifactId>protempa-framework</artifactId>
-            <version>${protempa.version}</version>
+            <version>${protempa-version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eurekaclinical</groupId>
+            <artifactId>etl-common</artifactId>
+            <version>${etl-common-version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -59,14 +65,14 @@
         <dependency>
             <groupId>org.eurekaclinical</groupId>
             <artifactId>protempa-dsb-relationaldb</artifactId>
-            <version>${protempa.version}</version>
+            <version>${protempa-version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.eurekaclinical</groupId>
             <artifactId>protempa-bconfigs-ini4j-ini</artifactId>
             <scope>test</scope>
-            <version>${protempa.version}</version>
+            <version>${protempa-version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

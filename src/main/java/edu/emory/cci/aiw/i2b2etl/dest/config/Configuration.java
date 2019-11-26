@@ -1,5 +1,6 @@
 package edu.emory.cci.aiw.i2b2etl.dest.config;
 
+import edu.emory.cci.aiw.etl.dest.config.Database;
 /*
  * #%L
  * AIW i2b2 ETL
