@@ -20,10 +20,10 @@
 package edu.emory.cci.aiw.i2b2etl.dest.config.xml;
 
 import edu.emory.cci.aiw.i2b2etl.dest.config.ConfigurationInitException;
-import edu.emory.cci.aiw.i2b2etl.dest.config.DataSourceDatabaseSpec;
-import edu.emory.cci.aiw.i2b2etl.dest.config.Database;
-import edu.emory.cci.aiw.i2b2etl.dest.config.DatabaseSpec;
-import edu.emory.cci.aiw.i2b2etl.dest.config.DriverManagerDatabaseSpec;
+import edu.emory.cci.aiw.etl.dest.config.DataSourceDatabaseSpec;
+import edu.emory.cci.aiw.etl.dest.config.Database;
+import edu.emory.cci.aiw.etl.dest.config.DatabaseSpec;
+import edu.emory.cci.aiw.etl.dest.config.DriverManagerDatabaseSpec;
 import java.util.TreeMap;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.w3c.dom.*;

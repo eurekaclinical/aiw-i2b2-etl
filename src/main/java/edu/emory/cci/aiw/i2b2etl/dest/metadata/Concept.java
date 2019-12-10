@@ -21,7 +21,7 @@ package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.InvalidConceptCodeException;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.conceptid.ConceptId;
-import edu.emory.cci.aiw.i2b2etl.dest.table.Record;
+import edu.emory.cci.aiw.etl.table.Record;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.Date;
 

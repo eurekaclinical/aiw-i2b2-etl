@@ -23,6 +23,8 @@ package edu.emory.cci.aiw.i2b2etl.dest.table;
 import java.sql.Timestamp;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import edu.emory.cci.aiw.etl.table.AbstractRecord;
+
 /**
  *
  * @author Andrew Post

@@ -20,7 +20,7 @@ package edu.emory.cci.aiw.i2b2etl.ksb;
  * #L%
  */
 
-import edu.emory.cci.aiw.i2b2etl.util.RecordHandler;
+import edu.emory.cci.aiw.etl.util.RecordHandler;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

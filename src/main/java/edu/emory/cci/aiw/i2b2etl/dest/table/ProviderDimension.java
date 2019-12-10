@@ -19,6 +19,7 @@
  */
 package edu.emory.cci.aiw.i2b2etl.dest.table;
 
+import edu.emory.cci.aiw.etl.table.AbstractRecord;
 import edu.emory.cci.aiw.i2b2etl.dest.metadata.Concept;
 import java.sql.Timestamp;
 import org.apache.commons.lang3.builder.ToStringBuilder;
