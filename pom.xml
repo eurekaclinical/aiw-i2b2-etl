@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eurekaclinical</groupId>
     <artifactId>aiw-i2b2-etl</artifactId>
-    <version>4.4-SNAPSHOT</version>
+    <version>4.5-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>AIW i2b2 ETL</name>
     <description>AIW i2b2 ETL is a Protempa query results handler for loading data and 
@@ -11,15 +11,16 @@
     <parent>
         <groupId>org.eurekaclinical</groupId>
         <artifactId>eurekaclinical-parent-standard-deps</artifactId>
-        <version>4-Alpha-3</version>
+        <version>4-Alpha-4-SNAPSHOT</version>
     </parent>
     
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-         <protempa-version>[5.1,)</protempa-version>
-        <eurekaclinical-ontology-version>[2.0.4,)</eurekaclinical-ontology-version>
-        <etl-common-version>[0.0.2,)</etl-common-version>
+         <protempa-version>5.2-Alpha-1-SNAPSHOT</protempa-version>
+        <eurekaclinical-ontology-version>2.0.5-SNAPSHOT</eurekaclinical-ontology-version>
+        <etl-common-version>0.0.3-SNAPSHOT</etl-common-version>
+ 		<maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
     
     <scm>
