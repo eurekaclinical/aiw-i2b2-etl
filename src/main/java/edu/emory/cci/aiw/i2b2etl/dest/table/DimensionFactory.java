@@ -47,6 +47,7 @@ public class DimensionFactory {
     
     protected Value getField(String field, Proposition encounterProp, Map<UniqueId, Proposition> references) {
         Value val;
+        Logger logger = TableUtil.logger();
         if (field != null) {
             DataSpec obxSpec = data.get(field);
             assert obxSpec.getPropertyName() != null : "propertyName cannot be null";
@@ -56,7 +57,6 @@ public class DimensionFactory {
                     int size = uids.size();
                     if (size > 0) {
                         if (size > 1) {
-                            Logger logger = TableUtil.logger();
                             logger.log(Level.WARNING,
                                     "Multiple propositions with {0} property found for {1}, using only the first one",
                                     new Object[]{field, encounterProp});

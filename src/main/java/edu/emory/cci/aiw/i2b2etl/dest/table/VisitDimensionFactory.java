@@ -60,6 +60,13 @@ public class VisitDimensionFactory extends DimensionFactory {
             String encryptedPatientIdSourceSystem,
             TemporalProposition encounterProp,
             Map<UniqueId, Proposition> references) throws SQLException {
+    	return this.getInstance(encryptedPatientId, encryptedPatientIdSourceSystem, encounterProp, references, true);
+    }
+
+    public VisitDimension getInstance(String encryptedPatientId,
+            String encryptedPatientIdSourceSystem,
+            TemporalProposition encounterProp,
+            Map<UniqueId, Proposition> references, boolean doInsert) throws SQLException {
         Interval interval = encounterProp.getInterval();
         Date visitStartDate = AbsoluteTimeGranularityUtil.asDate(interval.getMinStart());
         Date visitEndDate = AbsoluteTimeGranularityUtil.asDate(interval.getMinFinish());
@@ -94,8 +101,10 @@ public class VisitDimensionFactory extends DimensionFactory {
         visitDimension.setUpdated(TableUtil.setTimestampAttribute(updated));
         visitDimension.setDownloaded(TableUtil.setTimestampAttribute(encounterProp.getDownloadDate()));
         visitDimension.setDeletedDate(TableUtil.setTimestampAttribute(encounterProp.getDeleteDate()));
-        this.visitDimensionHandler.insert(visitDimension);
-        this.encounterMappingHandler.insert(visitDimension);
+        if (doInsert) {
+        	this.visitDimensionHandler.insert(visitDimension);
+        }
+    	this.encounterMappingHandler.insert(visitDimension);
         return visitDimension;
     }
 

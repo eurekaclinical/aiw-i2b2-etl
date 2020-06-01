@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.tree.TreeNode;
 
@@ -75,7 +76,7 @@ public final class Metadata {
     private final Data dataSection;
     private final Settings settings;
     private final PropositionDefinition[] userDefinedPropositionDefinitions;
-    private final String sourceSystemCode;
+	private final String sourceSystemCode;
     private ProviderConceptTreeBuilder providerConceptTreeBuilder;
     private final KnowledgeSourceCache cache;
     private final FolderSpec[] folderSpecs;
@@ -121,18 +122,28 @@ public final class Metadata {
         this.metaConnectionSpec = metaConnectionSpec;
         this.modifierRoots = new ArrayList<>();
         this.sourceSystemCode = MetadataUtil.toSourceSystemCode(sourceSystemCode);
+        LOGGER.log(Level.FINEST, "In METADATA source system cd is: {0}", this.sourceSystemCode);
         if (userDefinedPropositionDefinitions == null) {
             this.userDefinedPropositionDefinitions
                     = EMPTY_PROPOSITION_DEFINITION_ARRAY;
         } else {
             this.userDefinedPropositionDefinitions
                     = userDefinedPropositionDefinitions.clone();
+            if(LOGGER.isLoggable(Level.FINE)){
+            	for(PropositionDefinition pd: this.userDefinedPropositionDefinitions) {
+            		LOGGER.log(Level.FINE, "In METADATA user def prop def is: {0}", pd.getId());
+            	}
+            }
         }
         this.cache = cache;
         this.settings = settings;
         this.dataSection = dataSection;
         this.folderSpecs = folderSpecs.clone();
         this.propDefs = propDefs;
+        if(LOGGER.isLoggable(Level.FINE)){
+        	LOGGER.log(Level.FINE, "In METADATA settings:datasection:propDefs is: {0}:{1}:{2}", 
+        			new Object[]{this.settings.getClass().getName(), this.dataSection.getAll().size(), this.propDefs.getAll().size()});
+        }
     }
 
     void init() throws OntologyBuildException {
@@ -500,4 +511,13 @@ public final class Metadata {
     private static void throwOntologyBuildException(Throwable ex) throws OntologyBuildException {
         throw new OntologyBuildException("Error building ontology", ex);
     }
+
+	public Map<ConceptId, Concept> getConceptCache() {
+		return conceptCache;
+	}
+    
+    public PropositionDefinition[] getUserDefinedPropositionDefinitions() {
+		return userDefinedPropositionDefinitions;
+	}
+    
 }
