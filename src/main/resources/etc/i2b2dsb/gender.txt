@@ -1,4 +1,7 @@
-Female	F
-Male	M
-NotRecorded	@
-Unknown	U
+Male	Male
+Female	Female
+Unknown	Unknown
+NotRecorded	NotRecorded
+NotRecorded	NotRecorded
+DescriptionMissing	DescriptionMissing
+Unspecified	Unspecified

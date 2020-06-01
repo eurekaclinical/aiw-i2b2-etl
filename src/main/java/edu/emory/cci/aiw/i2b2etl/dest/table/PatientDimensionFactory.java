@@ -64,6 +64,12 @@ public class PatientDimensionFactory extends DimensionFactory {
 
     public PatientDimension getInstance(String keyId, Proposition encounterProp,
             Map<UniqueId, Proposition> references) throws InvalidPatientRecordException, SQLException {
+    	return this.getInstance(keyId, encounterProp, references, true);
+    }
+    
+    public PatientDimension getInstance(String keyId, Proposition encounterProp,
+            Map<UniqueId, Proposition> references, boolean doInsert) throws InvalidPatientRecordException, SQLException {
+    	Logger logger = TableUtil.logger();
         String obxSectionStr = this.settings.getPatientDimensionMRN();
         DataSpec dataSpec = getData().get(obxSectionStr);
         int size;
@@ -75,7 +81,7 @@ public class PatientDimensionFactory extends DimensionFactory {
             uids = null;
             size = 0;
         }
-        Logger logger = TableUtil.logger();
+        
         PatientDimension patientDimension = new PatientDimension();
         patientDimension.setEncryptedPatientId(keyId);
         patientDimension.setEncryptedPatientIdSource(metadata.getSourceSystemCode());
@@ -87,85 +93,88 @@ public class PatientDimensionFactory extends DimensionFactory {
             }
             Proposition prop = references.get(uids.get(0));
             if (prop == null) {
-                throw new InvalidPatientRecordException("Encounter's "
-                        + dataSpec.getReferenceName()
-                        + " reference points to a non-existant proposition");
+            	logger.log(Level.WARNING, "Encounter's " + dataSpec.getReferenceName() + 
+            			" reference points to a non-existent proposition");
             }
-            Value val = prop.getProperty(dataSpec.getPropertyName());
-            if (val != null) {
-                Value zipCode = getField(
-                        this.settings.getPatientDimensionZipCode(), encounterProp, references);
-                Value maritalStatus = getField(
-                        this.settings.getPatientDimensionMaritalStatus(), encounterProp, references);
-                Value race = getField(
-                        this.settings.getPatientDimensionRace(), encounterProp, references);
-                Value birthdateVal = getField(
-                        this.settings.getPatientDimensionBirthdate(), encounterProp, references);
-                Value deathDateVal = getField(
-                        this.settings.getPatientDimensionDeathDate(), encounterProp, references);
-                Value vitalStatus = getField(
-                        this.settings.getPatientDimensionVital(), encounterProp, references);
-                Value gender = getField(
-                        this.settings.getPatientDimensionGender(), encounterProp, references);
-                Value language = getField(
-                        this.settings.getPatientDimensionLanguage(), encounterProp, references);
-                Value religion = getField(
-                        this.settings.getPatientDimensionReligion(), encounterProp, references);
-                Date birthdate;
-                if (birthdateVal != null) {
-                    try {
-                        birthdate = ((DateValue) birthdateVal).getDate();
-                    } catch (ClassCastException cce) {
-                        birthdate = null;
-                        logger.log(Level.WARNING, "Birthdate property value not a DateValue");
-                    }
-                } else {
-                    birthdate = null;
-                }
-                Date deathDate;
-                if (deathDateVal != null) {
-                    try {
-                        deathDate = ((DateValue) deathDateVal).getDate();
-                    } catch (ClassCastException cce) {
-                        deathDate = null;
-                        logger.log(Level.WARNING, "DeathDate property value not a DateValue");
-                    }
-                } else {
-                    deathDate = null;
-                }
-
-                Long ageInYears = computeAgeInYears(birthdate);
-
-                patientDimension.setZip(zipCode != null ? zipCode.getFormatted() : null);
-                patientDimension.setAgeInYears(ageInYears);
-                patientDimension.setGender(gender != null ? gender.getFormatted() : null);
-                patientDimension.setLanguage(language != null ? language.getFormatted() : null);
-                patientDimension.setReligion(religion != null ? religion.getFormatted() : null);
-                patientDimension.setBirthDate(TableUtil.setDateAttribute(birthdate));
-                patientDimension.setDeathDate(TableUtil.setDateAttribute(deathDate));
-                patientDimension.setMaritalStatus(maritalStatus != null ? maritalStatus.getFormatted() : null);
-                patientDimension.setRace(race != null ? race.getFormatted() : null);
-                patientDimension.setSourceSystem(MetadataUtil.toSourceSystemCode(prop.getSourceSystem().getStringRepresentation()));
-                if (vitalStatus instanceof NominalValue) {
-                    String formatted = vitalStatus.getFormatted();
-                    VitalStatusCode vsCode = VitalStatusCode.fromCode(formatted);
-                    if (vsCode != null) {
-                        patientDimension.setVital(vsCode.getCode());
-                    } else {
-                        logger.log(Level.WARNING, "Unexpected vital status value {0}", formatted);
-                    }
-                } else if (vitalStatus instanceof BooleanValue) {
-                    patientDimension.setVital(VitalStatusCode.getInstance(((BooleanValue) vitalStatus).booleanValue()).getCode());
-                } else {
-                    patientDimension.setVital(VitalStatusCode.getInstance(null).getCode());
-                }
-                Date updateDate = prop.getUpdateDate();
-                patientDimension.setUpdated(TableUtil.setTimestampAttribute(updateDate != null ? updateDate : prop.getCreateDate()));
-                patientDimension.setDownloaded(TableUtil.setTimestampAttribute(prop.getDownloadDate()));
-                patientDimension.setDeletedDate(TableUtil.setTimestampAttribute(prop.getDeleteDate()));
-            }
+            else {
+	            Value val = prop.getProperty(dataSpec.getPropertyName());
+	            if (val != null) {
+	                Value zipCode = getField(
+	                        this.settings.getPatientDimensionZipCode(), encounterProp, references);
+	                Value maritalStatus = getField(
+	                        this.settings.getPatientDimensionMaritalStatus(), encounterProp, references);
+	                Value race = getField(
+	                        this.settings.getPatientDimensionRace(), encounterProp, references);
+	                Value birthdateVal = getField(
+	                        this.settings.getPatientDimensionBirthdate(), encounterProp, references);
+	                Value deathDateVal = getField(
+	                        this.settings.getPatientDimensionDeathDate(), encounterProp, references);
+	                Value vitalStatus = getField(
+	                        this.settings.getPatientDimensionVital(), encounterProp, references);
+	                Value gender = getField(
+	                        this.settings.getPatientDimensionGender(), encounterProp, references);
+	                Value language = getField(
+	                        this.settings.getPatientDimensionLanguage(), encounterProp, references);
+	                Value religion = getField(
+	                        this.settings.getPatientDimensionReligion(), encounterProp, references);
+	                Date birthdate;
+	                if (birthdateVal != null) {
+	                    try {
+	                        birthdate = ((DateValue) birthdateVal).getDate();
+	                    } catch (ClassCastException cce) {
+	                        birthdate = null;
+	                        logger.log(Level.WARNING, "Birthdate property value not a DateValue");
+	                    }
+	                } else {
+	                    birthdate = null;
+	                }
+	                Date deathDate;
+	                if (deathDateVal != null) {
+	                    try {
+	                        deathDate = ((DateValue) deathDateVal).getDate();
+	                    } catch (ClassCastException cce) {
+	                        deathDate = null;
+	                        logger.log(Level.WARNING, "DeathDate property value not a DateValue");
+	                    }
+	                } else {
+	                    deathDate = null;
+	                }
+	
+	                Long ageInYears = computeAgeInYears(birthdate);
+	
+	                patientDimension.setZip(zipCode != null ? zipCode.getFormatted() : null);
+	                patientDimension.setAgeInYears(ageInYears);
+	                patientDimension.setGender(gender != null ? gender.getFormatted() : null);
+	                patientDimension.setLanguage(language != null ? language.getFormatted() : null);
+	                patientDimension.setReligion(religion != null ? religion.getFormatted() : null);
+	                patientDimension.setBirthDate(TableUtil.setDateAttribute(birthdate));
+	                patientDimension.setDeathDate(TableUtil.setDateAttribute(deathDate));
+	                patientDimension.setMaritalStatus(maritalStatus != null ? maritalStatus.getFormatted() : null);
+	                patientDimension.setRace(race != null ? race.getFormatted() : null);
+	                patientDimension.setSourceSystem(MetadataUtil.toSourceSystemCode(prop.getSourceSystem().getStringRepresentation()));
+	                if (vitalStatus instanceof NominalValue) {
+	                    String formatted = vitalStatus.getFormatted();
+	                    VitalStatusCode vsCode = VitalStatusCode.fromCode(formatted);
+	                    if (vsCode != null) {
+	                        patientDimension.setVital(vsCode.getCode());
+	                    } else {
+	                        logger.log(Level.WARNING, "Unexpected vital status value {0}", formatted);
+	                    }
+	                } else if (vitalStatus instanceof BooleanValue) {
+	                    patientDimension.setVital(VitalStatusCode.getInstance(((BooleanValue) vitalStatus).booleanValue()).getCode());
+	                } else {
+	                    patientDimension.setVital(VitalStatusCode.getInstance(null).getCode());
+	                }
+	                Date updateDate = prop.getUpdateDate();
+	                patientDimension.setUpdated(TableUtil.setTimestampAttribute(updateDate != null ? updateDate : prop.getCreateDate()));
+	                patientDimension.setDownloaded(TableUtil.setTimestampAttribute(prop.getDownloadDate()));
+	                patientDimension.setDeletedDate(TableUtil.setTimestampAttribute(prop.getDeleteDate()));
+	            }
+          }
         }
-        this.patientDimensionHandler.insert(patientDimension);
+        if(doInsert) {
+        	this.patientDimensionHandler.insert(patientDimension);
+        }
         this.patientMappingHandler.insert(patientDimension);
         return patientDimension;
     }
