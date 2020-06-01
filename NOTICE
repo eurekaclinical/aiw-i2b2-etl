@@ -18,12 +18,12 @@ This project includes:
   Apache Commons Codec under Apache License, Version 2.0
   Apache Commons Collections under Apache License, Version 2.0
   Apache Commons CSV under Apache License, Version 2.0
-  Apache Commons DBCP under Apache License, Version 2.0
-  Apache Commons IO under Apache License, Version 2.0
+  Apache Commons DBCP under The Apache Software License, Version 2.0
   Apache Commons Lang under Apache License, Version 2.0
-  Apache Commons Logging under The Apache Software License, Version 2.0
-  Apache Commons Pool under Apache License, Version 2.0
+  Apache Commons Pool under The Apache Software License, Version 2.0
   Apache POI under The Apache Software License, Version 2.0
+  Commons IO under The Apache Software License, Version 2.0
+  Commons Logging under The Apache Software License, Version 2.0
   curvesapi under BSD License
   Datastore under Apache License, Version 2.0
   dbUnit Extension under GNU Lesser General Public License, Version 2.1
@@ -33,33 +33,24 @@ This project includes:
   H2 Database Engine under MPL 2.0 or EPL 1.0
   Hamcrest Core under New BSD License
   ini4j under Apache 2
-  JavaBeans Activation Framework API jar under CDDL/GPLv2+CE
   JavaUtil under Apache License, Version 2.0
-  jaxb-api under CDDL 1.1 or GPL2 w/ CPE
   JUnit under Eclipse Public License 1.0
   Liquibase Core under Apache License, Version 2.0
-  Logback Classic Module under Eclipse Public License - v 1.0 or GNU Lesser General Public License
-  Logback Core Module under Eclipse Public License - v 1.0 or GNU Lesser General Public License
   mvel under The Apache Software License, Version 2.0
-  Old JAXB Core under CDDL+GPL License
-  Old JAXB Runtime under CDDL+GPL License
   opencsv under Apache 2
   Oracle NoSQL Database Server under Apache 2
-  PostgreSQL JDBC Driver under BSD License
   Protempa Framework under Apache License, Version 2.0
   Protempa Ini4j INI Backend Configurations under Apache License, Version 2.0
   Protempa Relational Database Data Source Backend under Apache License, Version 2.0
   Protempa ServiceLoader Backend Configurations Provider under Apache License, Version 2.0
   Protempa ServiceLoader Backend Provider under Apache License, Version 2.0
   SLF4J API Module under MIT License
-  SnakeYAML under Apache License, Version 2.0
   StAX API under The Apache Software License, Version 2.0
   tomcat-annotations-api under Apache License, Version 2.0
   tomcat-api under Apache License, Version 2.0
   tomcat-catalina under Apache License, Version 2.0
   tomcat-coyote under Apache License, Version 2.0
   tomcat-el-api under Apache License, Version 2.0
-  tomcat-jaspic-api under Apache License, Version 2.0
   tomcat-jni under Apache License, Version 2.0
   tomcat-jsp-api under Apache License, Version 2.0
   tomcat-juli under Apache License, Version 2.0
