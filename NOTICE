@@ -18,12 +18,12 @@ This project includes:
   Apache Commons Codec under Apache License, Version 2.0
   Apache Commons Collections under Apache License, Version 2.0
   Apache Commons CSV under Apache License, Version 2.0
-  Apache Commons DBCP under The Apache Software License, Version 2.0
+  Apache Commons DBCP under Apache License, Version 2.0
+  Apache Commons IO under Apache License, Version 2.0
   Apache Commons Lang under Apache License, Version 2.0
-  Apache Commons Pool under The Apache Software License, Version 2.0
+  Apache Commons Logging under The Apache Software License, Version 2.0
+  Apache Commons Pool under Apache License, Version 2.0
   Apache POI under The Apache Software License, Version 2.0
-  Commons IO under The Apache Software License, Version 2.0
-  Commons Logging under The Apache Software License, Version 2.0
   curvesapi under BSD License
   Datastore under Apache License, Version 2.0
   dbUnit Extension under GNU Lesser General Public License, Version 2.1
@@ -39,6 +39,7 @@ This project includes:
   mvel under The Apache Software License, Version 2.0
   opencsv under Apache 2
   Oracle NoSQL Database Server under Apache 2
+  PostgreSQL JDBC Driver under BSD License
   Protempa Framework under Apache License, Version 2.0
   Protempa Ini4j INI Backend Configurations under Apache License, Version 2.0
   Protempa Relational Database Data Source Backend under Apache License, Version 2.0
@@ -51,6 +52,7 @@ This project includes:
   tomcat-catalina under Apache License, Version 2.0
   tomcat-coyote under Apache License, Version 2.0
   tomcat-el-api under Apache License, Version 2.0
+  tomcat-jaspic-api under Apache License, Version 2.0
   tomcat-jni under Apache License, Version 2.0
   tomcat-jsp-api under Apache License, Version 2.0
   tomcat-juli under Apache License, Version 2.0
