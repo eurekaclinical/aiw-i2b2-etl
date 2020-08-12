@@ -11,15 +11,15 @@
     <parent>
         <groupId>org.eurekaclinical</groupId>
         <artifactId>eurekaclinical-parent-standard-deps</artifactId>
-        <version>4-Alpha-4-SNAPSHOT</version>
+        <version>4-Alpha-4</version>
     </parent>
     
     <url>https://github.com/eurekaclinical/aiw-i2b2-etl.git</url>
     
     <properties>
-         <protempa-version>5.2-Alpha-2-SNAPSHOT</protempa-version>
-        <eurekaclinical-ontology-version>2.0.5-SNAPSHOT</eurekaclinical-ontology-version>
-        <etl-common-version>0.0.5-SNAPSHOT</etl-common-version>
+         <protempa-version>5.2-Alpha-2</protempa-version>
+        <eurekaclinical-ontology-version>2.0.5</eurekaclinical-ontology-version>
+        <etl-common-version>0.0.5</etl-common-version>
     </properties>
     
     <scm>
@@ -113,10 +113,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <systemProperties>
+                    <systemPropertyVariables>
                         <java.awt.headless>true</java.awt.headless>
                         <argLine>-Xms512m -Xmx2g</argLine>
-                    </systemProperties>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -161,11 +161,13 @@
                     <noticeTemplate>etc/NOTICE.template</noticeTemplate>
                 </configuration>
             </plugin>
-            <plugin>
+			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <additionalparam>-Xdoclint:none</additionalparam>
+                	<additionalOptions>
+                    	<additionalOption>-Xdoclint:none</additionalOption>
+                    </additionalOptions>
                 </configuration>
             </plugin>
             <plugin>
