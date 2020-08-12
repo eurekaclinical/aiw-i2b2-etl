@@ -30,6 +30,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.lang3.StringUtils;
 import org.arp.javautil.sql.DatabaseProduct;
 import org.protempa.KnowledgeSourceReadException;
 
@@ -45,6 +49,7 @@ import org.protempa.KnowledgeSourceReadException;
 public final class TableAccessReader {
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    private Logger LOGGER = Logger.getLogger(TableAccessReader.class.getName());
 
     static final class TableAccessReaderBuilder {
 
@@ -138,6 +143,7 @@ public final class TableAccessReader {
                     try {
                         DefaultUnionedMetadataQueryBuilder builder = new DefaultUnionedMetadataQueryBuilder();
                         String subQuery = builder.statement("SELECT 1 FROM {0} WHERE EK_UNIQUE_ID IN (''" + String.join("'',''", this.ekUniqueIds) + "'') AND C_FULLNAME LIKE TA.C_FULLNAME || ''%''" + (databaseProduct == DatabaseProduct.POSTGRESQL ? " ESCAPE ''''" : "")).ontTables(tables.toArray(new String[tables.size()])).build();
+                        LOGGER.log(Level.FINE, "Sql for tables: {0}", "SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS TA WHERE EXISTS (" + subQuery + ")");
                         try (Statement stmt = connection.createStatement();
                                 ResultSet resultSet = stmt.executeQuery("SELECT DISTINCT C_TABLE_NAME FROM TABLE_ACCESS TA WHERE EXISTS (" + subQuery + ")")) {
                             resultSet.setFetchSize(10);
@@ -145,6 +151,7 @@ public final class TableAccessReader {
                             while (resultSet.next()) {
                                 l.add(resultSet.getString(1));
                             }
+                            LOGGER.log(Level.INFO, "Tables are: {0}", StringUtils.join(l, ","));
                             this.ontTables = l.toArray(new String[l.size()]);
                         }
                     } catch (SQLException ex) {
