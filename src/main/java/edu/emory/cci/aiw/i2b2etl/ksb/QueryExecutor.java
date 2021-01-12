@@ -97,7 +97,7 @@ public class QueryExecutor implements AutoCloseable {
                     if (LOGGER.isLoggable(Level.FINE) && queryTime >= 1) {
                         LOGGER.log(Level.FINE, "Long running query ({0} seconds): {1}", new Object[]{queryTime, this.sql});
                     }
-                    return result;
+                    return result;//returns list of ontology tables details:: c_table_cd, c_name, ek_unique_id
                 }
             }
         } catch (SQLException ex) {
@@ -124,7 +124,7 @@ public class QueryExecutor implements AutoCloseable {
     public void prepare() throws KnowledgeSourceReadException {
         if (this.preparedStatement == null) {
             try {
-                readOntologyTables();
+                readOntologyTables(); //returns all ontology tables from i2b2actmetadata.table_access
                 if (this.ontTables.length > 0) {
                     QueryConstructorUnionedMetadataQueryBuilder builder
                             = new QueryConstructorUnionedMetadataQueryBuilder();

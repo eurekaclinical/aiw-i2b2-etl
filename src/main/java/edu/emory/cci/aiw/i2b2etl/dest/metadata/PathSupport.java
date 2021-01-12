@@ -1,5 +1,7 @@
 package edu.emory.cci.aiw.i2b2etl.dest.metadata;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /*
  * #%L
  * AIW i2b2 ETL
@@ -28,6 +30,7 @@ import javax.swing.tree.TreeNode;
 class PathSupport {
 
     private Concept concept;
+    private static final Logger LOGGER = Logger.getLogger(PathSupport.class.getName());
 
     private static interface PathConceptRep {
 
@@ -107,12 +110,16 @@ class PathSupport {
     }
 
     private void pathToString(StringBuilder buf, String sep, PathConceptRep rep) {
+    	LOGGER.log(Level.FINE, "pathToString: current buf: {0}::{1}", 
+    			new Object[]{buf.toString(),this.concept.getConceptCode()});
         TreeNode[] path = this.concept.getPath();
         for (int i = 0; i < path.length - 1; i++) {
             TreeNode tn = path[i];
             buf.append(sep);
             buf.append(rep.toString((Concept) tn));
         }
+        LOGGER.log(Level.FINE, "After path: {0}", 
+    			new Object[]{buf.toString()});
     }
 
 }

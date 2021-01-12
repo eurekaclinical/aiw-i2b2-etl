@@ -138,7 +138,7 @@ public final class TableAccessReader {
                 } catch (SQLException ex) {
                     throw new KnowledgeSourceReadException(ex);
                 }
-
+                //generates the sql to pull the table for the input proposition(s) 
                 if (this.ekUniqueIds.length > 0) {
                     try {
                         DefaultUnionedMetadataQueryBuilder builder = new DefaultUnionedMetadataQueryBuilder();
@@ -151,7 +151,7 @@ public final class TableAccessReader {
                             while (resultSet.next()) {
                                 l.add(resultSet.getString(1));
                             }
-                            LOGGER.log(Level.INFO, "Tables are: {0}", StringUtils.join(l, ","));
+                            LOGGER.log(Level.FINE, "Tables are: {0}", StringUtils.join(l, ","));
                             this.ontTables = l.toArray(new String[l.size()]);
                         }
                     } catch (SQLException ex) {
@@ -162,6 +162,6 @@ public final class TableAccessReader {
                 }
             }
         }
-        return this.ontTables.clone();
+        return this.ontTables.clone(); //returns list of ontology tables, one per input proposition(s)
     }
 }

@@ -25,6 +25,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.arp.javautil.sql.DatabaseProduct;
 
 /**
@@ -32,6 +35,8 @@ import org.arp.javautil.sql.DatabaseProduct;
  * @author Andrew Post
  */
 public class UniqueIdTempTableHandler extends RecordHandler<String> {
+	
+	private static final Logger LOGGER = Logger.getLogger(UniqueIdTempTableHandler.class.getName());
 
     public UniqueIdTempTableHandler(DatabaseProduct databaseProduct, Connection connection) throws SQLException {
         super(connection, "INSERT INTO EK_TEMP_UNIQUE_IDS VALUES (?)");
@@ -45,6 +50,7 @@ public class UniqueIdTempTableHandler extends RecordHandler<String> {
     
     @Override
     protected void setParameters(PreparedStatement statement, String record) throws SQLException {
+    	LOGGER.log(Level.FINE, "Setting temp unique ids: {0}", new Object[] {record});
         statement.setString(1, record);
     }
     
