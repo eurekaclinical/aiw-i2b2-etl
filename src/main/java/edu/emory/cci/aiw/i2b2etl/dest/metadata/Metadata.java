@@ -149,6 +149,7 @@ public final class Metadata {
     void init() throws OntologyBuildException {
         this.allRoots = new ArrayList<>();
         String rootNodeDisplayName = settings.getRootNodeName();
+        LOGGER.log(Level.FINE, "rootNodeDisplayName: {0}", new Object[] {rootNodeDisplayName});
         if (rootNodeDisplayName != null) {
             try {
                 this.conceptRoot = new Concept(
@@ -430,6 +431,7 @@ public final class Metadata {
                     break;
                 }
             }
+            LOGGER.log(Level.FINE, "allAlreadyLoaded: {0}", new Object[] {allAlreadyLoaded});
             //if allAlreadyLoaded, just pull the concepts that we're querying?
             try (Connection connection = this.metaConnectionSpec.getOrCreate()) {
                 QueryConstructor theQuery;
@@ -438,12 +440,14 @@ public final class Metadata {
                         try (UniqueIdTempTableHandler tmp = new UniqueIdTempTableHandler(this.metaConnectionSpec.getDatabaseProduct(), connection, false)) {
                             for (PropositionDefinition pd : this.propDefs.getAll()) {
                                 tmp.insert(pd.getId());
+                                LOGGER.log(Level.FINE, "Inserting propdefid: {0}", new Object[] {pd.getId()});
                             }
                         }
                         theQuery = ALL_CONCEPTS_QUERY_WITH_TMP;
                     } else {
                         theQuery = ALL_CONCEPTS_QUERY;
                     }
+                    LOGGER.log(Level.FINE, "theQuery: {0}", new Object[] {theQuery.toString()});
                 } catch (SQLException sqle) {
                     try {
                         connection.rollback();

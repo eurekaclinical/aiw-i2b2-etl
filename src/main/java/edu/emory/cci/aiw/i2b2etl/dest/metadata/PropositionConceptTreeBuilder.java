@@ -30,6 +30,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.protempa.Attribute;
 import org.protempa.KnowledgeSourceCache;
@@ -56,6 +59,8 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
     private final KnowledgeSourceCache knowledgeSourceCache;
     private final boolean alreadyLoaded;
     private List<Concept> roots;
+    
+    private static final Logger LOGGER = Logger.getLogger(PropositionConceptTreeBuilder.class.getName());
 
     PropositionConceptTreeBuilder(KnowledgeSourceCache knowledgeSourceCache,
             String[] propIds, String conceptCode, ValueTypeCode valueTypeCode,
@@ -120,6 +125,8 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
                 Concept child = addNode(childPropDef);
                 parent.add(child);
                 addModifierConcepts(childPropDef, child);
+                LOGGER.log(Level.FINE, "Building Tree:parent:child:childpropdefId: {0}:{1}:{2}", 
+            			new Object[]{parent.getFullName(), child.getFullName(), childPropDef.getId()});
                 buildHelper(childPropDef.getInverseIsA(), child);
             }
         }
@@ -153,8 +160,16 @@ class PropositionConceptTreeBuilder implements OntologyBuilder, SubtreeBuilder {
             }
         }
         if (this.valueTypeCode == ValueTypeCode.LABORATORY_TESTS) {
-            ValueType valueType
-                    = ((ParameterDefinition) propDef).getValueType();
+        	LOGGER.log(Level.FINE, "PropDef: {0}, {1}", new Object[] {propDef.getPropositionId() ,propDef.getId()});
+        	ValueType valueType;
+        	if(propDef instanceof ParameterDefinition) {
+        		valueType = ((ParameterDefinition) propDef).getValueType();
+        		LOGGER.log(Level.FINE, "Got ParameterDefinition Value Type: {0}", new Object[] {valueType.name()});
+        	}
+        	else {
+        		valueType = ValueType.VALUE;
+        		LOGGER.log(Level.FINE, "Got Value Type: {0}", new Object[] {valueType.name()});
+        	}
             newChild.setDataType(DataType.dataTypeFor(valueType));
             if (children.length < 1) {
                 newChild.setMetadataXml("<?xml version=\"1.0\"?><ValueMetadata><Version>3.02</Version><CreationDateTime>" + this.createDate
